@@ -485,6 +485,29 @@ async function build() {
   ].join('\n');
   const headMeta = `${cleanedMeta.join('\n')}\n${ogMeta}`;
 
+  // JSON-LD Person structured data (entity SEO / rich results). Injected only
+  // if the export doesn't already provide its own ld+json block.
+  const hasLd = result.meta.some((m) => /ld\+json/i.test(m));
+  const personLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: 'Ahmed Farid',
+    jobTitle: 'Senior Software Engineer',
+    url: `${SITE_URL}/`,
+    image: `${SITE_URL}/og.png`,
+    email: 'ahmedfareed2025@gmail.com',
+    address: { '@type': 'PostalAddress', addressLocality: 'Cairo', addressCountry: 'EG' },
+    worksFor: { '@type': 'Organization', name: 'Recovery Advisers' },
+    alumniOf: { '@type': 'CollegeOrUniversity', name: 'Helwan University' },
+    knowsAbout: ['Laravel', 'Next.js', 'FastAPI', 'Flutter', 'React', 'TypeScript', 'PHP', 'AWS', 'Multi-tenant SaaS'],
+    sameAs: [
+      'https://www.linkedin.com/in/ahmed-farid-b46a5221b/',
+      'https://github.com/ahmedfarid2',
+      'https://www.behance.net/ahmedfarid20',
+    ],
+  };
+  const jsonLd = hasLd ? '' : `<script type="application/ld+json">${JSON.stringify(personLd)}</script>`;
+
   const interactivity = `
 // Minimal vanilla interactivity — replaces the React runtime for the few
 // dynamic bits of an otherwise-static page.
@@ -540,6 +563,7 @@ ${headMeta}
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://assets.calendly.com/assets/external/widget.css">
 <noscript><style>.reveal,.cell-pre{opacity:1!important;transform:none!important}</style></noscript>
+${jsonLd}
 <style>${result.css}</style>
 </head>
 <body class="${result.bodyClass}"${bodyDataAttrs ? ' ' + bodyDataAttrs : ''}>
