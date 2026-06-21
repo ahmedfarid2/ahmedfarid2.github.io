@@ -473,21 +473,9 @@ async function build() {
   // Point og:image / twitter:image at the generated 1200×630 card (drop the
   // square-avatar one from the export) and ensure og:url is present.
   const ogImg = `${SITE_URL}/og.png`;
-  const cleanedMeta = result.meta.filter((m) => !/og:image|twitter:image|og:url/i.test(m));
-  const ogMeta = [
-    `<meta property="og:url" content="${SITE_URL}/">`,
-    `<meta property="og:image" content="${ogImg}">`,
-    `<meta property="og:image:width" content="1200">`,
-    `<meta property="og:image:height" content="630">`,
-    `<meta property="og:image:type" content="image/png">`,
-    `<meta property="og:image:alt" content="Ahmed Farid — Senior Software Engineer">`,
-    `<meta name="twitter:image" content="${ogImg}">`,
-  ].join('\n');
-  const headMeta = `${cleanedMeta.join('\n')}\n${ogMeta}`;
 
-  // JSON-LD Person structured data (entity SEO / rich results). Injected only
-  // if the export doesn't already provide its own ld+json block.
-  const hasLd = result.meta.some((m) => /ld\+json/i.test(m));
+  // Canonical Person structured data — used to inject a block if the export has
+  // none, and to enrich an existing export block with fields it may lack.
   const personLd = {
     '@context': 'https://schema.org',
     '@type': 'Person',
@@ -506,6 +494,39 @@ async function build() {
       'https://www.behance.net/ahmedfarid20',
     ],
   };
+
+  // Enrich an existing Person JSON-LD from the export with knowsAbout /
+  // worksFor / alumniOf when those fields are missing — keeps the export's own
+  // name/sameAs/etc. untouched, just fills the skill/affiliation gaps for SEO.
+  result.meta = result.meta.map((m) => {
+    const mm = /^(<script[^>]*ld\+json[^>]*>)([\s\S]*?)(<\/script>)$/i.exec(m.trim());
+    if (!mm) return m;
+    try {
+      const obj = JSON.parse(mm[2]);
+      if (obj && obj['@type'] === 'Person') {
+        for (const k of ['knowsAbout', 'worksFor', 'alumniOf']) {
+          if (obj[k] == null) obj[k] = personLd[k];
+        }
+        return `${mm[1]}${JSON.stringify(obj)}${mm[3]}`;
+      }
+    } catch { /* leave malformed ld+json untouched */ }
+    return m;
+  });
+
+  // Point og:image / twitter:image at the generated card (drop the export's
+  // square-avatar one) and ensure og:url is present.
+  const hasLd = result.meta.some((m) => /ld\+json/i.test(m));
+  const cleanedMeta = result.meta.filter((m) => !/og:image|twitter:image|og:url/i.test(m));
+  const ogMeta = [
+    `<meta property="og:url" content="${SITE_URL}/">`,
+    `<meta property="og:image" content="${ogImg}">`,
+    `<meta property="og:image:width" content="1200">`,
+    `<meta property="og:image:height" content="630">`,
+    `<meta property="og:image:type" content="image/png">`,
+    `<meta property="og:image:alt" content="Ahmed Farid — Senior Software Engineer">`,
+    `<meta name="twitter:image" content="${ogImg}">`,
+  ].join('\n');
+  const headMeta = `${cleanedMeta.join('\n')}\n${ogMeta}`;
   const jsonLd = hasLd ? '' : `<script type="application/ld+json">${JSON.stringify(personLd)}</script>`;
 
   const interactivity = `
