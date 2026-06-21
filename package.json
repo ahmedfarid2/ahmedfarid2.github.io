@@ -1,0 +1,14 @@
+{
+  "name": "ahmedfarid2-portfolio",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Build pipeline that optimizes the Claude-design export into a fast, static, crawlable site.",
+  "scripts": {
+    "build": "node scripts/build.mjs"
+  },
+  "devDependencies": {
+    "html-minifier-terser": "^7.2.0",
+    "puppeteer": "^24.10.0"
+  }
+}
