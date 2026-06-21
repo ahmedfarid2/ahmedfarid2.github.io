@@ -234,6 +234,31 @@ async function build() {
       if (badge && n > 0) badge.textContent = String(n).padStart(2, '0');
     });
 
+    // ── Brand-logo resilience ───────────────────────────────────────────────
+    // The React build gave brand/trust/company logos an onError handler that
+    // fell back to a favicon/mono mark; that's lost in static output, so a
+    // broken logo would show a broken-image icon and log a console error.
+    // Restore graceful fallback, and point known-dead brand assets straight at
+    // a favicon so there's no failed request in the console at all.
+    document.querySelectorAll('img.logo-img, img.trust-mark, img.co-logo').forEach((img) => {
+      const a = img.closest('a[href]');
+      let host = '';
+      try { host = a ? new URL(a.href).hostname : ''; } catch {}
+      const fav = host ? `https://www.google.com/s2/favicons?domain=${host}&sz=128` : '';
+      const src = img.getAttribute('src') || '';
+      // Known-dead brand asset (ezhal-qtr.com root doesn't resolve) → favicon.
+      if (fav && /ezhal-qtr\.com\/argon/i.test(src)) {
+        img.setAttribute('src', fav);
+      }
+      // On any future failure: try the favicon once, then hide cleanly.
+      if (!img.getAttribute('onerror')) {
+        img.setAttribute('onerror',
+          fav
+            ? `if(this.src.indexOf('s2/favicons')<0){this.src='${fav}'}else{this.style.display='none'}`
+            : `this.style.display='none'`);
+      }
+    });
+
     // ── GitHub section: keep the custom design, fill in REAL data ────────────
     // Restores the original hand-designed card/heatmap/repo cards. The React
     // build animated the heatmap in (and set its levels) via JS that no longer
