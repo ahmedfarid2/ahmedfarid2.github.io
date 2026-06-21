@@ -106,6 +106,40 @@ async function fetchGitHub() {
   return out;
 }
 
+// Pull the original vanilla "UI/UX enhancement layer" out of the export's
+// asset bundle so the static build keeps the exact same effects as Claude
+// design (cursor ring, Personalize palette, spotlight, tilt, magnetic buttons,
+// parallax, count-up, scroll progress, intro loader, heatmap ripple, etc.).
+// Found by content signature rather than asset id, so it survives re-exports.
+async function extractEnhancementLayer() {
+  const zlib = await import('node:zlib');
+  const raw = (await import('node:fs')).readFileSync(SRC, 'utf8');
+  // The bundle is a single JSON object mapping asset-id → { mime, compressed, data(base64) }.
+  for (const line of raw.split('\n')) {
+    const s = line.trim();
+    if (s.length < 200 || s[0] !== '{') continue;
+    let obj;
+    try { obj = JSON.parse(s); } catch { continue; }
+    if (!obj || typeof obj !== 'object') continue;
+    const first = Object.values(obj)[0];
+    if (!first || typeof first !== 'object' || !('data' in first)) continue;
+    for (const asset of Object.values(obj)) {
+      const mime = asset.mime || '';
+      if (!/javascript/.test(mime)) continue;
+      let buf;
+      try {
+        buf = Buffer.from(asset.data, 'base64');
+        if (asset.compressed) buf = zlib.gunzipSync(buf);
+      } catch { continue; }
+      const text = buf.toString('utf8');
+      if (text.includes('cursorRing') && text.includes('palettePicker')) {
+        return text;
+      }
+    }
+  }
+  return null;
+}
+
 async function fallback(reason) {
   console.warn('\n⚠️  Optimized build failed — deploying raw export instead.');
   console.warn('   Reason:', reason && reason.stack ? reason.stack : reason);
@@ -146,8 +180,12 @@ async function build() {
   const ghData = await fetchGitHub();
   console.log(`  publicRepos=${ghData.publicRepos ?? 'n/a'}  followers=${ghData.followers ?? 'n/a'}  calendarDays=${ghData.calendar ? ghData.calendar.length : 'n/a'}`);
 
+  console.log('→ Extracting original UI/UX enhancement layer…');
+  const enhanceJS = await extractEnhancementLayer();
+  console.log(enhanceJS ? `  found (${(enhanceJS.length / 1024).toFixed(1)} KB) — effects preserved` : '  not found — using fallback interactivity only');
+
   console.log('→ Transforming + extracting static DOM…');
-  const result = await page.evaluate(async (ghUser, gh) => {
+  const result = await page.evaluate(async (ghUser, gh, hasEnhance) => {
     // ── Convert <image-slot> → <img> (image lives in shadow DOM otherwise) ──
     document.querySelectorAll('image-slot').forEach((slot) => {
       const src = slot.getAttribute('src') || '';
@@ -236,12 +274,13 @@ async function build() {
             return l;
           });
         }
-        cells.forEach((c, i) => {
-          c.setAttribute('data-l', String(levels[i]));
-          c.classList.remove('cell-pre');
-          c.classList.add('cell-in');
-          c.style.removeProperty('--wd');
-        });
+        cells.forEach((c, i) => c.setAttribute('data-l', String(levels[i])));
+        // If the enhancement layer is included it owns the ripple-in animation
+        // (cell-pre → cell-in on scroll). Without it, reveal the cells now so
+        // the heatmap isn't stuck hidden.
+        if (!hasEnhance) {
+          cells.forEach((c) => { c.classList.remove('cell-pre'); c.classList.add('cell-in'); c.style.removeProperty('--wd'); });
+        }
         // Drop the "· illustrative" qualifier only when the data is actually real.
         if (real) {
           document.querySelectorAll('#github .gh-heat-foot span').forEach((s) => {
@@ -295,13 +334,16 @@ async function build() {
     const bodyClass = document.body.className || '';
     const rootAttrs = {};
     for (const a of document.documentElement.attributes) rootAttrs[a.name] = a.value;
+    // Body data-* (e.g. data-grain) drives texture/theme rules — preserve them.
+    const bodyAttrs = {};
+    for (const a of document.body.attributes) if (a.name.startsWith('data-')) bodyAttrs[a.name] = a.value;
 
     return {
-      title, lang, meta, css, bodyClass, rootAttrs,
+      title, lang, meta, css, bodyClass, rootAttrs, bodyAttrs,
       body: document.getElementById('root').innerHTML,
       blobCount: blobUrls.length,
     };
-  }, GH_USER, ghData);
+  }, GH_USER, ghData, !!enhanceJS);
 
   await browser.close();
 
@@ -313,6 +355,9 @@ async function build() {
   // ── Assemble the static document ──────────────────────────────────────────
   const dataAttrs = Object.entries(result.rootAttrs)
     .filter(([k]) => k.startsWith('data-') || k === 'lang')
+    .map(([k, v]) => `${k}="${v}"`)
+    .join(' ');
+  const bodyDataAttrs = Object.entries(result.bodyAttrs || {})
     .map(([k, v]) => `${k}="${v}"`)
     .join(' ');
 
@@ -370,12 +415,13 @@ ${result.meta.join('\n')}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://assets.calendly.com/assets/external/widget.css">
-<noscript><style>.reveal{opacity:1!important;transform:none!important}</style></noscript>
+<noscript><style>.reveal,.cell-pre{opacity:1!important;transform:none!important}</style></noscript>
 <style>${result.css}</style>
 </head>
-<body class="${result.bodyClass}">
+<body class="${result.bodyClass}"${bodyDataAttrs ? ' ' + bodyDataAttrs : ''}>
 <div id="root">${result.body}</div>
 <script src="https://assets.calendly.com/assets/external/widget.js" async></script>
+${enhanceJS ? `<script>${enhanceJS}</script>` : ''}
 <script>${interactivity}</script>
 </body>
 </html>`;
