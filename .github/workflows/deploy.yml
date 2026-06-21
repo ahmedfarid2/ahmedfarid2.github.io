@@ -41,6 +41,8 @@ jobs:
 
       - name: Build static site
         run: npm run build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Pages artifact
         if: github.event_name != 'pull_request'

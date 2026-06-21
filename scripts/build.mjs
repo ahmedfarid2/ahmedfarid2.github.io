@@ -45,6 +45,67 @@ async function copyStaticAssets() {
   }
 }
 
+// Fetch real GitHub data at build time to fill the custom GitHub section.
+// REST works unauthenticated (rate-limited); the contribution calendar needs a
+// token via GraphQL — GITHUB_TOKEN is provided automatically in GitHub Actions.
+// Any failure returns nulls and the build leaves that part of the design as-is.
+async function fetchGitHub() {
+  const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || '';
+  const headers = { 'User-Agent': 'af-portfolio-build', Accept: 'application/vnd.github+json' };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const out = { publicRepos: null, followers: null, calendar: null };
+
+  try {
+    const r = await fetch(`https://api.github.com/users/${GH_USER}`, { headers });
+    if (r.ok) {
+      const j = await r.json();
+      out.publicRepos = j.public_repos;
+      out.followers = j.followers;
+    } else {
+      console.log(`  (GitHub REST returned ${r.status} — keeping placeholder counts)`);
+    }
+  } catch (e) {
+    console.log('  (GitHub REST unreachable — keeping placeholder counts)');
+  }
+
+  if (token) {
+    try {
+      const query =
+        'query($l:String!){user(login:$l){contributionsCollection{contributionCalendar{weeks{contributionDays{contributionCount}}}}}}';
+      const r = await fetch('https://api.github.com/graphql', {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, variables: { l: GH_USER } }),
+      });
+      if (r.ok) {
+        const j = await r.json();
+        const weeks = j?.data?.user?.contributionsCollection?.contributionCalendar?.weeks || [];
+        const counts = [];
+        for (const w of weeks) for (const d of w.contributionDays) counts.push(d.contributionCount);
+        if (counts.length) {
+          const max = Math.max(1, ...counts);
+          out.calendar = counts.map((c) => {
+            if (c <= 0) return 0;
+            const r2 = c / max;
+            if (r2 <= 0.25) return 1;
+            if (r2 <= 0.5) return 2;
+            if (r2 <= 0.75) return 3;
+            return 4;
+          });
+        }
+      } else {
+        console.log(`  (GitHub GraphQL returned ${r.status} — keeping placeholder heatmap)`);
+      }
+    } catch (e) {
+      console.log('  (GitHub GraphQL unreachable — keeping placeholder heatmap)');
+    }
+  } else {
+    console.log('  (no GITHUB_TOKEN — heatmap stays as-is; set in CI for real data)');
+  }
+
+  return out;
+}
+
 async function fallback(reason) {
   console.warn('\n⚠️  Optimized build failed — deploying raw export instead.');
   console.warn('   Reason:', reason && reason.stack ? reason.stack : reason);
@@ -81,8 +142,12 @@ async function build() {
   );
   await new Promise((r) => setTimeout(r, 2500));
 
+  console.log('→ Fetching real GitHub data…');
+  const ghData = await fetchGitHub();
+  console.log(`  publicRepos=${ghData.publicRepos ?? 'n/a'}  followers=${ghData.followers ?? 'n/a'}  calendarDays=${ghData.calendar ? ghData.calendar.length : 'n/a'}`);
+
   console.log('→ Transforming + extracting static DOM…');
-  const result = await page.evaluate(async (ghUser) => {
+  const result = await page.evaluate(async (ghUser, gh) => {
     // ── Convert <image-slot> → <img> (image lives in shadow DOM otherwise) ──
     document.querySelectorAll('image-slot').forEach((slot) => {
       const src = slot.getAttribute('src') || '';
@@ -131,29 +196,67 @@ async function build() {
       if (badge && n > 0) badge.textContent = String(n).padStart(2, '0');
     });
 
-    // ── Swap the "illustrative" GitHub block for live stats ─────────────────
-    const gh = document.querySelector('#github .gh');
+    // ── GitHub section: keep the custom design, fill in REAL data ────────────
+    // Restores the original hand-designed card/heatmap/repo cards. The React
+    // build animated the heatmap in (and set its levels) via JS that no longer
+    // runs in static output — the snapshot catches every cell hidden
+    // (.cell-pre) at level 0. So we always make the cells visible and assign
+    // levels: real contributions when fetched, otherwise a deterministic
+    // pattern so the grid never looks empty.
     if (gh) {
-      const card = (src, alt) =>
-        `<img src="${src}" alt="${alt}" loading="lazy" style="width:100%;max-width:495px;border-radius:14px;border:1px solid rgba(255,255,255,.08)"/>`;
-      const stats =
-        `https://github-readme-stats.vercel.app/api?username=${ghUser}` +
-        `&show_icons=true&include_all_commits=true&count_private=true&hide_border=true` +
-        `&bg_color=0B0D10&title_color=E8C39E&icon_color=E8C39E&text_color=C9D1D9`;
-      const langs =
-        `https://github-readme-stats.vercel.app/api/top-langs?username=${ghUser}` +
-        `&layout=compact&langs_count=8&hide_border=true` +
-        `&bg_color=0B0D10&title_color=E8C39E&text_color=C9D1D9`;
-      const streak =
-        `https://streak-stats.demolab.com?user=${ghUser}&hide_border=true&background=0B0D10` +
-        `&stroke=30363D&ring=E8C39E&fire=E8C39E&currStreakLabel=E8C39E&sideLabels=C9D1D9` +
-        `&currStreakNum=C9D1D9&sideNums=C9D1D9&dates=8B949E`;
-      gh.outerHTML =
-        `<div class="gh gh-live" style="display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));align-items:start">` +
-        `<a href="https://github.com/${ghUser}" target="_blank" rel="noreferrer" style="display:block">${card(stats, 'GitHub stats')}</a>` +
-        `<a href="https://github.com/${ghUser}" target="_blank" rel="noreferrer" style="display:block">${card(langs, 'Top languages')}</a>` +
-        `<a href="https://github.com/${ghUser}" target="_blank" rel="noreferrer" style="grid-column:1/-1;display:block">${card(streak, 'GitHub streak')}</a>` +
-        `</div>`;
+      // Public-repos stat (first .gh-stat value).
+      if (gh.publicRepos != null) {
+        const v = document.querySelector('#github .gh-stat .v');
+        if (v) v.textContent = String(gh.publicRepos);
+      }
+
+      const cells = [...document.querySelectorAll('#github .gh-heat .cell')];
+      if (cells.length) {
+        const real = gh.calendar && gh.calendar.length ? gh.calendar : null;
+        let levels;
+        if (real) {
+          levels = cells.map((_, i) => {
+            const idx = real.length - cells.length + i;
+            return idx >= 0 ? real[idx] : 0;
+          });
+        } else {
+          // Mirror the export's original generator so a tokenless build still
+          // shows a lively (clearly illustrative) heatmap.
+          let seed = 7;
+          const rand = () => ((seed = (seed * 9301 + 49297) % 233280), seed / 233280);
+          levels = cells.map((_, i) => {
+            const w = Math.floor(i / 7);
+            const r = rand();
+            let l = 0;
+            if (r > 0.4) l = 1;
+            if (r > 0.62) l = 2;
+            if (r > 0.82) l = 3;
+            if (r > 0.94) l = 4;
+            if (w < 3 && r < 0.7) l = Math.max(0, l - 2);
+            return l;
+          });
+        }
+        cells.forEach((c, i) => {
+          c.setAttribute('data-l', String(levels[i]));
+          c.classList.remove('cell-pre');
+          c.classList.add('cell-in');
+          c.style.removeProperty('--wd');
+        });
+        // Drop the "· illustrative" qualifier only when the data is actually real.
+        if (real) {
+          document.querySelectorAll('#github .gh-heat-foot span').forEach((s) => {
+            if (/illustrative/i.test(s.textContent)) {
+              s.textContent = s.textContent.replace(/\s*[·.|-]?\s*illustrative/i, '').trim() || 'Contribution activity';
+            }
+          });
+        }
+      }
+
+      // The repo cards are real repos with real descriptions — drop the
+      // "illustrative" metadata disclaimer.
+      document.querySelectorAll('#github .fineprint').forEach((el) => {
+        if (/illustrative/i.test(el.textContent)) el.remove();
+      });
     }
 
     // ── Re-embed blob: fonts (and any blob assets) as data: URLs ────────────
@@ -198,7 +301,7 @@ async function build() {
       body: document.getElementById('root').innerHTML,
       blobCount: blobUrls.length,
     };
-  }, GH_USER);
+  }, GH_USER, ghData);
 
   await browser.close();
 
