@@ -28,6 +28,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = path.join(ROOT, 'index.html');
 const DIST = path.join(ROOT, 'dist');
 const GH_USER = 'ahmedfarid2';
+const SITE_URL = 'https://ahmedfarid2.github.io';
 
 // Static-asset files (anything that isn't the source HTML or repo plumbing)
 // that should be copied verbatim into dist/, e.g. the CV PDF.
@@ -140,6 +141,82 @@ async function extractEnhancementLayer() {
   return null;
 }
 
+// sitemap.xml + robots.txt + a styled 404.html. No browser needed, so this
+// runs in both the optimized build and the raw-export fallback.
+async function writeSeoFiles() {
+  const today = new Date().toISOString().slice(0, 10);
+  await writeFile(path.join(DIST, 'sitemap.xml'),
+    `<?xml version="1.0" encoding="UTF-8"?>\n` +
+    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+    `  <url><loc>${SITE_URL}/</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>1.0</priority></url>\n` +
+    `</urlset>\n`, 'utf8');
+
+  await writeFile(path.join(DIST, 'robots.txt'),
+    `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\n`, 'utf8');
+
+  await writeFile(path.join(DIST, '404.html'),
+    `<!doctype html><html lang="en"><head><meta charset="utf-8">\n` +
+    `<meta name="viewport" content="width=device-width, initial-scale=1">\n` +
+    `<title>404 — Ahmed Farid</title><meta name="robots" content="noindex">\n` +
+    `<style>:root{color-scheme:dark}*{margin:0;box-sizing:border-box}` +
+    `body{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;` +
+    `gap:18px;text-align:center;padding:24px;background:#0B0D10;color:#F4F1EA;` +
+    `font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;position:relative;overflow:hidden}` +
+    `body::before{content:"";position:absolute;top:-30%;left:50%;transform:translateX(-50%);width:700px;height:700px;` +
+    `border-radius:50%;background:radial-gradient(circle,rgba(230,200,160,.14),transparent 60%);pointer-events:none}` +
+    `.code{font-family:Georgia,serif;font-size:clamp(72px,18vw,160px);line-height:1;letter-spacing:-.03em;position:relative}` +
+    `.code em{font-style:italic;color:#E6C8A0}` +
+    `h1{font-size:clamp(20px,4vw,28px);font-weight:500;letter-spacing:-.01em}` +
+    `p{color:#a8a297;max-width:440px;line-height:1.5}` +
+    `a{margin-top:8px;display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:99px;` +
+    `border:1px solid rgba(255,255,255,.18);color:#0B0D10;background:#E6C8A0;text-decoration:none;font-weight:600;` +
+    `position:relative;transition:transform .2s}a:hover{transform:translateY(-2px)}</style></head>` +
+    `<body><div class="code">4<em>0</em>4</div>` +
+    `<h1>This page wandered off.</h1>` +
+    `<p>The link may be broken or the page may have moved.</p>` +
+    `<a href="/">← Back to Ahmed Farid's portfolio</a></body></html>\n`, 'utf8');
+
+  console.log('  wrote sitemap.xml, robots.txt, 404.html');
+}
+
+// Generate a real 1200×630 Open Graph card (branded, on-theme) so LinkedIn /
+// Twitter / Slack previews show a proper landscape image instead of the square
+// avatar. Rendered with the same headless browser.
+async function generateOgImage(browser) {
+  const card = `<!doctype html><html><head><meta charset="utf-8"><style>
+    *{margin:0;box-sizing:border-box}html,body{width:1200px;height:630px}
+    body{background:#0B0D10;color:#F4F1EA;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:center;padding:92px 90px}
+    .grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:46px 46px;
+      -webkit-mask-image:linear-gradient(180deg,#000,transparent 75%)}
+    .glow{position:absolute;top:-220px;right:-160px;width:760px;height:760px;border-radius:50%;
+      background:radial-gradient(circle,rgba(230,200,160,.20),transparent 60%)}
+    .eyebrow{font-size:21px;letter-spacing:.26em;text-transform:uppercase;color:#9a948a;margin-bottom:30px;position:relative}
+    .dot{display:inline-block;width:11px;height:11px;border-radius:50%;background:#E6C8A0;margin-right:14px;vertical-align:middle}
+    h1{font-family:Georgia,'Times New Roman',serif;font-size:100px;line-height:1.03;letter-spacing:-.02em;font-weight:600;position:relative}
+    h1 em{font-style:italic;color:#E6C8A0}
+    .sub{margin-top:32px;font-size:28px;color:#c9c3b8;max-width:940px;line-height:1.45;position:relative}
+    .foot{position:absolute;left:90px;bottom:64px;font-size:22px;color:#8b857b;letter-spacing:.02em}
+    .foot b{color:#F4F1EA;font-weight:600}
+    .tags{position:absolute;right:90px;bottom:64px;font-size:19px;color:#8b857b;letter-spacing:.05em}
+  </style></head><body>
+    <div class="grid"></div><div class="glow"></div>
+    <div class="eyebrow"><span class="dot"></span>Senior Software Engineer · Cairo · Open to relocation</div>
+    <h1>I build the systems<br>other teams <em>depend on.</em></h1>
+    <div class="sub">Multi-tenant SaaS · real-time platforms · AI tools · mobile apps shipped across the Gulf, US &amp; UK.</div>
+    <div class="foot"><b>Ahmed Farid</b> &nbsp;·&nbsp; ahmedfarid2.github.io</div>
+    <div class="tags">Laravel · Next.js · FastAPI · Flutter</div>
+  </body></html>`;
+  const p = await browser.newPage();
+  await p.setViewport({ width: 1200, height: 630, deviceScaleFactor: 1 });
+  await p.setContent(card, { waitUntil: 'load', timeout: 30000 });
+  await new Promise((r) => setTimeout(r, 300));
+  await p.screenshot({ path: path.join(DIST, 'og.png'), type: 'png' });
+  await p.close();
+  console.log('  generated og.png (1200×630)');
+}
+
 async function fallback(reason) {
   console.warn('\n⚠️  Optimized build failed — deploying raw export instead.');
   console.warn('   Reason:', reason && reason.stack ? reason.stack : reason);
@@ -147,6 +224,7 @@ async function fallback(reason) {
   await mkdir(DIST, { recursive: true });
   await copyFile(SRC, path.join(DIST, 'index.html'));
   await copyStaticAssets();
+  await writeSeoFiles();
   console.log('✓ Raw export copied to dist/ (site stays functional, unoptimized).');
 }
 
@@ -353,6 +431,9 @@ async function build() {
       ...pick('meta[property^="og:"]'),
       ...pick('meta[name^="twitter:"]'),
       ...pick('link[rel="icon"]'),
+      ...pick('link[rel="canonical"]'),
+      ...pick('link[rel="apple-touch-icon"]'),
+      ...pick('script[type="application/ld+json"]'),
     ];
     const title = document.title;
     const lang = document.documentElement.getAttribute('lang') || 'en';
@@ -370,6 +451,9 @@ async function build() {
     };
   }, GH_USER, ghData, !!enhanceJS);
 
+  console.log('→ Generating Open Graph card…');
+  try { await generateOgImage(browser); } catch (e) { console.log('  (og.png generation skipped:', e.message + ')'); }
+
   await browser.close();
 
   if (pageErrors.length) {
@@ -385,6 +469,21 @@ async function build() {
   const bodyDataAttrs = Object.entries(result.bodyAttrs || {})
     .map(([k, v]) => `${k}="${v}"`)
     .join(' ');
+
+  // Point og:image / twitter:image at the generated 1200×630 card (drop the
+  // square-avatar one from the export) and ensure og:url is present.
+  const ogImg = `${SITE_URL}/og.png`;
+  const cleanedMeta = result.meta.filter((m) => !/og:image|twitter:image|og:url/i.test(m));
+  const ogMeta = [
+    `<meta property="og:url" content="${SITE_URL}/">`,
+    `<meta property="og:image" content="${ogImg}">`,
+    `<meta property="og:image:width" content="1200">`,
+    `<meta property="og:image:height" content="630">`,
+    `<meta property="og:image:type" content="image/png">`,
+    `<meta property="og:image:alt" content="Ahmed Farid — Senior Software Engineer">`,
+    `<meta name="twitter:image" content="${ogImg}">`,
+  ].join('\n');
+  const headMeta = `${cleanedMeta.join('\n')}\n${ogMeta}`;
 
   const interactivity = `
 // Minimal vanilla interactivity — replaces the React runtime for the few
@@ -436,7 +535,7 @@ async function build() {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${result.title}</title>
-${result.meta.join('\n')}
+${headMeta}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://assets.calendly.com/assets/external/widget.css">
@@ -500,6 +599,7 @@ ${enhanceJS ? `<script>${enhanceJS}</script>` : ''}
 
   await writeFile(path.join(DIST, 'index.html'), out, 'utf8');
   await copyStaticAssets();
+  await writeSeoFiles();
 
   const before = (await import('node:fs')).statSync(SRC).size;
   const after = Buffer.byteLength(out);
