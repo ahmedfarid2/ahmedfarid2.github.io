@@ -595,6 +595,15 @@ ${headMeta}
 <noscript><style>.reveal,.cell-pre{opacity:1!important;transform:none!important}</style></noscript>
 ${jsonLd}
 <style>${result.css}</style>
+<style>
+/* Build fix: the Personalize widget's closed popup keeps its layout space
+   (opacity:0, not display:none), so the container's box was intercepting
+   clicks/hover over the bottom-left — buttons there only worked after
+   scrolling them out of that zone. Make the container click-through except
+   its toggle and the open panel. */
+.palette{pointer-events:none}
+.palette-toggle,.palette.open .palette-pop{pointer-events:auto}
+</style>
 </head>
 <body class="${result.bodyClass}"${bodyDataAttrs ? ' ' + bodyDataAttrs : ''}>
 <div id="root">${result.body}</div>
