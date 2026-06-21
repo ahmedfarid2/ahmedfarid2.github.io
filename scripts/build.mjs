@@ -557,6 +557,15 @@ async function build() {
       item.setAttribute('data-open',String(!isOpen));
     });
   });
+  // Case-study "Read the case study" deep-dive expanders.
+  document.querySelectorAll('.deepdive-toggle').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var dd=btn.closest('.deepdive');
+      if(!dd) return;
+      var open=dd.classList.toggle('open');
+      btn.setAttribute('aria-expanded',String(open));
+    });
+  });
   // Scroll-reveal: animate in on view; show immediately if IO is unavailable.
   var reveals=document.querySelectorAll('.reveal');
   if('IntersectionObserver' in window){
