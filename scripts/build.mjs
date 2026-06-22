@@ -30,6 +30,34 @@ const DIST = path.join(ROOT, 'dist');
 const GH_USER = 'ahmedfarid2';
 const SITE_URL = 'https://ahmedfarid2.github.io';
 
+// ── Locale discovery (by convention) ────────────────────────────────────────
+// English lives in the root export `index.html` and builds to dist/ root.
+// Any sibling matching `index.<code>.html` (two-letter ISO code) is a
+// translation and builds to dist/<code>/index.html. Direction is RTL for
+// Arabic, LTR otherwise. This is purely file-name driven, so adding a new
+// language is "drop in index.fr.html, rebuild" — zero pipeline edits.
+async function discoverLocales() {
+  const entries = await readdir(ROOT, { withFileTypes: true });
+  const locales = [];
+  for (const e of entries) {
+    if (!e.isFile()) continue;
+    const m = /^index\.([a-z]{2})\.html$/.exec(e.name);
+    if (!m) continue;
+    const code = m[1];
+    locales.push({
+      lang: code,
+      dir: code === 'ar' ? 'rtl' : 'ltr',
+      urlPath: `/${code}/`,
+      src: path.join(ROOT, e.name),
+      outDir: path.join(DIST, code),
+    });
+  }
+  // English is always first / the default.
+  locales.unshift({ lang: 'en', dir: 'ltr', urlPath: '/', src: SRC, outDir: DIST });
+  // Stable, deterministic order: English then the rest alphabetically.
+  return [locales[0], ...locales.slice(1).sort((a, b) => a.lang.localeCompare(b.lang))];
+}
+
 // Static-asset files (anything that isn't the source HTML or repo plumbing)
 // that should be copied verbatim into dist/, e.g. the CV PDF.
 async function copyStaticAssets() {
@@ -38,6 +66,7 @@ async function copyStaticAssets() {
     if (!e.isFile()) continue;
     const name = e.name;
     if (name === 'index.html') continue;
+    if (/^index\.[a-z]{2}\.html$/.test(name)) continue; // locale source exports
     if (name.startsWith('.')) continue;
     if (/\.(md)$/i.test(name)) continue;
     if (name === 'package.json' || name === 'package-lock.json') continue;
@@ -143,12 +172,17 @@ async function extractEnhancementLayer() {
 
 // sitemap.xml + robots.txt + a styled 404.html. No browser needed, so this
 // runs in both the optimized build and the raw-export fallback.
-async function writeSeoFiles() {
+async function writeSeoFiles(locales = [{ urlPath: '/' }]) {
   const today = new Date().toISOString().slice(0, 10);
+  const urls = locales
+    .map((l, i) =>
+      `  <url><loc>${SITE_URL}${l.urlPath}</loc><lastmod>${today}</lastmod>` +
+      `<changefreq>monthly</changefreq><priority>${i === 0 ? '1.0' : '0.9'}</priority></url>`)
+    .join('\n');
   await writeFile(path.join(DIST, 'sitemap.xml'),
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
     `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
-    `  <url><loc>${SITE_URL}/</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>1.0</priority></url>\n` +
+    `${urls}\n` +
     `</urlset>\n`, 'utf8');
 
   await writeFile(path.join(DIST, 'robots.txt'),
@@ -228,24 +262,28 @@ async function fallback(reason) {
   console.log('✓ Raw export copied to dist/ (site stays functional, unoptimized).');
 }
 
-async function build() {
-  const puppeteer = (await import('puppeteer')).default;
+// Build a single locale page end-to-end: render its source export, run the
+// in-page transforms, assemble a clean head/body, externalize data: URLs into
+// the SHARED dist/assets/ folder (root-absolute /assets/ refs), minify, and
+// write to outDir/index.html. Returns per-page stats. Everything that is
+// one-time work (og.png, GitHub fetch, enhancement-layer extraction,
+// sitemap/robots/404, copying static assets) is done by the orchestrator and
+// passed in — buildPage is called once per locale.
+async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enhanceJS, assetSeen }) {
+  const isRoot = outDir === DIST;
+  const urlPath = (locales.find((l) => l.lang === lang) || {}).urlPath || '/';
+  const multi = locales.length > 1;
 
-  await rm(DIST, { recursive: true, force: true });
-  await mkdir(DIST, { recursive: true });
+  await mkdir(outDir, { recursive: true });
 
-  const browser = await puppeteer.launch({
-    headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--ignore-certificate-errors'],
-  });
   const page = await browser.newPage();
   await page.setViewport({ width: 1440, height: 1200, deviceScaleFactor: 2 });
 
   const pageErrors = [];
   page.on('pageerror', (e) => pageErrors.push(String(e)));
 
-  console.log('→ Rendering export in headless Chromium…');
-  await page.goto(pathToFileURL(SRC).href, { waitUntil: 'load', timeout: 90000 });
+  console.log(`→ [${lang}] Rendering export in headless Chromium…`);
+  await page.goto(pathToFileURL(src).href, { waitUntil: 'load', timeout: 90000 });
   // Wait for React to mount the app and for image-slots to settle.
   await page.waitForSelector('#root > *', { timeout: 60000 });
   await page.waitForFunction(
@@ -254,25 +292,7 @@ async function build() {
   );
   await new Promise((r) => setTimeout(r, 2500));
 
-  console.log('→ Fetching real GitHub data…');
-  const ghData = await fetchGitHub();
-  console.log(`  publicRepos=${ghData.publicRepos ?? 'n/a'}  followers=${ghData.followers ?? 'n/a'}  calendarDays=${ghData.calendar ? ghData.calendar.length : 'n/a'}`);
-
-  console.log('→ Extracting original UI/UX enhancement layer…');
-  let enhanceJS = await extractEnhancementLayer();
-  console.log(enhanceJS ? `  found (${(enhanceJS.length / 1024).toFixed(1)} KB) — effects preserved` : '  not found — using fallback interactivity only');
-
-  // Default theme = dark for everyone on first visit (the export follows the
-  // OS prefers-color-scheme). Returning visitors' saved choice is respected
-  // (the localStorage check runs first). No-op if the pattern isn't found.
-  if (enhanceJS) {
-    enhanceJS = enhanceJS.replace(
-      /window\.matchMedia\(\s*(["'])\(prefers-color-scheme:\s*light\)\1\s*\)\.matches\s*\?\s*(["'])light\2\s*:\s*(["'])dark\3/g,
-      '"dark"'
-    );
-  }
-
-  console.log('→ Transforming + extracting static DOM…');
+  console.log(`→ [${lang}] Transforming + extracting static DOM…`);
   const result = await page.evaluate(async (ghUser, gh, hasEnhance) => {
     // ── Convert <image-slot> → <img> (image lives in shadow DOM otherwise) ──
     document.querySelectorAll('image-slot').forEach((slot) => {
@@ -461,25 +481,28 @@ async function build() {
     };
   }, GH_USER, ghData, !!enhanceJS);
 
-  console.log('→ Generating Open Graph card…');
-  try { await generateOgImage(browser); } catch (e) { console.log('  (og.png generation skipped:', e.message + ')'); }
-
-  await browser.close();
+  await page.close();
 
   if (pageErrors.length) {
-    console.log(`  (${pageErrors.length} non-fatal page errors during render — expected for blocked external assets)`);
+    console.log(`  [${lang}] (${pageErrors.length} non-fatal page errors during render — expected for blocked external assets)`);
   }
-  console.log(`  re-embedded ${result.blobCount} blob asset(s) as data: URLs`);
+  console.log(`  [${lang}] re-embedded ${result.blobCount} blob asset(s) as data: URLs`);
 
   // ── Assemble the static document ──────────────────────────────────────────
-  // Bake dark as the default theme into the initial markup (the headless
-  // snapshot captures whatever prefers-color-scheme the render reported, which
-  // is light). The client JS still honors a returning visitor's saved choice.
+  // Force this locale's lang (and RTL direction for Arabic) onto <html> while
+  // preserving the export's other root attributes (notably data-theme="dark"
+  // and any other captured data-*). lang/dir are set explicitly below, so we
+  // drop any captured lang/dir to avoid duplicates.
+  // Force dark as the default theme (the headless snapshot captures light from
+  // prefers-color-scheme). Client JS still honors a returning visitor's choice.
   if (result.rootAttrs['data-theme']) result.rootAttrs['data-theme'] = 'dark';
   const dataAttrs = Object.entries(result.rootAttrs)
-    .filter(([k]) => k.startsWith('data-') || k === 'lang')
+    .filter(([k]) => (k.startsWith('data-') || k === 'lang' || k === 'dir'))
+    .filter(([k]) => k !== 'lang' && k !== 'dir')
     .map(([k, v]) => `${k}="${v}"`)
     .join(' ');
+  const langDirAttrs = `lang="${lang}"${dir === 'rtl' ? ' dir="rtl"' : ''}`;
+  const htmlAttrs = [langDirAttrs, dataAttrs].filter(Boolean).join(' ');
   const bodyDataAttrs = Object.entries(result.bodyAttrs || {})
     .map(([k, v]) => `${k}="${v}"`)
     .join(' ');
@@ -527,12 +550,18 @@ async function build() {
     return m;
   });
 
+  const pageUrl = `${SITE_URL}${urlPath}`;
+
   // Point og:image / twitter:image at the generated card (drop the export's
-  // square-avatar one) and ensure og:url is present.
+  // square-avatar one), set og:url to THIS locale's URL, and override the
+  // export's canonical with this locale's canonical.
   const hasLd = result.meta.some((m) => /ld\+json/i.test(m));
-  const cleanedMeta = result.meta.filter((m) => !/og:image|twitter:image|og:url/i.test(m));
+  const cleanedMeta = result.meta.filter(
+    (m) => !/og:image|twitter:image|og:url/i.test(m) && !/rel=["']?canonical/i.test(m)
+  );
   const ogMeta = [
-    `<meta property="og:url" content="${SITE_URL}/">`,
+    `<link rel="canonical" href="${pageUrl}">`,
+    `<meta property="og:url" content="${pageUrl}">`,
     `<meta property="og:image" content="${ogImg}">`,
     `<meta property="og:image:width" content="1200">`,
     `<meta property="og:image:height" content="630">`,
@@ -540,8 +569,42 @@ async function build() {
     `<meta property="og:image:alt" content="Ahmed Farid — Senior Software Engineer">`,
     `<meta name="twitter:image" content="${ogImg}">`,
   ].join('\n');
-  const headMeta = `${cleanedMeta.join('\n')}\n${ogMeta}`;
+
+  // hreflang alternates — only meaningful when more than one locale exists.
+  // Lists every locale plus x-default → English root.
+  const hreflang = multi
+    ? locales
+        .map((l) => `<link rel="alternate" hreflang="${l.lang}" href="${SITE_URL}${l.urlPath}">`)
+        .concat(`<link rel="alternate" hreflang="x-default" href="${SITE_URL}/">`)
+        .join('\n')
+    : '';
+
+  const headMeta = `${cleanedMeta.join('\n')}\n${ogMeta}${hreflang ? '\n' + hreflang : ''}`;
   const jsonLd = hasLd ? '' : `<script type="application/ld+json">${JSON.stringify(personLd)}</script>`;
+
+  // ── Language switcher (only when multiple locales exist) ──────────────────
+  // Minimal, on-theme: mono font, accent color, fixed top-right, sits below the
+  // nav (z-index < nav). When only English exists this is empty → no visual
+  // change vs today.
+  const langName = { en: 'EN', es: 'ES', fr: 'FR', ar: 'AR', de: 'DE', pt: 'PT', it: 'IT' };
+  const switcherCss = multi ? `
+.lang-switch{position:fixed;top:14px;right:16px;z-index:40;display:flex;gap:2px;align-items:center;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:11px;letter-spacing:.08em;
+  padding:4px 6px;border-radius:99px;background:rgba(11,13,16,.55);backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.12)}
+.lang-switch a{color:#a8a297;text-decoration:none;padding:3px 7px;border-radius:99px;transition:color .15s,background .15s}
+.lang-switch a:hover{color:#F4F1EA}
+.lang-switch a[aria-current="true"]{color:#0B0D10;background:#E6C8A0;font-weight:600}
+[dir="rtl"] .lang-switch{right:auto;left:16px}` : '';
+  const switcher = multi
+    ? `<nav class="lang-switch" aria-label="Language">` +
+      locales
+        .map((l) =>
+          `<a href="${l.urlPath}"${l.lang === lang ? ' aria-current="true"' : ''}>` +
+          `${langName[l.lang] || l.lang.toUpperCase()}</a>`)
+        .join('') +
+      `</nav>`
+    : '';
 
   const interactivity = `
 // Minimal vanilla interactivity — replaces the React runtime for the few
@@ -597,7 +660,7 @@ async function build() {
 })();`.trim();
 
   const html = `<!doctype html>
-<html ${dataAttrs}>
+<html ${htmlAttrs}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -616,10 +679,11 @@ ${jsonLd}
    scrolling them out of that zone. Make the container click-through except
    its toggle and the open panel. */
 .palette{pointer-events:none}
-.palette-toggle,.palette.open .palette-pop{pointer-events:auto}
+.palette-toggle,.palette.open .palette-pop{pointer-events:auto}${switcherCss}
 </style>
 </head>
 <body class="${result.bodyClass}"${bodyDataAttrs ? ' ' + bodyDataAttrs : ''}>
+${switcher}
 <div id="root">${result.body}</div>
 <script src="https://assets.calendly.com/assets/external/widget.js" async></script>
 ${enhanceJS ? `<script>${enhanceJS}</script>` : ''}
@@ -628,8 +692,10 @@ ${enhanceJS ? `<script>${enhanceJS}</script>` : ''}
 </html>`;
 
   // ── Externalize large data: URLs (fonts + images) into cacheable files ────
-  // Keeps the HTML small/fast to parse and lets images lazy-load and cache,
-  // instead of shipping ~megabytes of base64 inline. Tiny assets stay inline.
+  // Assets live in the SHARED dist/assets/ folder and are referenced
+  // ROOT-ABSOLUTE as /assets/<hash>.<ext> so sub-locale pages (served from
+  // /<code>/) resolve them too. The assetSeen map is shared across locales so
+  // identical (content-hashed) assets are written once and deduped.
   const { createHash } = await import('node:crypto');
   const EXT = { 'image/jpeg': 'jpg', 'image/jpg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif', 'image/svg+xml': 'svg', 'font/woff2': 'woff2', 'font/woff': 'woff', 'application/font-woff2': 'woff2' };
   const INLINE_LIMIT = 2048; // bytes of decoded data — below this, leave inline
@@ -637,7 +703,6 @@ ${enhanceJS ? `<script>${enhanceJS}</script>` : ''}
   let assetCount = 0, assetBytes = 0;
   let externalized = html;
   const dataUrlRe = /data:([a-z0-9.+-]+\/[a-z0-9.+-]+);base64,([A-Za-z0-9+/=]+)/gi;
-  const seen = new Map();
   const matches = [...new Set(externalized.match(dataUrlRe) || [])];
   for (const full of matches) {
     const m = /^data:([^;]+);base64,(.*)$/s.exec(full);
@@ -647,17 +712,30 @@ ${enhanceJS ? `<script>${enhanceJS}</script>` : ''}
     if (!ext) continue;
     const buf = Buffer.from(m[2], 'base64');
     if (buf.length < INLINE_LIMIT) continue;
-    let file = seen.get(full);
+    let file = assetSeen.get(full);
     if (!file) {
       const hash = createHash('sha1').update(buf).digest('hex').slice(0, 12);
-      file = `assets/${hash}.${ext}`;
-      await writeFile(path.join(DIST, file), buf);
-      seen.set(full, file);
-      assetCount++; assetBytes += buf.length;
+      file = `/assets/${hash}.${ext}`; // root-absolute
+      if (!existsSync(path.join(DIST, file.slice(1)))) {
+        await writeFile(path.join(DIST, file.slice(1)), buf);
+        assetCount++; assetBytes += buf.length;
+      }
+      assetSeen.set(full, file);
     }
     externalized = externalized.split(full).join(file);
   }
-  console.log(`  externalized ${assetCount} asset(s) (${(assetBytes / 1e6).toFixed(2)} MB) to dist/assets/`);
+  console.log(`  [${lang}] externalized ${assetCount} new asset(s) (${(assetBytes / 1e6).toFixed(2)} MB) to dist/assets/`);
+
+  // ── Rewrite root-relative resource links that would break under /<code>/ ──
+  // The CV PDF is referenced relatively (href="Ahmed-Farid-CV.pdf"); under a
+  // sub-locale path that resolves to /<code>/Ahmed-Farid-CV.pdf which 404s.
+  // Make it root-absolute. Resolves identically for the root English page, so
+  // English stays functionally identical. In-page anchors (#work), data: and
+  // absolute (http/https//, /...) URLs are left untouched.
+  externalized = externalized.replace(
+    /(href|src)=("|')(?!https?:|\/\/|\/|#|data:|mailto:|tel:)(Ahmed-Farid-CV\.pdf)\2/gi,
+    (_, attr, q, file) => `${attr}=${q}/${file}${q}`
+  );
 
   // ── Minify (best-effort; skip if minifier unavailable) ────────────────────
   let out = externalized;
@@ -674,36 +752,98 @@ ${enhanceJS ? `<script>${enhanceJS}</script>` : ''}
     console.log('  (html-minifier-terser not present — writing unminified)');
   }
 
-  await writeFile(path.join(DIST, 'index.html'), out, 'utf8');
-  await copyStaticAssets();
-  await writeSeoFiles();
+  await writeFile(path.join(outDir, 'index.html'), out, 'utf8');
 
-  const before = (await import('node:fs')).statSync(SRC).size;
+  const before = (await import('node:fs')).statSync(src).size;
   const after = Buffer.byteLength(out);
-  console.log(`\n✓ Built dist/index.html`);
-  console.log(`  source export: ${(before / 1e6).toFixed(2)} MB  →  static HTML: ${(after / 1e6).toFixed(3)} MB (+ assets, lazy/cacheable)`);
-  console.log(`  removed: React, ReactDOM, Babel-standalone, editor scaffolding`);
+  console.log(`✓ [${lang}] Built ${path.relative(ROOT, path.join(outDir, 'index.html'))}`);
+  console.log(`  source export: ${(before / 1e6).toFixed(2)} MB  →  static HTML: ${(after / 1e6).toFixed(3)} MB (+ shared assets, lazy/cacheable)`);
 
-  // ── Verify the built page actually renders ────────────────────────────────
+  return { lang, urlPath, htmlPath: path.join(outDir, 'index.html'), pageErrors: pageErrors.length };
+}
+
+async function build() {
+  const puppeteer = (await import('puppeteer')).default;
+
+  const locales = await discoverLocales();
+  console.log(`→ Locales discovered: ${locales.map((l) => `${l.lang}${l.dir === 'rtl' ? '(rtl)' : ''} → ${l.urlPath}`).join(', ')}`);
+
+  await rm(DIST, { recursive: true, force: true });
+  await mkdir(DIST, { recursive: true });
+
+  const browser = await puppeteer.launch({
+    headless: 'new',
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--ignore-certificate-errors'],
+  });
+
+  // ── One-time shared work (run once, not per locale) ───────────────────────
+  console.log('→ Fetching real GitHub data…');
+  const ghData = await fetchGitHub();
+  console.log(`  publicRepos=${ghData.publicRepos ?? 'n/a'}  followers=${ghData.followers ?? 'n/a'}  calendarDays=${ghData.calendar ? ghData.calendar.length : 'n/a'}`);
+
+  console.log('→ Extracting original UI/UX enhancement layer…');
+  let enhanceJS = await extractEnhancementLayer();
+  console.log(enhanceJS ? `  found (${(enhanceJS.length / 1024).toFixed(1)} KB) — effects preserved` : '  not found — using fallback interactivity only');
+  // Default theme = dark for everyone on first visit (export follows OS
+  // prefers-color-scheme). Returning visitors' saved choice still wins.
+  if (enhanceJS) {
+    enhanceJS = enhanceJS.replace(
+      /window\.matchMedia\(\s*(["'])\(prefers-color-scheme:\s*light\)\1\s*\)\.matches\s*\?\s*(["'])light\2\s*:\s*(["'])dark\3/g,
+      '"dark"'
+    );
+  }
+
+  console.log('→ Generating Open Graph card…');
+  try { await generateOgImage(browser); } catch (e) { console.log('  (og.png generation skipped:', e.message + ')'); }
+
+  // ── Per-locale pages (shared assets folder, deduped via assetSeen) ────────
+  const assetSeen = new Map();
+  for (const loc of locales) {
+    await buildPage({
+      browser,
+      src: loc.src,
+      outDir: loc.outDir,
+      lang: loc.lang,
+      dir: loc.dir,
+      locales,
+      ghData,
+      enhanceJS,
+      assetSeen,
+    });
+  }
+
+  await browser.close();
+
+  // ── One-time SEO + static assets ──────────────────────────────────────────
+  await copyStaticAssets();
+  await writeSeoFiles(locales);
+
+  // ── Verify each built page actually renders ───────────────────────────────
   console.log('→ Verifying built output…');
   const vb = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox', '--disable-setuid-sandbox', '--ignore-certificate-errors'] });
-  const vp = await vb.newPage();
-  const vErrors = [];
-  vp.on('pageerror', (e) => vErrors.push(String(e)));
-  await vp.goto(pathToFileURL(path.join(DIST, 'index.html')).href, { waitUntil: 'load', timeout: 60000 });
-  const check = await vp.evaluate(() => ({
-    text: (document.body.innerText || '').length,
-    sections: document.querySelectorAll('section[id]').length,
-    imgs: document.querySelectorAll('img').length,
-    hasReact: typeof window.React !== 'undefined',
-    faq: document.querySelectorAll('.faq-item').length,
-  }));
-  await vb.close();
-  if (check.text < 5000 || check.sections < 8) {
-    throw new Error(`Verification failed: text=${check.text} sections=${check.sections}`);
+  for (const loc of locales) {
+    const vp = await vb.newPage();
+    const vErrors = [];
+    vp.on('pageerror', (e) => vErrors.push(String(e)));
+    await vp.goto(pathToFileURL(path.join(loc.outDir, 'index.html')).href, { waitUntil: 'load', timeout: 60000 });
+    const check = await vp.evaluate(() => ({
+      text: (document.body.innerText || '').length,
+      sections: document.querySelectorAll('section[id]').length,
+      imgs: document.querySelectorAll('img').length,
+      hasReact: typeof window.React !== 'undefined',
+      faq: document.querySelectorAll('.faq-item').length,
+    }));
+    await vp.close();
+    if (check.text < 5000 || check.sections < 8) {
+      await vb.close();
+      throw new Error(`[${loc.lang}] Verification failed: text=${check.text} sections=${check.sections}`);
+    }
+    console.log(`  ✓ [${loc.lang}] renders: ${check.text} chars, ${check.sections} sections, ${check.imgs} images, ${check.faq} FAQ items, React shipped=${check.hasReact}`);
+    if (vErrors.length) console.log(`    ([${loc.lang}] ${vErrors.length} non-fatal errors — expected for blocked external assets in CI)`);
   }
-  console.log(`  ✓ renders: ${check.text} chars of text, ${check.sections} sections, ${check.imgs} images, ${check.faq} FAQ items, React shipped=${check.hasReact}`);
-  if (vErrors.length) console.log(`  (${vErrors.length} non-fatal errors — expected for blocked external assets in CI)`);
+  await vb.close();
+
+  console.log(`\n✓ Built ${locales.length} locale page(s); removed React/ReactDOM/Babel-standalone/editor scaffolding.`);
 }
 
 try {
