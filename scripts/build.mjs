@@ -293,7 +293,7 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
   await new Promise((r) => setTimeout(r, 2500));
 
   console.log(`→ [${lang}] Transforming + extracting static DOM…`);
-  const result = await page.evaluate(async (ghUser, gh, hasEnhance) => {
+  const result = await page.evaluate(async (ghUser, gh, hasEnhance, localeCodes) => {
     // ── Convert <image-slot> → <img> (image lives in shadow DOM otherwise) ──
     document.querySelectorAll('image-slot').forEach((slot) => {
       const src = slot.getAttribute('src') || '';
@@ -474,12 +474,29 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
     const bodyAttrs = {};
     for (const a of document.body.attributes) if (a.name.startsWith('data-')) bodyAttrs[a.name] = a.value;
 
+    // The export may ship its OWN language switcher (e.g. `.locale`). Keep only
+    // the first instance (Claude design has rendered it more than once), and
+    // rewrite its source-filename links (index.html / index.<code>.html) to the
+    // deployed URLs (/ and /<code>/). hasOwnSwitcher tells the assembler not to
+    // inject a second switcher.
+    const ownSwitchers = [...document.querySelectorAll('.locale, .lang-switcher, [data-locale-switcher]')];
+    const hasOwnSwitcher = ownSwitchers.length > 0;
+    ownSwitchers.slice(1).forEach((el) => el.remove());
+    document.querySelectorAll('a[href]').forEach((a) => {
+      const bare = (a.getAttribute('href') || '').replace(/^\.?\//, '');
+      if (bare === 'index.html') a.setAttribute('href', '/');
+      else {
+        const m = /^index\.([a-z]{2})\.html$/.exec(bare);
+        if (m && localeCodes.includes(m[1])) a.setAttribute('href', `/${m[1]}/`);
+      }
+    });
+
     return {
-      title, lang, meta, css, bodyClass, rootAttrs, bodyAttrs,
+      title, lang, meta, css, bodyClass, rootAttrs, bodyAttrs, hasOwnSwitcher,
       body: document.getElementById('root').innerHTML,
       blobCount: blobUrls.length,
     };
-  }, GH_USER, ghData, !!enhanceJS);
+  }, GH_USER, ghData, !!enhanceJS, locales.map((l) => l.lang));
 
   await page.close();
 
@@ -587,8 +604,15 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
   // nav (z-index < nav). When only English exists this is empty → no visual
   // change vs today.
   const langName = { en: 'EN', es: 'ES', fr: 'FR', ar: 'AR', de: 'DE', pt: 'PT', it: 'IT' };
-  const switcherCss = multi ? `
-.lang-switch{position:fixed;top:14px;right:16px;z-index:40;display:flex;gap:2px;align-items:center;
+  // Use our own static switcher whenever there are multiple locales. The
+  // export's built-in switcher (.locale) is generated at runtime by the
+  // enhancement JS — it gets rendered more than once and links to the raw
+  // source filenames (index.es.html) instead of the deployed URLs (/es/), so
+  // we hide it and replace it with a reliable static one.
+  const injectSwitcher = multi;
+  const switcherCss = injectSwitcher ? `
+.locale{display:none!important}
+.lang-switch{position:fixed;top:18px;right:20px;z-index:120;display:flex;gap:2px;align-items:center;
   font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:11px;letter-spacing:.08em;
   padding:4px 6px;border-radius:99px;background:rgba(11,13,16,.55);backdrop-filter:blur(8px);
   border:1px solid rgba(255,255,255,.12)}
@@ -596,7 +620,7 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
 .lang-switch a:hover{color:#F4F1EA}
 .lang-switch a[aria-current="true"]{color:#0B0D10;background:#E6C8A0;font-weight:600}
 [dir="rtl"] .lang-switch{right:auto;left:16px}` : '';
-  const switcher = multi
+  const switcher = injectSwitcher
     ? `<nav class="lang-switch" aria-label="Language">` +
       locales
         .map((l) =>
