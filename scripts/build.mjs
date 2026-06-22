@@ -474,14 +474,15 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
     const bodyAttrs = {};
     for (const a of document.body.attributes) if (a.name.startsWith('data-')) bodyAttrs[a.name] = a.value;
 
-    // The export may ship its OWN language switcher (e.g. `.locale`). Keep only
-    // the first instance (Claude design has rendered it more than once), and
-    // rewrite its source-filename links (index.html / index.<code>.html) to the
-    // deployed URLs (/ and /<code>/). hasOwnSwitcher tells the assembler not to
-    // inject a second switcher.
+    // The export ships its OWN language switcher (`.locale`), but in static
+    // output the snapshot bakes in a DEAD copy — its click handlers don't
+    // survive, and the enhancement JS rebuilds a fresh, live one at runtime
+    // (correct dropdown + deployed-URL routing). So remove every baked copy
+    // here; the runtime build produces exactly one working switcher. (If a
+    // future export ships no such JS, the assembler injects a static fallback.)
     const ownSwitchers = [...document.querySelectorAll('.locale, .lang-switcher, [data-locale-switcher]')];
     const hasOwnSwitcher = ownSwitchers.length > 0;
-    ownSwitchers.slice(1).forEach((el) => el.remove());
+    ownSwitchers.forEach((el) => el.remove());
     document.querySelectorAll('a[href]').forEach((a) => {
       const bare = (a.getAttribute('href') || '').replace(/^\.?\//, '');
       if (bare === 'index.html') a.setAttribute('href', '/');
@@ -604,12 +605,15 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
   // nav (z-index < nav). When only English exists this is empty → no visual
   // change vs today.
   const langName = { en: 'EN', es: 'ES', fr: 'FR', ar: 'AR', de: 'DE', pt: 'PT', it: 'IT' };
-  // Use our own static switcher whenever there are multiple locales. The
-  // export's built-in switcher (.locale) is generated at runtime by the
-  // enhancement JS — it gets rendered more than once and links to the raw
-  // source filenames (index.es.html) instead of the deployed URLs (/es/), so
-  // we hide it and replace it with a reliable static one.
-  const injectSwitcher = multi;
+  // Prefer the export's OWN switcher (the .locale globe dropdown built by the
+  // enhancement JS). Current exports build a single switcher that routes by
+  // deployed URL (/es/, /fr/) on the live site and by filename in the design
+  // preview, and queue not-yet-shipped languages as "soon" — so Claude design
+  // stays the single source of truth. We only fall back to injecting our own
+  // reliable static switcher if a future export ships without one.
+  const hasDesignSwitcher =
+    !!enhanceJS && enhanceJS.includes('localeSwitcher') && enhanceJS.includes('locale-menu');
+  const injectSwitcher = multi && !hasDesignSwitcher;
   const switcherCss = injectSwitcher ? `
 .locale{display:none!important}
 .lang-switch{position:fixed;top:18px;right:20px;z-index:120;display:flex;gap:2px;align-items:center;
