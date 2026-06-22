@@ -259,8 +259,18 @@ async function build() {
   console.log(`  publicRepos=${ghData.publicRepos ?? 'n/a'}  followers=${ghData.followers ?? 'n/a'}  calendarDays=${ghData.calendar ? ghData.calendar.length : 'n/a'}`);
 
   console.log('→ Extracting original UI/UX enhancement layer…');
-  const enhanceJS = await extractEnhancementLayer();
+  let enhanceJS = await extractEnhancementLayer();
   console.log(enhanceJS ? `  found (${(enhanceJS.length / 1024).toFixed(1)} KB) — effects preserved` : '  not found — using fallback interactivity only');
+
+  // Default theme = dark for everyone on first visit (the export follows the
+  // OS prefers-color-scheme). Returning visitors' saved choice is respected
+  // (the localStorage check runs first). No-op if the pattern isn't found.
+  if (enhanceJS) {
+    enhanceJS = enhanceJS.replace(
+      /window\.matchMedia\(\s*(["'])\(prefers-color-scheme:\s*light\)\1\s*\)\.matches\s*\?\s*(["'])light\2\s*:\s*(["'])dark\3/g,
+      '"dark"'
+    );
+  }
 
   console.log('→ Transforming + extracting static DOM…');
   const result = await page.evaluate(async (ghUser, gh, hasEnhance) => {
@@ -462,6 +472,10 @@ async function build() {
   console.log(`  re-embedded ${result.blobCount} blob asset(s) as data: URLs`);
 
   // ── Assemble the static document ──────────────────────────────────────────
+  // Bake dark as the default theme into the initial markup (the headless
+  // snapshot captures whatever prefers-color-scheme the render reported, which
+  // is light). The client JS still honors a returning visitor's saved choice.
+  if (result.rootAttrs['data-theme']) result.rootAttrs['data-theme'] = 'dark';
   const dataAttrs = Object.entries(result.rootAttrs)
     .filter(([k]) => k.startsWith('data-') || k === 'lang')
     .map(([k, v]) => `${k}="${v}"`)
