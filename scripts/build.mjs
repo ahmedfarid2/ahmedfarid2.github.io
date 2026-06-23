@@ -714,7 +714,9 @@ ${jsonLd}
    description (and from the icon). Re-align them to the right in RTL so each
    card reads as one tidy block. Scoped to [dir=rtl], so LTR locales are
    untouched; applies to any future RTL locale automatically. */
-[dir="rtl"] .connect-handle{text-align:right}${switcherCss}
+[dir="rtl"] .connect-handle,
+[dir="rtl"] .price-amount,
+[dir="rtl"] .addon-price{text-align:right}${switcherCss}
 </style>
 </head>
 <body class="${result.bodyClass}"${bodyDataAttrs ? ' ' + bodyDataAttrs : ''}>
