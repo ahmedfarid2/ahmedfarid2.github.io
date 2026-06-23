@@ -707,7 +707,14 @@ ${jsonLd}
    scrolling them out of that zone. Make the container click-through except
    its toggle and the open panel. */
 .palette{pointer-events:none}
-.palette-toggle,.palette.open .palette-pop{pointer-events:auto}${switcherCss}
+.palette-toggle,.palette.open .palette-pop{pointer-events:auto}
+/* RTL polish: the contact "handle" lines (URL / e-mail / phone) keep
+   direction:ltr so the value reads left-to-right, but with text-align:start
+   that pins them to the LEFT — detaching them from the right-aligned name and
+   description (and from the icon). Re-align them to the right in RTL so each
+   card reads as one tidy block. Scoped to [dir=rtl], so LTR locales are
+   untouched; applies to any future RTL locale automatically. */
+[dir="rtl"] .connect-handle{text-align:right}${switcherCss}
 </style>
 </head>
 <body class="${result.bodyClass}"${bodyDataAttrs ? ' ' + bodyDataAttrs : ''}>
