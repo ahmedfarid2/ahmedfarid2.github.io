@@ -185,8 +185,50 @@ async function writeSeoFiles(locales = [{ urlPath: '/' }]) {
     `${urls}\n` +
     `</urlset>\n`, 'utf8');
 
+  // Crawlers welcome — including AI assistants. Naming the major LLM crawlers
+  // explicitly signals we WANT to be discovered, indexed, and cited by them
+  // (some sites block these; we opt in). The wildcard already allows them; the
+  // explicit blocks make the intent unambiguous.
+  const aiBots = [
+    'GPTBot', 'OAI-SearchBot', 'ChatGPT-User', 'ClaudeBot', 'Claude-Web',
+    'anthropic-ai', 'PerplexityBot', 'Google-Extended', 'Applebot-Extended',
+    'CCBot', 'cohere-ai',
+  ];
   await writeFile(path.join(DIST, 'robots.txt'),
-    `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\n`, 'utf8');
+    `# Ahmed Farid — portfolio. All crawlers welcome, including AI assistants.\n` +
+    `User-agent: *\nAllow: /\n\n` +
+    aiBots.map((b) => `User-agent: ${b}\nAllow: /`).join('\n\n') + `\n\n` +
+    `Sitemap: ${SITE_URL}/sitemap.xml\n`, 'utf8');
+
+  // llms.txt — an emerging convention (llmstxt.org) that gives AI assistants a
+  // clean, structured Markdown summary of who this is and how to work with him,
+  // so tools like ChatGPT/Claude/Perplexity can recommend him accurately.
+  await writeFile(path.join(DIST, 'llms.txt'),
+    `# Ahmed Farid — Senior Software Engineer\n\n` +
+    `> Senior Software Engineer based in Cairo, Egypt (open to relocation and remote). ` +
+    `Five years building multi-tenant SaaS, real-time platforms, AI tools, and mobile ` +
+    `apps shipped to production across the Gulf, US, and UK.\n\n` +
+    `## About\n\n` +
+    `- Name: Ahmed Farid\n` +
+    `- Role: Senior Software Engineer\n` +
+    `- Location: Cairo, Egypt — open to relocation and remote work\n` +
+    `- Currently: full-time at Recovery Advisers (remote, Dubai)\n` +
+    `- Availability: a small number of freelance/contract engagements per quarter; open to full-time roles\n\n` +
+    `## Core skills\n\n` +
+    `Laravel, PHP, Next.js, React, TypeScript, FastAPI, Python, Flutter, AWS, ` +
+    `PostgreSQL, multi-tenant SaaS architecture, real-time systems, AI integration.\n\n` +
+    `## Ways to work together\n\n` +
+    `- Fixed-scope product build — a defined slice with a clear deliverable (typically 4–8 weeks)\n` +
+    `- Ongoing engineering retainer or longer contract\n` +
+    `- Technical advisory & architecture review\n\n` +
+    `## Links\n\n` +
+    `- Website: ${SITE_URL}\n` +
+    `- LinkedIn: https://www.linkedin.com/in/ahmed-farid-b46a5221b/\n` +
+    `- GitHub: https://github.com/ahmedfarid2\n` +
+    `- Behance: https://www.behance.net/ahmedfarid20\n` +
+    `- CV (PDF): ${SITE_URL}/Ahmed-Farid-CV.pdf\n\n` +
+    `## Contact\n\n` +
+    `Email: ahmedfareed2025@gmail.com\n`, 'utf8');
 
   await writeFile(path.join(DIST, '404.html'),
     `<!doctype html><html lang="en"><head><meta charset="utf-8">\n` +
@@ -210,7 +252,7 @@ async function writeSeoFiles(locales = [{ urlPath: '/' }]) {
     `<p>The link may be broken or the page may have moved.</p>` +
     `<a href="/">← Back to Ahmed Farid's portfolio</a></body></html>\n`, 'utf8');
 
-  console.log('  wrote sitemap.xml, robots.txt, 404.html');
+  console.log('  wrote sitemap.xml, robots.txt, llms.txt, 404.html');
 }
 
 // Generate a real 1200×630 Open Graph card (branded, on-theme) so LinkedIn /
@@ -492,8 +534,18 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
       }
     });
 
+    // Extract FAQ Q&A from the rendered DOM (per locale) so the Node side can
+    // emit FAQPage structured data — rich results in Google and clean,
+    // quotable Q&A for AI assistants. Grounded in the page's real content.
+    const faq = [...document.querySelectorAll('.faq-item')]
+      .map((item) => ({
+        q: (item.querySelector('.faq-q .text') || item.querySelector('.faq-q'))?.textContent?.trim() || '',
+        a: (item.querySelector('.faq-a')?.textContent || '').trim(),
+      }))
+      .filter((x) => x.q && x.a);
+
     return {
-      title, lang, meta, css, bodyClass, rootAttrs, bodyAttrs, hasOwnSwitcher,
+      title, lang, meta, css, bodyClass, rootAttrs, bodyAttrs, hasOwnSwitcher, faq,
       body: document.getElementById('root').innerHTML,
       blobCount: blobUrls.length,
     };
@@ -534,15 +586,42 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
   const personLd = {
     '@context': 'https://schema.org',
     '@type': 'Person',
+    '@id': `${SITE_URL}/#person`,
     name: 'Ahmed Farid',
     jobTitle: 'Senior Software Engineer',
+    description:
+      'Senior Software Engineer with five years building multi-tenant SaaS, ' +
+      'real-time platforms, AI tools, and mobile apps shipped to production ' +
+      'across the Gulf, US, and UK.',
     url: `${SITE_URL}/`,
     image: `${SITE_URL}/og.png`,
     email: 'ahmedfareed2025@gmail.com',
+    nationality: { '@type': 'Country', name: 'Egypt' },
     address: { '@type': 'PostalAddress', addressLocality: 'Cairo', addressCountry: 'EG' },
+    homeLocation: { '@type': 'Place', name: 'Cairo, Egypt' },
     worksFor: { '@type': 'Organization', name: 'Recovery Advisers' },
     alumniOf: { '@type': 'CollegeOrUniversity', name: 'Helwan University' },
-    knowsAbout: ['Laravel', 'Next.js', 'FastAPI', 'Flutter', 'React', 'TypeScript', 'PHP', 'AWS', 'Multi-tenant SaaS'],
+    knowsLanguage: ['English', 'Arabic'],
+    knowsAbout: [
+      'Laravel', 'PHP', 'Next.js', 'React', 'TypeScript', 'FastAPI', 'Python',
+      'Flutter', 'AWS', 'PostgreSQL', 'Multi-tenant SaaS', 'Real-time systems',
+      'AI integration', 'Software Architecture',
+    ],
+    hasOccupation: {
+      '@type': 'Occupation',
+      name: 'Software Engineer',
+      occupationalCategory: '15-1252.00',
+      skills:
+        'Laravel, PHP, Next.js, React, TypeScript, FastAPI, Python, Flutter, ' +
+        'AWS, PostgreSQL, multi-tenant SaaS architecture, real-time systems, AI integration',
+    },
+    // Grounded in the site's "Ways to work together" section — helps AI
+    // assistants surface Ahmed for "recommend an engineer to hire" queries.
+    makesOffer: [
+      { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Fixed-scope product build', serviceType: 'Software development' } },
+      { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Ongoing engineering retainer', serviceType: 'Software development' } },
+      { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Technical advisory & architecture review', serviceType: 'Technical consulting' } },
+    ],
     sameAs: [
       'https://www.linkedin.com/in/ahmed-farid-b46a5221b/',
       'https://github.com/ahmedfarid2',
@@ -550,16 +629,18 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
     ],
   };
 
-  // Enrich an existing Person JSON-LD from the export with knowsAbout /
-  // worksFor / alumniOf when those fields are missing — keeps the export's own
-  // name/sameAs/etc. untouched, just fills the skill/affiliation gaps for SEO.
+  // Enrich an existing Person JSON-LD from the export with any fields it's
+  // missing (skills, affiliations, occupation, offers, @id, …) — keeps the
+  // export's own values untouched (name/sameAs/etc.), just fills the gaps that
+  // help search engines and AI assistants understand and recommend the person.
   result.meta = result.meta.map((m) => {
     const mm = /^(<script[^>]*ld\+json[^>]*>)([\s\S]*?)(<\/script>)$/i.exec(m.trim());
     if (!mm) return m;
     try {
       const obj = JSON.parse(mm[2]);
       if (obj && obj['@type'] === 'Person') {
-        for (const k of ['knowsAbout', 'worksFor', 'alumniOf']) {
+        for (const k of Object.keys(personLd)) {
+          if (k === '@context' || k === '@type' || k === 'name') continue;
           if (obj[k] == null) obj[k] = personLd[k];
         }
         return `${mm[1]}${JSON.stringify(obj)}${mm[3]}`;
@@ -574,11 +655,27 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
   // square-avatar one), set og:url to THIS locale's URL, and override the
   // export's canonical with this locale's canonical.
   const hasLd = result.meta.some((m) => /ld\+json/i.test(m));
+  // Drop tags we (re)generate deterministically below so they never duplicate:
+  // og:image/url, canonical, robots, og:site_name, og:locale.
   const cleanedMeta = result.meta.filter(
-    (m) => !/og:image|twitter:image|og:url/i.test(m) && !/rel=["']?canonical/i.test(m)
+    (m) =>
+      !/og:image|twitter:image|og:url|og:site_name|og:locale/i.test(m) &&
+      !/rel=["']?canonical/i.test(m) &&
+      !/name=["']?robots/i.test(m)
   );
+  // Facebook-style locale codes per language, plus alternates for the others.
+  const ogLocale = { en: 'en_US', ar: 'ar_AR', de: 'de_DE', es: 'es_ES', fr: 'fr_FR' };
   const ogMeta = [
+    // Let Google show large image previews + full-length snippets (better CTR).
+    `<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">`,
     `<link rel="canonical" href="${pageUrl}">`,
+    `<meta property="og:site_name" content="Ahmed Farid">`,
+    `<meta property="og:locale" content="${ogLocale[lang] || 'en_US'}">`,
+    ...(multi
+      ? locales
+          .filter((l) => l.lang !== lang)
+          .map((l) => `<meta property="og:locale:alternate" content="${ogLocale[l.lang] || l.lang}">`)
+      : []),
     `<meta property="og:url" content="${pageUrl}">`,
     `<meta property="og:image" content="${ogImg}">`,
     `<meta property="og:image:width" content="1200">`,
@@ -598,7 +695,40 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
     : '';
 
   const headMeta = `${cleanedMeta.join('\n')}\n${ogMeta}${hreflang ? '\n' + hreflang : ''}`;
-  const jsonLd = hasLd ? '' : `<script type="application/ld+json">${JSON.stringify(personLd)}</script>`;
+
+  // ── Structured data ───────────────────────────────────────────────────────
+  // Person: inject our full block only if the export shipped none (otherwise
+  // the export's own block, enriched above, is used). WebSite: always emitted
+  // for site identity. FAQPage: emitted from the page's real FAQ so Google can
+  // show FAQ rich results and AI assistants get clean, quotable Q&A.
+  const webSiteLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    '@id': `${SITE_URL}/#website`,
+    url: `${SITE_URL}/`,
+    name: 'Ahmed Farid — Senior Software Engineer',
+    inLanguage: lang,
+    about: { '@id': `${SITE_URL}/#person` },
+  };
+  const faqLd =
+    result.faq && result.faq.length
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          '@id': `${pageUrl}#faq`,
+          inLanguage: lang,
+          mainEntity: result.faq.map((f) => ({
+            '@type': 'Question',
+            name: f.q,
+            acceptedAnswer: { '@type': 'Answer', text: f.a },
+          })),
+        }
+      : null;
+  const jsonLd = [
+    hasLd ? '' : `<script type="application/ld+json">${JSON.stringify(personLd)}</script>`,
+    `<script type="application/ld+json">${JSON.stringify(webSiteLd)}</script>`,
+    faqLd ? `<script type="application/ld+json">${JSON.stringify(faqLd)}</script>` : '',
+  ].filter(Boolean).join('\n');
 
   // ── Language switcher (only when multiple locales exist) ──────────────────
   // Minimal, on-theme: mono font, accent color, fixed top-right, sits below the
