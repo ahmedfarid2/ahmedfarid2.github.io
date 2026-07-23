@@ -228,7 +228,7 @@ async function writeSeoFiles(locales = [{ urlPath: '/' }]) {
     `- Behance: https://www.behance.net/ahmedfarid20\n` +
     `- CV (PDF): ${SITE_URL}/Ahmed-Farid-CV.pdf\n\n` +
     `## Contact\n\n` +
-    `Email: ahmedfareed2025@gmail.com\n`, 'utf8');
+    `Email: ahmed@iamahmedfarid.com\n`, 'utf8');
 
   await writeFile(path.join(DIST, '404.html'),
     `<!doctype html><html lang="en"><head><meta charset="utf-8">\n` +
@@ -595,7 +595,7 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
       'across the Gulf, US, and UK.',
     url: `${SITE_URL}/`,
     image: `${SITE_URL}/og.png`,
-    email: 'ahmedfareed2025@gmail.com',
+    email: 'ahmed@iamahmedfarid.com',
     nationality: { '@type': 'Country', name: 'Egypt' },
     address: { '@type': 'PostalAddress', addressLocality: 'Cairo', addressCountry: 'EG' },
     homeLocation: { '@type': 'Place', name: 'Cairo, Egypt' },
