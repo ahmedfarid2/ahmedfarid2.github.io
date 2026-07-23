@@ -28,7 +28,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = path.join(ROOT, 'index.html');
 const DIST = path.join(ROOT, 'dist');
 const GH_USER = 'ahmedfarid2';
-const SITE_URL = 'https://ahmedfarid2.github.io';
+const SITE_URL = 'https://iamahmedfarid.com';
 
 // ── Locale discovery (by convention) ────────────────────────────────────────
 // English lives in the root export `index.html` and builds to dist/ root.
