@@ -853,23 +853,7 @@ ${jsonLd}
 [dir="rtl"] .connect-handle,
 [dir="rtl"] .price-amount,
 [dir="rtl"] .addon-price{text-align:right}
-/* Mobile polish (< 768px). Goal: keep the full desktop UI where it works;
-   only intervene where the default was actively broken.
-   1) Personalize palette stays visible — but relocated from bottom-left
-      (where it overlapped the primary hero CTA) to bottom-right, slightly
-      smaller so it doesn't dominate the viewport.
-   2) "Ahmed Farid" text next to the AF avatar keeps its place, but was
-      wrapping to two lines on 390px viewports. Force it nowrap with a
-      smaller font so it stays inline with the avatar.
-   3) Availability chip ("Available now · 2 slots") was wrapping to three
-      lines — force nowrap with a smaller pill. */
-@media (max-width:767px){
-  .palette{left:auto!important;right:14px!important;bottom:14px!important;transform:scale(.88);transform-origin:bottom right}
-  .brand{white-space:nowrap;gap:8px}
-  .brand>*:not(:first-child){font-size:13px;letter-spacing:.01em}
-  .nav-cta{white-space:nowrap;font-size:11px;padding:6px 10px;letter-spacing:.02em}
-  .locale-btn{padding:6px 8px;font-size:12px}
-}${switcherCss}
+${switcherCss}
 </style>
 </head>
 <body class="${result.bodyClass}"${bodyDataAttrs ? ' ' + bodyDataAttrs : ''}>
