@@ -854,14 +854,15 @@ ${jsonLd}
 [dir="rtl"] .price-amount,
 [dir="rtl"] .addon-price{text-align:right}
 /* Mobile polish (< 768px). Three focused fixes:
-   1) Personalize palette hides on phones — it was overlapping the primary
-      hero CTA ("Start a project") and nobody customizes theme on mobile.
+   1) Personalize palette stays on phones — but was overlapping the primary
+      hero CTA in bottom-left. Move it to bottom-right and slightly smaller
+      so it doesn't compete with the CTA for touch space.
    2) The "Ahmed Farid" text next to the AF avatar was wrapping to two
       lines and crowding the nav; the avatar alone is enough on mobile.
    3) The availability chip ("Available now · 2 slots") was wrapping to
       three lines — force it onto one line with a smaller pill. */
 @media (max-width:767px){
-  .palette{display:none!important}
+  .palette{left:auto!important;right:14px!important;bottom:14px!important;transform:scale(.88);transform-origin:bottom right}
   .brand>*:not(:first-child){display:none!important}
   .nav-cta{white-space:nowrap;font-size:11px;padding:6px 10px;letter-spacing:.02em}
   .locale-btn{padding:6px 8px;font-size:12px}
