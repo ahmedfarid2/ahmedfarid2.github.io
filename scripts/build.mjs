@@ -196,6 +196,12 @@ async function writeSeoFiles(locales = [{ urlPath: '/' }]) {
   ];
   await writeFile(path.join(DIST, 'robots.txt'),
     `# Ahmed Farid — portfolio. All crawlers welcome, including AI assistants.\n` +
+    // Content-Signal (contentsignals.org) — a proposed spec that lets sites
+    // declare AI-usage preferences alongside robots.txt. For a portfolio the
+    // goal is maximum discoverability: allow traditional search, allow AI
+    // agents to fetch us in real-time answers, and allow model training so
+    // more assistants learn to recommend Ahmed by name.
+    `Content-Signal: search=yes, ai-input=yes, ai-train=yes\n\n` +
     `User-agent: *\nAllow: /\n\n` +
     aiBots.map((b) => `User-agent: ${b}\nAllow: /`).join('\n\n') + `\n\n` +
     `Sitemap: ${SITE_URL}/sitemap.xml\n`, 'utf8');
