@@ -174,10 +174,21 @@ async function extractEnhancementLayer() {
 // runs in both the optimized build and the raw-export fallback.
 async function writeSeoFiles(locales = [{ urlPath: '/' }]) {
   const today = new Date().toISOString().slice(0, 10);
+  // Standalone pages that aren't locale builds but should still be discoverable.
+  // The checklist is public on purpose: it's the strongest topical content on
+  // the site, it targets exactly the people who hire for this work, and it ends
+  // in a "Book a call" CTA. Ranking and being cited by AI assistants is worth
+  // more here than gating it behind the capture form (which stays the primary
+  // path from the site and from LinkedIn).
+  const EXTRA_PAGES = [{ path: '/checklist.html', priority: '0.8', changefreq: 'yearly' }];
+
   const urls = locales
     .map((l, i) =>
       `  <url><loc>${SITE_URL}${l.urlPath}</loc><lastmod>${today}</lastmod>` +
       `<changefreq>monthly</changefreq><priority>${i === 0 ? '1.0' : '0.9'}</priority></url>`)
+    .concat(EXTRA_PAGES.map((p) =>
+      `  <url><loc>${SITE_URL}${p.path}</loc><lastmod>${today}</lastmod>` +
+      `<changefreq>${p.changefreq}</changefreq><priority>${p.priority}</priority></url>`))
     .join('\n');
   await writeFile(path.join(DIST, 'sitemap.xml'),
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
