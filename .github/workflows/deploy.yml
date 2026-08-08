@@ -39,6 +39,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Re-apply the hand-authored copy edits (hero, lead-magnet card, CTA)
+      # before building. The committed exports already contain them, so this is
+      # normally a no-op that logs "already applied". It matters after a fresh
+      # Claude-design export, which would otherwise silently revert the copy:
+      # this puts it back for the deploy. --soft means a markup change can warn
+      # without ever blocking a deploy.
+      - name: Apply copy edits
+        run: npm run copy:apply -- --soft
+
       - name: Build static site
         run: npm run build
         env:

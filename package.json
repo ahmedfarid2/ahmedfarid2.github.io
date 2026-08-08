@@ -5,7 +5,9 @@
   "type": "module",
   "description": "Build pipeline that optimizes the Claude-design export into a fast, static, crawlable site.",
   "scripts": {
-    "build": "node scripts/build.mjs"
+    "build": "node scripts/build.mjs",
+    "copy:apply": "node scripts/edit-copy.mjs",
+    "copy:check": "node scripts/edit-copy.mjs --check"
   },
   "devDependencies": {
     "html-minifier-terser": "^7.2.0",
