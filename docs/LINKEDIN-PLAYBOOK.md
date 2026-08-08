@@ -184,6 +184,42 @@ never paste a wall of text, and always make the ask small and easy to say yes to
 
 ---
 
+## 4b. The comment strategy — highest reach per minute
+
+Posting reaches **your** 25k. Commenting on a big account's post puts you in front of
+**their** audience — people who have never heard of you. A good comment takes two
+minutes and can out-reach a post you spent an hour writing.
+
+Most people skip this because it feels like helping someone else's content. It
+isn't. Whoever says the smartest thing in the comments gets the profile clicks.
+
+**Setup (once):**
+1. Find 10–15 accounts your buyers already follow — SaaS founders, CTOs, and
+   dev-influencers in the Gulf, US and UK, plus Laravel/Flutter/Next.js voices.
+2. Turn on notifications for them (bell icon on their profile) so you can be early.
+
+**Daily (15 minutes):**
+- Comment on **5 posts**. Aim to be in the first hour — early comments get seen most.
+- Comment in **both languages** where it fits. Arabic comments on Gulf accounts have
+  almost no senior competition.
+
+**What a good comment looks like:**
+
+> ❌ "Great post!" / "Thanks for sharing" — invisible, no clicks
+>
+> ✅ "We hit this on a live-auction platform. The fix wasn't a faster queue — it was
+> making the server authoritative for bid ordering. Once the client stopped deciding
+> order, the lost-update bug disappeared entirely."
+
+The pattern: **one specific thing you actually shipped**, plus the non-obvious
+lesson. You have 23 products to draw from — you can do this on almost any thread
+about architecture, real-time systems, multi-tenancy, or mobile delivery.
+
+**What not to do:** never pitch in a comment. No "DM me," no links. The comment
+earns the profile click; your profile does the selling.
+
+---
+
 ## 5. Weekly rhythm (2–3 hrs total)
 
 - **Mon (30 min):** write the week's 3 posts, schedule them.
