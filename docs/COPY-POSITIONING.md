@@ -8,28 +8,45 @@ and most referable.
 
 ---
 
-## ⚠️ Status: the hero paragraph is ALREADY APPLIED — mirror it in Claude design
+## ✅ Status: applied and self-healing — no Claude design step needed
 
-The **hero intro paragraph** below has been applied directly to all five exports
-(`index.html`, `.ar`, `.de`, `.es`, `.fr`) via
-[`scripts/edit-copy.mjs`](../scripts/edit-copy.mjs), so it is **live now**.
+Three changes are **live** on all five exports (`index.html`, `.ar`, `.de`,
+`.es`, `.fr`), applied via [`scripts/edit-copy.mjs`](../scripts/edit-copy.mjs):
 
-**This will be overwritten the next time you export from Claude design.**
-Claude design is the source of truth; it doesn't know about the direct edit. So
-at your next edit session, paste the new hero paragraph into Claude design too —
-then the change survives forever and the script becomes a no-op (it detects the
-new text and reports "already applied").
+1. **Hero paragraph** — leads with the niche
+2. **Lead-magnet card** in the Connect section → `/checklist.html`
+3. **Primary CTA** — "Book a scoping call" (nav, hero, about)
 
-Everything else in this document is **not yet applied** — those are still
-paste-into-Claude-design changes.
+**You do not need to paste anything into Claude design.** The build re-applies
+these automatically on every deploy (`.github/workflows/deploy.yml` → "Apply
+copy edits"), so even a fresh Claude-design export that lacks them ships with
+them anyway.
+
+If you do re-export, run this once locally to bring the committed files back in
+sync with what's deployed:
+
+```bash
+npm run copy:apply     # idempotent — safe to run any time
+npm run copy:check     # dry run: report what would change, write nothing
+```
+
+If a future export changes the surrounding markup enough that an edit can't
+find its anchor, CI logs a loud warning and **deploys anyway without that
+edit** — it will never block a deploy. Fix it by updating the matching entry in
+`scripts/edit-copy.mjs`.
+
+The rest of this document (About lead sentence, meta description) is **not
+applied** — those remain optional.
 
 ---
 
-**How to use (same flow as your `TRANSLATION-*.md` files):**
-1. Open the English version in Claude design.
-2. Replace the strings below, section by section. Only the HERO, ABOUT, meta,
-   and the "Ways to work together" intro change — everything else stays.
-3. Export → replace `index.html` → commit & push. The build handles the rest.
+**How to use what's left.** Items marked ✅ are already live and need nothing
+from you. For the unapplied ones you have two options:
+
+- **Ask me** — I apply them to all five exports via `scripts/edit-copy.mjs`, the
+  same self-healing path as the rest. This is the easier route.
+- **Do it in Claude design** — open the export, replace the strings, re-export,
+  commit. Still works; just remember to run `npm run copy:apply` afterwards.
 
 > Keep it honest: every claim below is already true from your portfolio. This is
 > **emphasis**, not invention.
@@ -44,18 +61,18 @@ paste-into-Claude-design changes.
 - **Headline (keep your strong one):**
   **I build the systems** / **other teams depend on.**
 
-- **Intro — ✅ APPLIED LIVE (paste this into Claude design to make it permanent):**
+- **Intro — ✅ APPLIED LIVE (self-healing; no action needed):**
   > Cairo-based senior engineer specializing in real-time, multi-tenant SaaS —
   > live bidding, role-based tenants, and the mobile apps that run on top. Five
   > years shipping to production across the Gulf, the US, and the UK. Laravel,
   > Next.js, FastAPI, Flutter. Open to relocation.
 
-  The translated versions now live in each export too — the exact strings are in
-  [`scripts/edit-copy.mjs`](../scripts/edit-copy.mjs) if you want to copy them
-  into the ES/FR/DE/AR versions in Claude design.
+  The translated versions live in each export too — all exact strings are in
+  [`scripts/edit-copy.mjs`](../scripts/edit-copy.mjs).
 
-- **Buttons (add urgency to the primary CTA):**
-  `Start a project` → **Book a scoping call** · `See selected work` · `Download CV ↓`
+- **Buttons — ✅ APPLIED LIVE:** `Start a project` → **Book a scoping call**
+  (all three placements: nav, hero, about). `See selected work` and
+  `Download CV ↓` unchanged.
 
 - **Optional scarcity line under the buttons (high-converting):**
   > _Currently taking a small number of engagements for Q4 2026._
@@ -106,13 +123,15 @@ paste-into-Claude-design changes.
 
 ---
 
-## CONNECT · 17 / connect (add the lead magnet)
+## CONNECT · 17 / connect — ✅ APPLIED LIVE
 
-Add one card (or a line in the intro) pointing to the lead magnet, so the 98%
-who aren't ready to book still leave with something and enter your list:
+A **Free checklist** card is now the first item in the Connect grid, in all five
+languages, linking to `/checklist.html`.
 
-- **Free resource** — **Multi-Tenant SaaS Architecture Checklist** — _The
-  decisions you can't cheaply undo. Free — [link to your capture form]._
+**One change still worth making:** it currently links straight to the checklist,
+so readers get the PDF and you get nothing. Once you have an email-capture form
+(see [`SETUP-EMAIL-AND-SEARCH-CONSOLE.md`](SETUP-EMAIL-AND-SEARCH-CONSOLE.md)),
+send me the URL and I'll repoint the card at it.
 
 ---
 

@@ -9,17 +9,26 @@
 // asset that holds the JSX, applies exact-match replacements, recompresses it,
 // and writes the export back.
 //
-// Usage:  node scripts/edit-copy.mjs [--check]
+// Usage:  node scripts/edit-copy.mjs [--check] [--soft]
 //   --check  report whether each edit's OLD or NEW text is present, change nothing
+//   --soft   always exit 0, even if an edit fails to match (used in CI so a
+//            re-export can never break the deploy — it just ships un-edited)
 //
-// IMPORTANT: Claude design remains the source of truth. Edits made here are
-// overwritten the next time the site is re-exported. Mirror any change here in
-// Claude design (see docs/COPY-POSITIONING.md) so it survives a re-export.
+// This runs automatically in CI before the build (see .github/workflows/deploy.yml),
+// so the deployed site keeps this copy even if the exports are replaced by a
+// fresh Claude-design export that doesn't have it. Re-run it locally after any
+// re-export to bring the committed exports back in sync:
+//
+//     npm run copy:apply
+//
+// Every edit is idempotent — already-applied text is detected and skipped — so
+// running it repeatedly is safe.
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import zlib from 'node:zlib';
 
 const CHECK = process.argv.includes('--check');
+const SOFT = process.argv.includes('--soft');
 
 // ── Lead-magnet card ────────────────────────────────────────────────────────
 // The checklist deploys to /checklist.html but nothing linked to it, so it was
@@ -296,4 +305,18 @@ for (const edit of EDITS) {
 }
 
 console.log(`\n${CHECK ? 'check' : 'apply'} complete — ${applied} edited, ${failures} failed`);
+
+if (failures && SOFT) {
+  // CI path: a failed match almost always means the exports were replaced by a
+  // fresh Claude-design export whose markup moved. That should surface loudly
+  // in the log, but it must not block a deploy — the site still builds, just
+  // without these copy edits.
+  console.warn(
+    `\n⚠️  ${failures} copy edit(s) did not match — the exports were probably re-exported\n` +
+    '   from Claude design. The site will deploy WITHOUT those edits. Re-run the\n' +
+    '   probe and update scripts/edit-copy.mjs to match the new markup.'
+  );
+  process.exit(0);
+}
+
 process.exit(failures ? 1 : 0);
