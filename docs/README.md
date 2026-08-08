@@ -10,6 +10,7 @@ are **repo-only** (the build does not deploy `.md` files or the `docs/` and
 | [`LINKEDIN-PLAYBOOK.md`](LINKEDIN-PLAYBOOK.md) | The system: profile setup, content pillars, 30-day calendar, and warm-outreach/referral DM scripts. |
 | [`LINKEDIN-POSTS-30-DAYS.md`](LINKEDIN-POSTS-30-DAYS.md) | **12 finished posts, ready to paste** — written from your real case studies (Yelo Sale, Recovery Advisers, KhebraOS, Phonic Maps, RevealSite). |
 | [`LINKEDIN-POSTS-ARABIC.md`](LINKEDIN-POSTS-ARABIC.md) | **The same 12 posts in Arabic** — rewritten to read naturally, not translated. Your least-contested audience: almost nobody writes senior architecture content in Arabic. |
+| [`COMMUNITY-PLAYBOOK.md`](COMMUNITY-PLAYBOOK.md) | Where to answer questions in public (Reddit, Indie Hackers, HN, dev.to, Arabic communities), each community's self-promo rules, and **6 drafted answers** to the questions that recur in his niche. |
 | [`COPY-POSITIONING.md`](COPY-POSITIONING.md) | Niche positioning copy. Hero, CTA and the lead-magnet card are **already live and self-healing**; the rest is optional. |
 | [`LEAD-MAGNET-SETUP.md`](LEAD-MAGNET-SETUP.md) | How to wire the lead magnet to an email pipeline (no backend needed). |
 | [`SETUP-EMAIL-AND-SEARCH-CONSOLE.md`](SETUP-EMAIL-AND-SEARCH-CONSOLE.md) | **Step-by-step** for the two account-side tasks: the email capture form, and a Search Console Domain property for `iamahmedfarid.com`. |
