@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Multi-Tenant SaaS Architecture Checklist — Ahmed Farid</title>
+<meta name="description" content="The architecture decisions you can't cheaply undo. A pre-build checklist for multi-tenant SaaS, by Ahmed Farid.">
+<style>
+  :root{
+    --bg:#0B0D10; --ink:#F4F1EA; --muted:#a8a297; --accent:#E6C8A0;
+    --line:rgba(255,255,255,.12); --card:rgba(255,255,255,.03);
+  }
+  *{margin:0;box-sizing:border-box}
+  html{color-scheme:dark}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    line-height:1.55; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:820px;margin:0 auto;padding:64px 40px 80px}
+  .eyebrow{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-bottom:20px}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--accent);margin-right:10px;vertical-align:middle}
+  h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(34px,6vw,52px);line-height:1.05;letter-spacing:-.02em;font-weight:600}
+  h1 em{font-style:italic;color:var(--accent)}
+  .lede{margin-top:22px;font-size:18px;color:#c9c3b8;max-width:640px}
+  .byline{margin-top:18px;font-size:14px;color:var(--muted)}
+  .byline a{color:var(--accent);text-decoration:none}
+  .intro{margin-top:36px;padding:22px 24px;background:var(--card);border:1px solid var(--line);border-radius:14px;color:#d7d2c8;font-size:15.5px}
+  h2{font-family:Georgia,serif;font-size:24px;letter-spacing:-.01em;margin:44px 0 6px;font-weight:600}
+  h2 .num{color:var(--accent);font-style:italic;margin-right:10px}
+  .sub{color:var(--muted);font-size:13.5px;margin-bottom:16px}
+  ul{list-style:none;padding:0}
+  li{position:relative;padding:11px 0 11px 34px;border-bottom:1px solid rgba(255,255,255,.06);font-size:15px;color:#e7e2d8}
+  li:before{content:"";position:absolute;left:0;top:13px;width:18px;height:18px;border:1.5px solid var(--accent);border-radius:5px}
+  li b{color:var(--ink);font-weight:600}
+  ol.keys{counter-reset:k;list-style:none;padding:0;margin-top:6px}
+  ol.keys li{padding-left:44px}
+  ol.keys li:before{content:counter(k);counter-increment:k;border:none;background:var(--accent);color:#0B0D10;
+    width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:13px;top:9px}
+  .cta{margin-top:52px;padding:30px 32px;background:linear-gradient(180deg,rgba(230,200,160,.10),rgba(230,200,160,.03));
+    border:1px solid rgba(230,200,160,.28);border-radius:16px}
+  .cta h3{font-family:Georgia,serif;font-size:22px;font-weight:600;margin-bottom:10px}
+  .cta p{color:#c9c3b8;font-size:15px;max-width:600px}
+  .cta a{display:inline-block;margin-top:16px;margin-right:12px;padding:11px 22px;border-radius:99px;
+    background:var(--accent);color:#0B0D10;text-decoration:none;font-weight:600;font-size:14px}
+  .cta a.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  footer{margin-top:40px;color:var(--muted);font-size:12.5px}
+  @media print{
+    :root{--bg:#fff;--ink:#111;--muted:#555;--line:#ddd;--card:#faf8f4}
+    html{color-scheme:light}
+    body{font-size:12px}
+    .wrap{padding:0}
+    li:before{border-color:#111}
+    h1 em,.byline a,h2 .num{color:#8a6d3b}
+    .cta{background:#faf8f4;border-color:#e2d8c4}
+    .cta a{background:#8a6d3b;color:#fff}
+    a{color:#8a6d3b}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow"><span class="dot"></span>Free resource · Architecture</div>
+  <h1>The Multi-Tenant SaaS<br>Architecture <em>Checklist.</em></h1>
+  <p class="lede">The decisions you can't cheaply undo six months later.</p>
+  <p class="byline">By Ahmed Farid — Senior Software Engineer ·
+    <a href="https://iamahmedfarid.com">iamahmedfarid.com</a></p>
+
+  <div class="intro">
+    Most multi-tenant SaaS rewrites don't happen because the code was bad. They
+    happen because a boundary was drawn wrong on day one — and by the time it
+    hurts, it's load-bearing. This is the checklist I run before writing a single
+    screen, distilled from shipping multi-tenant platforms across the Gulf, US &amp;
+    UK. Use it as a pre-build gate: if you can't answer a question, that's the
+    next conversation to have — not the next feature to build.
+  </div>
+
+  <h2><span class="num">01</span>Tenancy model — decide before anything else</h2>
+  <ul>
+    <li><b>Isolation strategy chosen and written down:</b> shared schema (tenant_id), schema-per-tenant, or database-per-tenant — each has a different blast radius and cost curve.</li>
+    <li><b>Tenant resolution path defined:</b> subdomain, path, header, or token claim — resolved in middleware, not controllers.</li>
+    <li><b>Every query is tenant-scoped by default</b>, not by developer discipline. A global scope that fails <b>closed</b> (no tenant = no data).</li>
+    <li><b>The "noisy neighbor" question answered:</b> can one tenant's load degrade another's? What's the ceiling?</li>
+    <li><b>Cross-tenant admin access is a separate, audited path</b> — never the same code path as tenant users.</li>
+  </ul>
+
+  <h2><span class="num">02</span>Identity, roles &amp; access</h2>
+  <ul>
+    <li><b>Roles modeled as first-class concepts</b>, not booleans that multiply.</li>
+    <li><b>Separate auth guards</b> for distinct actor types (admin / company / customer) rather than one overloaded user table.</li>
+    <li><b>Permission checks centralized</b> in a policy layer, not sprinkled in views.</li>
+    <li><b>Tenant + role together</b> decide access — a valid user in the wrong tenant sees nothing.</li>
+    <li><b>Impersonation / support access</b> is logged, time-boxed, and reversible.</li>
+  </ul>
+
+  <h2><span class="num">03</span>Data &amp; billing awareness</h2>
+  <ul>
+    <li><b>Billing is a first-class concept in the data model</b> from day one — plans, limits, usage, and the seams to meter them.</li>
+    <li><b>Usage-limiting is enforceable</b> (seats, API calls, storage) without a schema migration later.</li>
+    <li><b>Schema first, indexes second</b> — but the tenant_id composite indexes that matter at scale are identified now.</li>
+    <li><b>Soft-delete &amp; data-retention policy</b> decided per entity.</li>
+    <li><b>Tenant data export &amp; deletion</b> possible (GDPR/offboarding) without a manual DBA operation.</li>
+  </ul>
+
+  <h2><span class="num">04</span>Real-time &amp; concurrency <span style="color:var(--muted);font-family:inherit;font-size:14px;font-style:normal">(if applicable)</span></h2>
+  <ul>
+    <li><b>The server is the single source of truth</b> for ordering — never the client.</li>
+    <li><b>Atomic operations</b> for contended state (Redis atomic increments for counters, bids, inventory).</li>
+    <li><b>A push layer</b> (WebSocket/SSE) mirrors state to watchers — with a latency target you actually measure.</li>
+    <li><b>Idempotency keys</b> on anything retryable (payments, webhooks).</li>
+    <li><b>Backpressure &amp; reconnection</b> handled — what happens when 200 clients reconnect at once?</li>
+  </ul>
+
+  <h2><span class="num">05</span>Integrations &amp; money</h2>
+  <ul>
+    <li><b>Payment gateway(s) chosen per region</b> and abstracted behind one interface so a second gateway isn't a rewrite.</li>
+    <li><b>Webhooks verified, idempotent, and queued</b> — never processed inline on the request thread.</li>
+    <li><b>ERP/CRM sync direction defined</b> (one-way vs bidirectional) with conflict resolution decided before the first sync.</li>
+    <li><b>External calls have timeouts, retries, and a circuit breaker</b> — a slow third party can't take you down.</li>
+  </ul>
+
+  <h2><span class="num">06</span>Delivery &amp; operations</h2>
+  <ul>
+    <li><b>Deploy topology decided:</b> environments (alpha/beta/prod) and a pipeline that survives a Friday deploy.</li>
+    <li><b>Migrations safe to run by someone who isn't you, at 2 a.m.</b> (reversible, non-locking where it counts).</li>
+    <li><b>Observability from v1:</b> structured logs, error tracking, and the 3–5 metrics that signal health.</li>
+    <li><b>Feature flags</b> so vertical slices ship early and dark.</li>
+    <li><b>A runbook exists</b> — the handoff is part of the work, not an afterthought.</li>
+  </ul>
+
+  <h2><span class="num">07</span>The "can't cheaply undo" list</h2>
+  <p class="sub">Get these right on day one. Everything else you can refactor.</p>
+  <ol class="keys">
+    <li>Tenant isolation strategy</li>
+    <li>Auth / guard structure</li>
+    <li>Billing in the data model</li>
+    <li>Server-authoritative real-time ordering</li>
+    <li>API contract &amp; versioning</li>
+    <li>Deployment topology</li>
+  </ol>
+
+  <div class="cta">
+    <h3>Want a second pair of eyes on yours?</h3>
+    <p>I do architecture reviews and fixed-scope builds for real-time,
+      multi-tenant SaaS. A 30-minute scoping call is free — and often saves a
+      six-month rewrite.</p>
+    <a href="https://iamahmedfarid.com">Book a call →</a>
+    <a class="ghost" href="https://www.linkedin.com/in/ahmed-farid-b46a5221b/">Connect on LinkedIn</a>
+  </div>
+
+  <footer>© 2026 Ahmed Farid · Senior Software Engineer · Cairo · Remote &amp; open to relocation</footer>
+</div>
+</body>
+</html>

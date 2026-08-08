@@ -287,7 +287,7 @@ async function generateOgImage(browser) {
     <div class="eyebrow"><span class="dot"></span>Senior Software Engineer · Cairo · Open to relocation</div>
     <h1>I build the systems<br>other teams <em>depend on.</em></h1>
     <div class="sub">Multi-tenant SaaS · real-time platforms · AI tools · mobile apps shipped across the Gulf, US &amp; UK.</div>
-    <div class="foot"><b>Ahmed Farid</b> &nbsp;·&nbsp; ahmedfarid2.github.io</div>
+    <div class="foot"><b>Ahmed Farid</b> &nbsp;·&nbsp; iamahmedfarid.com</div>
     <div class="tags">Laravel · Next.js · FastAPI · Flutter</div>
   </body></html>`;
   const p = await browser.newPage();

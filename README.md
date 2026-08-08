@@ -77,5 +77,15 @@ values, so edit them at the source (Claude design) and re-export:
   missing its sequence number — it sits between “Why me · 12” and
   “Trust signals · 13.” Add `· 13` (and bump the rest) or leave it unnumbered
   intentionally.
-- Consider adding an **`og:image`** meta tag (e.g. your portrait or a branded
-  card) so LinkedIn/Twitter link previews show an image.
+- ~~Consider adding an **`og:image`** meta tag~~ — **done automatically.** The
+  build generates a branded 1200×630 card (`dist/og.png`) and wires up
+  `og:image` / `twitter:image` per locale. No action needed.
+
+---
+
+## 📈 Growth & client acquisition
+
+Strategy docs for turning this portfolio into a client pipeline live in
+[`docs/`](docs/) — start with [`docs/GROWTH-PLAN.md`](docs/GROWTH-PLAN.md).
+The lead magnet ("Multi-Tenant SaaS Architecture Checklist") is in
+[`lead-magnet/`](lead-magnet/) and deploys live at `/checklist.html`.
