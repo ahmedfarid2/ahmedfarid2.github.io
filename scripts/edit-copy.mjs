@@ -21,6 +21,38 @@ import zlib from 'node:zlib';
 
 const CHECK = process.argv.includes('--check');
 
+// ── Lead-magnet card ────────────────────────────────────────────────────────
+// The checklist deploys to /checklist.html but nothing linked to it, so it was
+// unreachable. This inserts a card at the top of the Connect section's
+// `channels` array in every locale. Shared icon: a checklist glyph drawn to
+// match the existing 22×22 / currentColor cards.
+const LM_ICON =
+  '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+  '<path d="M2.8 5.9l1.3-1.3 1.4 1.4 2.8-2.8 1.3 1.3-4.1 4.1zM11 4h10v2H11z' +
+  'M2.8 12.9l1.3-1.3 1.4 1.4 2.8-2.8 1.3 1.3-4.1 4.1zM11 11h10v2H11z' +
+  'M2.8 19.9l1.3-1.3 1.4 1.4 2.8-2.8 1.3 1.3-4.1 4.1zM11 18h10v2H11z"/></svg>';
+
+// Unique in every export (LinkedIn is always the first channel and brand names
+// are never translated), so one anchor works across all five locales.
+const LM_ANCHOR = 'const channels = [\n    {\n      name: "LinkedIn",';
+
+function leadMagnetCard({ name, handle, desc }) {
+  return (
+    'const channels = [\n' +
+    '    {\n' +
+    `      name: ${JSON.stringify(name)},\n` +
+    `      handle: ${JSON.stringify(handle)},\n` +
+    '      href: "/checklist.html",\n' +
+    `      desc: ${JSON.stringify(desc)},\n` +
+    '      icon: (\n' +
+    `        ${LM_ICON}\n` +
+    '      ),\n' +
+    '    },\n' +
+    '    {\n' +
+    '      name: "LinkedIn",'
+  );
+}
+
 // Each edit is an exact string match, so a failed match is loud rather than
 // silently rewriting the wrong thing.
 const EDITS = [
@@ -113,6 +145,58 @@ const EDITS = [
       '            tournent dessus. Cinq ans de mise en production dans le Golfe, aux États-Unis\n' +
       '            et au Royaume-Uni. Laravel, Next.js, FastAPI, Flutter. Ouvert à la mobilité.\n' +
       '          </p>',
+  },
+
+  // ── Lead-magnet card in the Connect section (all locales) ────────────────
+  {
+    file: 'index.html',
+    label: 'lead-magnet card (en)',
+    old: LM_ANCHOR,
+    new: leadMagnetCard({
+      name: 'Free checklist',
+      handle: 'Multi-Tenant SaaS Architecture',
+      desc: "The decisions you can't cheaply undo. Free PDF.",
+    }),
+  },
+  {
+    file: 'index.ar.html',
+    label: 'lead-magnet card (ar)',
+    old: LM_ANCHOR,
+    new: leadMagnetCard({
+      name: 'قائمة مجانية',
+      handle: 'معمارية SaaS متعدّدة المستأجرين',
+      desc: 'القرارات التي يصعب التراجع عنها لاحقًا. ملف PDF مجاني.',
+    }),
+  },
+  {
+    file: 'index.de.html',
+    label: 'lead-magnet card (de)',
+    old: LM_ANCHOR,
+    new: leadMagnetCard({
+      name: 'Kostenlose Checkliste',
+      handle: 'Multi-Tenant-SaaS-Architektur',
+      desc: 'Die Entscheidungen, die man nicht günstig rückgängig macht. Gratis-PDF.',
+    }),
+  },
+  {
+    file: 'index.es.html',
+    label: 'lead-magnet card (es)',
+    old: LM_ANCHOR,
+    new: leadMagnetCard({
+      name: 'Checklist gratuita',
+      handle: 'Arquitectura SaaS multi-tenant',
+      desc: 'Las decisiones que no puedes deshacer barato. PDF gratis.',
+    }),
+  },
+  {
+    file: 'index.fr.html',
+    label: 'lead-magnet card (fr)',
+    old: LM_ANCHOR,
+    new: leadMagnetCard({
+      name: 'Checklist gratuite',
+      handle: 'Architecture SaaS multi-tenant',
+      desc: "Les décisions qu'on ne peut pas défaire à bas coût. PDF gratuit.",
+    }),
   },
 ];
 
