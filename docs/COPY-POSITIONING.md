@@ -6,6 +6,25 @@
 range. You stay full-stack; you just *lead* with the thing that's most valuable
 and most referable.
 
+---
+
+## ⚠️ Status: the hero paragraph is ALREADY APPLIED — mirror it in Claude design
+
+The **hero intro paragraph** below has been applied directly to all five exports
+(`index.html`, `.ar`, `.de`, `.es`, `.fr`) via
+[`scripts/edit-copy.mjs`](../scripts/edit-copy.mjs), so it is **live now**.
+
+**This will be overwritten the next time you export from Claude design.**
+Claude design is the source of truth; it doesn't know about the direct edit. So
+at your next edit session, paste the new hero paragraph into Claude design too —
+then the change survives forever and the script becomes a no-op (it detects the
+new text and reports "already applied").
+
+Everything else in this document is **not yet applied** — those are still
+paste-into-Claude-design changes.
+
+---
+
 **How to use (same flow as your `TRANSLATION-*.md` files):**
 1. Open the English version in Claude design.
 2. Replace the strings below, section by section. Only the HERO, ABOUT, meta,
@@ -25,12 +44,15 @@ and most referable.
 - **Headline (keep your strong one):**
   **I build the systems** / **other teams depend on.**
 
-- **Intro (SHARPEN — lead with the niche, then the range):**
-  > Senior engineer specializing in **real-time, multi-tenant SaaS platforms** —
+- **Intro — ✅ APPLIED LIVE (paste this into Claude design to make it permanent):**
+  > Cairo-based senior engineer specializing in real-time, multi-tenant SaaS —
   > live bidding, role-based tenants, and the mobile apps that run on top. Five
-  > years shipping to production across the Gulf, US, and UK with Laravel,
-  > Next.js, FastAPI, and Flutter. I own the whole rope: architecture, backend,
-  > web, mobile, and the infrastructure under it.
+  > years shipping to production across the Gulf, the US, and the UK. Laravel,
+  > Next.js, FastAPI, Flutter. Open to relocation.
+
+  The translated versions now live in each export too — the exact strings are in
+  [`scripts/edit-copy.mjs`](../scripts/edit-copy.mjs) if you want to copy them
+  into the ES/FR/DE/AR versions in Claude design.
 
 - **Buttons (add urgency to the primary CTA):**
   `Start a project` → **Book a scoping call** · `See selected work` · `Download CV ↓`
