@@ -198,6 +198,16 @@ const EDITS = [
       desc: "Les décisions qu'on ne peut pas défaire à bas coût. PDF gratuit.",
     }),
   },
+
+  // ── Primary CTA (nav, hero, about — 3 places per locale) ────────────────
+  // "Start a project" asks for a commitment the visitor isn't ready to make.
+  // The actual next step is a free 30-minute scoping call (already promised in
+  // the services section and FAQ), so the button now says exactly that.
+  { file: 'index.html',    label: 'primary CTA (en)', expect: 3, old: 'Start a project',     new: 'Book a scoping call' },
+  { file: 'index.ar.html', label: 'primary CTA (ar)', expect: 3, old: 'ابدأ مشروعًا',         new: 'احجز مكالمة استكشافية' },
+  { file: 'index.de.html', label: 'primary CTA (de)', expect: 3, old: 'Projekt starten',     new: 'Scoping-Call buchen' },
+  { file: 'index.es.html', label: 'primary CTA (es)', expect: 3, old: 'Empezar un proyecto', new: 'Agendar una llamada' },
+  { file: 'index.fr.html', label: 'primary CTA (fr)', expect: 3, old: 'Démarrer un projet',  new: 'Réserver un appel' },
 ];
 
 // Locate the `__bundler/manifest` line: a single-line JSON object mapping
@@ -263,14 +273,21 @@ for (const edit of EDITS) {
     continue;
   }
 
+  // `expect` defaults to 1. Requiring an exact count (rather than "at least
+  // one") means a changed export fails loudly instead of silently editing a
+  // different number of places than intended.
+  const expected = edit.expect ?? 1;
   const occurrences = target.text.split(edit.old).length - 1;
-  if (occurrences !== 1) {
-    console.error(`✗ ${edit.label}: expected exactly 1 match, found ${occurrences} — refusing to edit`);
+  if (occurrences !== expected) {
+    console.error(`✗ ${edit.label}: expected exactly ${expected} match(es), found ${occurrences} — refusing to edit`);
     failures++;
     continue;
   }
 
-  const updated = target.text.replace(edit.old, edit.new);
+  const updated =
+    expected === 1
+      ? target.text.replace(edit.old, edit.new)
+      : target.text.split(edit.old).join(edit.new);
   obj[target.id] = { ...target.asset, data: encode(target.asset, updated) };
   lines[index] = JSON.stringify(obj);
   writeFileSync(edit.file, lines.join('\n'), 'utf8');
