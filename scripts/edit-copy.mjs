@@ -30,6 +30,11 @@ import zlib from 'node:zlib';
 const CHECK = process.argv.includes('--check');
 const SOFT = process.argv.includes('--soft');
 
+// Where the lead-magnet card points. This is the email-capture form: visitors
+// enter an email, then Tally hands them the PDF. Change this one constant to
+// repoint the card in every locale.
+const LM_HREF = 'https://tally.so/r/68YlMB';
+
 // ── Lead-magnet card ────────────────────────────────────────────────────────
 // The checklist deploys to /checklist.html but nothing linked to it, so it was
 // unreachable. This inserts a card at the top of the Connect section's
@@ -51,7 +56,7 @@ function leadMagnetCard({ name, handle, desc }) {
     '    {\n' +
     `      name: ${JSON.stringify(name)},\n` +
     `      handle: ${JSON.stringify(handle)},\n` +
-    '      href: "/checklist.html",\n' +
+    `      href: ${JSON.stringify(LM_HREF)},\n` +
     `      desc: ${JSON.stringify(desc)},\n` +
     '      icon: (\n' +
     `        ${LM_ICON}\n` +
@@ -160,6 +165,8 @@ const EDITS = [
   {
     file: 'index.html',
     label: 'lead-magnet card (en)',
+    // Stable across href changes — the handle text never varies.
+    appliedMarker: 'Multi-Tenant SaaS Architecture',
     old: LM_ANCHOR,
     new: leadMagnetCard({
       name: 'Free checklist',
@@ -170,6 +177,8 @@ const EDITS = [
   {
     file: 'index.ar.html',
     label: 'lead-magnet card (ar)',
+    // Stable across href changes — the handle text never varies.
+    appliedMarker: 'معمارية SaaS متعدّدة المستأجرين',
     old: LM_ANCHOR,
     new: leadMagnetCard({
       name: 'قائمة مجانية',
@@ -180,6 +189,8 @@ const EDITS = [
   {
     file: 'index.de.html',
     label: 'lead-magnet card (de)',
+    // Stable across href changes — the handle text never varies.
+    appliedMarker: 'Multi-Tenant-SaaS-Architektur',
     old: LM_ANCHOR,
     new: leadMagnetCard({
       name: 'Kostenlose Checkliste',
@@ -190,6 +201,8 @@ const EDITS = [
   {
     file: 'index.es.html',
     label: 'lead-magnet card (es)',
+    // Stable across href changes — the handle text never varies.
+    appliedMarker: 'Arquitectura SaaS multi-tenant',
     old: LM_ANCHOR,
     new: leadMagnetCard({
       name: 'Checklist gratuita',
@@ -200,6 +213,8 @@ const EDITS = [
   {
     file: 'index.fr.html',
     label: 'lead-magnet card (fr)',
+    // Stable across href changes — the handle text never varies.
+    appliedMarker: 'Architecture SaaS multi-tenant',
     old: LM_ANCHOR,
     new: leadMagnetCard({
       name: 'Checklist gratuite',
@@ -217,6 +232,19 @@ const EDITS = [
   { file: 'index.de.html', label: 'primary CTA (de)', expect: 3, old: 'Projekt starten',     new: 'Scoping-Call buchen' },
   { file: 'index.es.html', label: 'primary CTA (es)', expect: 3, old: 'Empezar un proyecto', new: 'Agendar una llamada' },
   { file: 'index.fr.html', label: 'primary CTA (fr)', expect: 3, old: 'Démarrer un projet',  new: 'Réserver un appel' },
+
+  // ── Migration: point the existing card at the capture form ───────────────
+  // Exports that already carry the card link straight to /checklist.html, which
+  // gives the PDF away without capturing an email. Repoint them at LM_HREF.
+  // Marked optional: a freshly-inserted card already uses LM_HREF, so on a new
+  // export there is nothing here to migrate.
+  ...['index.html', 'index.ar.html', 'index.de.html', 'index.es.html', 'index.fr.html'].map((file) => ({
+    file,
+    label: `lead-magnet href → capture form (${file.split('.')[1] === 'html' ? 'en' : file.split('.')[1]})`,
+    optional: true,
+    old: '      href: "/checklist.html",\n',
+    new: `      href: ${JSON.stringify(LM_HREF)},\n`,
+  })),
 ];
 
 // Locate the `__bundler/manifest` line: a single-line JSON object mapping
@@ -261,14 +289,27 @@ for (const edit of EDITS) {
 
   const { index, obj } = found;
   let target = null;
+  // How we recognise "this edit is already in place". Defaults to the new text,
+  // but an edit can supply `appliedMarker` — a stable substring that survives
+  // later tweaks to the replacement (e.g. the lead-magnet card, whose href can
+  // change when the capture form changes). Without that, editing the
+  // replacement would make an applied edit look unapplied.
+  const marker = edit.appliedMarker ?? edit.new;
   for (const [id, asset] of Object.entries(obj)) {
     let text;
     try { text = decode(asset); } catch { continue; }
     if (text.includes(edit.old)) { target = { id, asset, text }; break; }
-    if (text.includes(edit.new)) { target = { id, asset, text, already: true }; break; }
+    if (text.includes(marker)) { target = { id, asset, text, already: true }; break; }
   }
 
   if (!target) {
+    // `optional` marks a migration edit that only applies to files still in an
+    // older state. On a fresh export the newer form is produced directly, so
+    // "not found" is the expected outcome, not a failure.
+    if (edit.optional) {
+      console.log(`· ${edit.label}: nothing to migrate in ${edit.file} (expected)`);
+      continue;
+    }
     console.error(`✗ ${edit.label}: OLD text not found in ${edit.file} (export may have changed — re-run the probe)`);
     failures++;
     continue;
