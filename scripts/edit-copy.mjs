@@ -409,6 +409,46 @@ const EDITS = [
     new: `      href: ${JSON.stringify(LM_HREF)},\n`,
   })),
 
+  // ── RevealSite case screenshot ───────────────────────────────────────────
+  // RevealSite was the only one of the nine case studies with no screenshot.
+  // The cause was not a missing image: the mock only renders when the case has
+  // NO `fleet`, and RevealSite is the one case that has one — so adding a
+  // shotSrc alone would have changed nothing. The condition now also lets a
+  // fleet case through when it actually carries a screenshot, which leaves
+  // every other case's behaviour untouched.
+  //
+  // The image is a real file at the repo root (copied to dist/ by the build)
+  // rather than an inline base64 data URI like the other eight, so the HTML
+  // stays small and the browser caches it separately.
+  ...['index.html', 'index.ar.html', 'index.de.html', 'index.es.html', 'index.fr.html'].flatMap((file) => {
+    const loc = file === 'index.html' ? 'en' : file.split('.')[1];
+    return [
+      {
+        file,
+        label: `revealsite shot: show for fleet cases (${loc})`,
+        appliedMarker: '{(c.shotSrc || !c.fleet) && c.links',
+        old: '{!c.fleet && c.links && c.links.length ? (',
+        new: '{(c.shotSrc || !c.fleet) && c.links && c.links.length ? (',
+      },
+      {
+        file,
+        label: `revealsite shot: src (${loc})`,
+        appliedMarker: 'shotSrc: "/revealsite.jpg"',
+        // Anchored on the brand name, which is never translated. The `tag`
+        // beneath it is localised, so anchoring there would only match English.
+        // Verified unique in all five files — the other "RevealSite" lives in
+        // the brands array on a single line with different indentation.
+        // Spans the following `role:` key so the anchor is consumed by its own
+        // replacement — matching on the name line alone still matches after the
+        // insert and would add a duplicate shotSrc on every re-run. `role` is a
+        // code key, so it is identical in every locale even though its value is
+        // translated.
+        old: '\n    name: "RevealSite",\n    role:',
+        new: '\n    name: "RevealSite",\n    shotSrc: "/revealsite.jpg",\n    role:',
+      },
+    ];
+  }),
+
   // ── "Own products" section ───────────────────────────────────────────────
   // Client work shows he can execute someone else's brief; products he chose,
   // built and hosts himself show initiative, which is what founders hire for.
