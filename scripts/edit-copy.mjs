@@ -103,6 +103,19 @@ const PRODUCTS = [
       'AI-written executive summary, findings, risks and recommendations, ' +
       'exportable as PDF. Parsing runs in the browser — data never leaves it.',
   },
+  {
+    // Labelled a CONCEPT deliberately. Unlike the other two this is not Ahmed's
+    // own product: it is an unapproved concept for a real dental clinic, so the
+    // card must not imply the clinic commissioned it or signed it off.
+    cat: 'Concept',
+    name: 'Reform Dental',
+    href: 'https://reform.iamahmedfarid.com',
+    chips: ['Vanilla JS', 'No build step', 'Bilingual RTL', 'Vercel'],
+    desc:
+      'A homepage concept for a dental clinic, in English and Arabic. The RTL ' +
+      'version carries its own type system and composition rather than a ' +
+      'mirrored layout. No framework, no build step — three files and a photo.',
+  },
 ];
 
 // Per-locale section copy. Product names and tech chips stay in English, the
@@ -112,47 +125,51 @@ const PRODUCTS_COPY = {
     eyebrow: 'Own products',
     title: ['Products I built ', 'and run myself.'],
     sub: 'Client work shows what I can deliver against someone else’s brief. These are the ones where I picked the problem, shipped the product, and host it on my own domain.',
-    cats: ['Finance ops', 'AI reporting'],
-    descs: [PRODUCTS[0].desc, PRODUCTS[1].desc],
+    cats: ['Finance ops', 'AI reporting', 'Concept'],
+    descs: [PRODUCTS[0].desc, PRODUCTS[1].desc, PRODUCTS[2].desc],
   },
   ar: {
     eyebrow: 'منتجاتي الخاصة',
     title: ['منتجات بنيتها ', 'وأُشغّلها بنفسي.'],
     sub: 'أعمال العملاء تُظهر ما أستطيع تسليمه وفق متطلبات غيري. هذه هي التي اخترت فيها المشكلة بنفسي، وأطلقت المنتج، وأستضيفه على نطاقي الخاص.',
-    cats: ['عمليات مالية', 'تقارير بالذكاء الاصطناعي'],
+    cats: ['عمليات مالية', 'تقارير بالذكاء الاصطناعي', 'مفهوم تصميمي'],
     descs: [
       'مطابقة الفواتير مع كشوف الحساب البنكية للمحاسبين. ارفع الملفين وشاهد ما هو مدفوع، وغير مدفوع، ومدفوع مرتين، أو مشبوه — مع درجة ثقة وسبب واضح لكل صف.',
       'يحوّل ملف CSV خامًا إلى تقرير أعمال: لوحة تفاعلية، وملخّص تنفيذي مكتوب بالذكاء الاصطناعي، ونتائج ومخاطر وتوصيات، قابل للتصدير PDF. التحليل يتم في المتصفح — البيانات لا تغادره.',
+      'مفهوم لصفحة رئيسية لعيادة أسنان، بالإنجليزية والعربية. النسخة العربية لها نظامها الطباعي وتكوينها الخاص، لا مجرد انعكاس للتخطيط. بلا إطار عمل وبلا خطوة بناء — ثلاثة ملفات وصورة واحدة.',
     ],
   },
   de: {
     eyebrow: 'Eigene Produkte',
     title: ['Produkte, die ich gebaut habe ', 'und selbst betreibe.'],
     sub: 'Kundenarbeit zeigt, was ich nach fremder Vorgabe liefere. Hier habe ich das Problem selbst gewählt, das Produkt ausgeliefert und hoste es auf meiner eigenen Domain.',
-    cats: ['Finanzprozesse', 'KI-Reporting'],
+    cats: ['Finanzprozesse', 'KI-Reporting', 'Konzept'],
     descs: [
       'Abgleich von Rechnungen und Kontoauszügen für Buchhalter. Beide Dateien hochladen und sehen, was bezahlt, offen, doppelt bezahlt oder auffällig ist — jede Zeile mit Konfidenzwert und verständlicher Begründung.',
       'Macht aus einer rohen CSV einen Geschäftsbericht: interaktives Dashboard, KI-geschriebene Zusammenfassung, Erkenntnisse, Risiken und Empfehlungen, als PDF exportierbar. Das Parsen läuft im Browser — die Daten verlassen ihn nie.',
+      'Ein Homepage-Konzept für eine Zahnarztpraxis, auf Englisch und Arabisch. Die RTL-Fassung hat ein eigenes Typosystem und eine eigene Komposition statt eines gespiegelten Layouts. Ohne Framework, ohne Build-Schritt — drei Dateien und ein Foto.',
     ],
   },
   es: {
     eyebrow: 'Productos propios',
     title: ['Productos que construí ', 'y opero yo mismo.'],
     sub: 'El trabajo con clientes muestra lo que entrego según el encargo de otros. Estos son los que elegí yo: escogí el problema, lancé el producto y lo alojo en mi propio dominio.',
-    cats: ['Operaciones financieras', 'Informes con IA'],
+    cats: ['Operaciones financieras', 'Informes con IA', 'Concepto'],
     descs: [
       'Conciliación de facturas y extractos bancarios para contables. Sube ambos archivos y ve qué está pagado, pendiente, pagado dos veces o es sospechoso — cada fila con un nivel de confianza y un motivo en lenguaje claro.',
       'Convierte un CSV en bruto en un informe de negocio: panel interactivo, resumen ejecutivo escrito por IA, hallazgos, riesgos y recomendaciones, exportable a PDF. El análisis ocurre en el navegador — los datos nunca salen de él.',
+      'Un concepto de página de inicio para una clínica dental, en inglés y árabe. La versión RTL tiene su propio sistema tipográfico y composición, no un diseño reflejado. Sin framework y sin paso de compilación: tres archivos y una fotografía.',
     ],
   },
   fr: {
     eyebrow: 'Mes propres produits',
     title: ['Des produits que j’ai construits ', 'et que j’exploite moi-même.'],
     sub: 'Le travail client montre ce que je livre selon le cahier des charges d’autrui. Ici, j’ai choisi le problème, livré le produit et je l’héberge sur mon propre domaine.',
-    cats: ['Opérations financières', 'Reporting par IA'],
+    cats: ['Opérations financières', 'Reporting par IA', 'Concept'],
     descs: [
       'Rapprochement des factures et des relevés bancaires pour les comptables. Chargez les deux fichiers et voyez ce qui est payé, impayé, payé deux fois ou suspect — chaque ligne avec un score de confiance et une raison en clair.',
       'Transforme un CSV brut en rapport d’activité : tableau de bord interactif, synthèse rédigée par IA, constats, risques et recommandations, exportable en PDF. L’analyse tourne dans le navigateur — les données n’en sortent jamais.',
+      'Un concept de page d’accueil pour un cabinet dentaire, en anglais et en arabe. La version RTL possède sa propre typographie et composition plutôt qu’une mise en page miroir. Sans framework ni étape de build — trois fichiers et une photographie.',
     ],
   },
 };
@@ -162,20 +179,26 @@ const PRODUCTS_COPY = {
 const jsxText = (s) =>
   String(s).replace(/'/g, '&apos;').replace(/\{/g, '&#123;').replace(/\}/g, '&#125;');
 
-function productsComponent(locale) {
-  const c = PRODUCTS_COPY[locale];
-  const cards = PRODUCTS.map((p, i) =>
+// One product card. Shared so the fresh-export path (productsComponent) and the
+// append-to-an-existing-section migration below cannot drift apart.
+function productCard(p, cat, desc) {
+  return (
     '          <a className="writing-card" href="' + p.href + '" target="_blank" rel="noreferrer">\n' +
     '            <div className="writing-card-head">\n' +
-    '              <span className="writing-card-cat">' + jsxText(c.cats[i]) + '</span>\n' +
+    '              <span className="writing-card-cat">' + jsxText(cat) + '</span>\n' +
     '            </div>\n' +
     '            <h3 className="writing-card-title">' + jsxText(p.name) + '</h3>\n' +
-    '            <p className="writing-card-desc">' + jsxText(c.descs[i]) + '</p>\n' +
+    '            <p className="writing-card-desc">' + jsxText(desc) + '</p>\n' +
     '            <div className="case-stack">\n' +
     p.chips.map((ch) => '              <span className="chip">' + jsxText(ch) + '</span>\n').join('') +
     '            </div>\n' +
     '          </a>\n'
-  ).join('');
+  );
+}
+
+function productsComponent(locale) {
+  const c = PRODUCTS_COPY[locale];
+  const cards = PRODUCTS.map((p, i) => productCard(p, c.cats[i], c.descs[i])).join('');
 
   return (
     'function Products() {\n' +
@@ -216,6 +239,30 @@ const PRODUCT_SECTION_EDITS = ['en', 'ar', 'de', 'es', 'fr'].flatMap((loc) => {
       appliedMarker: 'Products, Writing, FAQ',
       old: 'Object.assign(window, { Writing, FAQ, Connect, CTA, Footer });',
       new: 'Object.assign(window, { Products, Writing, FAQ, Connect, CTA, Footer });',
+    },
+    // Migration: exports that already carry the two-card version of the section
+    // predate the Reform card. The component edit above cannot add it — its
+    // appliedMarker matches, so it reports "already applied" and does nothing —
+    // so the third card is appended here instead. Optional, because a freshly
+    // generated component already contains all three and has nothing to migrate.
+    {
+      file,
+      label: `products section: append Reform card (${loc})`,
+      optional: true,
+      appliedMarker: 'Reform Dental',
+      // Anchored on the last chip of the SheetPilot card plus the grid close, so
+      // the anchor is consumed by its own replacement and cannot re-append.
+      old:
+        '              <span className="chip">Recharts</span>\n' +
+        '            </div>\n' +
+        '          </a>\n' +
+        '        </div>\n',
+      new:
+        '              <span className="chip">Recharts</span>\n' +
+        '            </div>\n' +
+        '          </a>\n' +
+        productCard(PRODUCTS[2], PRODUCTS_COPY[loc].cats[2], PRODUCTS_COPY[loc].descs[2]) +
+        '        </div>\n',
     },
     {
       file,
