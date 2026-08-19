@@ -67,6 +67,169 @@ function leadMagnetCard({ name, handle, desc }) {
   );
 }
 
+// ── "Own products" section ──────────────────────────────────────────────────
+// Products Ahmed chose, built and hosts himself, as opposed to client work.
+//
+// Reuses existing classes only — `.writing-grid`/`.writing-card` for the link
+// cards (each product is an external link) and `.case-stack`/`.chip` for the
+// tech chips, since `.chip` is only styled inside `.build-card` and
+// `.case-stack`. That means zero new CSS, and the section inherits hover,
+// reveal and spotlight behaviour for free.
+//
+// The eyebrow carries no number on purpose. Section numbers are hardcoded
+// strings and already inconsistent in the export (15 appears twice, 16 is
+// unused), so numbering this one would either collide or force renumbering
+// everything after it. The design already has unnumbered eyebrows — "Profile",
+// "By the numbers", "Full toolbelt" — so this follows that established pattern
+// and can sit high on the page instead of being buried at the end.
+const PRODUCTS = [
+  {
+    cat: 'Finance ops',
+    name: 'ReconcilePilot',
+    href: 'https://reconcilepilot.iamahmedfarid.com',
+    chips: ['Next.js 16', 'React 19', 'Supabase', 'Vercel'],
+    desc:
+      'Invoice ↔ bank-statement reconciliation for accountants. Upload both ' +
+      'sheets and see what is paid, unpaid, double-paid or suspicious — every ' +
+      'row scored for confidence with a plain-English reason.',
+  },
+  {
+    cat: 'AI reporting',
+    name: 'SheetPilot AI',
+    href: 'https://sheetpilot.iamahmedfarid.com',
+    chips: ['Next.js 16', 'TypeScript', 'Tailwind v4', 'Recharts'],
+    desc:
+      'Turns a raw CSV into a business report: interactive dashboard, ' +
+      'AI-written executive summary, findings, risks and recommendations, ' +
+      'exportable as PDF. Parsing runs in the browser — data never leaves it.',
+  },
+];
+
+// Per-locale section copy. Product names and tech chips stay in English, the
+// way the existing translations already treat brand and tech tokens.
+const PRODUCTS_COPY = {
+  en: {
+    eyebrow: 'Own products',
+    title: ['Products I built ', 'and run myself.'],
+    sub: 'Client work shows what I can deliver against someone else’s brief. These are the ones where I picked the problem, shipped the product, and host it on my own domain.',
+    cats: ['Finance ops', 'AI reporting'],
+    descs: [PRODUCTS[0].desc, PRODUCTS[1].desc],
+  },
+  ar: {
+    eyebrow: 'منتجاتي الخاصة',
+    title: ['منتجات بنيتها ', 'وأُشغّلها بنفسي.'],
+    sub: 'أعمال العملاء تُظهر ما أستطيع تسليمه وفق متطلبات غيري. هذه هي التي اخترت فيها المشكلة بنفسي، وأطلقت المنتج، وأستضيفه على نطاقي الخاص.',
+    cats: ['عمليات مالية', 'تقارير بالذكاء الاصطناعي'],
+    descs: [
+      'مطابقة الفواتير مع كشوف الحساب البنكية للمحاسبين. ارفع الملفين وشاهد ما هو مدفوع، وغير مدفوع، ومدفوع مرتين، أو مشبوه — مع درجة ثقة وسبب واضح لكل صف.',
+      'يحوّل ملف CSV خامًا إلى تقرير أعمال: لوحة تفاعلية، وملخّص تنفيذي مكتوب بالذكاء الاصطناعي، ونتائج ومخاطر وتوصيات، قابل للتصدير PDF. التحليل يتم في المتصفح — البيانات لا تغادره.',
+    ],
+  },
+  de: {
+    eyebrow: 'Eigene Produkte',
+    title: ['Produkte, die ich gebaut habe ', 'und selbst betreibe.'],
+    sub: 'Kundenarbeit zeigt, was ich nach fremder Vorgabe liefere. Hier habe ich das Problem selbst gewählt, das Produkt ausgeliefert und hoste es auf meiner eigenen Domain.',
+    cats: ['Finanzprozesse', 'KI-Reporting'],
+    descs: [
+      'Abgleich von Rechnungen und Kontoauszügen für Buchhalter. Beide Dateien hochladen und sehen, was bezahlt, offen, doppelt bezahlt oder auffällig ist — jede Zeile mit Konfidenzwert und verständlicher Begründung.',
+      'Macht aus einer rohen CSV einen Geschäftsbericht: interaktives Dashboard, KI-geschriebene Zusammenfassung, Erkenntnisse, Risiken und Empfehlungen, als PDF exportierbar. Das Parsen läuft im Browser — die Daten verlassen ihn nie.',
+    ],
+  },
+  es: {
+    eyebrow: 'Productos propios',
+    title: ['Productos que construí ', 'y opero yo mismo.'],
+    sub: 'El trabajo con clientes muestra lo que entrego según el encargo de otros. Estos son los que elegí yo: escogí el problema, lancé el producto y lo alojo en mi propio dominio.',
+    cats: ['Operaciones financieras', 'Informes con IA'],
+    descs: [
+      'Conciliación de facturas y extractos bancarios para contables. Sube ambos archivos y ve qué está pagado, pendiente, pagado dos veces o es sospechoso — cada fila con un nivel de confianza y un motivo en lenguaje claro.',
+      'Convierte un CSV en bruto en un informe de negocio: panel interactivo, resumen ejecutivo escrito por IA, hallazgos, riesgos y recomendaciones, exportable a PDF. El análisis ocurre en el navegador — los datos nunca salen de él.',
+    ],
+  },
+  fr: {
+    eyebrow: 'Mes propres produits',
+    title: ['Des produits que j’ai construits ', 'et que j’exploite moi-même.'],
+    sub: 'Le travail client montre ce que je livre selon le cahier des charges d’autrui. Ici, j’ai choisi le problème, livré le produit et je l’héberge sur mon propre domaine.',
+    cats: ['Opérations financières', 'Reporting par IA'],
+    descs: [
+      'Rapprochement des factures et des relevés bancaires pour les comptables. Chargez les deux fichiers et voyez ce qui est payé, impayé, payé deux fois ou suspect — chaque ligne avec un score de confiance et une raison en clair.',
+      'Transforme un CSV brut en rapport d’activité : tableau de bord interactif, synthèse rédigée par IA, constats, risques et recommandations, exportable en PDF. L’analyse tourne dans le navigateur — les données n’en sortent jamais.',
+    ],
+  },
+};
+
+// Escape text destined for JSX text nodes: `'` must not break out of the JSX,
+// and a literal `{`/`}` would be read as an expression.
+const jsxText = (s) =>
+  String(s).replace(/'/g, '&apos;').replace(/\{/g, '&#123;').replace(/\}/g, '&#125;');
+
+function productsComponent(locale) {
+  const c = PRODUCTS_COPY[locale];
+  const cards = PRODUCTS.map((p, i) =>
+    '          <a className="writing-card" href="' + p.href + '" target="_blank" rel="noreferrer">\n' +
+    '            <div className="writing-card-head">\n' +
+    '              <span className="writing-card-cat">' + jsxText(c.cats[i]) + '</span>\n' +
+    '            </div>\n' +
+    '            <h3 className="writing-card-title">' + jsxText(p.name) + '</h3>\n' +
+    '            <p className="writing-card-desc">' + jsxText(c.descs[i]) + '</p>\n' +
+    '            <div className="case-stack">\n' +
+    p.chips.map((ch) => '              <span className="chip">' + jsxText(ch) + '</span>\n').join('') +
+    '            </div>\n' +
+    '          </a>\n'
+  ).join('');
+
+  return (
+    'function Products() {\n' +
+    '  return (\n' +
+    '    <section className="pad-y" id="products">\n' +
+    '      <div className="wrap">\n' +
+    '        <SectionHead_t\n' +
+    '          eyebrow="' + jsxText(c.eyebrow) + '"\n' +
+    '          title={<>' + jsxText(c.title[0]) + '<em>' + jsxText(c.title[1]) + '</em></>}\n' +
+    '          sub="' + jsxText(c.sub) + '"\n' +
+    '        />\n' +
+    '        <div className="writing-grid">\n' +
+    cards +
+    '        </div>\n' +
+    '      </div>\n' +
+    '    </section>\n' +
+    '  );\n' +
+    '}\n\n'
+  );
+}
+
+// Three exact-match inserts per locale. The anchors are structural (a function
+// declaration, the window registration, the render list), not prose, so they
+// are identical in every locale file.
+const PRODUCT_SECTION_EDITS = ['en', 'ar', 'de', 'es', 'fr'].flatMap((loc) => {
+  const file = loc === 'en' ? 'index.html' : `index.${loc}.html`;
+  return [
+    {
+      file,
+      label: `products section: component (${loc})`,
+      appliedMarker: 'function Products() {',
+      old: 'Object.assign(window, { Writing, FAQ, Connect, CTA, Footer });',
+      new: productsComponent(loc) + 'Object.assign(window, { Writing, FAQ, Connect, CTA, Footer });',
+    },
+    {
+      file,
+      label: `products section: register (${loc})`,
+      appliedMarker: 'Products, Writing, FAQ',
+      old: 'Object.assign(window, { Writing, FAQ, Connect, CTA, Footer });',
+      new: 'Object.assign(window, { Products, Writing, FAQ, Connect, CTA, Footer });',
+    },
+    {
+      file,
+      label: `products section: render (${loc})`,
+      appliedMarker: '      <Products/>\n',
+      // Anchor spans BOTH neighbours so it is consumed by its own replacement.
+      // Anchoring on `<CaseStudies/>` alone would still match after the insert
+      // and add a second <Products/> on every re-run.
+      old: '      <CaseStudies/>\n      <WhatIBuild/>\n',
+      new: '      <CaseStudies/>\n      <Products/>\n      <WhatIBuild/>\n',
+    },
+  ];
+});
+
 // Each edit is an exact string match, so a failed match is loud rather than
 // silently rewriting the wrong thing.
 const EDITS = [
@@ -245,6 +408,13 @@ const EDITS = [
     old: '      href: "/checklist.html",\n',
     new: `      href: ${JSON.stringify(LM_HREF)},\n`,
   })),
+
+  // ── "Own products" section ───────────────────────────────────────────────
+  // Client work shows he can execute someone else's brief; products he chose,
+  // built and hosts himself show initiative, which is what founders hire for.
+  // Three inserts per locale: the component, its registration on window, and
+  // the render call — see PRODUCTS_EDITS below.
+  ...PRODUCT_SECTION_EDITS,
 ];
 
 // Locate the `__bundler/manifest` line: a single-line JSON object mapping
