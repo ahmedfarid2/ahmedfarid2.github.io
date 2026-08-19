@@ -83,7 +83,7 @@ async function fetchGitHub() {
   const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || '';
   const headers = { 'User-Agent': 'af-portfolio-build', Accept: 'application/vnd.github+json' };
   if (token) headers.Authorization = `Bearer ${token}`;
-  const out = { publicRepos: null, followers: null, calendar: null };
+  const out = { publicRepos: null, followers: null, calendar: null, pinned: null };
 
   try {
     const r = await fetch(`https://api.github.com/users/${GH_USER}`, { headers });
@@ -100,8 +100,17 @@ async function fetchGitHub() {
 
   if (token) {
     try {
+      // pinnedItems comes from the same authenticated GraphQL call as the
+      // heatmap. The repo cards used to be a hand-maintained list in the design
+      // export, which went stale every time the pins were rearranged on GitHub
+      // — twice in one week. Reading them live means the section can never drift
+      // again, and it costs nothing extra: same request, one more field.
       const query =
-        'query($l:String!){user(login:$l){contributionsCollection{contributionCalendar{weeks{contributionDays{contributionCount}}}}}}';
+        'query($l:String!){user(login:$l){' +
+        'contributionsCollection{contributionCalendar{weeks{contributionDays{contributionCount}}}}' +
+        'pinnedItems(first:6,types:REPOSITORY){nodes{... on Repository{' +
+        'name description isPrivate url primaryLanguage{name}}}}' +
+        '}}';
       const r = await fetch('https://api.github.com/graphql', {
         method: 'POST',
         headers: { ...headers, 'Content-Type': 'application/json' },
@@ -109,6 +118,16 @@ async function fetchGitHub() {
       });
       if (r.ok) {
         const j = await r.json();
+        const pins = j?.data?.user?.pinnedItems?.nodes || [];
+        if (pins.length) {
+          out.pinned = pins.filter(Boolean).map((p) => ({
+            name: p.name,
+            desc: p.description || '',
+            lang: p.primaryLanguage?.name || '',
+            vis: p.isPrivate ? 'Private' : 'Public',
+            url: p.url,
+          }));
+        }
         const weeks = j?.data?.user?.contributionsCollection?.contributionCalendar?.weeks || [];
         const counts = [];
         for (const w of weeks) for (const d of w.contributionDays) counts.push(d.contributionCount);
@@ -520,6 +539,67 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
               s.textContent = s.textContent.replace(/\s*[·.|-]?\s*illustrative/i, '').trim() || 'Contribution activity';
             }
           });
+        }
+      }
+
+      // ── Pinned repos, live ────────────────────────────────────────────────
+      // The six repo cards were a hand-maintained list baked into the export,
+      // so every time the pins were rearranged on GitHub the site showed the
+      // old six. Rewrite them from the real pinnedItems instead. Repo names and
+      // GitHub's own descriptions are not translated, in the same way the
+      // brand and tech tokens elsewhere on the page aren't.
+      //
+      // Falls back to the export's cards whenever the fetch produced nothing
+      // (no token locally, API down, rate limit) — a stale list still beats an
+      // empty section.
+      if (gh.pinned && gh.pinned.length) {
+        const list = document.querySelector('#github .gh-repos');
+        const cards = list ? [...list.querySelectorAll('.gh-repo')] : [];
+        if (cards.length) {
+          const template = cards[0];
+          // "Pinned" is the label the export uses in the stats slot of each
+          // card; it is translated per locale, so reuse whatever this export
+          // already had rather than hardcoding an English word.
+          const pinnedLabel =
+            template.querySelector('.gh-repo-stats span:last-child')?.textContent?.trim() || 'Pinned';
+
+          const built = gh.pinned.map((p) => {
+            const el = template.cloneNode(true);
+            el.querySelector('.name').textContent = p.name;
+            const meta = el.querySelector('.meta');
+            if (meta) meta.textContent = p.vis;
+            const desc = el.querySelector('p');
+            if (desc) desc.textContent = p.desc;
+            const stats = el.querySelectorAll('.gh-repo-stats span');
+            if (stats[0]) stats[0].textContent = p.lang;
+            if (stats[1]) stats[1].textContent = pinnedLabel;
+            // A private pin has no public page to open, so it stays plain text.
+            if (!p.url || p.vis === 'Private') return el;
+            const a = document.createElement('a');
+            a.href = p.url;
+            a.target = '_blank';
+            a.rel = 'noreferrer';
+            a.style.color = 'inherit';
+            a.style.textDecoration = 'none';
+            a.appendChild(el);
+            return a;
+          });
+
+          cards.forEach((c) => c.remove());
+          built.reverse().forEach((el) => list.insertBefore(el, list.firstChild));
+
+          // The "Pinned projects" stat counts them — keep it honest if the
+          // number of pins ever changes from six.
+          const stat = [...document.querySelectorAll('#github .gh-stat')].find(
+            (s) => s.querySelector('.v')?.textContent?.trim() === String(cards.length)
+          );
+          const sv = stat?.querySelector('.v');
+          if (sv && cards.length !== gh.pinned.length) {
+            const AR2 = '٠١٢٣٤٥٦٧٨٩';
+            sv.textContent = /[٠-٩]/.test(sv.textContent)
+              ? String(gh.pinned.length).replace(/[0-9]/g, (d) => AR2[Number(d)])
+              : String(gh.pinned.length);
+          }
         }
       }
 
@@ -1004,7 +1084,7 @@ async function build() {
   // ── One-time shared work (run once, not per locale) ───────────────────────
   console.log('→ Fetching real GitHub data…');
   const ghData = await fetchGitHub();
-  console.log(`  publicRepos=${ghData.publicRepos ?? 'n/a'}  followers=${ghData.followers ?? 'n/a'}  calendarDays=${ghData.calendar ? ghData.calendar.length : 'n/a'}`);
+  console.log(`  publicRepos=${ghData.publicRepos ?? 'n/a'}  followers=${ghData.followers ?? 'n/a'}  calendarDays=${ghData.calendar ? ghData.calendar.length : 'n/a'}  pinned=${ghData.pinned ? ghData.pinned.map((p) => p.name).join(', ') : 'n/a (keeping export cards)'}`);
 
   console.log('→ Extracting original UI/UX enhancement layer…');
   let enhanceJS = await extractEnhancementLayer();
