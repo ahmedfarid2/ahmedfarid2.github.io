@@ -598,6 +598,114 @@ const CASE_EDITS = ['en', 'ar', 'de', 'es', 'fr'].map((loc) => ({
   transform: rewriteCases(loc),
 }));
 
+// ── Pricing: "from" on the two large tiers ───────────────────────────────────
+// A hard number is a filter, and filters are for when there are more leads than
+// you can take. There aren't yet — so `$9,000` was closing conversations that
+// should have opened. Deleting the prices outright would be worse: the tiers are
+// what make the page read as productized rather than as another freelancer
+// asking you to enquire. So the numbers stay and one word goes in front of the
+// two big ones, which keeps the anchor and the filter while leaving room to
+// quote a Dubai or US engagement higher than a first-time client.
+//
+// The entry tier (Architecture Clinic) deliberately keeps its exact price: it is
+// the cheap, concrete offer that earns the first click, and a range there would
+// only add friction to the one number people are willing to act on.
+const FROM_WORD = {
+  en: 'from',
+  ar: 'ابتداءً من',
+  de: 'ab',
+  es: 'desde',
+  fr: 'à partir de',
+};
+
+// Rendered inside `.price-amount`, which is a very large display number — hence
+// the sub-em sizing and the lift, so the qualifier reads as a prefix instead of
+// competing with the figure. Inline style rather than a new class: the export's
+// CSS lives in its own style blocks, and this file only ever edits the JSX.
+// `marginInlineEnd` (not `marginRight`) so it sits on the correct side in RTL.
+const FROM_SPAN =
+  '<span style={{fontSize:"0.42em",fontWeight:400,letterSpacing:"0.02em",opacity:0.6,' +
+  'marginInlineEnd:"0.32em",verticalAlign:"0.28em"}}>{t.from}</span>';
+
+// The two tiers that get a range, keyed by the price string in each locale.
+// Anchored on the price line PLUS the note line that follows it, so the insert
+// between them consumes its own anchor.
+const RANGED_TIERS = {
+  en: ['"$9,000"', '"$3,500"'],
+  ar: ['"$٩٬٠٠٠"', '"$٣٬٥٠٠"'],
+  de: ['"9.000 $"', '"3.500 $"'],
+  es: ['"$9,000"', '"$3,500"'],
+  fr: ['"9 000 $"', '"3 500 $"'],
+};
+
+// Add-on prices are already small, uniform text, so the qualifier goes straight
+// into the string rather than through a sized span.
+const ADDON_PRICES = {
+  en: ['"$6,000"', '"$4,500"', '"$4,000"'],
+  ar: ['"$٦٬٠٠٠"', '"$٤٬٥٠٠"', '"$٤٬٠٠٠"'],
+  de: ['"6.000 $"', '"4.500 $"', '"4.000 $"'],
+  es: ['"$6,000"', '"$4,500"', '"$4,000"'],
+  fr: ['"6 000 $"', '"4 500 $"', '"4 000 $"'],
+};
+
+const PRICING_EDITS = ['en', 'ar', 'de', 'es', 'fr'].flatMap((loc) => {
+  const file = loc === 'en' ? 'index.html' : `index.${loc}.html`;
+  const word = FROM_WORD[loc];
+  // Arabic pins the amount to `dir="ltr"` because a bare "$١٬٢٠٠" would otherwise
+  // render with the currency mark on the wrong side. Once an Arabic word leads
+  // the line that override becomes wrong — it would drag the prefix to the left
+  // of the figure. `dir="auto"` gets both cases right: it takes direction from
+  // the first strong character, so a numbers-only amount still resolves to LTR.
+  const amountOld =
+    loc === 'ar'
+      ? '<div className="price-amount" dir="ltr">{t.price}</div>'
+      : '<div className="price-amount">{t.price}</div>';
+  const amountNew =
+    loc === 'ar'
+      ? '<div className="price-amount" dir="auto">{t.from ? ' + FROM_SPAN + ' : null}{t.price}</div>'
+      : '<div className="price-amount">{t.from ? ' + FROM_SPAN + ' : null}{t.price}</div>';
+
+  return [
+    {
+      file,
+      label: `pricing: render "from" prefix (${loc})`,
+      appliedMarker: '{t.from ? <span',
+      old: amountOld,
+      new: amountNew,
+    },
+    // Same `dir` reasoning as the amount, for the add-on prices.
+    ...(loc === 'ar'
+      ? [{
+          file,
+          label: `pricing: add-on price direction (ar)`,
+          appliedMarker: '<span className="addon-price" dir="auto">',
+          old: '<span className="addon-price" dir="ltr">{a.price}</span>',
+          new: '<span className="addon-price" dir="auto">{a.price}</span>',
+        }]
+      : []),
+    ...RANGED_TIERS[loc].map((price, i) => ({
+      file,
+      label: `pricing: "${word}" on tier ${i + 1} (${loc})`,
+      // Keyed on the price, which is unique per tier within the file — the
+      // marker has to be too, or a changed export could make the second tier
+      // report "already applied" off the back of the first one's insert.
+      appliedMarker: `      price: ${price},\n      from: `,
+      expect: 1,
+      // `price` then `note` on consecutive lines; inserting between them means
+      // the anchor cannot match again on a re-run.
+      old: `      price: ${price},\n      note: `,
+      new: `      price: ${price},\n      from: ${JSON.stringify(word)},\n      note: `,
+    })),
+    ...ADDON_PRICES[loc].map((price, i) => ({
+      file,
+      label: `pricing: "${word}" on add-on ${i + 1} (${loc})`,
+      appliedMarker: `price: "${word} ${price.slice(1, -1)}"`,
+      old: `price: ${price} }`,
+      new: `price: "${word} ${price.slice(1, -1)}" }`,
+    })),
+  ];
+});
+
 // Each edit is an exact string match, so a failed match is loud rather than
 // silently rewriting the wrong thing.
 const EDITS = [
@@ -855,6 +963,9 @@ const EDITS = [
 
   // ── Case studies: Proven Group + Ibdaa Course, and Ezhal moved last ───────
   ...CASE_EDITS,
+
+  // ── Pricing: "from" on the two large tiers and the add-ons ────────────────
+  ...PRICING_EDITS,
 ];
 
 // Locate the `__bundler/manifest` line: a single-line JSON object mapping
