@@ -282,6 +282,322 @@ const PRODUCT_SECTION_EDITS = ['en', 'ar', 'de', 'es', 'fr'].flatMap((loc) => {
   ];
 });
 
+// ── Case studies: two new entries, plus ordering ─────────────────────────────
+// Two projects that belong in "Selected work" but post-date the export, and one
+// ordering change: Ezhal moves to the end (it is the only case with no shipped
+// apps yet, so it reads as the weakest card and shouldn't sit mid-list).
+//
+// Unlike every other edit in this file, these are done with a `transform`
+// rather than an exact-string anchor. Reordering an array and renumbering its
+// entries is not an insert — expressing it as string surgery over nine large
+// objects would need an anchor per case per locale, and any one of them
+// drifting would corrupt the array. The transform re-derives the whole array
+// from its current contents, so it converges to the same result no matter how
+// many times it runs.
+
+// Language-independent fields. Names, tech and URLs are never translated —
+// exactly how the existing nine cases treat them.
+const NEW_CASES = {
+  proven: {
+    name: 'Proven Group',
+    shotSrc: '/proven.jpg',
+    stack: ['Vanilla JS', 'No build step', 'Bilingual ES/EN', 'GitHub Pages'],
+    openUrl: 'https://provengroup.es/',
+    hrefs: ['https://provengroup.es/', 'https://provengroup.es/portfolio.html', 'https://provengroup.es/equipo.html'],
+  },
+  ibdaa: {
+    name: 'Ibdaa Course',
+    shotSrc: '/ibdaa.jpg',
+    stack: ['Laravel 13', 'Next.js 16', 'PostgreSQL 17', 'Nx + pnpm', 'Tailwind v4'],
+    openUrl: 'https://alpha.ibdaacourse.com/ar',
+    hrefs: ['https://alpha.ibdaacourse.com/ar', 'https://alpha.ibdaacourse.com/en'],
+  },
+};
+
+// Per-locale prose. `impact` entries are either { v, l } (plain string) or
+// { pre, em, l } (a JSX fragment with the second half emphasised) — the two
+// shapes the existing cases already use.
+const CASES_COPY = {
+  en: {
+    proven: {
+      role: 'Independent Consultant · Spain',
+      tag: 'Corporate site for a diversified investment & operating group — fully bilingual ES/EN, no framework, no build step.',
+      labels: ['Website', 'Portfolio', 'Team'],
+      problem: 'An investment and operating group raising capital across Europe and the Gulf needed a corporate presence that reads as credible to a Spanish-speaking board and to English-speaking international investors at the same time — without a CMS to maintain or a build pipeline to keep alive.',
+      solution: 'Seven hand-built pages — about, vision and goals, portfolio, external investments, team and contact — where every line of copy exists twice in the markup, once in Spanish and once in English. One toggle in the header swaps the entire site instantly: no reload, no route change, no translation service. Both languages ship inside the HTML, so search engines index both.',
+      impact: [
+        { pre: '7', em: 'pages', l: 'Bilingual ES/EN' },
+        { v: 'Instant', l: 'Language swap, no reload' },
+        { v: '0 build', l: 'Static, no framework' },
+      ],
+      highlights: [
+        'Every string ships as a paired ES/EN node — both indexable',
+        'Language choice persisted across pages and visits',
+        'Static hosting on a custom domain, near-zero running cost',
+      ],
+    },
+    ibdaa: {
+      role: 'Senior Software Engineer · Arabic-first LMS',
+      tag: 'Arabic-first learning platform — a Laravel 13 API and a Next.js 16 app in one Nx monorepo, delivered with full handover.',
+      labels: ['Arabic', 'English'],
+      note: 'Alpha — “Ibdaa Course” is a working title, pending the client’s launch brand',
+      problem: 'Arabic training providers run on platforms designed English-first with RTL bolted on afterwards — so the student experience, the certificate and the admin panel all read like a translation of something else.',
+      solution: 'Built Arabic-first instead: locale-prefixed /ar and /en routes over one Next.js 16 App Router app with RTL as the default direction, backed by a Laravel 13 API split into thirteen feature modules — courses, lectures, enrolments, payments, exams, certificates with public verification, reviews, discussions, favourites and reporting. Delivered with deployment, UAT and handover docs so the client can run and extend it without me.',
+      impact: [
+        { pre: '174', em: 'tests', l: '616 API assertions' },
+        { v: '13 modules', l: '74 API routes' },
+        { v: 'Arabic-first', l: 'RTL by default' },
+      ],
+      highlights: [
+        'Nx + pnpm monorepo — Laravel 13 (PHP 8.5) + Next.js 16',
+        'Certificates verifiable publicly by code',
+        'Two production images: FrankenPHP + Next.js standalone',
+      ],
+    },
+  },
+  ar: {
+    proven: {
+      role: 'مستشار مستقل · إسبانيا',
+      tag: 'موقع مؤسسي لمجموعة استثمار وتشغيل متنوّعة — ثنائي اللغة بالكامل إسباني/إنجليزي، بلا إطار عمل وبلا خطوة بناء.',
+      labels: ['الموقع', 'المحفظة', 'الفريق'],
+      problem: 'احتاجت مجموعة استثمار وتشغيل تجمع رأس المال في أوروبا والخليج حضورًا مؤسسيًا يبدو موثوقًا أمام مجلس إدارة يتحدّث الإسبانية ومستثمرين دوليين يتحدّثون الإنجليزية في آنٍ واحد — دون نظام إدارة محتوى يحتاج صيانة ولا خطّ بناء يحتاج متابعة.',
+      solution: 'سبع صفحات مبنية يدويًا — من نحن، الرؤية والأهداف، المحفظة، الاستثمارات الخارجية، الفريق، والتواصل — حيث يوجد كل سطر من النصّ مرّتين داخل الصفحة: مرّة بالإسبانية ومرّة بالإنجليزية. زرّ واحد في الأعلى يبدّل الموقع كلّه فورًا: بلا إعادة تحميل، وبلا تغيير مسار، وبلا خدمة ترجمة. اللغتان تُشحنان داخل الـHTML، فتفهرس محرّكات البحث كلتيهما.',
+      impact: [
+        { pre: '٧', em: 'صفحات', l: 'ثنائية اللغة إسباني/إنجليزي' },
+        { v: 'فوري', l: 'تبديل اللغة دون إعادة تحميل' },
+        { v: 'بلا بناء', l: 'ثابت وبلا إطار عمل' },
+      ],
+      highlights: [
+        'كل نصّ يُشحن كعقدتين إسبانية/إنجليزية — كلتاهما قابلة للفهرسة',
+        'اختيار اللغة يبقى محفوظًا بين الصفحات والزيارات',
+        'استضافة ثابتة على نطاق مخصّص بتكلفة تشغيل تكاد تكون صفرًا',
+      ],
+    },
+    ibdaa: {
+      role: 'مهندس برمجيات أول · منصّة تعلّم عربية أولًا',
+      tag: 'منصّة تعلّم عربية أولًا — واجهة برمجية Laravel 13 وتطبيق Next.js 16 داخل مستودع Nx واحد، مُسلَّمة بتوثيق تسليم كامل.',
+      labels: ['العربية', 'الإنجليزية'],
+      note: 'نسخة تجريبية — «إبداع كورس» اسم عمل مؤقّت بانتظار هوية العميل عند الإطلاق',
+      problem: 'تعمل جهات التدريب العربية على منصّات مُصمّمة بالإنجليزية أولًا ثم أُضيف إليها دعم الاتجاه من اليمين لاحقًا — فتبدو تجربة الطالب والشهادة ولوحة الإدارة كأنها ترجمة لشيء آخر.',
+      solution: 'بُنيت بالعربية أولًا بدلًا من ذلك: مسارات /ar و/en داخل تطبيق Next.js 16 واحد باتجاه من اليمين إلى اليسار افتراضيًا، خلفها واجهة برمجية Laravel 13 مقسّمة إلى ثلاث عشرة وحدة — الدورات والمحاضرات والتسجيل والمدفوعات والاختبارات والشهادات مع تحقّق عام، والتقييمات والنقاشات والمفضّلة والتقارير. سُلّمت مع وثائق النشر والاختبار والتسليم ليتمكّن العميل من تشغيلها وتطويرها دوني.',
+      impact: [
+        { pre: '١٧٤', em: 'اختبارًا', l: '٦١٦ تحقّقًا في الواجهة البرمجية' },
+        { v: '١٣ وحدة', l: '٧٤ مسارًا برمجيًا' },
+        { v: 'العربية أولًا', l: 'اتجاه RTL افتراضيًا' },
+      ],
+      highlights: [
+        'مستودع Nx + pnpm — ‏Laravel 13 (PHP 8.5) وNext.js 16',
+        'شهادات قابلة للتحقّق علنًا برمز',
+        'صورتا إنتاج: FrankenPHP وNext.js standalone',
+      ],
+    },
+  },
+  de: {
+    proven: {
+      role: 'Unabhängiger Berater · Spanien',
+      tag: 'Unternehmenswebsite für eine diversifizierte Investment- und Betreibergruppe — vollständig zweisprachig ES/EN, ohne Framework, ohne Build-Schritt.',
+      labels: ['Website', 'Portfolio', 'Team'],
+      problem: 'Eine Investment- und Betreibergruppe, die in Europa und am Golf Kapital einwirbt, brauchte einen Auftritt, der zugleich vor einem spanischsprachigen Board und vor englischsprachigen internationalen Investoren glaubwürdig wirkt — ohne CMS zu pflegen und ohne Build-Pipeline am Leben zu halten.',
+      solution: 'Sieben handgebaute Seiten — Über uns, Vision und Ziele, Portfolio, externe Investments, Team und Kontakt — in denen jede Textzeile zweimal im Markup steht: einmal auf Spanisch, einmal auf Englisch. Ein Schalter im Header tauscht die gesamte Website sofort: kein Reload, kein Routenwechsel, kein Übersetzungsdienst. Beide Sprachen stehen im HTML, also indexieren Suchmaschinen beide.',
+      impact: [
+        { pre: '7', em: 'Seiten', l: 'Zweisprachig ES/EN' },
+        { v: 'Sofort', l: 'Sprachwechsel ohne Reload' },
+        { v: '0 Build', l: 'Statisch, ohne Framework' },
+      ],
+      highlights: [
+        'Jeder String als ES/EN-Paar im Markup — beide indexierbar',
+        'Sprachwahl bleibt über Seiten und Besuche hinweg erhalten',
+        'Statisches Hosting auf eigener Domain, nahezu ohne laufende Kosten',
+      ],
+    },
+    ibdaa: {
+      role: 'Senior Software Engineer · Arabisch-first-LMS',
+      tag: 'Arabisch-first-Lernplattform — eine Laravel-13-API und eine Next.js-16-App in einem Nx-Monorepo, mit vollständiger Übergabe geliefert.',
+      labels: ['Arabisch', 'Englisch'],
+      note: 'Alpha — „Ibdaa Course“ ist ein Arbeitstitel bis zum Launch-Branding des Kunden',
+      problem: 'Arabische Bildungsanbieter arbeiten mit Plattformen, die englisch-first entworfen und erst nachträglich um RTL ergänzt wurden — Lernerlebnis, Zertifikat und Adminbereich lesen sich deshalb wie die Übersetzung von etwas anderem.',
+      solution: 'Stattdessen arabisch-first gebaut: Locale-präfixierte /ar- und /en-Routen in einer Next.js-16-App-Router-Anwendung mit RTL als Standardrichtung, dahinter eine Laravel-13-API in dreizehn Feature-Modulen — Kurse, Lektionen, Einschreibungen, Zahlungen, Prüfungen, Zertifikate mit öffentlicher Verifikation, Bewertungen, Diskussionen, Favoriten und Reporting. Ausgeliefert mit Deployment-, UAT- und Übergabedokumentation, damit der Kunde sie ohne mich betreiben und erweitern kann.',
+      impact: [
+        { pre: '174', em: 'Tests', l: '616 API-Assertions' },
+        { v: '13 Module', l: '74 API-Routen' },
+        { v: 'Arabisch-first', l: 'RTL als Standard' },
+      ],
+      highlights: [
+        'Nx-+-pnpm-Monorepo — Laravel 13 (PHP 8.5) + Next.js 16',
+        'Zertifikate öffentlich per Code verifizierbar',
+        'Zwei Produktions-Images: FrankenPHP + Next.js standalone',
+      ],
+    },
+  },
+  es: {
+    proven: {
+      role: 'Consultor independiente · España',
+      tag: 'Sitio corporativo para un grupo diversificado de inversión y operación — totalmente bilingüe ES/EN, sin framework y sin paso de compilación.',
+      labels: ['Sitio web', 'Portfolio', 'Equipo'],
+      problem: 'Un grupo de inversión y operación que capta capital en Europa y el Golfo necesitaba una presencia corporativa creíble a la vez para un consejo hispanohablante y para inversores internacionales anglófonos — sin un CMS que mantener ni una pipeline de compilación que vigilar.',
+      solution: 'Siete páginas hechas a mano — nosotros, visión y objetivos, portfolio, inversiones externas, equipo y contacto — donde cada línea de texto existe dos veces en el marcado: una en español y otra en inglés. Un botón en la cabecera cambia todo el sitio al instante: sin recarga, sin cambio de ruta y sin servicio de traducción. Ambos idiomas viajan dentro del HTML, así que los buscadores indexan los dos.',
+      impact: [
+        { pre: '7', em: 'páginas', l: 'Bilingüe ES/EN' },
+        { v: 'Instantáneo', l: 'Cambio de idioma sin recarga' },
+        { v: '0 build', l: 'Estático, sin framework' },
+      ],
+      highlights: [
+        'Cada cadena viaja como par ES/EN — ambas indexables',
+        'La elección de idioma se conserva entre páginas y visitas',
+        'Alojamiento estático en dominio propio, coste casi nulo',
+      ],
+    },
+    ibdaa: {
+      role: 'Ingeniero de Software Sénior · LMS en árabe',
+      tag: 'Plataforma de aprendizaje pensada primero en árabe — una API Laravel 13 y una app Next.js 16 en un monorepo Nx, entregada con handover completo.',
+      labels: ['Árabe', 'Inglés'],
+      note: 'Alpha — «Ibdaa Course» es un nombre de trabajo, pendiente de la marca de lanzamiento del cliente',
+      problem: 'Los proveedores de formación en árabe trabajan con plataformas diseñadas primero en inglés y con el RTL añadido después — así que la experiencia del alumno, el certificado y el panel de administración se leen como la traducción de otra cosa.',
+      solution: 'Se construyó al revés, primero en árabe: rutas /ar y /en con prefijo de idioma sobre una única app Next.js 16 con App Router y RTL como dirección por defecto, respaldada por una API Laravel 13 dividida en trece módulos — cursos, lecciones, matrículas, pagos, exámenes, certificados con verificación pública, reseñas, debates, favoritos e informes. Entregada con documentación de despliegue, UAT y handover para que el cliente pueda operarla y ampliarla sin mí.',
+      impact: [
+        { pre: '174', em: 'tests', l: '616 aserciones de API' },
+        { v: '13 módulos', l: '74 rutas de API' },
+        { v: 'Árabe primero', l: 'RTL por defecto' },
+      ],
+      highlights: [
+        'Monorepo Nx + pnpm — Laravel 13 (PHP 8.5) + Next.js 16',
+        'Certificados verificables públicamente por código',
+        'Dos imágenes de producción: FrankenPHP + Next.js standalone',
+      ],
+    },
+  },
+  fr: {
+    proven: {
+      role: 'Consultant indépendant · Espagne',
+      tag: 'Site corporate pour un groupe diversifié d’investissement et d’exploitation — entièrement bilingue ES/EN, sans framework ni étape de build.',
+      labels: ['Site web', 'Portfolio', 'Équipe'],
+      problem: 'Un groupe d’investissement et d’exploitation qui lève des fonds en Europe et dans le Golfe avait besoin d’une présence corporate crédible à la fois pour un conseil hispanophone et pour des investisseurs internationaux anglophones — sans CMS à maintenir ni pipeline de build à surveiller.',
+      solution: 'Sept pages construites à la main — à propos, vision et objectifs, portfolio, investissements externes, équipe et contact — où chaque ligne de texte existe deux fois dans le markup : une fois en espagnol, une fois en anglais. Un bouton dans l’en-tête bascule tout le site instantanément : sans rechargement, sans changement de route, sans service de traduction. Les deux langues sont dans le HTML, donc les moteurs indexent les deux.',
+      impact: [
+        { pre: '7', em: 'pages', l: 'Bilingue ES/EN' },
+        { v: 'Instantané', l: 'Changement de langue sans rechargement' },
+        { v: '0 build', l: 'Statique, sans framework' },
+      ],
+      highlights: [
+        'Chaque chaîne est un couple ES/EN dans le markup — les deux indexables',
+        'Le choix de langue est conservé d’une page et d’une visite à l’autre',
+        'Hébergement statique sur domaine propre, coût de fonctionnement quasi nul',
+      ],
+    },
+    ibdaa: {
+      role: 'Ingénieur logiciel senior · LMS pensé en arabe d’abord',
+      tag: 'Plateforme d’apprentissage pensée en arabe d’abord — une API Laravel 13 et une app Next.js 16 dans un monorepo Nx, livrée avec une passation complète.',
+      labels: ['Arabe', 'Anglais'],
+      note: 'Alpha — « Ibdaa Course » est un nom de travail, en attente de la marque de lancement du client',
+      problem: 'Les organismes de formation arabophones utilisent des plateformes conçues d’abord en anglais, le RTL étant ajouté après coup — l’expérience de l’apprenant, le certificat et l’admin se lisent alors comme la traduction d’autre chose.',
+      solution: 'Construite dans l’autre sens, en arabe d’abord : des routes /ar et /en préfixées par la locale sur une seule app Next.js 16 (App Router) avec le RTL comme direction par défaut, adossée à une API Laravel 13 découpée en treize modules — cours, leçons, inscriptions, paiements, examens, certificats vérifiables publiquement, avis, discussions, favoris et reporting. Livrée avec la documentation de déploiement, d’UAT et de passation pour que le client l’exploite et la fasse évoluer sans moi.',
+      impact: [
+        { pre: '174', em: 'tests', l: '616 assertions d’API' },
+        { v: '13 modules', l: '74 routes d’API' },
+        { v: 'Arabe d’abord', l: 'RTL par défaut' },
+      ],
+      highlights: [
+        'Monorepo Nx + pnpm — Laravel 13 (PHP 8.5) + Next.js 16',
+        'Certificats vérifiables publiquement par code',
+        'Deux images de production : FrankenPHP + Next.js standalone',
+      ],
+    },
+  },
+};
+
+// Render one case object, matching the formatting of the nine already in the
+// export exactly (2-space object indent, 4-space keys, trailing commas). `n` is
+// emitted as a placeholder — renumbering is a separate pass, so it stays correct
+// no matter where the entry ends up in the array.
+const q = (s) => JSON.stringify(String(s));
+
+function caseObject(key, loc) {
+  const base = NEW_CASES[key];
+  const c = CASES_COPY[loc][key];
+  const impact = c.impact
+    .map((i) =>
+      i.em
+        ? `      { v: <>${jsxText(i.pre)} <em>${jsxText(i.em)}</em></>, l: ${q(i.l)} },\n`
+        : `      { v: ${q(i.v)}, l: ${q(i.l)} },\n`
+    )
+    .join('');
+
+  return (
+    '\n  {\n' +
+    '    n: "00",\n' +
+    `    name: ${q(base.name)},\n` +
+    `    role: ${q(c.role)},\n` +
+    `    shotSrc: ${q(base.shotSrc)},\n` +
+    `    tag: ${q(c.tag)},\n` +
+    `    stack: [${base.stack.map(q).join(', ')}],\n` +
+    `    openUrl: ${q(base.openUrl)},\n` +
+    '    links: [\n' +
+    base.hrefs.map((h, i) => `      { label: ${q(c.labels[i])}, href: ${q(h)} },\n`).join('') +
+    '    ],\n' +
+    (c.note ? `    note: ${q(c.note)},\n` : '') +
+    `    problem: ${q(c.problem)},\n` +
+    `    solution: ${q(c.solution)},\n` +
+    '    impact: [\n' +
+    impact +
+    '    ],\n' +
+    '    highlights: [\n' +
+    c.highlights.map((h) => `      ${q(h)},\n`).join('') +
+    '    ],'
+  );
+}
+
+// The array is delimited by literals that are identical in all five exports
+// (verified): it opens with `const cases = [\n  {\n` and closes with
+// `\n  },\n];`, and top-level entries are separated by `\n  },\n  {\n`. Nested
+// objects are indented deeper, so no inner text can be mistaken for a
+// separator — the entry count comes out at 9 in every locale.
+const CASES_OPEN = 'const cases = [';
+const CASES_CLOSE = '\n  },\n];';
+const CASE_SEP = '\n  },';
+
+function rewriteCases(loc) {
+  return (text) => {
+    const a = text.indexOf(CASES_OPEN);
+    if (a < 0) return null;
+    const b = text.indexOf(CASES_CLOSE, a);
+    if (b < 0) return null;
+
+    const bodyStart = a + CASES_OPEN.length;
+    const bodyEnd = b + CASE_SEP.length;
+    const parts = text.slice(bodyStart, bodyEnd).split(CASE_SEP);
+    if (parts.pop() !== '') return null; // body must end on a separator
+    let entries = parts;
+    if (!entries.length) return null;
+
+    // 1. Append the two new cases, once.
+    for (const key of ['proven', 'ibdaa']) {
+      const marker = `shotSrc: ${q(NEW_CASES[key].shotSrc)}`;
+      if (!entries.some((e) => e.includes(marker))) entries.push(caseObject(key, loc));
+    }
+
+    // 2. Ezhal last — it is the only case with nothing shipped to the stores
+    //    yet, so it reads as the weakest card and shouldn't sit mid-list.
+    const isEzhal = (e) => e.includes('name: "Ezhal"');
+    entries = [...entries.filter((e) => !isEzhal(e)), ...entries.filter(isEzhal)];
+
+    // 3. Renumber in final order. Case numbers are Western digits in every
+    //    locale (only the `impact` values are localised to Arabic-Indic).
+    entries = entries.map((e, i) =>
+      e.replace(/\n    n: "\d+",/, `\n    n: "${String(i + 1).padStart(2, '0')}",`)
+    );
+
+    return text.slice(0, bodyStart) + entries.join(CASE_SEP) + CASE_SEP + text.slice(bodyEnd);
+  };
+}
+
+const CASE_EDITS = ['en', 'ar', 'de', 'es', 'fr'].map((loc) => ({
+  file: loc === 'en' ? 'index.html' : `index.${loc}.html`,
+  label: `case studies: Proven + Ibdaa, Ezhal last (${loc})`,
+  // Transform edits find their asset by this substring instead of by `old`.
+  anchor: CASES_OPEN,
+  transform: rewriteCases(loc),
+}));
+
 // Each edit is an exact string match, so a failed match is loud rather than
 // silently rewriting the wrong thing.
 const EDITS = [
@@ -536,6 +852,9 @@ const EDITS = [
   // Three inserts per locale: the component, its registration on window, and
   // the render call — see PRODUCTS_EDITS below.
   ...PRODUCT_SECTION_EDITS,
+
+  // ── Case studies: Proven Group + Ibdaa Course, and Ezhal moved last ───────
+  ...CASE_EDITS,
 ];
 
 // Locate the `__bundler/manifest` line: a single-line JSON object mapping
@@ -579,6 +898,60 @@ for (const edit of EDITS) {
   }
 
   const { index, obj } = found;
+
+  // ── Transform edits ──────────────────────────────────────────────────────
+  // For structural rewrites (reordering an array, renumbering its entries) an
+  // exact-string anchor is the wrong tool: there is no single "old" to match.
+  // A transform gets the whole asset and returns the rewritten text, and is
+  // required to be idempotent — so "already applied" is simply "the transform
+  // changed nothing", which needs no appliedMarker to detect.
+  if (edit.transform) {
+    let hit = null;
+    for (const [id, asset] of Object.entries(obj)) {
+      let text;
+      try { text = decode(asset); } catch { continue; }
+      if (text.includes(edit.anchor)) { hit = { id, asset, text }; break; }
+    }
+    if (!hit) {
+      console.error(`✗ ${edit.label}: anchor not found in ${edit.file} (export may have changed)`);
+      failures++;
+      continue;
+    }
+    let updated;
+    try { updated = edit.transform(hit.text); } catch (e) {
+      console.error(`✗ ${edit.label}: transform threw in ${edit.file} — ${e.message}`);
+      failures++;
+      continue;
+    }
+    if (updated == null) {
+      console.error(`✗ ${edit.label}: transform could not parse ${edit.file} (export may have changed)`);
+      failures++;
+      continue;
+    }
+    if (updated === hit.text) {
+      console.log(`= ${edit.label}: already applied in ${edit.file}`);
+      continue;
+    }
+    if (CHECK) {
+      console.log(`✓ ${edit.label}: would rewrite ${edit.file} (asset ${hit.id.slice(0, 8)})`);
+      continue;
+    }
+    // Idempotency is a hard requirement, not a hope: re-running the transform
+    // on its own output must be a no-op. Verified here so a regression fails at
+    // write time instead of silently duplicating cases on the next deploy.
+    if (edit.transform(updated) !== updated) {
+      console.error(`✗ ${edit.label}: transform is not idempotent — refusing to write ${edit.file}`);
+      failures++;
+      continue;
+    }
+    obj[hit.id] = { ...hit.asset, data: encode(hit.asset, updated) };
+    lines[index] = JSON.stringify(obj);
+    writeFileSync(edit.file, lines.join('\n'), 'utf8');
+    console.log(`✓ ${edit.label}: applied to ${edit.file} (asset ${hit.id.slice(0, 8)})`);
+    applied++;
+    continue;
+  }
+
   let target = null;
   // How we recognise "this edit is already in place". Defaults to the new text,
   // but an edit can supply `appliedMarker` — a stable substring that survives
