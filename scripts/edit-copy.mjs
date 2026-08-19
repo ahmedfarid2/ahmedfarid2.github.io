@@ -230,6 +230,11 @@ const PRODUCT_SECTION_EDITS = ['en', 'ar', 'de', 'es', 'fr'].flatMap((loc) => {
       file,
       label: `products section: component (${loc})`,
       appliedMarker: 'function Products() {',
+      // The replacement deliberately re-emits the anchor: this edit prepends the
+      // component above the window registration, and the `register` edit that
+      // runs immediately after rewrites that same line. So the anchor is
+      // consumed by the pair, not by this edit alone.
+      allowRepeat: true,
       old: 'Object.assign(window, { Writing, FAQ, Connect, CTA, Footer });',
       new: productsComponent(loc) + 'Object.assign(window, { Writing, FAQ, Connect, CTA, Footer });',
     },
@@ -496,6 +501,35 @@ const EDITS = [
     ];
   }),
 
+  // ── Proven Group on the brand wall ───────────────────────────────────────
+  // provengroup.es — a bilingual (ES/EN) static site for an investment and
+  // operations group, and one of the clients already named on his LinkedIn.
+  // Client work, so it belongs with the other client brands rather than in the
+  // "own products" section.
+  //
+  // No `light: true`: `.logo-img` flattens every mark with
+  // `grayscale(1) brightness(0) invert(.32)`, so the black source SVG renders as
+  // the same neutral grey as the rest. `light` is only for marks that are
+  // already white. If the remote SVG ever 404s the build's onerror handler falls
+  // back to the domain favicon.
+  ...['index.html', 'index.ar.html', 'index.de.html', 'index.es.html', 'index.fr.html'].map((file) => ({
+    file,
+    label: `brand wall: Proven Group (${file.split('.')[1] === 'html' ? 'en' : file.split('.')[1]})`,
+    appliedMarker: 'provengroup.es',
+    // Brand names are never translated, so one anchor works for every locale.
+    // The anchor spans the Compass Med line AND the RevealSite line that follows
+    // it, so inserting between them consumes the anchor. Matching on the
+    // RevealSite line alone still matches after the insert, and would append a
+    // duplicate Proven entry on every re-run.
+    old:
+      '  { name: "Compass Med", domain: "compass-egy.com", logo: "https://www.compass-egy.com/assets/images/logos/compasslogo-wh.svg", site: "https://www.compass-egy.com/", light: true },\n' +
+      '  { name: "RevealSite", domain: "revealsite.com"',
+    new:
+      '  { name: "Compass Med", domain: "compass-egy.com", logo: "https://www.compass-egy.com/assets/images/logos/compasslogo-wh.svg", site: "https://www.compass-egy.com/", light: true },\n' +
+      '  { name: "Proven Group", domain: "provengroup.es", logo: "https://provengroup.es/assets/img/logo.svg", site: "https://provengroup.es/" },\n' +
+      '  { name: "RevealSite", domain: "revealsite.com"',
+  })),
+
   // ── "Own products" section ───────────────────────────────────────────────
   // Client work shows he can execute someone else's brief; products he chose,
   // built and hosts himself show initiative, which is what founders hire for.
@@ -595,6 +629,24 @@ for (const edit of EDITS) {
     expected === 1
       ? target.text.replace(edit.old, edit.new)
       : target.text.split(edit.old).join(edit.new);
+
+  // Idempotency guard. An insert whose replacement still contains its own
+  // anchor matches again on the next run and inserts a second copy — the
+  // `appliedMarker` never gets consulted, because `old` is tested first. That
+  // silently duplicated a card more than once while this file was being built,
+  // so it is now a hard failure at the moment of writing rather than a
+  // surprise on some later run. Anchors must span enough context to be consumed
+  // by their own replacement.
+  if (!edit.allowRepeat && updated.includes(edit.old)) {
+    console.error(
+      `✗ ${edit.label}: anchor survives its own replacement — re-running would ` +
+      `apply it again. Widen \`old\` to include adjacent context, or set ` +
+      `allowRepeat if a later edit consumes it.`
+    );
+    failures++;
+    continue;
+  }
+
   obj[target.id] = { ...target.asset, data: encode(target.asset, updated) };
   lines[index] = JSON.stringify(obj);
   writeFileSync(edit.file, lines.join('\n'), 'utf8');
