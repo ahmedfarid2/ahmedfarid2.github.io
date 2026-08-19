@@ -434,10 +434,50 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
     // levels: real contributions when fetched, otherwise a deterministic
     // pattern so the grid never looks empty.
     if (gh) {
-      // Public-repos stat (first .gh-stat value).
+      // Public-repos count appears TWICE: the stat card and the section intro
+      // prose ("… — 16 public repos spanning TypeScript tooling …"). Only the
+      // card used to be synced to the live count, so the two drifted apart as
+      // repos were added — the card said 19 while the sentence still said 16.
+      //
+      // The prose is translated per locale, so matching the words "public
+      // repos" would only fix English. Instead key off the NUMBER the export
+      // shipped with (whatever the card reads before we overwrite it) and
+      // replace that token in the intro. That works in every locale because
+      // both places started from the same hardcoded value.
+      // The Arabic export renders these counts in Arabic-Indic digits (٠-٩),
+      // so both the comparison and the replacement have to be numeral-system
+      // aware — otherwise the card ends up reading "19" next to prose reading
+      // "١٦". Write the fresh value back in whichever system the export used.
       if (gh.publicRepos != null) {
+        const AR = '٠١٢٣٤٥٦٧٨٩';
+        const toWestern = (s) => s.replace(/[٠-٩]/g, (d) => String(AR.indexOf(d)));
+        const matchDigits = (s, sample) =>
+          /[٠-٩]/.test(sample) ? s.replace(/[0-9]/g, (d) => AR[Number(d)]) : s;
+
         const v = document.querySelector('#github .gh-stat .v');
-        if (v) v.textContent = String(gh.publicRepos);
+        const staleRaw = v ? v.textContent.trim() : '';
+        const staleWestern = toWestern(staleRaw);
+        const freshWestern = String(gh.publicRepos);
+        const freshLocal = matchDigits(freshWestern, staleRaw);
+
+        if (v) v.textContent = freshLocal;
+
+        if (/^\d+$/.test(staleWestern) && staleWestern !== freshWestern) {
+          // Guard both sides with a non-digit (either numeral system) so "16"
+          // inside a longer number is never partially rewritten.
+          const nd = '[^0-9٠-٩]';
+          const re = new RegExp('(^|' + nd + ')' + staleRaw + '(?=' + nd + '|$)', 'g');
+          document.querySelectorAll('#github .section-sub').forEach((p) => {
+            const walker = document.createTreeWalker(p, NodeFilter.SHOW_TEXT);
+            const nodes = [];
+            while (walker.nextNode()) nodes.push(walker.currentNode);
+            nodes.forEach((n) => {
+              if (n.nodeValue.includes(staleRaw)) {
+                n.nodeValue = n.nodeValue.replace(re, (m, before) => before + freshLocal);
+              }
+            });
+          });
+        }
       }
 
       const cells = [...document.querySelectorAll('#github .gh-heat .cell')];
