@@ -706,6 +706,95 @@ const PRICING_EDITS = ['en', 'ar', 'de', 'es', 'fr'].flatMap((loc) => {
   ];
 });
 
+// ── Launchpad: a three-week slice, not a four-to-eight-week one ──────────────
+// The packages contradicted each other. Partner is $3,500 for 40 reserved hours
+// (~$88/hr) and $6,000 for 80 (~$75/hr), while Launchpad was $9,000 for a slice
+// the Services section described as taking "4–8 weeks" — 160 to 320 hours, or
+// $28–56/hr. So the flagship build was quietly the cheapest way to buy his time,
+// by a wide margin, and at the long end it wasn't senior money in any market.
+//
+// The fix is the scope, not the price. Three weeks at $9,000 lands at ~$75/hr,
+// which is exactly the 80-hour block rate — the three tiers now tell one
+// consistent story. Tightening the window (rather than raising the price) also
+// keeps the number unchanged while there is no social proof yet, and makes
+// "one slice, not the whole product" concrete: three weeks is a far easier
+// commitment for a stranger to say yes to than eight.
+//
+// The duration appears in three places per locale — the pricing card's note
+// line, the Services item (prose + tag), and a FAQ answer — and all three have
+// to move together or the page argues with itself.
+const WEEKS_COPY = {
+  en: {
+    noteOld: 'note: "fixed scope · shipped to production"',
+    noteNew: 'note: "fixed scope · 3 weeks · shipped to production"',
+    proseOld: 'A defined slice shipped to production in 4–8 weeks: architecture',
+    proseNew: 'A defined slice shipped to production in 3 weeks: architecture',
+    tagOld: 'tags: ["4–8 weeks",',
+    tagNew: 'tags: ["3 weeks",',
+    faqOld: 'a: "Most start as a 4–8 week scoped build — a defined slice',
+    faqNew: 'a: "Most start as a 3-week scoped build — a defined slice',
+  },
+  ar: {
+    noteOld: 'note: "نطاق ثابت · مُطلق في الإنتاج"',
+    noteNew: 'note: "نطاق ثابت · ٣ أسابيع · مُطلق في الإنتاج"',
+    proseOld: 'شريحة محدّدة تُطلق في الإنتاج خلال ٤–٨ أسابيع: معمارية',
+    proseNew: 'شريحة محدّدة تُطلق في الإنتاج خلال ٣ أسابيع: معمارية',
+    tagOld: 'tags: ["٤–٨ أسابيع",',
+    tagNew: 'tags: ["٣ أسابيع",',
+    faqOld: 'a: "معظمها يبدأ كبناء محدّد النطاق من ٤–٨ أسابيع — شريحة محدّدة',
+    faqNew: 'a: "معظمها يبدأ كبناء محدّد النطاق من ٣ أسابيع — شريحة محدّدة',
+  },
+  de: {
+    noteOld: 'note: "fester Umfang · in Produktion gebracht"',
+    noteNew: 'note: "fester Umfang · 3 Wochen · in Produktion gebracht"',
+    proseOld: 'Eine definierte Scheibe in 4–8 Wochen in Produktion gebracht: Architektur',
+    proseNew: 'Eine definierte Scheibe in 3 Wochen in Produktion gebracht: Architektur',
+    tagOld: 'tags: ["4–8 Wochen",',
+    tagNew: 'tags: ["3 Wochen",',
+    faqOld: 'a: "Die meisten beginnen als 4–8-wöchiger Festumfang-Build — eine definierte',
+    faqNew: 'a: "Die meisten beginnen als 3-wöchiger Festumfang-Build — eine definierte',
+  },
+  es: {
+    noteOld: 'note: "alcance cerrado · llevado a producción"',
+    noteNew: 'note: "alcance cerrado · 3 semanas · llevado a producción"',
+    proseOld: 'Un corte definido llevado a producción en 4–8 semanas: arquitectura',
+    proseNew: 'Un corte definido llevado a producción en 3 semanas: arquitectura',
+    tagOld: 'tags: ["4–8 semanas",',
+    tagNew: 'tags: ["3 semanas",',
+    faqOld: 'a: "La mayoría empieza como un proyecto acotado de 4–8 semanas — un corte definido',
+    faqNew: 'a: "La mayoría empieza como un proyecto acotado de 3 semanas — un corte definido',
+  },
+  fr: {
+    noteOld: 'note: "périmètre fixe · livré en production"',
+    noteNew: 'note: "périmètre fixe · 3 semaines · livré en production"',
+    proseOld: 'Une tranche définie livrée en production en 4 à 8 semaines : architecture',
+    proseNew: 'Une tranche définie livrée en production en 3 semaines : architecture',
+    tagOld: 'tags: ["4–8 semaines",',
+    tagNew: 'tags: ["3 semaines",',
+    faqOld: 'a: "La plupart commencent par un projet cadré de 4 à 8 semaines — une tranche définie',
+    faqNew: 'a: "La plupart commencent par un projet cadré de 3 semaines — une tranche définie',
+  },
+};
+
+const WEEKS_EDITS = ['en', 'ar', 'de', 'es', 'fr'].flatMap((loc) => {
+  const file = loc === 'en' ? 'index.html' : `index.${loc}.html`;
+  const c = WEEKS_COPY[loc];
+  return [
+    ['Launchpad card note', c.noteOld, c.noteNew],
+    ['Services prose', c.proseOld, c.proseNew],
+    ['Services tag', c.tagOld, c.tagNew],
+    ['FAQ answer', c.faqOld, c.faqNew],
+  ].map(([what, old, next]) => ({
+    file,
+    label: `3-week slice: ${what} (${loc})`,
+    // Every one of these replaces the duration in place, so the old text cannot
+    // survive its own replacement and the default marker (the new text) is
+    // exactly right — no appliedMarker needed.
+    old,
+    new: next,
+  }));
+});
+
 // Each edit is an exact string match, so a failed match is loud rather than
 // silently rewriting the wrong thing.
 const EDITS = [
@@ -966,6 +1055,10 @@ const EDITS = [
 
   // ── Pricing: "from" on the two large tiers and the add-ons ────────────────
   ...PRICING_EDITS,
+
+  // ── Launchpad scoped to three weeks, so the tiers stop undercutting each
+  //    other on implied hourly rate ─────────────────────────────────────────
+  ...WEEKS_EDITS,
 ];
 
 // Locate the `__bundler/manifest` line: a single-line JSON object mapping
