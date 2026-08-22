@@ -7,6 +7,7 @@ are **repo-only** (the build does not deploy `.md` files or the `docs/` and
 | File | What it is |
 |---|---|
 | [`30-DAY-CLIENT-SPRINT.md`](30-DAY-CLIENT-SPRINT.md) | **The execution layer — start here.** Day-by-day for 30 days, every message written out, plus the verdict on paid ads and what to spend money on instead. |
+| [`COLD-EMAIL-AND-PAID-ADS.md`](COLD-EMAIL-AND-PAID-ADS.md) | The two paid channels: cold-email deliverability setup + a 4-email sequence built on the "they're hiring" signal, and where to put a $200/month ad budget (and why not TikTok). |
 | [`GROWTH-PLAN.md`](GROWTH-PLAN.md) | The master consultation — diagnosis (why "good SEO" ≠ clients), channel strategy, and a 90-day roadmap. The *why* behind the sprint. |
 | [`LINKEDIN-PLAYBOOK.md`](LINKEDIN-PLAYBOOK.md) | The system: profile setup, content pillars, 30-day calendar, and warm-outreach/referral DM scripts. |
 | [`LINKEDIN-POSTS-30-DAYS.md`](LINKEDIN-POSTS-30-DAYS.md) | **12 finished posts, ready to paste** — written from your real case studies (Yelo Sale, Recovery Advisers, KhebraOS, Phonic Maps, RevealSite). |
