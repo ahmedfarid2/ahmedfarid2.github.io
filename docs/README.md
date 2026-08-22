@@ -6,7 +6,8 @@ are **repo-only** (the build does not deploy `.md` files or the `docs/` and
 
 | File | What it is |
 |---|---|
-| [`GROWTH-PLAN.md`](GROWTH-PLAN.md) | The master consultation — diagnosis (why "good SEO" ≠ clients), channel strategy, and a 90-day roadmap. **Start here.** |
+| [`30-DAY-CLIENT-SPRINT.md`](30-DAY-CLIENT-SPRINT.md) | **The execution layer — start here.** Day-by-day for 30 days, every message written out, plus the verdict on paid ads and what to spend money on instead. |
+| [`GROWTH-PLAN.md`](GROWTH-PLAN.md) | The master consultation — diagnosis (why "good SEO" ≠ clients), channel strategy, and a 90-day roadmap. The *why* behind the sprint. |
 | [`LINKEDIN-PLAYBOOK.md`](LINKEDIN-PLAYBOOK.md) | The system: profile setup, content pillars, 30-day calendar, and warm-outreach/referral DM scripts. |
 | [`LINKEDIN-POSTS-30-DAYS.md`](LINKEDIN-POSTS-30-DAYS.md) | **12 finished posts, ready to paste** — written from your real case studies (Yelo Sale, Recovery Advisers, KhebraOS, Phonic Maps, RevealSite). |
 | [`LINKEDIN-POSTS-ARABIC.md`](LINKEDIN-POSTS-ARABIC.md) | **The same 12 posts in Arabic** — rewritten to read naturally, not translated. Your least-contested audience: almost nobody writes senior architecture content in Arabic. |
