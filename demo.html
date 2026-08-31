@@ -161,12 +161,14 @@
   <p class="lede">
     Tell me what you're building. I'll build <strong>one real screen of it</strong> —
     deployed to a URL you can open, click and send to your team. Five business
-    days. Free, and there's nothing to cancel afterwards.
+    days. Free, and there's nothing to cancel afterwards. Wherever you're based:
+    I work remotely across every timezone I've shipped in.
   </p>
 
   <p class="byline">
-    By <a href="https://iamahmedfarid.com/">Ahmed Farid</a> — senior software engineer,
-    Cairo. Multi-tenant SaaS, real-time systems, and the mobile apps on top.
+    By <a href="https://iamahmedfarid.com/">Ahmed Farid</a> — senior software engineer
+    based in Cairo, shipping to production for teams across the Gulf, Europe, the
+    UK and the US. Multi-tenant SaaS, real-time systems, and the mobile apps on top.
   </p>
 
   <div class="intro">
@@ -230,7 +232,9 @@
       <div class="grid2">
         <label class="field">
           <span>Your name <i class="req">*</i></span>
-          <input type="text" name="Name" required autocomplete="name" placeholder="Ahmed Farid">
+          <!-- Not "Ahmed Farid": using the site owner's own name as the sample
+               in a field asking for the visitor's name reads as pre-filled. -->
+          <input type="text" name="Name" required autocomplete="name" placeholder="First and last name">
         </label>
         <label class="field">
           <span>Email <i class="req">*</i></span>
@@ -241,7 +245,13 @@
       <div class="grid2">
         <label class="field">
           <span>Phone or WhatsApp <i class="req">*</i></span>
-          <input type="tel" name="Phone" required autocomplete="tel" placeholder="+20 100 000 0000" inputmode="tel">
+          <!-- No sample number, from any country. An Egyptian one reads as
+               "Egypt only" on a page whose case studies are in the Gulf, the
+               US, the UK and Europe — and naming any single country does the
+               same thing to everyone else. What actually matters is the country
+               code: without it the number cannot be dialled from abroad, which
+               is where most of this work comes from. -->
+          <input type="tel" name="Phone" required autocomplete="tel" placeholder="+ country code and number" inputmode="tel">
         </label>
         <label class="field">
           <span>Company or product URL</span>
