@@ -86,6 +86,15 @@ function leadMagnetCard({ name, handle, desc }) {
 // second section below — a heading that isn't true costs more than a card gains.
 const PRODUCTS = [
   {
+    // First, deliberately: it is the largest of the three and the only one on
+    // its own domain, so it is the strongest evidence for the section's claim.
+    // It also appears as a full case study — the card is the quick link, the
+    // case study is the depth, and the two sections sit far apart on the page.
+    name: 'Applyni',
+    href: 'https://applyni.com/ar',
+    chips: ['Next.js', 'TypeScript', 'Supabase', 'Tailwind v4'],
+  },
+  {
     name: 'ReconcilePilot',
     href: 'https://reconcilepilot.iamahmedfarid.com',
     chips: ['Next.js 16', 'React 19', 'Supabase', 'Vercel'],
@@ -152,8 +161,9 @@ const PRODUCTS_COPY = {
     eyebrow: 'Own products',
     title: ['Products I built ', 'and run myself.'],
     sub: 'Client work shows what I can deliver against someone else’s brief. These are the ones where I picked the problem, shipped the product, and host it on my own domain.',
-    cats: ['Finance ops', 'AI reporting'],
+    cats: ['AI career agent', 'Finance ops', 'AI reporting'],
     descs: [
+      'Saudi-first job-search agent: it reads your CV, matches you to companies where your experience actually fits with a plain-language reason for each, then sends from your own Gmail — only after you approve every message.',
       'Invoice ↔ bank-statement reconciliation for accountants. Upload both sheets and see what is paid, unpaid, double-paid or suspicious — every row scored for confidence with a plain-English reason.',
       'Turns a raw CSV into a business report: interactive dashboard, AI-written executive summary, findings, risks and recommendations, exportable as PDF. Parsing runs in the browser — data never leaves it.',
     ],
@@ -162,8 +172,9 @@ const PRODUCTS_COPY = {
     eyebrow: 'منتجاتي الخاصة',
     title: ['منتجات بنيتها ', 'وأُشغّلها بنفسي.'],
     sub: 'أعمال العملاء تُظهر ما أستطيع تسليمه وفق متطلبات غيري. هذه هي التي اخترت فيها المشكلة بنفسي، وأطلقت المنتج، وأستضيفه على نطاقي الخاص.',
-    cats: ['عمليات مالية', 'تقارير بالذكاء الاصطناعي'],
+    cats: ['وكيل مهني بالذكاء الاصطناعي', 'عمليات مالية', 'تقارير بالذكاء الاصطناعي'],
     descs: [
+      'وكيل بحث عن عمل، سعودي أولًا: يقرأ سيرتك، ويطابقك مع شركات تناسب خبرتك فعلًا مع سبب واضح لكل مطابقة، ثم يرسل من بريدك أنت — وفقط بعد موافقتك على كل رسالة.',
       'مطابقة الفواتير مع كشوف الحساب البنكية للمحاسبين. ارفع الملفين وشاهد ما هو مدفوع، وغير مدفوع، ومدفوع مرتين، أو مشبوه — مع درجة ثقة وسبب واضح لكل صف.',
       'يحوّل ملف CSV خامًا إلى تقرير أعمال: لوحة تفاعلية، وملخّص تنفيذي مكتوب بالذكاء الاصطناعي، ونتائج ومخاطر وتوصيات، قابل للتصدير PDF. التحليل يتم في المتصفح — البيانات لا تغادره.',
     ],
@@ -172,8 +183,9 @@ const PRODUCTS_COPY = {
     eyebrow: 'Eigene Produkte',
     title: ['Produkte, die ich gebaut habe ', 'und selbst betreibe.'],
     sub: 'Kundenarbeit zeigt, was ich nach fremder Vorgabe liefere. Hier habe ich das Problem selbst gewählt, das Produkt ausgeliefert und hoste es auf meiner eigenen Domain.',
-    cats: ['Finanzprozesse', 'KI-Reporting'],
+    cats: ['KI-Karriereagent', 'Finanzprozesse', 'KI-Reporting'],
     descs: [
+      'Jobsuche-Agent, Saudi-first: liest den Lebenslauf, matcht auf Unternehmen, zu denen die Erfahrung wirklich passt, mit verständlicher Begründung je Match, und versendet dann aus dem eigenen Gmail — erst nach Freigabe jeder Nachricht.',
       'Abgleich von Rechnungen und Kontoauszügen für Buchhalter. Beide Dateien hochladen und sehen, was bezahlt, offen, doppelt bezahlt oder auffällig ist — jede Zeile mit Konfidenzwert und verständlicher Begründung.',
       'Macht aus einer rohen CSV einen Geschäftsbericht: interaktives Dashboard, KI-geschriebene Zusammenfassung, Erkenntnisse, Risiken und Empfehlungen, als PDF exportierbar. Das Parsen läuft im Browser — die Daten verlassen ihn nie.',
     ],
@@ -182,8 +194,9 @@ const PRODUCTS_COPY = {
     eyebrow: 'Productos propios',
     title: ['Productos que construí ', 'y opero yo mismo.'],
     sub: 'El trabajo con clientes muestra lo que entrego según el encargo de otros. Estos son los que elegí yo: escogí el problema, lancé el producto y lo alojo en mi propio dominio.',
-    cats: ['Operaciones financieras', 'Informes con IA'],
+    cats: ['Agente de carrera con IA', 'Operaciones financieras', 'Informes con IA'],
     descs: [
+      'Agente de búsqueda de empleo pensado para Arabia Saudí: lee tu CV, te empareja con empresas donde tu experiencia encaja de verdad con un motivo en lenguaje claro, y envía desde tu propio Gmail — solo tras aprobar cada mensaje.',
       'Conciliación de facturas y extractos bancarios para contables. Sube ambos archivos y ve qué está pagado, pendiente, pagado dos veces o es sospechoso — cada fila con un nivel de confianza y un motivo en lenguaje claro.',
       'Convierte un CSV en bruto en un informe de negocio: panel interactivo, resumen ejecutivo escrito por IA, hallazgos, riesgos y recomendaciones, exportable a PDF. El análisis ocurre en el navegador — los datos nunca salen de él.',
     ],
@@ -192,8 +205,9 @@ const PRODUCTS_COPY = {
     eyebrow: 'Mes propres produits',
     title: ['Des produits que j’ai construits ', 'et que j’exploite moi-même.'],
     sub: 'Le travail client montre ce que je livre selon le cahier des charges d’autrui. Ici, j’ai choisi le problème, livré le produit et je l’héberge sur mon propre domaine.',
-    cats: ['Opérations financières', 'Reporting par IA'],
+    cats: ['Agent de carrière IA', 'Opérations financières', 'Reporting par IA'],
     descs: [
+      'Agent de recherche d’emploi pensé pour l’Arabie saoudite : il lit votre CV, vous rapproche d’entreprises où votre expérience colle vraiment avec une raison en clair, puis envoie depuis votre propre Gmail — seulement après validation de chaque message.',
       'Rapprochement des factures et des relevés bancaires pour les comptables. Chargez les deux fichiers et voyez ce qui est payé, impayé, payé deux fois ou suspect — chaque ligne avec un score de confiance et une raison en clair.',
       'Transforme un CSV brut en rapport d’activité : tableau de bord interactif, synthèse rédigée par IA, constats, risques et recommandations, exportable en PDF. L’analyse tourne dans le navigateur — les données n’en sortent jamais.',
     ],
@@ -437,6 +451,16 @@ const NEW_CASES = {
     openUrl: 'https://alpha.ibdaacourse.com/ar',
     hrefs: ['https://alpha.ibdaacourse.com/ar', 'https://alpha.ibdaacourse.com/en'],
   },
+  applyni: {
+    name: 'Applyni',
+    // No shotSrc yet — the screenshot has not been added to the repo root. The
+    // card renders without the browser mock until it is, exactly as RevealSite
+    // did; adding a `/applyni.jpg` that doesn't exist would ship a broken image
+    // instead of a missing one.
+    stack: ['Next.js', 'TypeScript', 'Supabase', 'Tailwind v4', 'next-intl'],
+    openUrl: 'https://applyni.com/ar',
+    hrefs: ['https://applyni.com/ar', 'https://applyni.com/en'],
+  },
 };
 
 // Per-locale prose. `impact` entries are either { v, l } (plain string) or
@@ -479,6 +503,23 @@ const CASES_COPY = {
         'Two production images: FrankenPHP + Next.js standalone',
       ],
     },
+    applyni: {
+      role: 'Solo — product, engineering and operations',
+      tag: 'Saudi-first AI career agent — reads your CV, finds companies where you actually fit, and sends from your own Gmail.',
+      labels: ['Arabic', 'English'],
+      problem: 'Job seekers in the Gulf blast the same CV at every opening and hear nothing back. The tools that promise to fix it mostly automate the spraying, then dress it up with invented ATS scores and match percentages that explain nothing.',
+      solution: 'An agent built to do the opposite of volume. It reads your CV, matches you against Saudi companies and explains each match in words — including what it could not verify, so a weak match says so instead of hiding behind a number. It drafts the outreach, you review it, and it sends from your own Gmail on a queue with skip rules. Nothing leaves without your approval, and the spec forbids what most of this category does: never fabricate candidate information, never promise an interview, no fake ATS scores.',
+      impact: [
+        { pre: '21', em: 'modules', l: '54 migrations · 96 test files' },
+        { v: 'Your Gmail', l: 'Send-only, you approve' },
+        { v: 'Arabic-first', l: 'RTL by default, /ar' },
+      ],
+      highlights: [
+        'Explainable matches — including what it could not verify',
+        'Queued sending from your own Gmail with skip rules',
+        'Append-only credit ledger · Telegram delivery notices',
+      ],
+    },
   },
   ar: {
     proven: {
@@ -514,6 +555,23 @@ const CASES_COPY = {
         'مستودع Nx + pnpm — ‏Laravel 13 (PHP 8.5) وNext.js 16',
         'شهادات قابلة للتحقّق علنًا برمز',
         'صورتا إنتاج: FrankenPHP وNext.js standalone',
+      ],
+    },
+    applyni: {
+      role: 'منفردًا — المنتج والهندسة والتشغيل',
+      tag: 'وكيل مهني بالذكاء الاصطناعي، سعودي أولًا — يقرأ سيرتك، ويجد الشركات التي تناسبك فعلًا، ويرسل من بريدك أنت.',
+      labels: ['العربية', 'الإنجليزية'],
+      problem: 'الباحثون عن عمل في الخليج يرسلون السيرة نفسها إلى كل إعلان ولا يصلهم ردّ. والأدوات التي تَعِد بحلّ ذلك تُؤتمت الرشّ العشوائي في معظمها، ثم تُلبسه درجات توافق ونِسَب مُختلَقة لا تفسّر شيئًا.',
+      solution: 'وكيل بُني ليفعل عكس الكمّ. يقرأ سيرتك، ويطابقك مع شركات سعودية، ويشرح كل مطابقة بالكلمات — بما في ذلك ما لم يستطع التحقق منه، فالمطابقة الضعيفة تقول ذلك بدل أن تختبئ خلف رقم. يجهّز لك الرسائل، وأنت تراجعها، ثم تُرسل من بريدك أنت في طابور بقواعد تخطٍّ. لا شيء يخرج دون موافقتك، والمواصفة تمنع ما تفعله معظم هذه الفئة: لا اختلاق لمعلومات المرشّح، ولا وعد بمقابلة، ولا درجات ATS وهمية.',
+      impact: [
+        { pre: '٢١', em: 'وحدة', l: '٥٤ هجرة قاعدة بيانات · ٩٦ ملف اختبار' },
+        { v: 'بريدك أنت', l: 'إرسال فقط، بموافقتك' },
+        { v: 'العربية أولًا', l: 'اتجاه RTL افتراضيًا، /ar' },
+      ],
+      highlights: [
+        'مطابقات مشروحة — بما في ذلك ما تعذّر التحقق منه',
+        'إرسال في طابور من بريدك أنت مع قواعد تخطٍّ',
+        'سجلّ أرصدة إضافي فقط · إشعارات تسليم على تيليجرام',
       ],
     },
   },
@@ -553,6 +611,23 @@ const CASES_COPY = {
         'Zwei Produktions-Images: FrankenPHP + Next.js standalone',
       ],
     },
+    applyni: {
+      role: 'Allein — Produkt, Engineering und Betrieb',
+      tag: 'KI-Karriereagent, Saudi-first — liest Ihren Lebenslauf, findet Unternehmen, zu denen Sie wirklich passen, und versendet aus Ihrem eigenen Gmail.',
+      labels: ['Arabisch', 'Englisch'],
+      problem: 'Bewerber am Golf schicken denselben Lebenslauf an jede Ausschreibung und hören nichts zurück. Die Tools, die das beheben wollen, automatisieren meist genau dieses Gießkannenprinzip — verkleidet mit erfundenen ATS-Scores und Match-Prozenten, die nichts erklären.',
+      solution: 'Ein Agent, der das Gegenteil von Masse tut. Er liest den Lebenslauf, gleicht ihn mit saudischen Unternehmen ab und erklärt jede Übereinstimmung in Worten — einschließlich dessen, was er nicht verifizieren konnte, sodass eine schwache Übereinstimmung das auch sagt, statt sich hinter einer Zahl zu verstecken. Er entwirft die Ansprache, Sie prüfen sie, und versendet wird über eine Warteschlange mit Skip-Regeln aus Ihrem eigenen Gmail. Nichts geht ohne Ihre Freigabe raus, und die Spezifikation verbietet, was die meisten dieser Kategorie tun: keine erfundenen Bewerberangaben, kein Versprechen auf ein Interview, keine Fake-ATS-Scores.',
+      impact: [
+        { pre: '21', em: 'Module', l: '54 Migrationen · 96 Testdateien' },
+        { v: 'Ihr Gmail', l: 'Nur Senden, Sie geben frei' },
+        { v: 'Arabisch-first', l: 'RTL als Standard, /ar' },
+      ],
+      highlights: [
+        'Erklärte Matches — inklusive dessen, was nicht verifizierbar war',
+        'Versand aus dem eigenen Gmail über eine Queue mit Skip-Regeln',
+        'Append-only-Guthabenkonto · Telegram-Zustellhinweise',
+      ],
+    },
   },
   es: {
     proven: {
@@ -588,6 +663,23 @@ const CASES_COPY = {
         'Monorepo Nx + pnpm — Laravel 13 (PHP 8.5) + Next.js 16',
         'Certificados verificables públicamente por código',
         'Dos imágenes de producción: FrankenPHP + Next.js standalone',
+      ],
+    },
+    applyni: {
+      role: 'En solitario — producto, ingeniería y operación',
+      tag: 'Agente de carrera con IA, pensado primero para Arabia Saudí — lee tu CV, encuentra empresas donde realmente encajas y envía desde tu propio Gmail.',
+      labels: ['Árabe', 'Inglés'],
+      problem: 'Quien busca trabajo en el Golfo manda el mismo CV a todas las ofertas y no recibe respuesta. Las herramientas que prometen arreglarlo automatizan sobre todo ese envío indiscriminado, y lo disfrazan con puntuaciones ATS inventadas y porcentajes de coincidencia que no explican nada.',
+      solution: 'Un agente construido para hacer lo contrario del volumen. Lee tu CV, te compara con empresas saudíes y explica cada coincidencia con palabras — incluido lo que no ha podido verificar, de modo que una coincidencia débil lo dice en vez de esconderse tras un número. Redacta el mensaje, tú lo revisas, y se envía desde tu propio Gmail en una cola con reglas de omisión. Nada sale sin tu aprobación, y la especificación prohíbe lo que hace casi toda la categoría: nunca inventar información del candidato, nunca prometer una entrevista, ninguna puntuación ATS falsa.',
+      impact: [
+        { pre: '21', em: 'módulos', l: '54 migraciones · 96 archivos de test' },
+        { v: 'Tu Gmail', l: 'Solo envío, tú apruebas' },
+        { v: 'Árabe primero', l: 'RTL por defecto, /ar' },
+      ],
+      highlights: [
+        'Coincidencias explicadas — incluido lo que no pudo verificar',
+        'Envío en cola desde tu propio Gmail con reglas de omisión',
+        'Libro de créditos solo-añadir · avisos de entrega por Telegram',
       ],
     },
   },
@@ -627,6 +719,23 @@ const CASES_COPY = {
         'Deux images de production : FrankenPHP + Next.js standalone',
       ],
     },
+    applyni: {
+      role: 'En solo — produit, ingénierie et exploitation',
+      tag: 'Agent de carrière IA pensé d’abord pour l’Arabie saoudite — il lit votre CV, trouve les entreprises où vous correspondez vraiment, et envoie depuis votre propre Gmail.',
+      labels: ['Arabe', 'Anglais'],
+      problem: 'Les candidats du Golfe envoient le même CV à toutes les offres et n’obtiennent aucune réponse. Les outils censés régler cela automatisent surtout cet arrosage, puis l’habillent de scores ATS inventés et de pourcentages de correspondance qui n’expliquent rien.',
+      solution: 'Un agent conçu pour faire l’inverse du volume. Il lit votre CV, vous rapproche d’entreprises saoudiennes et explique chaque correspondance avec des mots — y compris ce qu’il n’a pas pu vérifier, de sorte qu’une correspondance faible le dit au lieu de se cacher derrière un chiffre. Il rédige l’approche, vous la relisez, puis l’envoi part de votre propre Gmail dans une file avec des règles d’exclusion. Rien ne part sans votre accord, et la spécification interdit ce que fait la plupart de cette catégorie : jamais inventer d’information sur le candidat, jamais promettre un entretien, aucun score ATS factice.',
+      impact: [
+        { pre: '21', em: 'modules', l: '54 migrations · 96 fichiers de test' },
+        { v: 'Votre Gmail', l: 'Envoi seul, vous validez' },
+        { v: 'Arabe d’abord', l: 'RTL par défaut, /ar' },
+      ],
+      highlights: [
+        'Correspondances expliquées — y compris ce qui n’a pas pu être vérifié',
+        'Envoi en file depuis votre propre Gmail, avec règles d’exclusion',
+        'Registre de crédits en ajout seul · avis de livraison par Telegram',
+      ],
+    },
   },
 };
 
@@ -652,7 +761,7 @@ function caseObject(key, loc) {
     '    n: "00",\n' +
     `    name: ${q(base.name)},\n` +
     `    role: ${q(c.role)},\n` +
-    `    shotSrc: ${q(base.shotSrc)},\n` +
+    (base.shotSrc ? `    shotSrc: ${q(base.shotSrc)},\n` : '') +
     `    tag: ${q(c.tag)},\n` +
     `    stack: [${base.stack.map(q).join(', ')}],\n` +
     `    openUrl: ${q(base.openUrl)},\n` +
@@ -694,9 +803,12 @@ function rewriteCases(loc) {
     let entries = parts;
     if (!entries.length) return null;
 
-    // 1. Append the two new cases, once.
-    for (const key of ['proven', 'ibdaa']) {
-      const marker = `shotSrc: ${q(NEW_CASES[key].shotSrc)}`;
+    // 1. Append each new case, once. Keyed on the name line at case-object
+    //    indentation — not on shotSrc, which not every case has, and not on the
+    //    bare name, which for Proven Group also appears in the brand-wall array
+    //    (one line, two-space indent, so the leading newline excludes it).
+    for (const key of ['proven', 'ibdaa', 'applyni']) {
+      const marker = `\n    name: ${q(NEW_CASES[key].name)},\n`;
       if (!entries.some((e) => e.includes(marker))) entries.push(caseObject(key, loc));
     }
 
@@ -1115,10 +1227,28 @@ const EDITS = [
     return [
       {
         file,
-        label: `revealsite shot: show for fleet cases (${loc})`,
-        appliedMarker: '{(c.shotSrc || !c.fleet) && c.links',
+        label: `case shot: show only when there is one (${loc})`,
+        appliedMarker: '{c.shotSrc && c.links && c.links.length ? (',
+        // Two problems, one condition. Originally the mock rendered for any
+        // case with NO `fleet`, which is why RevealSite — the one case that has
+        // one — showed no screenshot however many times a shotSrc was added.
+        // The first fix was `c.shotSrc || !c.fleet`, which let RevealSite
+        // through but also kept rendering an empty browser frame for any case
+        // without a screenshot. An empty frame reads as a broken image, which
+        // is worse than no frame, so the condition is now simply: draw the mock
+        // when there is something to put in it. Every other case carries an
+        // inline base64 shot, so nothing else changes.
+        old: '{(c.shotSrc || !c.fleet) && c.links && c.links.length ? (',
+        new: '{c.shotSrc && c.links && c.links.length ? (',
+      },
+      // Migration for exports still carrying the original pre-RevealSite form.
+      {
+        file,
+        label: `case shot: condition from fresh export (${loc})`,
+        optional: true,
+        appliedMarker: '{c.shotSrc && c.links && c.links.length ? (',
         old: '{!c.fleet && c.links && c.links.length ? (',
-        new: '{(c.shotSrc || !c.fleet) && c.links && c.links.length ? (',
+        new: '{c.shotSrc && c.links && c.links.length ? (',
       },
       {
         file,
