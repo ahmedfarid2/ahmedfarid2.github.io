@@ -1205,6 +1205,42 @@ const DEMO_EDITS = ['en', 'ar', 'de', 'es', 'fr'].map((loc) => ({
   transform: installDemoBand(loc),
 }));
 
+// ── Lead with the free offer at the top of the page ─────────────────────────
+// The hero's primary button asked for a scoping call, and the free demo sat in
+// the pricing section most visitors never scroll to. That is the ladder upside
+// down: the cheapest, lowest-commitment thing should be the first thing offered,
+// and "a free screen of your product" is a far easier yes than "give me half an
+// hour of your day". The scoping call is still offered twice in the pricing
+// section and in the contact section, so nothing is lost — it just stops being
+// the opening ask.
+function leadWithDemo(loc) {
+  const cta = jsxText(DEMO_COPY[loc].cta);
+  return (text) => {
+    // Both patterns match their own output as well as the original, so a second
+    // run rewrites them to the identical string and the transform converges.
+    const hero = /(<a href=")(?:#contact|\/demo\.html)(" className="btn btn-primary">\n\s+)[^<]*?(\s*<Arrow_h\/>)/;
+    const mobile = /<a href="(?:#contact|\/demo\.html)" className="nav-mobile-cta"[\s\S]*?<\/a>/;
+    if (!hero.test(text) || !mobile.test(text)) return null;
+
+    let out = text.replace(hero, (_m, open, mid, tail) => open + DEMO_URL + mid + cta + tail);
+    // The mobile button had a smooth-scroll handler for the #contact anchor.
+    // It now navigates to another page, so the handler is not just unnecessary
+    // — it would preventDefault the navigation and the button would do nothing.
+    out = out.replace(
+      mobile,
+      `<a href="${DEMO_URL}" className="nav-mobile-cta">${cta} →</a>`
+    );
+    return out;
+  };
+}
+
+const HERO_DEMO_EDITS = ['en', 'ar', 'de', 'es', 'fr'].map((loc) => ({
+  file: loc === 'en' ? 'index.html' : `index.${loc}.html`,
+  label: `hero + mobile nav lead with free demo (${loc})`,
+  anchor: 'className="btn btn-primary"',
+  transform: leadWithDemo(loc),
+}));
+
 // Each edit is an exact string match, so a failed match is loud rather than
 // silently rewriting the wrong thing.
 const EDITS = [
@@ -1498,6 +1534,9 @@ const EDITS = [
 
   // ── The free rung underneath the ladder ──────────────────────────────────
   ...DEMO_EDITS,
+
+  // ── …and lead with it, instead of burying it in the pricing section ──────
+  ...HERO_DEMO_EDITS,
 ];
 
 // Locate the `__bundler/manifest` line: a single-line JSON object mapping
