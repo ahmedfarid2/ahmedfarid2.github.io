@@ -72,9 +72,57 @@
   input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);background:rgba(255,255,255,.06)}
   input::placeholder,textarea::placeholder{color:#6f6a62}
   select{appearance:none;cursor:pointer}
-  /* Options inherit the OS menu, not the page — force legible colours or the
-     dark-on-dark combination makes them unreadable on Windows and Linux. */
+  /* The dropped-open list of a native <select> is drawn by the OS, not the
+     page — no CSS reaches it, so on a dark page it opens as a light grey slab.
+     The script below replaces it with a real listbox. Until that runs the
+     native control is the visible one and must still be legible, hence the
+     option colours; if JS never runs, this is what the user gets and it works.
+     Nothing here is dead code — it is the no-JS path. */
   select option{background:#14171b;color:var(--ink)}
+
+  /* ── Custom dropdown (progressive enhancement) ─────────────────────────── */
+  .sel{position:relative}
+  /* Only once the script has built the replacement does the native control get
+     hidden — and it is clipped rather than display:none so it stays focusable.
+     A required control that cannot be focused makes the browser refuse to
+     submit with "an invalid form control is not focusable", and the user gets
+     a form that silently does nothing. */
+  .sel.is-enhanced select{
+    position:absolute;left:14px;bottom:8px;width:1px;height:1px;
+    opacity:0;padding:0;margin:0;border:0;pointer-events:none;
+  }
+  .sel-btn{
+    display:none;width:100%;padding:13px 44px 13px 14px;background:var(--field);
+    color:var(--ink);border:1px solid var(--line);border-radius:10px;
+    font:inherit;font-size:15px;text-align:left;cursor:pointer;position:relative;
+    transition:border-color .18s ease, background .18s ease;
+  }
+  .sel.is-enhanced .sel-btn{display:block}
+  .sel-btn:hover{background:rgba(255,255,255,.06)}
+  .sel-btn:focus-visible{outline:none;border-color:var(--accent);background:rgba(255,255,255,.06)}
+  .sel-btn[aria-expanded="true"]{border-color:var(--accent);background:rgba(255,255,255,.06)}
+  .sel-btn.is-placeholder{color:#6f6a62}
+  .sel-btn:after{
+    content:"";position:absolute;right:17px;top:50%;width:8px;height:8px;
+    border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);
+    transform:translateY(-70%) rotate(45deg);transition:transform .2s ease;
+  }
+  .sel-btn[aria-expanded="true"]:after{transform:translateY(-30%) rotate(225deg)}
+  .sel-list{
+    position:absolute;z-index:20;top:calc(100% + 6px);left:0;right:0;
+    margin:0;padding:6px;list-style:none;
+    background:#14171b;border:1px solid var(--line);border-radius:12px;
+    box-shadow:0 24px 48px -20px rgba(0,0,0,.9);
+    max-height:260px;overflow:auto;
+  }
+  .sel-list[hidden]{display:none}
+  .sel-list li{
+    padding:11px 12px;border-radius:8px;font-size:15px;color:var(--body);cursor:pointer;
+  }
+  .sel-list li:hover,.sel-list li.is-active{background:rgba(255,255,255,.07);color:var(--ink)}
+  .sel-list li[aria-selected="true"]{color:var(--accent)}
+  /* The whole control is replaced when the pointer is coarse too — a phone's
+     native picker is good, but a light slab on a dark page is still jarring. */
   .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
   button{
     margin-top:24px;width:100%;padding:16px 22px;border:none;border-radius:99px;
@@ -201,16 +249,20 @@
         </label>
       </div>
 
-      <label class="field">
-        <span>When would you want to start? <i class="req">*</i></span>
-        <select name="Timeline" required>
-          <option value="">Choose one…</option>
-          <option>As soon as a slot opens</option>
-          <option>Within the next month</option>
-          <option>This quarter</option>
-          <option>Just exploring for now</option>
-        </select>
-      </label>
+      <!-- Not a <label> wrapper: the enhanced control is a button, and a label
+           wrapping both it and the hidden select would toggle the wrong one. -->
+      <div class="field">
+        <span id="timeline-label">When would you want to start? <i class="req">*</i></span>
+        <div class="sel" data-select>
+          <select name="Timeline" required aria-labelledby="timeline-label">
+            <option value="">Choose one…</option>
+            <option>As soon as a slot opens</option>
+            <option>Within the next month</option>
+            <option>This quarter</option>
+            <option>Just exploring for now</option>
+          </select>
+        </div>
+      </div>
 
       <label class="field">
         <span>What should I build, and which screen matters most? <i class="req">*</i></span>
@@ -255,6 +307,125 @@
     document.getElementById('formwrap').hidden = true;
     document.getElementById('sent').scrollIntoView({ block: 'center' });
   }
+
+  // ── Custom dropdown ──────────────────────────────────────────────────────
+  // The native <select> stays in the DOM and remains the thing that submits;
+  // this only builds a listbox on top of it and mirrors the value back. So the
+  // form works identically with JS disabled, and validation still belongs to
+  // the real control rather than being re-implemented badly here.
+  document.querySelectorAll('[data-select]').forEach((wrap, i) => {
+    const select = wrap.querySelector('select');
+    const options = [...select.options];
+    const listId = 'sel-list-' + i;
+
+    const btn = document.createElement('button');
+    btn.type = 'button';                    // never submit the form
+    btn.className = 'sel-btn';
+    btn.setAttribute('role', 'combobox');
+    btn.setAttribute('aria-haspopup', 'listbox');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.setAttribute('aria-controls', listId);
+    const labelledBy = select.getAttribute('aria-labelledby');
+    if (labelledBy) btn.setAttribute('aria-labelledby', labelledBy);
+
+    const list = document.createElement('ul');
+    list.className = 'sel-list';
+    list.id = listId;
+    list.setAttribute('role', 'listbox');
+    list.hidden = true;
+
+    // The empty-value option is a prompt, not an answer. It stays in the native
+    // select (so "nothing chosen" is still a state the browser can invalidate)
+    // but it is NOT offered in the list — picking it would clear the field and
+    // fail validation, which is not a choice worth giving anyone.
+    options.forEach((opt, idx) => {
+      if (!opt.value) return;
+      const li = document.createElement('li');
+      li.id = listId + '-opt-' + idx;
+      li.setAttribute('role', 'option');
+      li.textContent = opt.textContent;
+      li.dataset.idx = String(idx);       // index into the real <select>
+      list.appendChild(li);
+    });
+
+    wrap.append(btn, list);
+    wrap.classList.add('is-enhanced');
+
+    const items = [...list.children];
+    const itemFor = (selIdx) => items.findIndex((li) => Number(li.dataset.idx) === selIdx);
+    let active = Math.max(0, itemFor(select.selectedIndex));
+
+    const paint = () => {
+      const opt = options[select.selectedIndex] || options[0];
+      btn.textContent = opt.textContent;
+      // Nothing chosen yet reads as placeholder text, like the other fields.
+      btn.classList.toggle('is-placeholder', !opt.value);
+      items.forEach((li, idx) => {
+        li.setAttribute('aria-selected', String(Number(li.dataset.idx) === select.selectedIndex));
+        li.classList.toggle('is-active', idx === active);
+      });
+      btn.setAttribute('aria-activedescendant', list.hidden ? '' : items[active].id);
+    };
+
+    const open = () => {
+      list.hidden = false;
+      btn.setAttribute('aria-expanded', 'true');
+      active = Math.max(0, itemFor(select.selectedIndex));
+      paint();
+      items[active].scrollIntoView({ block: 'nearest' });
+    };
+    const close = ({ focus = true } = {}) => {
+      list.hidden = true;
+      btn.setAttribute('aria-expanded', 'false');
+      paint();
+      if (focus) btn.focus();
+    };
+    const choose = (itemIdx) => {
+      select.selectedIndex = Number(items[itemIdx].dataset.idx);
+      // Let anything listening on the real control know, exactly as a native
+      // selection would.
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+      active = itemIdx;
+      close();
+    };
+
+    btn.addEventListener('click', () => (list.hidden ? open() : close()));
+
+    btn.addEventListener('keydown', (e) => {
+      const k = e.key;
+      if (list.hidden) {
+        if (k === 'ArrowDown' || k === 'ArrowUp' || k === 'Enter' || k === ' ') {
+          e.preventDefault();
+          open();
+        }
+        return;
+      }
+      if (k === 'Escape') { e.preventDefault(); close(); }
+      else if (k === 'ArrowDown') { e.preventDefault(); active = Math.min(active + 1, items.length - 1); paint(); items[active].scrollIntoView({ block: 'nearest' }); }
+      else if (k === 'ArrowUp')   { e.preventDefault(); active = Math.max(active - 1, 0); paint(); items[active].scrollIntoView({ block: 'nearest' }); }
+      else if (k === 'Home')      { e.preventDefault(); active = 0; paint(); }
+      else if (k === 'End')       { e.preventDefault(); active = items.length - 1; paint(); }
+      else if (k === 'Enter' || k === ' ') { e.preventDefault(); choose(active); }
+    });
+
+    items.forEach((li, idx) => {
+      li.addEventListener('click', () => choose(idx));
+      li.addEventListener('mousemove', () => { active = idx; paint(); });
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!list.hidden && !wrap.contains(e.target)) close({ focus: false });
+    });
+
+    // If the browser blocks submission because nothing was chosen, it focuses
+    // the hidden native control — which the user cannot see. Send focus to the
+    // visible button instead so the error lands somewhere meaningful.
+    select.addEventListener('invalid', () => {
+      requestAnimationFrame(() => btn.focus());
+    });
+
+    paint();
+  });
 </script>
 </body>
 </html>
