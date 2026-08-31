@@ -453,10 +453,7 @@ const NEW_CASES = {
   },
   applyni: {
     name: 'Applyni',
-    // No shotSrc yet — the screenshot has not been added to the repo root. The
-    // card renders without the browser mock until it is, exactly as RevealSite
-    // did; adding a `/applyni.jpg` that doesn't exist would ship a broken image
-    // instead of a missing one.
+    shotSrc: '/applyni.jpg',
     stack: ['Next.js', 'TypeScript', 'Supabase', 'Tailwind v4', 'next-intl'],
     openUrl: 'https://applyni.com/ar',
     hrefs: ['https://applyni.com/ar', 'https://applyni.com/en'],
@@ -803,13 +800,23 @@ function rewriteCases(loc) {
     let entries = parts;
     if (!entries.length) return null;
 
-    // 1. Append each new case, once. Keyed on the name line at case-object
-    //    indentation — not on shotSrc, which not every case has, and not on the
-    //    bare name, which for Proven Group also appears in the brand-wall array
-    //    (one line, two-space indent, so the leading newline excludes it).
+    // 1. Add each new case, or REGENERATE it if it is already there. Appending
+    //    only when missing would mean a case, once applied, could never be
+    //    corrected — editing its copy or adding a screenshot would be silently
+    //    ignored on every subsequent run, which is exactly what happened when
+    //    Applyni's shotSrc was added. Regenerating makes the data above the
+    //    single source of truth, and stays idempotent because the generated
+    //    text is deterministic.
+    //
+    //    Keyed on the name line at case-object indentation — not on shotSrc,
+    //    which not every case has, and not on the bare name, which for Proven
+    //    Group also appears in the brand-wall array (one line, two-space
+    //    indent, so the leading newline excludes it).
     for (const key of ['proven', 'ibdaa', 'applyni']) {
       const marker = `\n    name: ${q(NEW_CASES[key].name)},\n`;
-      if (!entries.some((e) => e.includes(marker))) entries.push(caseObject(key, loc));
+      const at = entries.findIndex((e) => e.includes(marker));
+      if (at < 0) entries.push(caseObject(key, loc));
+      else entries[at] = caseObject(key, loc);
     }
 
     // 2. Ezhal last — it is the only case with nothing shipped to the stores
