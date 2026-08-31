@@ -67,54 +67,81 @@ function leadMagnetCard({ name, handle, desc }) {
   );
 }
 
-// ── "Own products" section ──────────────────────────────────────────────────
-// Products Ahmed chose, built and hosts himself, as opposed to client work.
+// ── Two card sections: own products, and concepts/builds ────────────────────
+// Both reuse existing classes only — `.writing-grid`/`.writing-card` for the
+// link cards (every entry is an external link) and `.case-stack`/`.chip` for
+// the tech chips, since `.chip` is only styled inside `.build-card` and
+// `.case-stack`. Zero new CSS, and both sections inherit hover, reveal and
+// spotlight behaviour for free.
 //
-// Reuses existing classes only — `.writing-grid`/`.writing-card` for the link
-// cards (each product is an external link) and `.case-stack`/`.chip` for the
-// tech chips, since `.chip` is only styled inside `.build-card` and
-// `.case-stack`. That means zero new CSS, and the section inherits hover,
-// reveal and spotlight behaviour for free.
-//
-// The eyebrow carries no number on purpose. Section numbers are hardcoded
+// Neither eyebrow carries a number, on purpose. Section numbers are hardcoded
 // strings and already inconsistent in the export (15 appears twice, 16 is
-// unused), so numbering this one would either collide or force renumbering
-// everything after it. The design already has unnumbered eyebrows — "Profile",
-// "By the numbers", "Full toolbelt" — so this follows that established pattern
-// and can sit high on the page instead of being buried at the end.
+// unused), so numbering these would either collide or force renumbering
+// everything after them. The design already has unnumbered eyebrows —
+// "Profile", "By the numbers", "Full toolbelt" — so this follows that pattern.
+
+// ── Section 1: own products ─────────────────────────────────────────────────
+// Only the two things Ahmed chose, built and hosts himself. The section's whole
+// value is that claim, so anything commissioned by someone else belongs in the
+// second section below — a heading that isn't true costs more than a card gains.
 const PRODUCTS = [
   {
-    cat: 'Finance ops',
     name: 'ReconcilePilot',
     href: 'https://reconcilepilot.iamahmedfarid.com',
     chips: ['Next.js 16', 'React 19', 'Supabase', 'Vercel'],
-    desc:
-      'Invoice ↔ bank-statement reconciliation for accountants. Upload both ' +
-      'sheets and see what is paid, unpaid, double-paid or suspicious — every ' +
-      'row scored for confidence with a plain-English reason.',
   },
   {
-    cat: 'AI reporting',
     name: 'SheetPilot AI',
     href: 'https://sheetpilot.iamahmedfarid.com',
     chips: ['Next.js 16', 'TypeScript', 'Tailwind v4', 'Recharts'],
-    desc:
-      'Turns a raw CSV into a business report: interactive dashboard, ' +
-      'AI-written executive summary, findings, risks and recommendations, ' +
-      'exportable as PDF. Parsing runs in the browser — data never leaves it.',
   },
+];
+
+// ── Section 2: concepts, demos and smaller client builds ────────────────────
+// Everything else live on iamahmedfarid.com. Each card carries a category chip
+// naming what it actually is, because the difference matters:
+//
+//   • Reform and DIGIT are UNSOLICITED concepts — the clinics did not
+//     commission them and have not signed them off. Both repos say so
+//     explicitly (DIGIT ships noindex/nofollow on every route). The copy must
+//     never read as paid client work.
+//   • ITQAN is a concept too, but a far larger one — 22 routes.
+//   • Cairo Plaza is real client work for a New Cairo developer.
+//   • Ofoq is a client demo built from a written proposal.
+const BUILDS = [
   {
-    // Labelled a CONCEPT deliberately. Unlike the other two this is not Ahmed's
-    // own product: it is an unapproved concept for a real dental clinic, so the
-    // card must not imply the clinic commissioned it or signed it off.
-    cat: 'Concept',
+    key: 'reform',
     name: 'Reform Dental',
     href: 'https://reform.iamahmedfarid.com',
     chips: ['Vanilla JS', 'No build step', 'Bilingual RTL', 'Vercel'],
-    desc:
-      'A homepage concept for a dental clinic, in English and Arabic. The RTL ' +
-      'version carries its own type system and composition rather than a ' +
-      'mirrored layout. No framework, no build step — three files and a photo.',
+  },
+  {
+    key: 'digit',
+    name: 'DIGIT Dental',
+    href: 'https://digitdental.iamahmedfarid.com',
+    chips: ['Next.js 16', 'React 19', 'TypeScript', 'Tailwind v4'],
+  },
+  {
+    key: 'itqan',
+    name: 'ITQAN Dental',
+    href: 'https://itqan.iamahmedfarid.com',
+    // Not "22 routes": a chip whose first strong character is a digit gets
+    // reordered inside the RTL export and renders as "routes 22". The count is
+    // in the description, where it is localised properly; chips stay tech
+    // tokens, which are direction-safe in every locale.
+    chips: ['Next.js 16', 'App Router', 'TypeScript', 'Tailwind v4'],
+  },
+  {
+    key: 'cairoplaza',
+    name: 'Cairo Plaza',
+    href: 'https://cairoplaza.iamahmedfarid.com',
+    chips: ['Vanilla JS', 'No build step', 'Bilingual EN/AR', 'Vercel'],
+  },
+  {
+    key: 'ofoq',
+    name: 'Ofoq',
+    href: 'https://ofoq.iamahmedfarid.com',
+    chips: ['Next.js 16', 'React 19', 'TypeScript', 'Live sync'],
   },
 ];
 
@@ -125,52 +152,124 @@ const PRODUCTS_COPY = {
     eyebrow: 'Own products',
     title: ['Products I built ', 'and run myself.'],
     sub: 'Client work shows what I can deliver against someone else’s brief. These are the ones where I picked the problem, shipped the product, and host it on my own domain.',
-    cats: ['Finance ops', 'AI reporting', 'Concept'],
-    descs: [PRODUCTS[0].desc, PRODUCTS[1].desc, PRODUCTS[2].desc],
+    cats: ['Finance ops', 'AI reporting'],
+    descs: [
+      'Invoice ↔ bank-statement reconciliation for accountants. Upload both sheets and see what is paid, unpaid, double-paid or suspicious — every row scored for confidence with a plain-English reason.',
+      'Turns a raw CSV into a business report: interactive dashboard, AI-written executive summary, findings, risks and recommendations, exportable as PDF. Parsing runs in the browser — data never leaves it.',
+    ],
   },
   ar: {
     eyebrow: 'منتجاتي الخاصة',
     title: ['منتجات بنيتها ', 'وأُشغّلها بنفسي.'],
     sub: 'أعمال العملاء تُظهر ما أستطيع تسليمه وفق متطلبات غيري. هذه هي التي اخترت فيها المشكلة بنفسي، وأطلقت المنتج، وأستضيفه على نطاقي الخاص.',
-    cats: ['عمليات مالية', 'تقارير بالذكاء الاصطناعي', 'مفهوم تصميمي'],
+    cats: ['عمليات مالية', 'تقارير بالذكاء الاصطناعي'],
     descs: [
       'مطابقة الفواتير مع كشوف الحساب البنكية للمحاسبين. ارفع الملفين وشاهد ما هو مدفوع، وغير مدفوع، ومدفوع مرتين، أو مشبوه — مع درجة ثقة وسبب واضح لكل صف.',
       'يحوّل ملف CSV خامًا إلى تقرير أعمال: لوحة تفاعلية، وملخّص تنفيذي مكتوب بالذكاء الاصطناعي، ونتائج ومخاطر وتوصيات، قابل للتصدير PDF. التحليل يتم في المتصفح — البيانات لا تغادره.',
-      'مفهوم لصفحة رئيسية لعيادة أسنان، بالإنجليزية والعربية. النسخة العربية لها نظامها الطباعي وتكوينها الخاص، لا مجرد انعكاس للتخطيط. بلا إطار عمل وبلا خطوة بناء — ثلاثة ملفات وصورة واحدة.',
     ],
   },
   de: {
     eyebrow: 'Eigene Produkte',
     title: ['Produkte, die ich gebaut habe ', 'und selbst betreibe.'],
     sub: 'Kundenarbeit zeigt, was ich nach fremder Vorgabe liefere. Hier habe ich das Problem selbst gewählt, das Produkt ausgeliefert und hoste es auf meiner eigenen Domain.',
-    cats: ['Finanzprozesse', 'KI-Reporting', 'Konzept'],
+    cats: ['Finanzprozesse', 'KI-Reporting'],
     descs: [
       'Abgleich von Rechnungen und Kontoauszügen für Buchhalter. Beide Dateien hochladen und sehen, was bezahlt, offen, doppelt bezahlt oder auffällig ist — jede Zeile mit Konfidenzwert und verständlicher Begründung.',
       'Macht aus einer rohen CSV einen Geschäftsbericht: interaktives Dashboard, KI-geschriebene Zusammenfassung, Erkenntnisse, Risiken und Empfehlungen, als PDF exportierbar. Das Parsen läuft im Browser — die Daten verlassen ihn nie.',
-      'Ein Homepage-Konzept für eine Zahnarztpraxis, auf Englisch und Arabisch. Die RTL-Fassung hat ein eigenes Typosystem und eine eigene Komposition statt eines gespiegelten Layouts. Ohne Framework, ohne Build-Schritt — drei Dateien und ein Foto.',
     ],
   },
   es: {
     eyebrow: 'Productos propios',
     title: ['Productos que construí ', 'y opero yo mismo.'],
     sub: 'El trabajo con clientes muestra lo que entrego según el encargo de otros. Estos son los que elegí yo: escogí el problema, lancé el producto y lo alojo en mi propio dominio.',
-    cats: ['Operaciones financieras', 'Informes con IA', 'Concepto'],
+    cats: ['Operaciones financieras', 'Informes con IA'],
     descs: [
       'Conciliación de facturas y extractos bancarios para contables. Sube ambos archivos y ve qué está pagado, pendiente, pagado dos veces o es sospechoso — cada fila con un nivel de confianza y un motivo en lenguaje claro.',
       'Convierte un CSV en bruto en un informe de negocio: panel interactivo, resumen ejecutivo escrito por IA, hallazgos, riesgos y recomendaciones, exportable a PDF. El análisis ocurre en el navegador — los datos nunca salen de él.',
-      'Un concepto de página de inicio para una clínica dental, en inglés y árabe. La versión RTL tiene su propio sistema tipográfico y composición, no un diseño reflejado. Sin framework y sin paso de compilación: tres archivos y una fotografía.',
     ],
   },
   fr: {
     eyebrow: 'Mes propres produits',
     title: ['Des produits que j’ai construits ', 'et que j’exploite moi-même.'],
     sub: 'Le travail client montre ce que je livre selon le cahier des charges d’autrui. Ici, j’ai choisi le problème, livré le produit et je l’héberge sur mon propre domaine.',
-    cats: ['Opérations financières', 'Reporting par IA', 'Concept'],
+    cats: ['Opérations financières', 'Reporting par IA'],
     descs: [
       'Rapprochement des factures et des relevés bancaires pour les comptables. Chargez les deux fichiers et voyez ce qui est payé, impayé, payé deux fois ou suspect — chaque ligne avec un score de confiance et une raison en clair.',
       'Transforme un CSV brut en rapport d’activité : tableau de bord interactif, synthèse rédigée par IA, constats, risques et recommandations, exportable en PDF. L’analyse tourne dans le navigateur — les données n’en sortent jamais.',
-      'Un concept de page d’accueil pour un cabinet dentaire, en anglais et en arabe. La version RTL possède sa propre typographie et composition plutôt qu’une mise en page miroir. Sans framework ni étape de build — trois fichiers et une photographie.',
     ],
+  },
+};
+
+const BUILDS_COPY = {
+  en: {
+    eyebrow: 'Concepts & builds',
+    title: ['Concepts, demos, ', 'and recent builds.'],
+    sub: 'Design concepts, client demos and smaller builds — all live on my own domain, so you can click through them instead of taking my word for it. Each one is labelled for what it actually is.',
+    cats: { concept: 'Concept', client: 'Client work', demo: 'Client demo' },
+    kinds: { reform: 'concept', digit: 'concept', itqan: 'concept', cairoplaza: 'client', ofoq: 'demo' },
+    descs: {
+      reform: 'A homepage concept for a dental clinic, in English and Arabic. The RTL version carries its own type system and composition rather than a mirrored layout. No framework, no build step — three files and a photo.',
+      digit: 'An unsolicited Arabic-first concept for a Giza dental clinic, built from two design artboards. Anything the clinic has not verified — credentials, counts, case photos — is structured in the data layer but deliberately left empty rather than invented.',
+      itqan: 'A full Arabic clinic site as a concept: 22 routes covering services, ten treatment pages, a doctor profile, team, articles and contact — the treatment pages generated from one typed service model. Only verified information is allowed into the data layer.',
+      cairoplaza: 'A payment-plan calculator and project pages for a New Cairo real-estate developer. Bilingual English and Arabic, fully static, no backend — a sales tool their team can open on a phone in front of a buyer.',
+      ofoq: 'A smart-building app proposal turned into something the owner can actually use. Book a room in the member app and it lands on the management calendar; order from the café and it reaches the kitchen board — mark it ready and the member is notified live, even in another tab.',
+    },
+  },
+  ar: {
+    eyebrow: 'مفاهيم وأعمال',
+    title: ['مفاهيم وعروض تجريبية ', 'وأعمال حديثة.'],
+    sub: 'مفاهيم تصميمية وعروض تجريبية لعملاء وأعمال أصغر — جميعها منشورة على نطاقي الخاص، لتتصفّحها بنفسك بدل أن تأخذ كلامي. وكلٌّ منها موسوم بما هو عليه فعلًا.',
+    cats: { concept: 'مفهوم تصميمي', client: 'عمل لعميل', demo: 'عرض تجريبي لعميل' },
+    kinds: { reform: 'concept', digit: 'concept', itqan: 'concept', cairoplaza: 'client', ofoq: 'demo' },
+    descs: {
+      reform: 'مفهوم لصفحة رئيسية لعيادة أسنان، بالإنجليزية والعربية. النسخة العربية لها نظامها الطباعي وتكوينها الخاص، لا مجرد انعكاس للتخطيط. بلا إطار عمل وبلا خطوة بناء — ثلاثة ملفات وصورة واحدة.',
+      digit: 'مفهوم عربي أولًا غير مطلوب لعيادة أسنان في الجيزة، مبني من لوحتَي تصميم. وكل ما لم تؤكّده العيادة — مؤهلات وأرقام وصور حالات — مُهيكل في طبقة البيانات لكنه تُرك فارغًا عمدًا بدل اختلاقه.',
+      itqan: 'موقع عيادة عربي كامل كمفهوم: ٢٢ مسارًا تشمل الخدمات، وعشر صفحات علاج، وملفّ الطبيب، والفريق، والمقالات، والتواصل — وصفحات العلاج مُولَّدة من نموذج خدمة واحد مُحدّد الأنواع. ولا يدخل طبقة البيانات إلا ما هو موثّق.',
+      cairoplaza: 'حاسبة خطط سداد وصفحات مشاريع لمطوّر عقاري في القاهرة الجديدة. ثنائية اللغة إنجليزي/عربي، ثابتة بالكامل وبلا خلفية برمجية — أداة بيع يفتحها فريقهم على الهاتف أمام المشتري.',
+      ofoq: 'مقترح تطبيق لمبنى ذكي تحوّل إلى شيء يستطيع المالك استخدامه فعلًا. احجز قاعة من تطبيق العضو فتظهر على تقويم الإدارة؛ واطلب من المقهى فيصل الطلب إلى شاشة المطبخ — وبمجرد وسمه جاهزًا يصل الإشعار إلى العضو مباشرة، حتى في تبويب آخر.',
+    },
+  },
+  de: {
+    eyebrow: 'Konzepte & Builds',
+    title: ['Konzepte, Demos ', 'und neuere Arbeiten.'],
+    sub: 'Designkonzepte, Kunden-Demos und kleinere Builds — alle live auf meiner eigenen Domain, damit Sie durchklicken können, statt mir zu glauben. Jedes ist als das gekennzeichnet, was es wirklich ist.',
+    cats: { concept: 'Konzept', client: 'Kundenarbeit', demo: 'Kunden-Demo' },
+    kinds: { reform: 'concept', digit: 'concept', itqan: 'concept', cairoplaza: 'client', ofoq: 'demo' },
+    descs: {
+      reform: 'Ein Homepage-Konzept für eine Zahnarztpraxis, auf Englisch und Arabisch. Die RTL-Fassung hat ein eigenes Typosystem und eine eigene Komposition statt eines gespiegelten Layouts. Ohne Framework, ohne Build-Schritt — drei Dateien und ein Foto.',
+      digit: 'Ein unaufgefordertes, arabisch-first Konzept für eine Zahnarztpraxis in Gizeh, gebaut aus zwei Design-Artboards. Alles, was die Praxis nicht bestätigt hat — Qualifikationen, Zahlen, Fallfotos — ist in der Datenschicht strukturiert, aber bewusst leer gelassen statt erfunden.',
+      itqan: 'Eine vollständige arabische Praxis-Website als Konzept: 22 Routen mit Leistungen, zehn Behandlungsseiten, Arztprofil, Team, Artikeln und Kontakt — die Behandlungsseiten aus einem typisierten Leistungsmodell generiert. In die Datenschicht darf nur Verifiziertes.',
+      cairoplaza: 'Ein Zahlungsplan-Rechner und Projektseiten für einen Immobilienentwickler in New Cairo. Zweisprachig Englisch und Arabisch, vollständig statisch, ohne Backend — ein Vertriebswerkzeug, das das Team vor dem Käufer auf dem Handy öffnet.',
+      ofoq: 'Ein Proposal für eine Smart-Building-App, verwandelt in etwas, das der Eigentümer wirklich benutzen kann. Ein in der Mitglieder-App gebuchter Raum landet im Management-Kalender; eine Café-Bestellung erscheint auf dem Küchenboard — als fertig markiert, wird das Mitglied live benachrichtigt, auch in einem anderen Tab.',
+    },
+  },
+  es: {
+    eyebrow: 'Conceptos y builds',
+    title: ['Conceptos, demos ', 'y trabajos recientes.'],
+    sub: 'Conceptos de diseño, demos para clientes y trabajos más pequeños — todos publicados en mi propio dominio, para que los recorras en vez de creerme. Cada uno está etiquetado por lo que realmente es.',
+    cats: { concept: 'Concepto', client: 'Trabajo de cliente', demo: 'Demo para cliente' },
+    kinds: { reform: 'concept', digit: 'concept', itqan: 'concept', cairoplaza: 'client', ofoq: 'demo' },
+    descs: {
+      reform: 'Un concepto de página de inicio para una clínica dental, en inglés y árabe. La versión RTL tiene su propio sistema tipográfico y composición, no un diseño reflejado. Sin framework y sin paso de compilación: tres archivos y una fotografía.',
+      digit: 'Un concepto no solicitado, pensado primero en árabe, para una clínica dental de Guiza, construido a partir de dos artboards de diseño. Todo lo que la clínica no ha verificado — credenciales, cifras, fotos de casos — está estructurado en la capa de datos pero deliberadamente vacío en lugar de inventado.',
+      itqan: 'Un sitio completo de clínica en árabe como concepto: 22 rutas con servicios, diez páginas de tratamiento, perfil del doctor, equipo, artículos y contacto — las páginas de tratamiento generadas desde un único modelo de servicio tipado. Solo entra información verificada en la capa de datos.',
+      cairoplaza: 'Una calculadora de planes de pago y páginas de proyecto para una promotora inmobiliaria de Nuevo Cairo. Bilingüe inglés y árabe, totalmente estática y sin backend — una herramienta de venta que su equipo abre en el móvil delante del comprador.',
+      ofoq: 'Una propuesta de app para un edificio inteligente convertida en algo que el propietario puede usar de verdad. Reserva una sala en la app de miembro y aparece en el calendario de gestión; pide en la cafetería y llega al tablero de cocina — márcalo como listo y el miembro recibe el aviso en vivo, incluso en otra pestaña.',
+    },
+  },
+  fr: {
+    eyebrow: 'Concepts & réalisations',
+    title: ['Concepts, démos ', 'et travaux récents.'],
+    sub: 'Concepts de design, démos client et réalisations plus courtes — tous en ligne sur mon propre domaine, pour que vous cliquiez plutôt que de me croire sur parole. Chacun est étiqueté pour ce qu’il est vraiment.',
+    cats: { concept: 'Concept', client: 'Travail client', demo: 'Démo client' },
+    kinds: { reform: 'concept', digit: 'concept', itqan: 'concept', cairoplaza: 'client', ofoq: 'demo' },
+    descs: {
+      reform: 'Un concept de page d’accueil pour un cabinet dentaire, en anglais et en arabe. La version RTL possède sa propre typographie et composition plutôt qu’une mise en page miroir. Sans framework ni étape de build — trois fichiers et une photographie.',
+      digit: 'Un concept spontané, pensé en arabe d’abord, pour un cabinet dentaire à Gizeh, construit à partir de deux planches de design. Tout ce que le cabinet n’a pas vérifié — diplômes, chiffres, photos de cas — est structuré dans la couche de données mais laissé volontairement vide plutôt qu’inventé.',
+      itqan: 'Un site de cabinet entièrement en arabe, en concept : 22 routes couvrant les services, dix pages de traitement, le profil du médecin, l’équipe, les articles et le contact — les pages de traitement générées depuis un modèle de service typé. Seule une information vérifiée entre dans la couche de données.',
+      cairoplaza: 'Un simulateur de plan de paiement et des pages projet pour un promoteur immobilier du Nouveau Caire. Bilingue anglais et arabe, entièrement statique et sans backend — un outil de vente que leur équipe ouvre sur un téléphone devant l’acheteur.',
+      ofoq: 'Une proposition d’application pour un bâtiment intelligent transformée en quelque chose que le propriétaire peut réellement utiliser. Réservez une salle dans l’app membre et elle apparaît au calendrier de gestion ; commandez au café et la commande arrive sur le tableau de la cuisine — passez-la en « prêt » et le membre est notifié en direct, même dans un autre onglet.',
+    },
   },
 };
 
@@ -179,8 +278,7 @@ const PRODUCTS_COPY = {
 const jsxText = (s) =>
   String(s).replace(/'/g, '&apos;').replace(/\{/g, '&#123;').replace(/\}/g, '&#125;');
 
-// One product card. Shared so the fresh-export path (productsComponent) and the
-// append-to-an-existing-section migration below cannot drift apart.
+// One card. Shared by both sections so they cannot drift apart visually.
 function productCard(p, cat, desc) {
   return (
     '          <a className="writing-card" href="' + p.href + '" target="_blank" rel="noreferrer">\n' +
@@ -196,19 +294,17 @@ function productCard(p, cat, desc) {
   );
 }
 
-function productsComponent(locale) {
-  const c = PRODUCTS_COPY[locale];
-  const cards = PRODUCTS.map((p, i) => productCard(p, c.cats[i], c.descs[i])).join('');
-
+// Shared shell so the two sections stay structurally identical.
+function cardSection(fnName, sectionId, copy, cards) {
   return (
-    'function Products() {\n' +
+    'function ' + fnName + '() {\n' +
     '  return (\n' +
-    '    <section className="pad-y" id="products">\n' +
+    '    <section className="pad-y" id="' + sectionId + '">\n' +
     '      <div className="wrap">\n' +
     '        <SectionHead_t\n' +
-    '          eyebrow="' + jsxText(c.eyebrow) + '"\n' +
-    '          title={<>' + jsxText(c.title[0]) + '<em>' + jsxText(c.title[1]) + '</em></>}\n' +
-    '          sub="' + jsxText(c.sub) + '"\n' +
+    '          eyebrow="' + jsxText(copy.eyebrow) + '"\n' +
+    '          title={<>' + jsxText(copy.title[0]) + '<em>' + jsxText(copy.title[1]) + '</em></>}\n' +
+    '          sub="' + jsxText(copy.sub) + '"\n' +
     '        />\n' +
     '        <div className="writing-grid">\n' +
     cards +
@@ -220,67 +316,96 @@ function productsComponent(locale) {
   );
 }
 
-// Three exact-match inserts per locale. The anchors are structural (a function
-// declaration, the window registration, the render list), not prose, so they
-// are identical in every locale file.
-const PRODUCT_SECTION_EDITS = ['en', 'ar', 'de', 'es', 'fr'].flatMap((loc) => {
-  const file = loc === 'en' ? 'index.html' : `index.${loc}.html`;
-  return [
-    {
-      file,
-      label: `products section: component (${loc})`,
-      appliedMarker: 'function Products() {',
-      // The replacement deliberately re-emits the anchor: this edit prepends the
-      // component above the window registration, and the `register` edit that
-      // runs immediately after rewrites that same line. So the anchor is
-      // consumed by the pair, not by this edit alone.
-      allowRepeat: true,
-      old: 'Object.assign(window, { Writing, FAQ, Connect, CTA, Footer });',
-      new: productsComponent(loc) + 'Object.assign(window, { Writing, FAQ, Connect, CTA, Footer });',
-    },
-    {
-      file,
-      label: `products section: register (${loc})`,
-      appliedMarker: 'Products, Writing, FAQ',
-      old: 'Object.assign(window, { Writing, FAQ, Connect, CTA, Footer });',
-      new: 'Object.assign(window, { Products, Writing, FAQ, Connect, CTA, Footer });',
-    },
-    // Migration: exports that already carry the two-card version of the section
-    // predate the Reform card. The component edit above cannot add it — its
-    // appliedMarker matches, so it reports "already applied" and does nothing —
-    // so the third card is appended here instead. Optional, because a freshly
-    // generated component already contains all three and has nothing to migrate.
-    {
-      file,
-      label: `products section: append Reform card (${loc})`,
-      optional: true,
-      appliedMarker: 'Reform Dental',
-      // Anchored on the last chip of the SheetPilot card plus the grid close, so
-      // the anchor is consumed by its own replacement and cannot re-append.
-      old:
-        '              <span className="chip">Recharts</span>\n' +
-        '            </div>\n' +
-        '          </a>\n' +
-        '        </div>\n',
-      new:
-        '              <span className="chip">Recharts</span>\n' +
-        '            </div>\n' +
-        '          </a>\n' +
-        productCard(PRODUCTS[2], PRODUCTS_COPY[loc].cats[2], PRODUCTS_COPY[loc].descs[2]) +
-        '        </div>\n',
-    },
-    {
-      file,
-      label: `products section: render (${loc})`,
-      appliedMarker: '      <Products/>\n',
-      // Anchor spans BOTH neighbours so it is consumed by its own replacement.
-      // Anchoring on `<CaseStudies/>` alone would still match after the insert
-      // and add a second <Products/> on every re-run.
-      old: '      <CaseStudies/>\n      <WhatIBuild/>\n',
-      new: '      <CaseStudies/>\n      <Products/>\n      <WhatIBuild/>\n',
-    },
-  ];
-});
+function productsComponent(locale) {
+  const c = PRODUCTS_COPY[locale];
+  const cards = PRODUCTS.map((p, i) => productCard(p, c.cats[i], c.descs[i])).join('');
+  return cardSection('Products', 'products', c, cards);
+}
+
+function buildsComponent(locale) {
+  const c = BUILDS_COPY[locale];
+  const cards = BUILDS.map((b) => productCard(b, c.cats[c.kinds[b.key]], c.descs[b.key])).join('');
+  return cardSection('Builds', 'builds', c, cards);
+}
+
+// Both sections are installed by a transform rather than by exact-string
+// anchors. An earlier version of this file used anchored inserts, and each time
+// the section's contents changed it needed a fresh "migration" edit to move
+// exports already carrying the older shape — the Reform card was appended that
+// way, and pulling it back out into its own section would have needed another.
+// A transform sidesteps the whole category of problem: it regenerates both
+// components from the data above every run, so whatever shape a file is
+// currently in, it converges on the same output.
+const SECTION_OPEN = { Products: 'function Products() {', Builds: 'function Builds() {' };
+const FN_CLOSE = '\n}\n\n';
+const REGISTER_TAIL = 'Writing, FAQ, Connect, CTA, Footer });';
+const RENDER_ANCHOR = '      <CaseStudies/>\n';
+const RENDER_TAIL = '      <WhatIBuild/>\n';
+
+function installSections(loc) {
+  return (text) => {
+    let out = text;
+
+    // 1. Components. Replace an existing one in place, otherwise insert both
+    //    just above the window registration.
+    for (const [fn, source] of [
+      ['Products', productsComponent(loc)],
+      ['Builds', buildsComponent(loc)],
+    ]) {
+      const open = SECTION_OPEN[fn];
+      const at = out.indexOf(open);
+      if (at >= 0) {
+        const end = out.indexOf(FN_CLOSE, at);
+        if (end < 0) return null;
+        out = out.slice(0, at) + source + out.slice(end + FN_CLOSE.length);
+      } else {
+        const reg = out.indexOf('Object.assign(window, { ');
+        if (reg < 0) return null;
+        const line = out.indexOf(REGISTER_TAIL, reg);
+        if (line < 0) return null;
+        const start = out.lastIndexOf('Object.assign(window, { ', line);
+        out = out.slice(0, start) + source + out.slice(start);
+      }
+    }
+
+    // 2. Registration — normalised, so it doesn't matter which names a previous
+    //    run already added.
+    const regAt = out.indexOf(REGISTER_TAIL);
+    if (regAt < 0) return null;
+    const regStart = out.lastIndexOf('Object.assign(window, { ', regAt);
+    if (regStart < 0) return null;
+    out =
+      out.slice(0, regStart) +
+      'Object.assign(window, { Products, Builds, ' +
+      REGISTER_TAIL +
+      out.slice(regAt + REGISTER_TAIL.length);
+
+    // 3. Render list — both sections sit between the case studies and
+    //    "What I build", normalised the same way.
+    const rAt = out.indexOf(RENDER_ANCHOR);
+    if (rAt < 0) return null;
+    const tailAt = out.indexOf(RENDER_TAIL, rAt);
+    if (tailAt < 0) return null;
+    const between = out.slice(rAt + RENDER_ANCHOR.length, tailAt);
+    // Only rewrite the gap when it holds nothing but our own section calls —
+    // otherwise a future export that puts something else there would lose it.
+    if (/^(\s*<(Products|Builds)\/>\n)*$/.test(between)) {
+      out =
+        out.slice(0, rAt + RENDER_ANCHOR.length) +
+        '      <Products/>\n      <Builds/>\n' +
+        out.slice(tailAt);
+    }
+
+    return out;
+  };
+}
+
+const PRODUCT_SECTION_EDITS = ['en', 'ar', 'de', 'es', 'fr'].map((loc) => ({
+  file: loc === 'en' ? 'index.html' : `index.${loc}.html`,
+  label: `sections: own products + concepts/builds (${loc})`,
+  anchor: 'Object.assign(window, { ',
+  transform: installSections(loc),
+}));
 
 // ── Case studies: two new entries, plus ordering ─────────────────────────────
 // Two projects that belong in "Selected work" but post-date the export, and one
