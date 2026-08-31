@@ -1039,6 +1039,141 @@ const WEEKS_EDITS = ['en', 'ar', 'de', 'es', 'fr'].flatMap((loc) => {
   }));
 });
 
+// ── Free demo: step zero of the value ladder ────────────────────────────────
+// The ladder started at $1,200, which is the right entry price but still a
+// price — and with no testimonials yet, the first ask is the hardest one. This
+// puts a free rung underneath it.
+//
+// It is not a giveaway invented for the page. Reform, DIGIT, ITQAN and Ofoq were
+// all built before anyone commissioned them: the work already happens, it just
+// happens speculatively and unattached to a named prospect. Formalising it costs
+// nothing extra and converts far better, because now the same effort arrives
+// with a booked call and a real person on the other end.
+//
+// The scope guards are the whole point — without them this eats every week.
+// One screen, five days, two slots a month, matching the "2 slots" the header
+// badge already advertises.
+//
+// It renders as a band ABOVE `.price-grid`, not as a fourth card: the grid is
+// `repeat(3,1fr)`, so a fourth tier would break the layout at every breakpoint.
+// Reuses `.price-card` (border, radius, elevation, hover, spotlight all come
+// free) with a row direction, so it reads as part of the same system.
+const DEMO_COPY = {
+  en: {
+    badge: 'Start free',
+    name: 'See it before you buy it.',
+    tag: 'One real screen of your product, built and deployed — free.',
+    feats: [
+      'One screen or one page, genuinely built — not a mockup',
+      'Deployed to a live URL you can open, share and test',
+      'Five business days · two slots a month',
+      'No obligation — stop there and you owe nothing',
+    ],
+    cta: 'Book a free demo',
+    note: 'The concepts above were built before anyone asked. This just books it first.',
+  },
+  ar: {
+    badge: 'ابدأ مجانًا',
+    name: 'شاهده قبل أن تدفع.',
+    tag: 'شاشة حقيقية واحدة من منتجك، مبنية ومنشورة — مجانًا.',
+    feats: [
+      'شاشة واحدة أو صفحة واحدة، مبنية فعلًا — لا مجرد تصميم',
+      'منشورة على رابط حيّ تفتحه وتشاركه وتجرّبه',
+      'خمسة أيام عمل · مقعدان شهريًا',
+      'بلا التزام — إن توقّفت هنا فلا شيء عليك',
+    ],
+    cta: 'احجز عرضًا مجانيًا',
+    note: 'المفاهيم أعلاه بُنيت قبل أن يطلبها أحد. هذا فقط يحجزها أولًا.',
+  },
+  de: {
+    badge: 'Kostenlos starten',
+    name: 'Erst sehen, dann kaufen.',
+    tag: 'Ein echter Screen Ihres Produkts, gebaut und deployed — kostenlos.',
+    feats: [
+      'Ein Screen oder eine Seite, wirklich gebaut — kein Mockup',
+      'Deployed auf eine Live-URL, die Sie öffnen, teilen und testen können',
+      'Fünf Werktage · zwei Plätze pro Monat',
+      'Unverbindlich — wer hier aufhört, schuldet nichts',
+    ],
+    cta: 'Kostenlose Demo buchen',
+    note: 'Die Konzepte oben entstanden, bevor jemand danach fragte. Das hier bucht es nur vorher.',
+  },
+  es: {
+    badge: 'Empieza gratis',
+    name: 'Míralo antes de comprarlo.',
+    tag: 'Una pantalla real de tu producto, construida y desplegada — gratis.',
+    feats: [
+      'Una pantalla o una página, construida de verdad — no una maqueta',
+      'Desplegada en una URL en vivo que puedes abrir, compartir y probar',
+      'Cinco días hábiles · dos plazas al mes',
+      'Sin compromiso — si lo dejas ahí, no debes nada',
+    ],
+    cta: 'Reservar una demo gratis',
+    note: 'Los conceptos de arriba se construyeron antes de que nadie los pidiera. Esto solo lo reserva primero.',
+  },
+  fr: {
+    badge: 'Commencer gratuitement',
+    name: 'Voyez-le avant de l’acheter.',
+    tag: 'Un écran réel de votre produit, construit et déployé — gratuitement.',
+    feats: [
+      'Un écran ou une page, réellement construit — pas une maquette',
+      'Déployé sur une URL en ligne que vous pouvez ouvrir, partager et tester',
+      'Cinq jours ouvrés · deux places par mois',
+      'Sans engagement — si vous vous arrêtez là, vous ne devez rien',
+    ],
+    cta: 'Réserver une démo gratuite',
+    note: 'Les concepts ci-dessus ont été construits avant que quiconque ne les demande. Ceci ne fait que les réserver d’abord.',
+  },
+};
+
+const CAL_URL = 'https://calendly.com/ahmedfareed2025/30min';
+
+function freeDemoBand(loc) {
+  const c = DEMO_COPY[loc];
+  // Same Calendly popup handler the pricing footer already uses, so the button
+  // behaves identically to the one below it rather than navigating away.
+  const onClick =
+    `{(e) => { if (window.Calendly) { e.preventDefault(); ` +
+    `window.Calendly.initPopupWidget({ url: '${CAL_URL}' }); } }}`;
+
+  return (
+    '        <div className="price-card" style={{marginBottom:18,flexDirection:"row",flexWrap:"wrap",alignItems:"center",justifyContent:"space-between",gap:32}}>\n' +
+    '          <span className="price-badge">' + jsxText(c.badge) + '</span>\n' +
+    '          <div style={{flex:"1 1 440px",minWidth:0}}>\n' +
+    '            <h3 className="price-name">' + jsxText(c.name) + '</h3>\n' +
+    '            <p className="price-tag">' + jsxText(c.tag) + '</p>\n' +
+    '            <ul className="price-feats" style={{marginTop:18}}>\n' +
+    c.feats
+      .map(
+        (f) =>
+          '              <li><span className="price-check" aria-hidden="true">✓</span>' +
+          jsxText(f) +
+          '</li>\n'
+      )
+      .join('') +
+    '            </ul>\n' +
+    '          </div>\n' +
+    '          <div style={{flex:"0 1 300px"}}>\n' +
+    '            <a className="btn btn-primary price-cta" style={{marginTop:0}} href="' + CAL_URL + '"' +
+    ' onClick=' + onClick +
+    ' target="_blank" rel="noreferrer">' + jsxText(c.cta) + ' <span className="arr">→</span></a>\n' +
+    '            <p className="price-note">' + jsxText(c.note) + '</p>\n' +
+    '          </div>\n' +
+    '        </div>\n'
+  );
+}
+
+const DEMO_EDITS = ['en', 'ar', 'de', 'es', 'fr'].map((loc) => ({
+  file: loc === 'en' ? 'index.html' : `index.${loc}.html`,
+  label: `free demo band (${loc})`,
+  appliedMarker: 'className="price-badge">' + jsxText(DEMO_COPY[loc].badge),
+  // Anchored on the SectionHead's self-closing tag plus the grid that follows
+  // it, so the insert between them consumes its own anchor. Matching on the
+  // grid line alone would still match afterwards and add a second band.
+  old: '        />\n        <div className="price-grid">',
+  new: '        />\n' + freeDemoBand(loc) + '        <div className="price-grid">',
+}));
+
 // Each edit is an exact string match, so a failed match is loud rather than
 // silently rewriting the wrong thing.
 const EDITS = [
@@ -1321,6 +1456,9 @@ const EDITS = [
   // ── Launchpad scoped to three weeks, so the tiers stop undercutting each
   //    other on implied hourly rate ─────────────────────────────────────────
   ...WEEKS_EDITS,
+
+  // ── The free rung underneath the ladder ──────────────────────────────────
+  ...DEMO_EDITS,
 ];
 
 // Locate the `__bundler/manifest` line: a single-line JSON object mapping
