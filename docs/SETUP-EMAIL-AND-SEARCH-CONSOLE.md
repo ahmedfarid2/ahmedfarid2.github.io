@@ -13,24 +13,31 @@ is someone interested in multi-tenant SaaS architecture — exactly your buyer �
 and they leave without a trace. A capture form turns those into a list you own
 and can email whenever you have capacity.
 
-### Recommended: Tally (free, no coding, fastest)
+### Done — the form is on your own site
 
-1. Go to **[tally.so](https://tally.so)** → sign up (Google login works).
-2. **Create new form** → start from blank.
-3. Add one field: **Email** (mark it required). Delete any other default fields.
-4. Title it: **Get the Multi-Tenant SaaS Architecture Checklist**
-   Description: *The decisions you can't cheaply undo. Free PDF, no spam.*
-5. Go to the form's **Settings → After submission → Redirect to URL** and paste:
-   ```
-   https://iamahmedfarid.com/multi-tenant-saas-checklist.pdf
-   ```
-   (Submitting now hands them the PDF immediately.)
-6. Optional but better: **Integrations → Email notifications** so you get an
-   email each time someone signs up.
-7. **Publish** → copy the form URL (looks like `https://tally.so/r/XXXXXX`).
+This no longer needs a third party. Both capture forms live on
+`iamahmedfarid.com` and match the rest of the site:
 
-**Then send me that URL** and I'll repoint the "Free checklist" card on your
-site at it, in all five languages, in one command.
+| Page | Captures | On submit |
+|---|---|---|
+| [`/get-checklist.html`](../get-checklist.html) | Email (required), name | Hands over the PDF immediately |
+| [`/demo.html`](../demo.html) | Name, **email**, **phone**, company URL, timeline, what to build | Confirmation on the page |
+
+Both post to **FormSubmit**, which forwards straight to
+`ahmed@iamahmedfarid.com` and stores nothing. No account, no dashboard, no
+monthly fee, and the lead lands in your inbox rather than someone else's
+database.
+
+**One thing you must do once:** submit either form yourself. FormSubmit sends a
+one-time confirmation email the first time an address is used — click that link
+or nothing gets delivered. Do it before you send anyone to either page.
+
+The endpoint sits in a single `action` attribute on each page with a comment
+above it, so moving to Formspree, Kit, or a real backend later is a one-line
+change per page.
+
+**The old Tally form is no longer referenced anywhere** — you can delete it from
+your Tally account whenever you like.
 
 ### Alternative: Kit / ConvertKit (better long-term)
 

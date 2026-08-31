@@ -30,10 +30,13 @@ import zlib from 'node:zlib';
 const CHECK = process.argv.includes('--check');
 const SOFT = process.argv.includes('--soft');
 
-// Where the lead-magnet card points. This is the email-capture form: visitors
-// enter an email, then Tally hands them the PDF. Change this one constant to
-// repoint the card in every locale.
-const LM_HREF = 'https://tally.so/r/68YlMB';
+// Where the lead-magnet card points. This is the email-capture gate: a visitor
+// enters an email and is handed the PDF. It used to be a Tally form on
+// tally.so; it is now a page on this domain, which keeps the visitor on the
+// site, keeps the styling consistent, and means the lead does not live in a
+// third party's dashboard. Change this one constant to repoint the card in
+// every locale.
+const LM_HREF = '/get-checklist.html';
 
 // ── Lead-magnet card ────────────────────────────────────────────────────────
 // The checklist deploys to /checklist.html but nothing linked to it, so it was
@@ -1369,17 +1372,25 @@ const EDITS = [
   { file: 'index.fr.html', label: 'primary CTA (fr)', expect: 3, old: 'Démarrer un projet',  new: 'Réserver un appel' },
 
   // ── Migration: point the existing card at the capture form ───────────────
-  // Exports that already carry the card link straight to /checklist.html, which
-  // gives the PDF away without capturing an email. Repoint them at LM_HREF.
-  // Marked optional: a freshly-inserted card already uses LM_HREF, so on a new
-  // export there is nothing here to migrate.
-  ...['index.html', 'index.ar.html', 'index.de.html', 'index.es.html', 'index.fr.html'].map((file) => ({
-    file,
-    label: `lead-magnet href → capture form (${file.split('.')[1] === 'html' ? 'en' : file.split('.')[1]})`,
-    optional: true,
-    old: '      href: "/checklist.html",\n',
-    new: `      href: ${JSON.stringify(LM_HREF)},\n`,
-  })),
+  // The card's href has had three values over time, so there are two states to
+  // migrate from, not one:
+  //   • "/checklist.html"        — the original, which gave the PDF away
+  //                                without capturing anything
+  //   • the old tally.so form    — capture, but hosted off-site
+  // Both are rewritten to LM_HREF, now a page on this domain. Each is optional:
+  // a freshly-inserted card already carries LM_HREF, so on a new export there
+  // is nothing to migrate and "not found" is the expected result.
+  ...['/checklist.html', 'https://tally.so/r/68YlMB'].flatMap((from) =>
+    ['index.html', 'index.ar.html', 'index.de.html', 'index.es.html', 'index.fr.html'].map((file) => ({
+      file,
+      label:
+        `lead-magnet href: ${from.startsWith('http') ? 'tally' : 'ungated'} → own form ` +
+        `(${file.split('.')[1] === 'html' ? 'en' : file.split('.')[1]})`,
+      optional: true,
+      old: `      href: ${JSON.stringify(from)},\n`,
+      new: `      href: ${JSON.stringify(LM_HREF)},\n`,
+    }))
+  ),
 
   // ── RevealSite case screenshot ───────────────────────────────────────────
   // RevealSite was the only one of the nine case studies with no screenshot.

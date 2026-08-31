@@ -34,12 +34,21 @@ Best for building a list you can email later.
    - LinkedIn post CTAs ("link in comments")
    - Your site's Connect section (see `COPY-POSITIONING.md`)
 
-## Option B — No email tool yet (form → notify)
+## Option B — No email tool yet (form → notify) · **this is what's live**
 
-Use [Tally](https://tally.so) or [Formspree](https://formspree.io) (both free):
-- One email field → on submit, redirect to the hosted checklist page and/or
-  auto-reply with the PDF link. You get an email for each signup to follow up
-  manually. Upgrade to Option A once signups are steady.
+The capture form is on your own domain at
+[`/get-checklist.html`](../get-checklist.html): one required email field, then
+straight to the PDF. It posts to **FormSubmit**, which forwards to
+`ahmed@iamahmedfarid.com` and stores nothing — no account, no dashboard, no fee.
+
+The demo request form at [`/demo.html`](../demo.html) works the same way and
+captures a phone number too.
+
+Neither needs a third-party form host, and the endpoint is a single `action`
+attribute on each page, so upgrading to Option A later is a one-line change.
+
+> **Once, before sending anyone:** submit a form yourself and click FormSubmit's
+> one-time confirmation email, or nothing is delivered.
 
 ## Option C — Host the page on your own site (pairs with A or B)
 

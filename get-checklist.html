@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Get the Multi-Tenant SaaS Architecture Checklist — Ahmed Farid</title>
+<meta name="description" content="The architecture decisions you can't cheaply undo six months later. Free PDF checklist for multi-tenant SaaS.">
+<!-- Thin gate page: checklist.html carries the full text and is the version
+     that should rank. Keeping this one out of the index stops the two competing
+     for the same query. -->
+<meta name="robots" content="noindex, follow">
+<link rel="canonical" href="https://iamahmedfarid.com/checklist.html">
+<meta name="author" content="Ahmed Farid">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Ahmed Farid">
+<meta property="og:url" content="https://iamahmedfarid.com/get-checklist.html">
+<meta property="og:title" content="The Multi-Tenant SaaS Architecture Checklist — free PDF">
+<meta property="og:description" content="The architecture decisions you can't cheaply undo six months later.">
+<meta property="og:image" content="https://iamahmedfarid.com/og.png">
+<style>
+  :root{
+    --bg:#0B0D10; --ink:#F4F1EA; --muted:#a8a297; --accent:#E6C8A0;
+    --line:rgba(255,255,255,.12); --card:rgba(255,255,255,.03);
+    --body:#e7e2d8; --body-dim:#c9c3b8; --rule:rgba(255,255,255,.06);
+    --field:rgba(255,255,255,.04);
+  }
+  *{margin:0;box-sizing:border-box}
+  html{color-scheme:dark}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    line-height:1.55; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:620px;margin:0 auto;padding:72px 40px 80px}
+  @media(max-width:640px){.wrap{padding:48px 22px 64px}}
+  .eyebrow{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-bottom:20px}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--accent);margin-right:10px;vertical-align:middle}
+  h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(30px,5.4vw,44px);line-height:1.08;letter-spacing:-.02em;font-weight:600}
+  h1 em{font-style:italic;color:var(--accent)}
+  .lede{margin-top:20px;font-size:17px;color:var(--body-dim)}
+  ul.ticks{list-style:none;padding:0;margin-top:28px}
+  ul.ticks li{position:relative;padding:10px 0 10px 32px;border-bottom:1px solid var(--rule);font-size:15px;color:var(--body)}
+  ul.ticks li:before{content:"";position:absolute;left:0;top:12px;width:17px;height:17px;border:1.5px solid var(--accent);border-radius:5px}
+  form{margin-top:32px}
+  .field{display:block;margin-top:14px}
+  .field > span{display:block;font-size:13px;letter-spacing:.02em;color:var(--muted);margin-bottom:7px}
+  .field > span .req{color:var(--accent)}
+  input{
+    width:100%;padding:13px 14px;background:var(--field);color:var(--ink);
+    border:1px solid var(--line);border-radius:10px;font:inherit;font-size:15px;
+    transition:border-color .18s ease, background .18s ease;
+  }
+  input:focus{outline:none;border-color:var(--accent);background:rgba(255,255,255,.06)}
+  input::placeholder{color:#6f6a62}
+  .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+  button{
+    margin-top:22px;width:100%;padding:16px 22px;border:none;border-radius:99px;
+    background:var(--accent);color:#0B0D10;font:inherit;font-size:15.5px;font-weight:600;
+    cursor:pointer;transition:transform .18s ease, filter .18s ease;
+  }
+  button:hover{filter:brightness(1.06);transform:translateY(-1px)}
+  .formnote{margin-top:14px;font-size:13px;color:var(--muted);text-align:center}
+  .formnote a{color:var(--accent)}
+  .alt{margin-top:30px;padding-top:20px;border-top:1px solid var(--line);font-size:14px;color:var(--muted)}
+  .alt a{color:var(--accent);text-decoration:none}
+  footer{margin-top:44px;padding-top:20px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+  footer a{color:var(--accent);text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span class="dot"></span>Free PDF · no sequence, no spam</div>
+
+  <h1>The Multi-Tenant SaaS <em>Architecture Checklist.</em></h1>
+
+  <p class="lede">
+    The decisions you can't cheaply undo six months later — written from
+    shipping multi-tenant platforms across the Gulf, the US and the UK.
+  </p>
+
+  <ul class="ticks">
+    <li>Tenancy model, identity and role structure</li>
+    <li>Billing-aware data modelling</li>
+    <li>Server-authoritative real-time concurrency</li>
+    <li>Integrations, webhooks and failure isolation</li>
+    <li>Delivery, migrations and the day-two runbook</li>
+  </ul>
+
+  <form action="https://formsubmit.co/ahmed@iamahmedfarid.com" method="POST">
+    <input type="hidden" name="_subject" value="Checklist download — iamahmedfarid.com">
+    <input type="hidden" name="_template" value="table">
+    <input type="hidden" name="_captcha" value="false">
+    <!-- Straight to the PDF on success: the download IS the confirmation, so
+         there is no thank-you page to bounce through. -->
+    <input type="hidden" name="_next" value="https://iamahmedfarid.com/multi-tenant-saas-checklist.pdf">
+    <input class="hp" type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+    <label class="field">
+      <span>Email <i class="req">*</i></span>
+      <input type="email" name="Email" required autocomplete="email" placeholder="you@company.com">
+    </label>
+
+    <label class="field">
+      <span>Name</span>
+      <input type="text" name="Name" autocomplete="name" placeholder="Optional">
+    </label>
+
+    <button type="submit">Send me the PDF</button>
+
+    <p class="formnote">
+      One email address, one PDF. No newsletter and no follow-up sequence —
+      if you want to talk, <a href="/demo.html">book a free demo</a> instead.
+    </p>
+  </form>
+
+  <p class="alt">
+    Rather not hand over an email? <a href="/checklist.html">Read the whole thing
+    on the web</a> — same content, no form.
+  </p>
+
+  <footer>
+    © 2026 <a href="https://iamahmedfarid.com/">Ahmed Farid</a> · Senior Software Engineer · Cairo
+  </footer>
+</div>
+</body>
+</html>
