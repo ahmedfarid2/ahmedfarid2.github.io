@@ -199,7 +199,14 @@ async function writeSeoFiles(locales = [{ urlPath: '/' }]) {
   // in a "Book a call" CTA. Ranking and being cited by AI assistants is worth
   // more here than gating it behind the capture form (which stays the primary
   // path from the site and from LinkedIn).
-  const EXTRA_PAGES = [{ path: '/checklist.html', priority: '0.8', changefreq: 'yearly' }];
+  // Hand-written pages that live outside the design export. They are copied
+  // into dist/ by copyStaticAssets, but nothing else would put them in the
+  // sitemap. /demo.html gets the higher priority of the two: it is the page a
+  // conversion actually happens on.
+  const EXTRA_PAGES = [
+    { path: '/demo.html', priority: '0.9', changefreq: 'monthly' },
+    { path: '/checklist.html', priority: '0.8', changefreq: 'yearly' },
+  ];
 
   const urls = locales
     .map((l, i) =>

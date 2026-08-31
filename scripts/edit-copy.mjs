@@ -1126,15 +1126,16 @@ const DEMO_COPY = {
   },
 };
 
-const CAL_URL = 'https://calendly.com/ahmedfareed2025/30min';
+// A form, not a calendar. A call is the wrong first ask for a free offer: it
+// asks for a slot in someone's day before they have decided anything, and a
+// no-show leaves nothing behind. The form captures name, email, phone and what
+// they want built even from people who never book — and a phone number is worth
+// more here than a calendar invite, because it is the follow-up channel that
+// actually works in this market.
+const DEMO_URL = '/demo.html';
 
 function freeDemoBand(loc) {
   const c = DEMO_COPY[loc];
-  // Same Calendly popup handler the pricing footer already uses, so the button
-  // behaves identically to the one below it rather than navigating away.
-  const onClick =
-    `{(e) => { if (window.Calendly) { e.preventDefault(); ` +
-    `window.Calendly.initPopupWidget({ url: '${CAL_URL}' }); } }}`;
 
   return (
     '        <div className="price-card" style={{marginBottom:18,flexDirection:"row",flexWrap:"wrap",alignItems:"center",justifyContent:"space-between",gap:32}}>\n' +
@@ -1160,9 +1161,8 @@ function freeDemoBand(loc) {
     '            </ul>\n' +
     '          </div>\n' +
     '          <div style={{flex:"0 1 300px"}}>\n' +
-    '            <a className="btn btn-primary price-cta" style={{marginTop:0}} href="' + CAL_URL + '"' +
-    ' onClick=' + onClick +
-    ' target="_blank" rel="noreferrer">' + jsxText(c.cta) + ' <span className="arr">→</span></a>\n' +
+    '            <a className="btn btn-primary price-cta" style={{marginTop:0}} href="' + DEMO_URL + '">' +
+    jsxText(c.cta) + ' <span className="arr">→</span></a>\n' +
     '            <p className="price-note">' + jsxText(c.note) + '</p>\n' +
     '          </div>\n' +
     '        </div>\n'
