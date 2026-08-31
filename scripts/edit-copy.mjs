@@ -1142,7 +1142,13 @@ function freeDemoBand(loc) {
     '          <div style={{flex:"1 1 440px",minWidth:0}}>\n' +
     '            <h3 className="price-name">' + jsxText(c.name) + '</h3>\n' +
     '            <p className="price-tag">' + jsxText(c.tag) + '</p>\n' +
-    '            <ul className="price-feats" style={{marginTop:18}}>\n' +
+    // Two columns. `.price-feats` is a one-column grid sized for a narrow tier
+    // card; stretched across this band, each row is far wider than its text, so
+    // the tick and its line end up separated by a gap of dead space — very
+    // visible in Arabic, where the text right-aligns away from the tick. Two
+    // columns bring the two back together and use the width instead of padding
+    // it. Collapses to one column below 720px.
+    '            <ul className="price-feats" style={{marginTop:18,gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",columnGap:26}}>\n' +
     c.feats
       .map(
         (f) =>
@@ -1163,15 +1169,37 @@ function freeDemoBand(loc) {
   );
 }
 
+// Installed by a transform, not an anchored insert. An insert can only ever ADD
+// the band: once it is in the file the appliedMarker matches and every later
+// change to the markup — a spacing fix, a reworded bullet — is silently skipped.
+// That has now bitten three separate edits in this file. The transform instead
+// replaces whatever currently sits between the section head and the grid with
+// the freshly generated band, so the data above stays the single source of
+// truth and the result converges however many times it runs.
+const GRID_OPEN = '        <div className="price-grid">';
+const HEAD_CLOSE = '        />\n';
+
+function installDemoBand(loc) {
+  return (text) => {
+    const grid = text.indexOf(GRID_OPEN);
+    if (grid < 0) return null;
+    // The section head's self-closing tag is the last one before the grid;
+    // everything between the two is the band (or nothing, on a fresh export).
+    const head = text.lastIndexOf(HEAD_CLOSE, grid);
+    if (head < 0) return null;
+    const between = text.slice(head + HEAD_CLOSE.length, grid);
+    // Only rewrite a gap that is empty or holds a band we generated. Anything
+    // else means a future export put something there, and it must not be eaten.
+    if (between !== '' && !between.includes('className="price-badge"')) return text;
+    return text.slice(0, head + HEAD_CLOSE.length) + freeDemoBand(loc) + text.slice(grid);
+  };
+}
+
 const DEMO_EDITS = ['en', 'ar', 'de', 'es', 'fr'].map((loc) => ({
   file: loc === 'en' ? 'index.html' : `index.${loc}.html`,
   label: `free demo band (${loc})`,
-  appliedMarker: 'className="price-badge">' + jsxText(DEMO_COPY[loc].badge),
-  // Anchored on the SectionHead's self-closing tag plus the grid that follows
-  // it, so the insert between them consumes its own anchor. Matching on the
-  // grid line alone would still match afterwards and add a second band.
-  old: '        />\n        <div className="price-grid">',
-  new: '        />\n' + freeDemoBand(loc) + '        <div className="price-grid">',
+  anchor: GRID_OPEN,
+  transform: installDemoBand(loc),
 }));
 
 // Each edit is an exact string match, so a failed match is loud rather than
