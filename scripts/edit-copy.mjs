@@ -1537,6 +1537,26 @@ const EDITS = [
 
   // ── …and lead with it, instead of burying it in the pricing section ──────
   ...HERO_DEMO_EDITS,
+
+  // ── React Native in the toolbelt ─────────────────────────────────────────
+  // Added on Ahmed's word: he has the experience, and it is his CV to state.
+  // It goes in the toolbelt — the section that lists what he works in — and
+  // NOT into any case study's `stack`, because every one of those describes a
+  // named, shipped project and all of the mobile ones are Flutter. Putting it
+  // in a project stack would attach the claim to work that did not use it.
+  //
+  // Placed next to React rather than next to Flutter: it is the same ecosystem
+  // as the React and Next.js already there, and the list is grouped by family
+  // rather than by platform.
+  ...['index.html', 'index.ar.html', 'index.de.html', 'index.es.html', 'index.fr.html'].map((file) => ({
+    file,
+    label: `toolbelt: React Native (${file.split('.')[1] === 'html' ? 'en' : file.split('.')[1]})`,
+    appliedMarker: '"React", "React Native"',
+    // Framework names are not translated in any locale, so one anchor serves
+    // all five. Spans the following entry so the anchor is consumed.
+    old: '"React", "Next.js"',
+    new: '"React", "React Native", "Next.js"',
+  })),
 ];
 
 // Locate the `__bundler/manifest` line: a single-line JSON object mapping
