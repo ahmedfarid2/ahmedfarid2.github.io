@@ -1241,12 +1241,196 @@ const HERO_DEMO_EDITS = ['en', 'ar', 'de', 'es', 'fr'].map((loc) => ({
   transform: leadWithDemo(loc),
 }));
 
+// ── Based in Dubai, not Cairo ───────────────────────────────────────────────
+// Changes where Ahmed says HE is. It deliberately does not touch two other
+// kinds of Cairo/Egypt mention, which are facts about other things:
+//
+//   • Past roles — `loc: "Cairo · Hybrid"` on Almentor, Arab Bank and Compass
+//     Med. He genuinely worked those from Cairo; rewriting them would falsify
+//     his own history. Every swap below is written so it cannot match a
+//     `loc:` value.
+//   • Clients — "Egypt" in the FAQ answer about where clients are based, and
+//     Cairo Plaza, a New Cairo property developer. Those stay.
+//
+// The timezone moves with him: Cairo is GMT+2, Dubai is GMT+4. A contact card
+// still claiming GMT+2 would have people calling two hours wrong.
+const CITY_SWAPS = {
+  en: [
+    ['Cairo, Egypt 🇪🇬', 'Dubai, United Arab Emirates 🇦🇪'],
+    ['Cairo 🇪🇬', 'Dubai 🇦🇪'],
+    ['Cairo-based', 'Dubai-based'],
+    ['from Cairo,', 'from Dubai,'],
+    ['Cairo time', 'Gulf time'],
+    ['Cairo, Egypt ·', 'Dubai, United Arab Emirates ·'],
+    ['>Cairo · Remote · GMT+2<', '>Dubai · Remote · GMT+4<'],
+  ],
+  ar: [
+    ['القاهرة، مصر 🇪🇬', 'دبي، الإمارات العربية المتحدة 🇦🇪'],
+    ['القاهرة 🇪🇬', 'دبي 🇦🇪'],
+    ['مقيم في القاهرة', 'مقيم في دبي'],
+    ['من القاهرة،', 'من دبي،'],
+    ['بتوقيت القاهرة', 'بتوقيت الخليج'],
+    ['القاهرة، مصر ·', 'دبي، الإمارات العربية المتحدة ·'],
+    ['>القاهرة · عن بُعد · GMT+2<', '>دبي · عن بُعد · GMT+4<'],
+  ],
+  de: [
+    ['Kairo, Ägypten 🇪🇬', 'Dubai, Vereinigte Arabische Emirate 🇦🇪'],
+    ['Kairo 🇪🇬', 'Dubai 🇦🇪'],
+    ['mit Sitz in Kairo', 'mit Sitz in Dubai'],
+    ['Mit Sitz in Kairo', 'Mit Sitz in Dubai'],
+    ['aus Kairo,', 'aus Dubai,'],
+    ['Kairoer Zeit', 'Golf-Zeit'],
+    ['Kairo, Ägypten ·', 'Dubai, Vereinigte Arabische Emirate ·'],
+    ['>Kairo · Remote · GMT+2<', '>Dubai · Remote · GMT+4<'],
+  ],
+  es: [
+    ['El Cairo, Egipto 🇪🇬', 'Dubái, Emiratos Árabes Unidos 🇦🇪'],
+    ['El Cairo 🇪🇬', 'Dubái 🇦🇪'],
+    ['afincado en El Cairo', 'afincado en Dubái'],
+    ['Afincado en El Cairo', 'Afincado en Dubái'],
+    ['desde El Cairo,', 'desde Dubái,'],
+    ['horario de El Cairo', 'horario del Golfo'],
+    ['El Cairo, Egipto ·', 'Dubái, Emiratos Árabes Unidos ·'],
+    ['>El Cairo · Remoto · GMT+2<', '>Dubái · Remoto · GMT+4<'],
+  ],
+  fr: [
+    ['Le Caire, Égypte 🇪🇬', 'Dubaï, Émirats arabes unis 🇦🇪'],
+    ['Le Caire 🇪🇬', 'Dubaï 🇦🇪'],
+    ['basé au Caire', 'basé à Dubaï'],
+    ['Basé au Caire', 'Basé à Dubaï'],
+    ['depuis Le Caire,', 'depuis Dubaï,'],
+    ["l'heure du Caire", "l'heure du Golfe"],
+    ['Le Caire, Égypte ·', 'Dubaï, Émirats arabes unis ·'],
+    ['>Le Caire · Distanciel · GMT+2<', '>Dubaï · Distanciel · GMT+4<'],
+  ],
+};
+
+const CITY_EDITS = ['en', 'ar', 'de', 'es', 'fr'].map((loc) => ({
+  file: loc === 'en' ? 'index.html' : `index.${loc}.html`,
+  label: `based in Dubai (${loc})`,
+  anchor: 'className="tag-full"',
+  transform: (text) => {
+    let out = text;
+    for (const [from, to] of CITY_SWAPS[loc]) out = out.split(from).join(to);
+    // Idempotent by construction: once applied, none of the `from` strings
+    // remain, so a second run is a no-op and reports "already applied".
+    return out;
+  },
+}));
+
+// The `<head>` is not in the manifest — it lives in the `__bundler/template`
+// line, which is what crawlers and social unfurls read before React ever runs.
+// So the city has to be swapped there too, or search results keep saying Cairo
+// long after the page says Dubai.
+//
+// The untranslated tail ("across the Gulf, US, and UK.") in the ar/de/es/fr
+// meta descriptions is a separate, pre-existing defect in the same sentence —
+// fixed here rather than left half-English in four languages.
+const HEAD_SWAPS = {
+  en: [
+    ['based in Cairo, open to relocation.', 'based in Dubai, open to relocation.'],
+  ],
+  ar: [
+    ['مقيم في القاهرة، مستعدّ للانتقال.', 'مقيم في دبي، مستعدّ للانتقال.'],
+    ['وتطبيقات جوّال across the Gulf, US, and UK.', 'وتطبيقات جوّال عبر الخليج والولايات المتحدة والمملكة المتحدة.'],
+  ],
+  de: [
+    ['mit Sitz in Kairo, umzugsbereit.', 'mit Sitz in Dubai, umzugsbereit.'],
+    ['mobilen Apps across the Gulf, US, and UK.', 'mobilen Apps für Kunden am Golf, in den USA und in Großbritannien.'],
+  ],
+  es: [
+    ['afincado en El Cairo, abierto a reubicación.', 'afincado en Dubái, abierto a reubicación.'],
+    ['apps móviles across the Gulf, US, and UK.', 'apps móviles para clientes del Golfo, EE. UU. y Reino Unido.'],
+  ],
+  fr: [
+    ['basé au Caire, ouvert à la mobilité.', 'basé à Dubaï, ouvert à la mobilité.'],
+    ['applications mobiles across the Gulf, US, and UK.', 'applications mobiles pour des clients du Golfe, des États-Unis et du Royaume-Uni.'],
+  ],
+};
+
+// Applies to every locale: the JSON-LD Person block. Nationality stays
+// Egyptian — that is a fact about him; the address is the hiring signal.
+const HEAD_SWAPS_ALL = [
+  ['"addressLocality": "Cairo", "addressCountry": "EG"', '"addressLocality": "Dubai", "addressCountry": "AE"'],
+];
+
+// ── Two WhatsApp numbers ────────────────────────────────────────────────────
+// A Gulf client seeing only a +20 number reads "offshore, different country".
+// The UAE number goes first because that is where he now is; the Egyptian one
+// stays because it is the number his existing contacts already have.
+//
+// Only the label, handle and href change — the card's own `desc` and inline SVG
+// come from whatever the locale already has, so the icon and translated copy
+// are carried over rather than re-authored here.
+const WA_UAE = { handle: '+971 58 556 2001', href: 'https://wa.me/971585562001' };
+const WA_COPY = {
+  en: { uae: 'WhatsApp · UAE', eg: 'WhatsApp · Egypt', egDesc: 'Same person, Egyptian number.' },
+  ar: { uae: 'WhatsApp · الإمارات', eg: 'WhatsApp · مصر', egDesc: 'نفس الشخص، رقم مصري.' },
+  de: { uae: 'WhatsApp · VAE', eg: 'WhatsApp · Ägypten', egDesc: 'Dieselbe Person, ägyptische Nummer.' },
+  es: { uae: 'WhatsApp · EAU', eg: 'WhatsApp · Egipto', egDesc: 'La misma persona, número egipcio.' },
+  fr: { uae: 'WhatsApp · EAU', eg: 'WhatsApp · Égypte', egDesc: 'La même personne, numéro égyptien.' },
+};
+
+function splitWhatsApp(loc) {
+  const c = WA_COPY[loc];
+  return (text) => {
+    // Already applied: the single generic card is gone, both labelled ones are
+    // present. Returning the text unchanged reports "already applied" instead
+    // of failing.
+    if (text.includes(`name: ${q(c.uae)}`) && text.includes(`name: ${q(c.eg)}`)) return text;
+
+    const at = text.indexOf('name: "WhatsApp",');
+    if (at < 0) return null;
+    const start = text.lastIndexOf('\n    {\n', at);
+    const endTok = '\n    },\n';
+    const end = text.indexOf(endTok, at);
+    if (start < 0 || end < 0) return null;
+    const entry = text.slice(start, end + endTok.length);
+    if (!entry.includes('href: "https://wa.me/')) return null;
+
+    const uae = entry
+      .replace('name: "WhatsApp",', `name: ${q(c.uae)},`)
+      .replace(/handle: "[^"]*",/, `handle: ${q(WA_UAE.handle)},`)
+      .replace(/href: "https:\/\/wa\.me\/[^"]*",/, `href: ${q(WA_UAE.href)},`);
+    const eg = entry
+      .replace('name: "WhatsApp",', `name: ${q(c.eg)},`)
+      .replace(/desc: "[^"]*",/, `desc: ${q(c.egDesc)},`);
+
+    return text.slice(0, start) + uae + eg.replace(/^\n/, '') + text.slice(end + endTok.length);
+  };
+}
+
+const WHATSAPP_EDITS = ['en', 'ar', 'de', 'es', 'fr'].map((loc) => ({
+  file: loc === 'en' ? 'index.html' : `index.${loc}.html`,
+  label: `WhatsApp: UAE + Egypt (${loc})`,
+  anchor: 'https://wa.me/',
+  transform: splitWhatsApp(loc),
+}));
+
+const HEAD_EDITS = ['en', 'ar', 'de', 'es', 'fr'].map((loc) => ({
+  file: loc === 'en' ? 'index.html' : `index.${loc}.html`,
+  label: `head: based in Dubai (${loc})`,
+  template: true,
+  transform: (text) => {
+    let out = text;
+    for (const [from, to] of [...HEAD_SWAPS[loc], ...HEAD_SWAPS_ALL]) {
+      out = out.split(from).join(to);
+    }
+    return out;
+  },
+}));
+
 // Each edit is an exact string match, so a failed match is loud rather than
 // silently rewriting the wrong thing.
 const EDITS = [
   {
     file: 'index.html',
     label: 'hero-sub (en)',
+    // Marker deliberately excludes the city: the Dubai/Cairo swap rewrites
+    // this same sentence, and a marker containing the city name would stop
+    // matching the moment it changed — reporting a false failure.
+    appliedMarker:
+      '            live bidding, role-based tenants, and the mobile apps that run on top.',
     old:
       '<p className="hero-sub">\n' +
       '            Cairo-based software engineer, open to relocation — five years building\n' +
@@ -1256,7 +1440,7 @@ const EDITS = [
       '          </p>',
     new:
       '<p className="hero-sub">\n' +
-      '            Cairo-based senior engineer specializing in real-time, multi-tenant SaaS —\n' +
+      '            Dubai-based senior engineer specializing in real-time, multi-tenant SaaS —\n' +
       '            live bidding, role-based tenants, and the mobile apps that run on top.\n' +
       '            Five years shipping to production across the Gulf, the US, and the UK.\n' +
       '            Laravel, Next.js, FastAPI, Flutter. Open to relocation.\n' +
@@ -1265,6 +1449,11 @@ const EDITS = [
   {
     file: 'index.ar.html',
     label: 'hero-sub (ar)',
+    // Marker deliberately excludes the city: the Dubai/Cairo swap rewrites
+    // this same sentence, and a marker containing the city name would stop
+    // matching the moment it changed — reporting a false failure.
+    appliedMarker:
+      '            والفورية — مزادات مباشرة، وصلاحيات حسب الدور، وتطبيقات',
     old:
       '<p className="hero-sub">\n' +
       '            مهندس برمجيات مقيم في القاهرة، مستعدّ للانتقال — خمس سنوات في بناء منصّات\n' +
@@ -1274,7 +1463,7 @@ const EDITS = [
       '          </p>',
     new:
       '<p className="hero-sub">\n' +
-      '            مهندس برمجيات أول مقيم في القاهرة، متخصّص في منصّات SaaS متعدّدة المستأجرين\n' +
+      '            مهندس برمجيات أول مقيم في دبي، متخصّص في منصّات SaaS متعدّدة المستأجرين\n' +
       '            والفورية — مزادات مباشرة، وصلاحيات حسب الدور، وتطبيقات الجوّال التي تعمل فوقها.\n' +
       '            خمس سنوات من الإطلاق في الإنتاج عبر الخليج والولايات المتحدة والمملكة المتحدة.\n' +
       '            Laravel وNext.js وFastAPI وFlutter. مستعدّ للانتقال.\n' +
@@ -1283,6 +1472,11 @@ const EDITS = [
   {
     file: 'index.de.html',
     label: 'hero-sub (de)',
+    // Marker deliberately excludes the city: the Dubai/Cairo swap rewrites
+    // this same sentence, and a marker containing the city name would stop
+    // matching the moment it changed — reporting a false failure.
+    appliedMarker:
+      '            Multi-Tenant-SaaS — Live-Gebote, rollenbasierte Mandanten und die mobilen',
     old:
       '<p className="hero-sub">\n' +
       '            Softwareentwickler mit Sitz in Kairo, umzugsbereit — fünf Jahre Erfahrung im\n' +
@@ -1292,7 +1486,7 @@ const EDITS = [
       '          </p>',
     new:
       '<p className="hero-sub">\n' +
-      '            Senior-Softwareentwickler mit Sitz in Kairo, spezialisiert auf Echtzeit- und\n' +
+      '            Senior-Softwareentwickler mit Sitz in Dubai, spezialisiert auf Echtzeit- und\n' +
       '            Multi-Tenant-SaaS — Live-Gebote, rollenbasierte Mandanten und die mobilen\n' +
       '            Apps, die darauf laufen. Fünf Jahre in Produktion im Golfraum, in den USA\n' +
       '            und in Großbritannien. Laravel, Next.js, FastAPI, Flutter. Umzugsbereit.\n' +
@@ -1301,6 +1495,11 @@ const EDITS = [
   {
     file: 'index.es.html',
     label: 'hero-sub (es)',
+    // Marker deliberately excludes the city: the Dubai/Cairo swap rewrites
+    // this same sentence, and a marker containing the city name would stop
+    // matching the moment it changed — reporting a false failure.
+    appliedMarker:
+      '            tiempo real — subastas en vivo, acceso por rol y las apps móviles que corren',
     old:
       '<p className="hero-sub">\n' +
       '            Ingeniero de software afincado en El Cairo, abierto a reubicación — cinco años\n' +
@@ -1310,7 +1509,7 @@ const EDITS = [
       '          </p>',
     new:
       '<p className="hero-sub">\n' +
-      '            Ingeniero senior afincado en El Cairo, especializado en SaaS multi-tenant y en\n' +
+      '            Ingeniero senior afincado en Dubái, especializado en SaaS multi-tenant y en\n' +
       '            tiempo real — subastas en vivo, acceso por rol y las apps móviles que corren\n' +
       '            encima. Cinco años llevando sistemas a producción en el Golfo, EE. UU. y el\n' +
       '            Reino Unido. Laravel, Next.js, FastAPI, Flutter. Abierto a reubicación.\n' +
@@ -1319,6 +1518,11 @@ const EDITS = [
   {
     file: 'index.fr.html',
     label: 'hero-sub (fr)',
+    // Marker deliberately excludes the city: the Dubai/Cairo swap rewrites
+    // this same sentence, and a marker containing the city name would stop
+    // matching the moment it changed — reporting a false failure.
+    appliedMarker:
+      "            réel — enchères en direct, accès par rôle et les applications mobiles qui",
     old:
       '<p className="hero-sub">\n' +
       "            Ingénieur logiciel basé au Caire, ouvert à la mobilité — cinq ans à construire\n" +
@@ -1328,7 +1532,7 @@ const EDITS = [
       '          </p>',
     new:
       '<p className="hero-sub">\n' +
-      '            Ingénieur senior basé au Caire, spécialisé dans les SaaS multi-tenant et temps\n' +
+      '            Ingénieur senior basé à Dubaï, spécialisé dans les SaaS multi-tenant et temps\n' +
       "            réel — enchères en direct, accès par rôle et les applications mobiles qui\n" +
       '            tournent dessus. Cinq ans de mise en production dans le Golfe, aux États-Unis\n' +
       '            et au Royaume-Uni. Laravel, Next.js, FastAPI, Flutter. Ouvert à la mobilité.\n' +
@@ -1557,7 +1761,32 @@ const EDITS = [
     old: '"React", "Next.js"',
     new: '"React", "React Native", "Next.js"',
   })),
+
+  // ── Based in Dubai ───────────────────────────────────────────────────────
+  // Last, so it also catches the hero-sub this file rewrites earlier.
+  ...CITY_EDITS,
+  ...HEAD_EDITS,
+  ...WHATSAPP_EDITS,
 ];
+
+// Locate the `__bundler/template` line: the document shell, stored as a single
+// JSON-encoded string. The `<head>` lives here — <title>, meta description,
+// OG tags and the JSON-LD Person block — so anything search engines read before
+// React runs is edited here, not in the manifest.
+function findTemplateLine(lines) {
+  for (let i = 0; i < lines.length; i++) {
+    if (!lines[i].includes('type="__bundler/template"')) continue;
+    for (let j = i + 1; j < lines.length; j++) {
+      const s = lines[j].trim();
+      if (!s || s[0] !== '"') continue;
+      let str;
+      try { str = JSON.parse(s); } catch { continue; }
+      if (typeof str !== 'string') continue;
+      return { index: j, text: str };
+    }
+  }
+  return null;
+}
 
 // Locate the `__bundler/manifest` line: a single-line JSON object mapping
 // asset-id → { mime, compressed, data }.
@@ -1592,6 +1821,52 @@ let applied = 0;
 for (const edit of EDITS) {
   const raw = readFileSync(edit.file, 'utf8');
   const lines = raw.split('\n');
+
+  // ── Template edits ───────────────────────────────────────────────────────
+  // Same idempotent-transform contract as below, but against the document
+  // shell instead of a bundled asset.
+  if (edit.template) {
+    const tpl = findTemplateLine(lines);
+    if (!tpl) {
+      console.error(`✗ ${edit.label}: no bundler template found in ${edit.file}`);
+      failures++;
+      continue;
+    }
+    let updated;
+    try { updated = edit.transform(tpl.text); } catch (e) {
+      console.error(`✗ ${edit.label}: transform threw in ${edit.file} — ${e.message}`);
+      failures++;
+      continue;
+    }
+    if (updated == null) {
+      console.error(`✗ ${edit.label}: transform could not parse the template in ${edit.file}`);
+      failures++;
+      continue;
+    }
+    if (updated === tpl.text) {
+      console.log(`= ${edit.label}: already applied in ${edit.file}`);
+      continue;
+    }
+    if (CHECK) {
+      console.log(`✓ ${edit.label}: would rewrite the template in ${edit.file}`);
+      continue;
+    }
+    if (edit.transform(updated) !== updated) {
+      console.error(`✗ ${edit.label}: transform is not idempotent — refusing to write ${edit.file}`);
+      failures++;
+      continue;
+    }
+    // The template is a JSON string living *inside* a <script> element, so any
+    // literal `</` in it (`</title>`, `</head>`) would close that script early
+    // and shred the document. The export escapes them as `</`; JSON
+    // .stringify does not, so re-escape here or the page stops rendering.
+    lines[tpl.index] = JSON.stringify(updated).replace(/<\//g, '<\\u002F');
+    writeFileSync(edit.file, lines.join('\n'), 'utf8');
+    console.log(`✓ ${edit.label}: applied to the template in ${edit.file}`);
+    applied++;
+    continue;
+  }
+
   const found = findManifestLine(lines);
   if (!found) {
     console.error(`✗ ${edit.label}: no bundler manifest found in ${edit.file}`);

@@ -18,7 +18,7 @@
 ## HERO / top
 - Eyebrow: **SENIOR-SOFTWAREENTWICKLER · KAIRO, ÄGYPTEN 🇪🇬 · UMZUGSBEREIT 🌍**
 - Headline: **Ich baue die Systeme,** / **auf die sich andere Teams verlassen.**
-- Intro: **Softwareentwickler mit Sitz in Kairo, umzugsbereit — fünf Jahre Erfahrung im Aufbau von Multi-Tenant-SaaS, Echtzeit-Auktionsplattformen, KI-gestützten Tools und mobilen Apps, die im Golfraum, in den USA und in Großbritannien in Produktion gegangen sind. Laravel, Next.js, FastAPI, Flutter — und ein schneller Lerner, der sich mühelos an jeden Stack oder jedes Framework anpasst, das das Projekt erfordert.**
+- Intro: **Softwareentwickler mit Sitz in Dubai, umzugsbereit — fünf Jahre Erfahrung im Aufbau von Multi-Tenant-SaaS, Echtzeit-Auktionsplattformen, KI-gestützten Tools und mobilen Apps, die im Golfraum, in den USA und in Großbritannien in Produktion gegangen sind. Laravel, Next.js, FastAPI, Flutter — und ein schneller Lerner, der sich mühelos an jeden Stack oder jedes Framework anpasst, das das Projekt erfordert.**
 - Buttons: **Projekt starten** / **Ausgewählte Arbeiten ansehen** / **Lebenslauf herunterladen ↓**
 - Stats: `5+` **Jahre** / **SYSTEME IN PRODUKTION** — `12+` **APPS IM APP STORE / PLAY** — `23` **PRODUKTE GELIEFERT & VERLINKT** — `16+` **LÄNDER WELTWEIT BEDIENT**
 - Scroll cue: **SCROLLEN**
@@ -37,7 +37,7 @@
 ## ABOUT / about
 - Badge: **Verfügbar · Q3 2026** · Label: **PROFIL**
 - **Ich bin Ahmed Farid — ein Senior-Entwickler, der Systeme durchgängig liefert.**
-- **Mit Sitz in Kairo, umzugsbereit. In den letzten fünf Jahren habe ich Multi-Tenant-SaaS-Plattformen, Echtzeit-Auktions- und Buchungssysteme, KI-gestützte Tools und eine Flotte mobiler Apps gebaut, die im Golfraum, in den USA und in Großbritannien in Produktion gegangen sind.**
+- **Mit Sitz in Dubai, umzugsbereit. In den letzten fünf Jahren habe ich Multi-Tenant-SaaS-Plattformen, Echtzeit-Auktions- und Buchungssysteme, KI-gestützte Tools und eine Flotte mobiler Apps gebaut, die im Golfraum, in den USA und in Großbritannien in Produktion gegangen sind.**
 - **Ich arbeite über den gesamten Stack — Laravel, Next.js, FastAPI, Flutter, AWS — und übernehme gern Verantwortung für ein Produkt, von der ersten Schema-Entscheidung bis zur App-Store-Einreichung und der Bereitschaft nach dem Launch. Ich lerne schnell und passe mich an jeden Stack an, den das Projekt wirklich braucht.**
 - `25,000+` **Follower auf LinkedIn** / **öffentlich bauen**
 - `5` **Jahre** **SOFTWARE IN PRODUKTION** — `23` **PRODUKTE GEBAUT ODER GELIEFERT** — `16+` **LÄNDER BEDIENT**
@@ -199,7 +199,7 @@ Repeated labels (apply everywhere):
 
 ## REACH · 06 / regions
 - Heading: **REICHWEITE · 06** — Title: **Geliefert für Teams in 16+ Ländern.**
-- Intro: **Remote-first aus Kairo, mit Überschneidung zu GCC-, EU-, UK- und US-Zeiten. Kunden und Produkte über fünf Kontinente — Tendenz steigend.**
+- Intro: **Remote-first aus Dubai, mit Überschneidung zu GCC-, EU-, UK- und US-Zeiten. Kunden und Produkte über fünf Kontinente — Tendenz steigend.**
 - **GOLFRAUM** `04` — 🇦🇪 **VAE** · 🇸🇦 **Saudi-Arabien** · 🇶🇦 **Katar** · 🇧🇭 **Bahrain**
 - **EUROPA & UK** `04` — 🇬🇧 **Vereinigtes Königreich** · 🇪🇸 **Spanien** · 🇳🇱 **Niederlande** · 🇫🇷 **Frankreich**
 - **AMERIKA** `01` — 🇺🇸 **Vereinigte Staaten**
@@ -300,18 +300,19 @@ Repeated labels (apply everywhere):
 - Intro: **Wenn Ihre nicht dabei ist, stellen Sie sie direkt — am Ende der Seite.**
 - **Wie sieht ein typisches Engagement aus?** — **Die meisten beginnen als 4–8-wöchiger Festumfang-Build — eine definierte Scheibe mit klarem Liefergegenstand. Daraus wird meist ein laufender Retainer oder ein längerer Vertrag. Ich bevorzuge Festumfang-Phasen gegenüber Stunden-Drift.**
 - **Arbeiten Sie Vollzeit, freiberuflich oder beides?** — **Beides. Ich bin Vollzeit bei Recovery Advisers (remote, Dubai) und nehme pro Quartal eine kleine Zahl freiberuflicher Engagements an. Wenn Sie Vollzeit einstellen, bin ich offen für Gespräche für das richtige Team.**
-- **Wo sitzen Ihre Kunden?** — **VAE, Saudi-Arabien, die Vereinigten Staaten und Ägypten. Ich laufe auf Kairoer Zeit, überschneide mich aber bequem mit GCC-, EU- und US-Ost-/Zentral-Geschäftszeiten.**
+- **Wo sitzen Ihre Kunden?** — **VAE, Saudi-Arabien, die Vereinigten Staaten und Ägypten. Ich laufe auf Golf-Zeit, überschneide mich aber bequem mit GCC-, EU- und US-Ost-/Zentral-Geschäftszeiten.**
 - **Können Sie ein Projekt von null übernehmen?** — **Ja — dort bin ich am stärksten. Architektur, Schema, Deploy, die erste Scheibe in Produktion. Ich kann durch die Skalierung bleiben oder es sauber übergeben.**
 - **Machen Sie reine Mobile-Arbeit?** — **Ja — ich habe 12+ Flutter-Apps in App Store und Play Store ausgeliefert. Aber ich arbeite meist besser, wenn ich beide Enden des API-Vertrags besitze.**
 - **Wie hoch ist Ihr Satz?** — **Hängt von Umfang, Region und davon ab, ob Sie Senior-Architektur oder Umsetzungs-Hände brauchen. Ich gebe Ihnen ein Pauschalangebot pro Phase, keine Stundenrechnung, nach einem 30-minütigen Scoping-Call.**
 
 ## CONNECT · 17 / connect
 - Heading: **KONTAKT · 17** — Title: **Finden Sie mich, wo Sie arbeiten.**
-- Intro: **Kairo, Ägypten · umzugsbereit. Wählen Sie den Kanal, der Ihnen passt — ich antworte innerhalb eines Tages.**
+- Intro: **Dubai, Vereinigte Arabische Emirate · umzugsbereit. Wählen Sie den Kanal, der Ihnen passt — ich antworte innerhalb eines Tages.**
 - **LinkedIn** — **25.000+ Follower** — **Karriere, Empfehlungen & ein Netzwerk von 25K+.**
 - **GitHub** — github.com/ahmedfarid2 — **Quellcode, angepinnte Projekte & ML-Notebooks.**
 - **Behance** — ahmedfarid20 — **Design, Motion & visuelle Arbeit.**
-- **WhatsApp** — +20 10 1399 6079 — **Der schnellste Weg, mich direkt zu erreichen.**
+- **WhatsApp · VAE** — +971 58 556 2001 — **Der schnellste Weg, mich direkt zu erreichen.**
+- **WhatsApp · Ägypten** — +20 10 1399 6079 — **Dieselbe Person, ägyptische Nummer.**
 - **E-Mail** — ahmedfareed2025@gmail.com — **Für Briefings, Angebote & längere Notizen.**
 - **Arbeits-E-Mail** — a.farid@recoveryadvisers.com — **Erreichen Sie mich bei Recovery Advisers.**
 
@@ -325,7 +326,7 @@ Repeated labels (apply everywhere):
 - **Senior-Softwareentwickler, der Multi-Tenant-Plattformen, B2B/B2C-Systeme und die mobilen Apps baut, die obendrauf laufen.**
 - `SECTIONS` → **ABSCHNITTE** — **Ausgewählte Arbeiten** · **Fähigkeiten** · **Engineering** · **Wie ich arbeite**
 - `PROFILES` → **PROFILE** — GitHub · LinkedIn · Behance
-- `CONTACT` → **KONTAKT** — **Lebenslauf ansehen ↗** · **Lebenslauf herunterladen ↓** · email · phone · **Kairo · Remote · GMT+2**
+- `CONTACT` → **KONTAKT** — **Lebenslauf ansehen ↗** · **Lebenslauf herunterladen ↓** · email · phone · **Dubai · Remote · GMT+4**
 - **© 2026 · Ahmed Farid · Von Hand gebaut**
 - **v.2026.05 · Kein Tracking · Keine Cookies**
 

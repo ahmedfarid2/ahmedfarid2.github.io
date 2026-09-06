@@ -248,14 +248,14 @@ async function writeSeoFiles(locales = [{ urlPath: '/' }]) {
   // so tools like ChatGPT/Claude/Perplexity can recommend him accurately.
   await writeFile(path.join(DIST, 'llms.txt'),
     `# Ahmed Farid — Senior Software Engineer\n\n` +
-    `> Senior Software Engineer based in Cairo, Egypt (open to relocation and remote). ` +
+    `> Senior Software Engineer based in Dubai, United Arab Emirates (open to relocation and remote). ` +
     `Five years building multi-tenant SaaS, real-time platforms, AI tools, and mobile ` +
     `apps shipped to production across the Gulf, US, and UK.\n\n` +
     `## About\n\n` +
     `- Name: Ahmed Farid\n` +
     `- Role: Senior Software Engineer\n` +
-    `- Location: Cairo, Egypt — open to relocation and remote work\n` +
-    `- Currently: full-time at Recovery Advisers (remote, Dubai)\n` +
+    `- Location: Dubai, United Arab Emirates — open to relocation and remote work\n` +
+    `- Currently: full-time at Recovery Advisers (Dubai)\n` +
     `- Availability: a small number of freelance/contract engagements per quarter; open to full-time roles\n\n` +
     `## Core skills\n\n` +
     `Laravel, PHP, Next.js, React, TypeScript, FastAPI, Python, Flutter, AWS, ` +
@@ -321,7 +321,7 @@ async function generateOgImage(browser) {
     .tags{position:absolute;right:90px;bottom:64px;font-size:19px;color:#8b857b;letter-spacing:.05em}
   </style></head><body>
     <div class="grid"></div><div class="glow"></div>
-    <div class="eyebrow"><span class="dot"></span>Senior Software Engineer · Cairo · Open to relocation</div>
+    <div class="eyebrow"><span class="dot"></span>Senior Software Engineer · Dubai · Open to relocation</div>
     <h1>I build the systems<br>other teams <em>depend on.</em></h1>
     <div class="sub">Multi-tenant SaaS · real-time platforms · AI tools · mobile apps shipped across the Gulf, US &amp; UK.</div>
     <div class="foot"><b>Ahmed Farid</b> &nbsp;·&nbsp; iamahmedfarid.com</div>
@@ -741,8 +741,10 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
     image: `${SITE_URL}/og.png`,
     email: 'ahmed@iamahmedfarid.com',
     nationality: { '@type': 'Country', name: 'Egypt' },
-    address: { '@type': 'PostalAddress', addressLocality: 'Cairo', addressCountry: 'EG' },
-    homeLocation: { '@type': 'Place', name: 'Cairo, Egypt' },
+    // Nationality stays Egyptian — that is a fact about him, not about where he
+    // works from. Address/homeLocation are the "where do I hire from" signal.
+    address: { '@type': 'PostalAddress', addressLocality: 'Dubai', addressCountry: 'AE' },
+    homeLocation: { '@type': 'Place', name: 'Dubai, United Arab Emirates' },
     worksFor: { '@type': 'Organization', name: 'Recovery Advisers' },
     alumniOf: { '@type': 'CollegeOrUniversity', name: 'Helwan University' },
     knowsLanguage: ['English', 'Arabic'],

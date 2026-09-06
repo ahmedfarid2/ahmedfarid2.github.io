@@ -13,7 +13,7 @@ This mirrors the **live Spanish site** (`/es/`) string-for-string, so it's a fai
 
 - Eyebrow: **INGENIERO DE SOFTWARE SENIOR · EL CAIRO, EGIPTO 🇪🇬 · ABIERTO A REUBICACIÓN 🌍**
 - Headline: **Construyo los sistemas** / **de los que otros equipos dependen.**
-- Intro: **Ingeniero de software afincado en El Cairo, abierto a reubicación — cinco años construyendo SaaS multi-tenant, plataformas de subastas en tiempo real, herramientas asistidas por IA y apps móviles llevadas a producción en el Golfo, EE. UU. y el Reino Unido. Laravel, Next.js, FastAPI, Flutter — y de aprendizaje rápido, cómodo adaptándome a cualquier stack o framework que el proyecto necesite.**
+- Intro: **Ingeniero de software afincado en Dubái, abierto a reubicación — cinco años construyendo SaaS multi-tenant, plataformas de subastas en tiempo real, herramientas asistidas por IA y apps móviles llevadas a producción en el Golfo, EE. UU. y el Reino Unido. Laravel, Next.js, FastAPI, Flutter — y de aprendizaje rápido, cómodo adaptándome a cualquier stack o framework que el proyecto necesite.**
 - Buttons: **Empezar un proyecto** / **Ver trabajo seleccionado** / **Descargar CV ↓**
 - Stats: `5+` **años** / **SISTEMAS EN PRODUCCIÓN** — `12+` **APPS EN APP STORE / PLAY** — `23` **PRODUCTOS ENTREGADOS Y ENLAZADOS** — `16+` **PAÍSES ATENDIDOS EN EL MUNDO**
 - Scroll cue: **DESLIZA**
@@ -32,7 +32,7 @@ This mirrors the **live Spanish site** (`/es/`) string-for-string, so it's a fai
 ## ABOUT / about
 - Badge: **Disponible · T3 2026** · Label: **PERFIL**
 - **Soy Ahmed Farid — un ingeniero senior que entrega sistemas de extremo a extremo.**
-- **Afincado en El Cairo, abierto a reubicación. En los últimos cinco años he construido plataformas SaaS multi-tenant, sistemas de subastas y reservas en tiempo real, herramientas asistidas por IA y una flota de apps móviles llevadas a producción en el Golfo, EE. UU. y el Reino Unido.**
+- **Afincado en Dubái, abierto a reubicación. En los últimos cinco años he construido plataformas SaaS multi-tenant, sistemas de subastas y reservas en tiempo real, herramientas asistidas por IA y una flota de apps móviles llevadas a producción en el Golfo, EE. UU. y el Reino Unido.**
 - **Trabajo todo el stack — Laravel, Next.js, FastAPI, Flutter, AWS — y me siento cómodo siendo responsable de un producto desde la primera decisión de esquema hasta la publicación en la App Store y la guardia tras el lanzamiento. Aprendo rápido y me adapto a cualquier stack que el proyecto realmente necesite.**
 - `25,000+` **seguidores en LinkedIn** / **construyendo en público**
 - `5` **años** **SOFTWARE EN PRODUCCIÓN** — `23` **PRODUCTOS CREADOS O ENTREGADOS** — `16+` **PAÍSES ATENDIDOS**
@@ -194,7 +194,7 @@ Repeated labels (apply everywhere):
 
 ## REACH · 06 / regions
 - Heading: **ALCANCE · 06** — Title: **Entregado para equipos en 16+ países.**
-- Intro: **Remoto primero desde El Cairo, con solapamiento horario con el CCG, la UE, el Reino Unido y EE. UU. Clientes y productos en cinco continentes — y subiendo.**
+- Intro: **Remoto primero desde Dubái, con solapamiento horario con el CCG, la UE, el Reino Unido y EE. UU. Clientes y productos en cinco continentes — y subiendo.**
 - **GOLFO** `04` — 🇦🇪 **EAU** · 🇸🇦 **Arabia Saudí** · 🇶🇦 **Catar** · 🇧🇭 **Baréin**
 - **EUROPA Y REINO UNIDO** `04` — 🇬🇧 **Reino Unido** · 🇪🇸 **España** · 🇳🇱 **Países Bajos** · 🇫🇷 **Francia**
 - **AMÉRICA** `01` — 🇺🇸 **Estados Unidos**
@@ -295,18 +295,19 @@ Repeated labels (apply everywhere):
 - Intro: **Si la tuya no está aquí, pregúntala directamente — al final de la página.**
 - **¿Cómo es una colaboración típica?** — **La mayoría empieza como un proyecto acotado de 4–8 semanas — un corte definido con un entregable claro. A partir de ahí suele convertirse en retainer continuo o un contrato más largo. Prefiero fases de alcance cerrado antes que el desvío por horas.**
 - **¿Trabajas a jornada completa, freelance o ambos?** — **Ambos. Estoy a jornada completa en Recovery Advisers (remoto, Dubái) y acepto un número reducido de encargos freelance por trimestre. Si estás contratando a jornada completa, estoy abierto a conversar para el equipo adecuado.**
-- **¿Dónde están tus clientes?** — **EAU, Arabia Saudí, Estados Unidos y Egipto. Trabajo en horario de El Cairo, pero me solapo cómodamente con el CCG, la UE y el horario laboral del Este/Centro de EE. UU.**
+- **¿Dónde están tus clientes?** — **EAU, Arabia Saudí, Estados Unidos y Egipto. Trabajo en horario del Golfo, pero me solapo cómodamente con el CCG, la UE y el horario laboral del Este/Centro de EE. UU.**
 - **¿Puedes tomar un proyecto desde cero?** — **Sí — ahí es donde soy más fuerte. Arquitectura, esquema, despliegue, el primer corte en producción. Puedo quedarme durante el escalado o hacer un traspaso limpio.**
 - **¿Haces trabajo solo de móvil?** — **Sí — he entregado 12+ apps Flutter a App Store y Play Store. Pero suelo trabajar mejor cuando soy responsable de ambos extremos del contrato de la API.**
 - **¿Cuál es tu tarifa?** — **Depende del alcance, la región y de si necesitas arquitectura senior o manos para implementar. Te daré un presupuesto cerrado por fase, no una factura por horas, tras una llamada de alcance de 30 minutos.**
 
 ## CONNECT · 17 / connect
 - Heading: **CONTACTO · 17** — Title: **Encuéntrame donde tú trabajas.**
-- Intro: **El Cairo, Egipto · abierto a reubicación. Elige el canal que prefieras — respondo en menos de un día.**
+- Intro: **Dubái, Emiratos Árabes Unidos · abierto a reubicación. Elige el canal que prefieras — respondo en menos de un día.**
 - **LinkedIn** — **25.000+ seguidores** — **Carrera, recomendaciones y una red de 25K+.**
 - **GitHub** — github.com/ahmedfarid2 — **Código, proyectos fijados y notebooks de ML.**
 - **Behance** — ahmedfarid20 — **Diseño, motion y trabajo visual.**
-- **WhatsApp** — +20 10 1399 6079 — **La forma más rápida de contactarme directamente.**
+- **WhatsApp · EAU** — +971 58 556 2001 — **La forma más rápida de contactarme directamente.**
+- **WhatsApp · Egipto** — +20 10 1399 6079 — **La misma persona, número egipcio.**
 - **Email** — ahmedfareed2025@gmail.com — **Para briefs, propuestas y notas más largas.**
 - **Email de trabajo** — a.farid@recoveryadvisers.com — **Contáctame en Recovery Advisers.**
 
@@ -320,6 +321,6 @@ Repeated labels (apply everywhere):
 - **Ingeniero de Software Senior que construye plataformas multi-tenant, sistemas B2B/B2C y las apps móviles que se montan encima.**
 - `SECTIONS` → **SECCIONES** — **Trabajo seleccionado** · **Capacidades** · **Ingeniería** · **Cómo trabajo**
 - `PROFILES` → **PERFILES** — GitHub · LinkedIn · Behance
-- `CONTACT` → **CONTACTO** — **Ver CV ↗** · **Descargar CV ↓** · email · phone · **El Cairo · Remoto · GMT+2**
+- `CONTACT` → **CONTACTO** — **Ver CV ↗** · **Descargar CV ↓** · email · phone · **Dubái · Remoto · GMT+4**
 - **© 2026 · Ahmed Farid · Hecho a mano**
 - **v.2026.05 · Sin rastreo · Sin cookies**
