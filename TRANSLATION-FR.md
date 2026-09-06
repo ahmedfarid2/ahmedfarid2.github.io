@@ -18,7 +18,7 @@
 - Headline:
   **Je construis les systèmes**
   **dont les autres équipes dépendent.**
-- Intro: **Ingénieur logiciel basé au Caire, ouvert à la mobilité — cinq ans à construire des SaaS multi-tenant, des plateformes d'enchères en temps réel, des outils assistés par IA et des applications mobiles déployées en production dans le Golfe, aux États-Unis et au Royaume-Uni. Laravel, Next.js, FastAPI, Flutter — et un apprentissage rapide, à l'aise pour m'adapter à n'importe quelle stack ou framework que le projet exige.**
+- Intro: **Ingénieur logiciel basé à Dubaï, ouvert à la mobilité — cinq ans à construire des SaaS multi-tenant, des plateformes d'enchères en temps réel, des outils assistés par IA et des applications mobiles déployées en production dans le Golfe, aux États-Unis et au Royaume-Uni. Laravel, Next.js, FastAPI, Flutter — et un apprentissage rapide, à l'aise pour m'adapter à n'importe quelle stack ou framework que le projet exige.**
 - Button 1: **Démarrer un projet**
 - Button 2: **Voir les projets sélectionnés**
 - Button 3: **Télécharger le CV ↓**
@@ -49,7 +49,7 @@
 - Badge: **Disponible · T3 2026**
 - Label: **PROFIL**
 - **Je suis Ahmed Farid — un ingénieur senior qui livre des systèmes de bout en bout.**
-- **Basé au Caire, ouvert à la mobilité. Ces cinq dernières années, j'ai construit des plateformes SaaS multi-tenant, des systèmes d'enchères et de réservation en temps réel, des outils assistés par IA et une flotte d'applications mobiles déployées en production dans le Golfe, aux États-Unis et au Royaume-Uni.**
+- **Basé à Dubaï, ouvert à la mobilité. Ces cinq dernières années, j'ai construit des plateformes SaaS multi-tenant, des systèmes d'enchères et de réservation en temps réel, des outils assistés par IA et une flotte d'applications mobiles déployées en production dans le Golfe, aux États-Unis et au Royaume-Uni.**
 - **Je travaille toute la stack — Laravel, Next.js, FastAPI, Flutter, AWS — et je suis à l'aise pour porter un produit de la première décision de schéma jusqu'à la soumission sur l'App Store et l'astreinte après le lancement. J'apprends vite et je m'adapte à la stack dont le projet a réellement besoin.**
 - `25,000+` → **abonnés sur LinkedIn** / **bâtir en public**
 - `5` → **ans** / **LOGICIELS EN PRODUCTION**
@@ -232,7 +232,7 @@ Repeated labels used across case studies (translate once, applies everywhere):
 
 - Heading: **PORTÉE · 06**
 - Title: **Livré pour des équipes dans plus de 16 pays.**
-- Intro: **Remote-first depuis le Caire, en chevauchement avec les horaires du CCG, de l'UE, du Royaume-Uni et des États-Unis. Clients et produits couvrant cinq continents — et ça continue.**
+- Intro: **Remote-first depuis Dubaï, en chevauchement avec les horaires du CCG, de l'UE, du Royaume-Uni et des États-Unis. Clients et produits couvrant cinq continents — et ça continue.**
 - **GOLFE** `04` — 🇦🇪 **ÉAU** · 🇸🇦 **Arabie saoudite** · 🇶🇦 **Qatar** · 🇧🇭 **Bahreïn**
 - **EUROPE & ROYAUME-UNI** `04` — 🇬🇧 **Royaume-Uni** · 🇪🇸 **Espagne** · 🇳🇱 **Pays-Bas** · 🇫🇷 **France**
 - **AMÉRIQUES** `01` — 🇺🇸 **États-Unis**
@@ -364,7 +364,7 @@ Repeated labels used across case studies (translate once, applies everywhere):
 - Intro: **Si la vôtre n'y est pas, posez-la directement — en bas de page.**
 - Q: **À quoi ressemble une mission type ?** — R: **La plupart démarrent comme un build cadré de 4 à 8 semaines — une tranche définie avec un livrable clair. Ensuite, cela devient généralement une régie continue ou un contrat plus long. Je préfère les phases à périmètre fixe à la dérive horaire.**
 - Q: **Travaillez-vous à temps plein, en freelance, ou les deux ?** — R: **Les deux. Je suis à temps plein chez Recovery Advisers (à distance, Dubaï) et je prends un petit nombre de missions freelance par trimestre. Si vous recrutez à temps plein, je suis ouvert aux échanges pour la bonne équipe.**
-- Q: **Où sont basés vos clients ?** — R: **ÉAU, Arabie saoudite, États-Unis et Égypte. Je suis sur le fuseau du Caire mais je chevauche confortablement les heures de bureau du CCG, de l'UE et de l'Est / Centre des États-Unis.**
+- Q: **Où sont basés vos clients ?** — R: **ÉAU, Arabie saoudite, États-Unis et Égypte. Je suis sur le fuseau du Golfe mais je chevauche confortablement les heures de bureau du CCG, de l'UE et de l'Est / Centre des États-Unis.**
 - Q: **Pouvez-vous reprendre un projet depuis zéro ?** — R: **Oui — c'est là que je suis le plus fort. Architecture, schéma, déploiement, la première tranche en production. Je peux rester pendant la montée en charge ou passer le relais proprement.**
 - Q: **Faites-vous uniquement du mobile ?** — R: **Oui — j'ai livré plus de 12 apps Flutter sur l'App Store et le Play Store. Mais je travaille généralement mieux quand je possède les deux bouts du contrat d'API.**
 - Q: **Quel est votre tarif ?** — R: **Cela dépend du périmètre, de la région et du besoin d'architecture senior ou de mains d'implémentation. Je vous donnerai un devis forfaitaire par phase, pas une facture horaire, après un appel de cadrage de 30 minutes.**
@@ -373,7 +373,7 @@ Repeated labels used across case studies (translate once, applies everywhere):
 
 - Heading: **CONTACT · 17**
 - Title: **Retrouvez-moi là où vous travaillez.**
-- Intro: **Le Caire, Égypte · ouvert à la mobilité. Choisissez le canal qui vous convient — je réponds dans la journée.**
+- Intro: **Dubaï, Émirats arabes unis · ouvert à la mobilité. Choisissez le canal qui vous convient — je réponds dans la journée.**
 - **LinkedIn** — **25 000+ abonnés** — **Carrière, recommandations et un réseau de plus de 25K.**
 - **GitHub** — github.com/ahmedfarid2 — **Sources, projets épinglés et notebooks ML.**
 - **Behance** — ahmedfarid20 — **Design, motion et travail visuel.**
@@ -395,7 +395,7 @@ Repeated labels used across case studies (translate once, applies everywhere):
 - **Ingénieur logiciel senior construisant des plateformes multi-tenant, des systèmes B2B/B2C et les applications mobiles qui roulent dessus.**
 - `SECTIONS` → **SECTIONS** — **Projets sélectionnés** · **Compétences** · **Ingénierie** · **Comment je travaille**
 - `PROFILES` → **PROFILS** — GitHub · LinkedIn · Behance
-- `CONTACT` → **CONTACT** — **Voir le CV ↗** · **Télécharger le CV ↓** · email · phone · **Le Caire · À distance · GMT+2**
+- `CONTACT` → **CONTACT** — **Voir le CV ↗** · **Télécharger le CV ↓** · email · phone · **Dubaï · À distance · GMT+4**
 - **© 2026 · Ahmed Farid · Fait main**
 - **v.2026.05 · Aucun tracking · Aucun cookie**
 
