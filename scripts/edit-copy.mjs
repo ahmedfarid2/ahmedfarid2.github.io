@@ -1802,7 +1802,11 @@ for (const edit of EDITS) {
       failures++;
       continue;
     }
-    lines[tpl.index] = JSON.stringify(updated);
+    // The template is a JSON string living *inside* a <script> element, so any
+    // literal `</` in it (`</title>`, `</head>`) would close that script early
+    // and shred the document. The export escapes them as `</`; JSON
+    // .stringify does not, so re-escape here or the page stops rendering.
+    lines[tpl.index] = JSON.stringify(updated).replace(/<\//g, '<\\u002F');
     writeFileSync(edit.file, lines.join('\n'), 'utf8');
     console.log(`✓ ${edit.label}: applied to the template in ${edit.file}`);
     applied++;
