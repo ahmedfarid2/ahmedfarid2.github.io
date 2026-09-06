@@ -1326,6 +1326,22 @@ const CITY_EDITS = ['en', 'ar', 'de', 'es', 'fr'].map((loc) => ({
 // The untranslated tail ("across the Gulf, US, and UK.") in the ar/de/es/fr
 // meta descriptions is a separate, pre-existing defect in the same sentence —
 // fixed here rather than left half-English in four languages.
+// The <title> is the one string that decides whether a commercial search can
+// ever reach him. "Ahmed Farid — Senior Software Engineer" only wins searches
+// for his own name; adding the city makes "senior software engineer dubai"
+// reachable, which is the shape of query that actually carries hiring intent.
+//
+// Kept at ~47 characters so Google renders it whole — the specialty keywords
+// (multi-tenant SaaS, real-time platforms) live in the meta description, which
+// has the room for them.
+const TITLES = {
+  en: ['Ahmed Farid — Senior Software Engineer', 'Ahmed Farid — Senior Software Engineer in Dubai'],
+  ar: ['Ahmed Farid — مهندس برمجيات أول', 'Ahmed Farid — مهندس برمجيات أول في دبي'],
+  de: ['Ahmed Farid — Senior-Softwareentwickler', 'Ahmed Farid — Senior-Softwareentwickler in Dubai'],
+  es: ['Ahmed Farid — Ingeniero de Software Senior', 'Ahmed Farid — Ingeniero de Software Senior en Dubái'],
+  fr: ['Ahmed Farid — Ingénieur logiciel senior', 'Ahmed Farid — Ingénieur logiciel senior à Dubaï'],
+};
+
 const HEAD_SWAPS = {
   en: [
     ['based in Cairo, open to relocation.', 'based in Dubai, open to relocation.'],
@@ -1414,6 +1430,18 @@ const HEAD_EDITS = ['en', 'ar', 'de', 'es', 'fr'].map((loc) => ({
   transform: (text) => {
     let out = text;
     for (const [from, to] of [...HEAD_SWAPS[loc], ...HEAD_SWAPS_ALL]) {
+      out = out.split(from).join(to);
+    }
+    // The title appears three times — <title>, og:title, twitter:title — and
+    // all three must agree, or the social unfurl says something the tab does
+    // not. Anchored on the delimiter so this cannot match the new title's own
+    // substring and append the city twice.
+    const [oldTitle, newTitle] = TITLES[loc];
+    for (const [from, to] of [
+      [`<title>${oldTitle}<`, `<title>${newTitle}<`],
+      [`og:title" content="${oldTitle}"`, `og:title" content="${newTitle}"`],
+      [`twitter:title" content="${oldTitle}"`, `twitter:title" content="${newTitle}"`],
+    ]) {
       out = out.split(from).join(to);
     }
     return out;
