@@ -258,7 +258,7 @@ async function writeSeoFiles(locales = [{ urlPath: '/' }]) {
     `- Currently: full-time at Recovery Advisers (Dubai)\n` +
     `- Availability: a small number of freelance/contract engagements per quarter; open to full-time roles\n\n` +
     `## Core skills\n\n` +
-    `Laravel, PHP, Next.js, React, TypeScript, FastAPI, Python, Flutter, AWS, ` +
+    `Laravel, PHP, Next.js, React, React Native, TypeScript, FastAPI, Python, Flutter, AWS, ` +
     `PostgreSQL, multi-tenant SaaS architecture, real-time systems, AI integration.\n\n` +
     `## Ways to work together\n\n` +
     `- Fixed-scope product build — a defined slice with a clear deliverable (typically 4–8 weeks)\n` +
@@ -749,7 +749,7 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
     alumniOf: { '@type': 'CollegeOrUniversity', name: 'Helwan University' },
     knowsLanguage: ['English', 'Arabic'],
     knowsAbout: [
-      'Laravel', 'PHP', 'Next.js', 'React', 'TypeScript', 'FastAPI', 'Python',
+      'Laravel', 'PHP', 'Next.js', 'React', 'React Native', 'TypeScript', 'FastAPI', 'Python',
       'Flutter', 'AWS', 'PostgreSQL', 'Multi-tenant SaaS', 'Real-time systems',
       'AI integration', 'Software Architecture',
     ],
@@ -758,7 +758,7 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
       name: 'Software Engineer',
       occupationalCategory: '15-1252.00',
       skills:
-        'Laravel, PHP, Next.js, React, TypeScript, FastAPI, Python, Flutter, ' +
+        'Laravel, PHP, Next.js, React, React Native, TypeScript, FastAPI, Python, Flutter, ' +
         'AWS, PostgreSQL, multi-tenant SaaS architecture, real-time systems, AI integration',
     },
     // Grounded in the site's "Ways to work together" section — helps AI
