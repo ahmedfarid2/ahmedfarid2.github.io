@@ -311,7 +311,8 @@ Repeated labels (apply everywhere):
 - **LinkedIn** — **25.000+ Follower** — **Karriere, Empfehlungen & ein Netzwerk von 25K+.**
 - **GitHub** — github.com/ahmedfarid2 — **Quellcode, angepinnte Projekte & ML-Notebooks.**
 - **Behance** — ahmedfarid20 — **Design, Motion & visuelle Arbeit.**
-- **WhatsApp** — +20 10 1399 6079 — **Der schnellste Weg, mich direkt zu erreichen.**
+- **WhatsApp · VAE** — +971 58 556 2001 — **Der schnellste Weg, mich direkt zu erreichen.**
+- **WhatsApp · Ägypten** — +20 10 1399 6079 — **Dieselbe Person, ägyptische Nummer.**
 - **E-Mail** — ahmedfareed2025@gmail.com — **Für Briefings, Angebote & längere Notizen.**
 - **Arbeits-E-Mail** — a.farid@recoveryadvisers.com — **Erreichen Sie mich bei Recovery Advisers.**
 

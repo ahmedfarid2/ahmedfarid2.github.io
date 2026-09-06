@@ -1354,6 +1354,59 @@ const HEAD_SWAPS_ALL = [
   ['"addressLocality": "Cairo", "addressCountry": "EG"', '"addressLocality": "Dubai", "addressCountry": "AE"'],
 ];
 
+// ── Two WhatsApp numbers ────────────────────────────────────────────────────
+// A Gulf client seeing only a +20 number reads "offshore, different country".
+// The UAE number goes first because that is where he now is; the Egyptian one
+// stays because it is the number his existing contacts already have.
+//
+// Only the label, handle and href change — the card's own `desc` and inline SVG
+// come from whatever the locale already has, so the icon and translated copy
+// are carried over rather than re-authored here.
+const WA_UAE = { handle: '+971 58 556 2001', href: 'https://wa.me/971585562001' };
+const WA_COPY = {
+  en: { uae: 'WhatsApp · UAE', eg: 'WhatsApp · Egypt', egDesc: 'Same person, Egyptian number.' },
+  ar: { uae: 'WhatsApp · الإمارات', eg: 'WhatsApp · مصر', egDesc: 'نفس الشخص، رقم مصري.' },
+  de: { uae: 'WhatsApp · VAE', eg: 'WhatsApp · Ägypten', egDesc: 'Dieselbe Person, ägyptische Nummer.' },
+  es: { uae: 'WhatsApp · EAU', eg: 'WhatsApp · Egipto', egDesc: 'La misma persona, número egipcio.' },
+  fr: { uae: 'WhatsApp · EAU', eg: 'WhatsApp · Égypte', egDesc: 'La même personne, numéro égyptien.' },
+};
+
+function splitWhatsApp(loc) {
+  const c = WA_COPY[loc];
+  return (text) => {
+    // Already applied: the single generic card is gone, both labelled ones are
+    // present. Returning the text unchanged reports "already applied" instead
+    // of failing.
+    if (text.includes(`name: ${q(c.uae)}`) && text.includes(`name: ${q(c.eg)}`)) return text;
+
+    const at = text.indexOf('name: "WhatsApp",');
+    if (at < 0) return null;
+    const start = text.lastIndexOf('\n    {\n', at);
+    const endTok = '\n    },\n';
+    const end = text.indexOf(endTok, at);
+    if (start < 0 || end < 0) return null;
+    const entry = text.slice(start, end + endTok.length);
+    if (!entry.includes('href: "https://wa.me/')) return null;
+
+    const uae = entry
+      .replace('name: "WhatsApp",', `name: ${q(c.uae)},`)
+      .replace(/handle: "[^"]*",/, `handle: ${q(WA_UAE.handle)},`)
+      .replace(/href: "https:\/\/wa\.me\/[^"]*",/, `href: ${q(WA_UAE.href)},`);
+    const eg = entry
+      .replace('name: "WhatsApp",', `name: ${q(c.eg)},`)
+      .replace(/desc: "[^"]*",/, `desc: ${q(c.egDesc)},`);
+
+    return text.slice(0, start) + uae + eg.replace(/^\n/, '') + text.slice(end + endTok.length);
+  };
+}
+
+const WHATSAPP_EDITS = ['en', 'ar', 'de', 'es', 'fr'].map((loc) => ({
+  file: loc === 'en' ? 'index.html' : `index.${loc}.html`,
+  label: `WhatsApp: UAE + Egypt (${loc})`,
+  anchor: 'https://wa.me/',
+  transform: splitWhatsApp(loc),
+}));
+
 const HEAD_EDITS = ['en', 'ar', 'de', 'es', 'fr'].map((loc) => ({
   file: loc === 'en' ? 'index.html' : `index.${loc}.html`,
   label: `head: based in Dubai (${loc})`,
@@ -1713,6 +1766,7 @@ const EDITS = [
   // Last, so it also catches the hero-sub this file rewrites earlier.
   ...CITY_EDITS,
   ...HEAD_EDITS,
+  ...WHATSAPP_EDITS,
 ];
 
 // Locate the `__bundler/template` line: the document shell, stored as a single

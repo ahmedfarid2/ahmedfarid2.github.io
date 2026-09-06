@@ -377,7 +377,8 @@ Repeated labels used across case studies (translate once, applies everywhere):
 - **LinkedIn** — **25 000+ abonnés** — **Carrière, recommandations et un réseau de plus de 25K.**
 - **GitHub** — github.com/ahmedfarid2 — **Sources, projets épinglés et notebooks ML.**
 - **Behance** — ahmedfarid20 — **Design, motion et travail visuel.**
-- **WhatsApp** — +20 10 1399 6079 — **Le moyen le plus rapide de me joindre directement.**
+- **WhatsApp · EAU** — +971 58 556 2001 — **Le moyen le plus rapide de me joindre directement.**
+- **WhatsApp · Égypte** — +20 10 1399 6079 — **La même personne, numéro égyptien.**
 - **Email** — ahmedfareed2025@gmail.com — **Pour briefs, propositions et notes plus longues.**
 - **E-mail professionnel** — a.farid@recoveryadvisers.com — **Joignez-moi chez Recovery Advisers.**
 
