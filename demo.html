@@ -327,7 +327,9 @@
     // third-party script that may be blocked; a blocked tracker must never
     // take the confirmation message down with it.
     try {
-      if (window.oaiq) window.oaiq('measure', 'Lead', { event_source: 'demo_form' });
+      // `lead_created` is one of OpenAI's ten standard event names — an
+      // arbitrary label is rejected, so this cannot be renamed to taste.
+      if (window.oaiq) window.oaiq('measure', 'lead_created', { type: 'customer_action' });
     } catch (e) { /* tracking is never worth breaking the page for */ }
   }
 
