@@ -30,6 +30,25 @@ const DIST = path.join(ROOT, 'dist');
 const GH_USER = 'ahmedfarid2';
 const SITE_URL = 'https://iamahmedfarid.com';
 
+// OpenAI / ChatGPT Ads measurement pixel.
+//
+// It has to be injected here, not just in the export, because this build
+// rebuilds the <head> from an explicit allowlist (see `pick(...)` below) —
+// anything not on that list is dropped, and a tracking script that silently
+// disappears at build time is worse than one that was never installed.
+// edit-copy.mjs also puts it in the export template, which is what the
+// raw-export fallback ships; the two never collide because the fallback path
+// does not run this assembler.
+//
+// The Ads Manager snippet's `debug: true` is deliberately dropped: it logs SDK
+// chatter to the console, and the people most likely to open devtools here are
+// the engineers this site is meant to impress.
+const AD_PIXEL =
+  '<script>!function(w,d,s,u){if(w.oaiq)return;var q=function(){q.q.push(arguments)};' +
+  'q.q=[];w.oaiq=q;var j=d.createElement(s);j.async=1;j.src=u;var f=d.getElementsByTagName(s)[0];' +
+  'f.parentNode.insertBefore(j,f)}(window,document,"script","https://bzrcdn.openai.com/sdk/oaiq.min.js");' +
+  'oaiq("init",{pixelId:"9ceAHjhY9TXnV8VVdRpZEx"});</script>';
+
 // ── Locale discovery (by convention) ────────────────────────────────────────
 // English lives in the root export `index.html` and builds to dist/ root.
 // Any sibling matching `index.<code>.html` (two-letter ISO code) is a
@@ -968,6 +987,7 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+${AD_PIXEL}
 <title>${result.title}</title>
 ${headMeta}
 <link rel="preconnect" href="https://fonts.googleapis.com">

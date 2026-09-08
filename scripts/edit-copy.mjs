@@ -1448,6 +1448,37 @@ const HEAD_EDITS = ['en', 'ar', 'de', 'es', 'fr'].map((loc) => ({
   },
 }));
 
+// ── OpenAI / ChatGPT Ads measurement pixel ──────────────────────────────────
+// Installed on every page so the account accumulates history from now on,
+// whether or not a campaign ever runs. The `debug: true` from the Ads Manager
+// snippet is deliberately dropped: it logs SDK chatter to the console, and the
+// people most likely to open devtools on this site are the engineers he wants
+// to impress.
+//
+// Page views only. The one conversion worth counting — a demo request — fires
+// from demo.html's success state, not from a submit handler, so it counts
+// deliveries rather than attempts.
+const PIXEL_ID = '9ceAHjhY9TXnV8VVdRpZEx';
+const PIXEL_TAG =
+  '<script>!function(w,d,s,u){if(w.oaiq)return;var q=function(){q.q.push(arguments)};' +
+  'q.q=[];w.oaiq=q;var j=d.createElement(s);j.async=1;j.src=u;var f=d.getElementsByTagName(s)[0];' +
+  'f.parentNode.insertBefore(j,f)}(window,document,"script","https://bzrcdn.openai.com/sdk/oaiq.min.js");' +
+  `oaiq("init",{pixelId:"${PIXEL_ID}"});</script>`;
+
+const PIXEL_EDITS = ['en', 'ar', 'de', 'es', 'fr'].map((loc) => ({
+  file: loc === 'en' ? 'index.html' : `index.${loc}.html`,
+  label: `head: ChatGPT Ads pixel (${loc})`,
+  template: true,
+  transform: (text) => {
+    // Self-consuming by the pixel id: once installed the guard matches and the
+    // transform is a no-op, so a second run reports "already applied".
+    if (text.includes(PIXEL_ID)) return text;
+    const anchor = '<meta charset="utf-8">';
+    if (!text.includes(anchor)) return null;
+    return text.replace(anchor, `${anchor}\n  ${PIXEL_TAG}`);
+  },
+}));
+
 // Each edit is an exact string match, so a failed match is loud rather than
 // silently rewriting the wrong thing.
 const EDITS = [
@@ -1795,6 +1826,7 @@ const EDITS = [
   ...CITY_EDITS,
   ...HEAD_EDITS,
   ...WHATSAPP_EDITS,
+  ...PIXEL_EDITS,
 ];
 
 // Locate the `__bundler/template` line: the document shell, stored as a single

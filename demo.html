@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- OpenAI / ChatGPT Ads measurement pixel. Page views only; the demo
+     request fires its own conversion from the success state below. -->
+<script>!function(w,d,s,u){if(w.oaiq)return;var q=function(){q.q.push(arguments)};q.q=[];w.oaiq=q;var j=d.createElement(s);j.async=1;j.src=u;var f=d.getElementsByTagName(s)[0];f.parentNode.insertBefore(j,f)}(window,document,"script","https://bzrcdn.openai.com/sdk/oaiq.min.js");oaiq("init",{pixelId:"9ceAHjhY9TXnV8VVdRpZEx"});</script>
 <title>Book a free demo — one real screen, built in five days | Ahmed Farid</title>
 <meta name="description" content="Tell me what you're building and I'll build one real screen of it — deployed, clickable, free. Five business days, two slots a month, no obligation.">
 <link rel="canonical" href="https://iamahmedfarid.com/demo.html">
@@ -316,6 +319,16 @@
     document.getElementById('sent').hidden = false;
     document.getElementById('formwrap').hidden = true;
     document.getElementById('sent').scrollIntoView({ block: 'center' });
+
+    // Count the conversion here rather than on submit: the form posts away to
+    // FormSubmit and only lands back on ?sent=1 when the message actually went
+    // through, so this counts deliveries, not attempts — and it cannot be lost
+    // to the page unloading mid-send. Guarded because the pixel is a
+    // third-party script that may be blocked; a blocked tracker must never
+    // take the confirmation message down with it.
+    try {
+      if (window.oaiq) window.oaiq('measure', 'Lead', { event_source: 'demo_form' });
+    } catch (e) { /* tracking is never worth breaking the page for */ }
   }
 
   // ── Custom dropdown ──────────────────────────────────────────────────────
