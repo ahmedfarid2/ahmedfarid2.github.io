@@ -1429,7 +1429,10 @@ const HEAD_EDITS = ['en', 'ar', 'de', 'es', 'fr'].map((loc) => ({
   template: true,
   transform: (text) => {
     let out = text;
-    for (const [from, to] of [...HEAD_SWAPS[loc], ...HEAD_SWAPS_ALL]) {
+    for (const [from, to] of [
+      ...HEAD_SWAPS[loc], ...HEAD_SWAPS_ALL,
+      YEARS_HEAD[loc], RELOCATION_HEAD[loc],
+    ]) {
       out = out.split(from).join(to);
     }
     // The title appears three times — <title>, og:title, twitter:title — and
@@ -1478,6 +1481,270 @@ const PIXEL_EDITS = ['en', 'ar', 'de', 'es', 'fr'].map((loc) => ({
     return text.replace(anchor, `${anchor}\n  ${PIXEL_TAG}`);
   },
 }));
+
+const LOCALES = ['en', 'ar', 'de', 'es', 'fr'];
+const fileFor = (loc) => (loc === 'en' ? 'index.html' : `index.${loc}.html`);
+
+// Builds one bundle edit per locale from a {loc: [old, new]} table. Every edit
+// produced here is `critical` — each one corrects a statement of fact, so a
+// re-export that stops it matching must break the build rather than quietly
+// restore the old claim.
+//
+// Matching is whitespace-flexible: the export wraps prose across lines at
+// arbitrary points, so an exact-string match breaks the moment a re-export
+// re-wraps a sentence. Every run of whitespace in the search text matches any
+// run of whitespace in the source.
+const rxEscape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const flexible = (s) => new RegExp(s.trim().split(/\s+/).map(rxEscape).join('\\s+'), 'g');
+
+function factEdits(label, table, extra = {}) {
+  return LOCALES.filter((loc) => table[loc]).map((loc) => {
+    const [from, to] = table[loc];
+    const lead = /^\s/.test(from) ? '\\s*' : '';
+    const rx = new RegExp(lead + flexible(from).source, 'g');
+    return {
+      file: fileFor(loc),
+      label: `${label} (${loc})`,
+      critical: true,
+      // Stable across every edit here: they all live in the one bundled app
+      // asset, and none of them touches this class name.
+      anchor: 'className="about-p"',
+      transform: (text) => {
+        if (rx.test(text)) { rx.lastIndex = 0; return text.replace(rx, to); }
+        rx.lastIndex = 0;
+        // Not matched. Either already applied, or the export moved and this
+        // correction is now silently dropped — which for a `critical` edit
+        // must fail. A non-empty replacement is detectable, so check for it.
+        // Pure removals have nothing to look for; those rely on the other
+        // critical edits in the same group to catch a re-export.
+        if (to === '' || text.includes(to.trim())) return text;
+        return null;
+      },
+      ...extra,
+    };
+  });
+}
+
+// ── Six years, not five ─────────────────────────────────────────────────────
+// He was first paid to write code in 2019. Three separate places said five —
+// the hero line, the About stat, and the About paragraph — plus the meta
+// description in the template and the llms.txt/JSON-LD copy in build.mjs.
+const YEARS_EDITS = [
+  ...factEdits('six years: hero line', {
+    en: ['Five years shipping to production across the Gulf, the US, and the UK.',
+         'Six years shipping to production across the Gulf, the US, and the UK.'],
+    ar: ['خمس سنوات من الإطلاق في الإنتاج عبر الخليج والولايات المتحدة والمملكة المتحدة.',
+         'ست سنوات من الإطلاق في الإنتاج عبر الخليج والولايات المتحدة والمملكة المتحدة.'],
+    de: ['Fünf Jahre in Produktion im Golfraum, in den USA und in Großbritannien.',
+         'Sechs Jahre in Produktion im Golfraum, in den USA und in Großbritannien.'],
+    es: ['Cinco años llevando sistemas a producción en el Golfo, EE',
+         'Seis años llevando sistemas a producción en el Golfo, EE'],
+    fr: ['Cinq ans de mise en production dans le Golfe, aux États-Unis et au Royaume-Uni.',
+         'Six ans de mise en production dans le Golfe, aux États-Unis et au Royaume-Uni.'],
+  }),
+  ...factEdits('six years: About stat', {
+    en: ['v: "5+ yrs"', 'v: "6+ yrs"'],
+    ar: ['v: "+٥ سنوات"', 'v: "+٦ سنوات"'],
+    de: ['v: "5+ Jahre"', 'v: "6+ Jahre"'],
+    es: ['v: "5+ años"', 'v: "6+ años"'],
+    fr: ['v: "5+ ans"', 'v: "6+ ans"'],
+  }),
+  // The spec listed three occurrences; this is a fourth it missed. Left alone
+  // the About paragraph would still open with "over the last five years".
+  ...factEdits('six years: About paragraph', {
+    en: ["Over the last five years I've built", "Over the last six years I've built"],
+    ar: ['خلال السنوات الخمس الماضية', 'خلال السنوات الست الماضية'],
+    de: ['In den letzten fünf Jahren', 'In den letzten sechs Jahren'],
+    es: ['En los últimos cinco años', 'En los últimos seis años'],
+    fr: ['Ces cinq dernières années', 'Ces six dernières années'],
+  }),
+];
+
+// The meta description lives in the template, not the bundle.
+const YEARS_HEAD = {
+  en: ['Five years building multi-tenant SaaS', 'Six years building multi-tenant SaaS'],
+  ar: ['خمس سنوات في بناء منصّات SaaS', 'ست سنوات في بناء منصّات SaaS'],
+  de: ['Fünf Jahre Aufbau von Multi-Tenant-SaaS', 'Sechs Jahre Aufbau von Multi-Tenant-SaaS'],
+  es: ['Cinco años construyendo SaaS multi-tenant', 'Seis años construyendo SaaS multi-tenant'],
+  fr: ['Cinq ans à construire des SaaS multi-tenant', 'Six ans à construire des SaaS multi-tenant'],
+};
+
+// ── Remove the LinkedIn follower count ──────────────────────────────────────
+// The number was true (27,034 on 12 Sep 2026). It comes down because it is the
+// only claim on the site about an audience rather than about shipped work, and
+// it invites arithmetic that does not flatter: best post in a month, 412
+// impressions against 27k followers.
+//
+// Four places per locale, not the three the spec listed — the "notes" section
+// carried a fourth mention.
+const FOLLOWER_BLOCK_EDITS = LOCALES.map((loc) => ({
+  file: fileFor(loc),
+  label: `remove follower stat block (${loc})`,
+  critical: true,
+  // NOT `about-followers` — that is the thing being deleted, so using it as the
+  // anchor makes the second run report "anchor not found" and fail the build.
+  // The anchor has to be something the edit leaves behind.
+  anchor: 'className="about-p"',
+  transform: (text) => {
+    // Self-consuming: once the block is gone the anchor is gone, and the guard
+    // below returns the text untouched on any later run.
+    const at = text.indexOf('<a className="about-followers"');
+    if (at < 0) return text;
+    // Delete the whole <Reveal_ab …> wrapper, not just the <a> — leaving an
+    // empty animated wrapper would keep its vertical rhythm in the layout.
+    const open = text.lastIndexOf('<Reveal_ab', at);
+    const closeTok = '</Reveal_ab>';
+    const close = text.indexOf(closeTok, at);
+    if (open < 0 || close < 0) return null;
+    let start = open;
+    // Take the whitespace/newline before the block too, so the deletion does
+    // not leave a blank indented line behind.
+    const prevNl = text.lastIndexOf('\n', open - 1);
+    if (prevNl >= 0 && text.slice(prevNl + 1, open).trim() === '') start = prevNl;
+    return text.slice(0, start) + text.slice(close + closeTok.length);
+  },
+}));
+
+const FOLLOWER_EDITS = [
+  ...FOLLOWER_BLOCK_EDITS,
+  ...factEdits('recommendations sub: drop follower count', {
+    en: ['Recommendations from people who managed me directly — verified on LinkedIn, where 25,000+ follow my work.',
+         'Recommendations from people who managed me directly, verified on LinkedIn.'],
+    ar: ['توصيات من أشخاص أداروني مباشرةً — موثّقة على LinkedIn، حيث يتابع عملي ٢٥٬٠٠٠+.',
+         'توصيات من أشخاص أداروني مباشرةً، موثّقة على LinkedIn.'],
+    de: ['Empfehlungen von Personen, die mich direkt geführt haben — verifiziert auf LinkedIn, wo 25.000+ meiner Arbeit folgen.',
+         'Empfehlungen von Personen, die mich direkt geführt haben, verifiziert auf LinkedIn.'],
+    es: ['Recomendaciones de personas que me supervisaron directamente — verificadas en LinkedIn, donde 25.000+ siguen mi trabajo.',
+         'Recomendaciones de personas que me supervisaron directamente, verificadas en LinkedIn.'],
+    fr: ["Recommandations de personnes qui m'ont encadré directement — vérifiées sur LinkedIn, où 25 000+ suivent mon travail.",
+         "Recommandations de personnes qui m'ont encadré directement, vérifiées sur LinkedIn."],
+  }),
+  ...factEdits('notes sub: drop follower count', {
+    en: ['posted on LinkedIn where 25k+ people follow along.', 'posted on LinkedIn.'],
+    ar: ['على LinkedIn حيث يتابع 25k+.', 'على LinkedIn.'],
+    de: ['auf LinkedIn, wo 25k+ Menschen mitlesen.', 'auf LinkedIn.'],
+    es: ['publicado en LinkedIn donde 25k+ personas me siguen.', 'publicado en LinkedIn.'],
+    fr: ['publiés sur LinkedIn où 25k+ personnes me suivent.', 'publiés sur LinkedIn.'],
+  }),
+  // The connect card always renders a handle, so it gets the profile slug —
+  // the same shape as the Behance card's "ahmedfarid20" — rather than being
+  // blanked, which would leave a visibly empty line in the grid.
+  ...factEdits('LinkedIn card: drop follower count', {
+    en: ['handle: "25,000+ followers"', 'handle: "ahmed-farid"'],
+    ar: ['handle: "٢٥٬٠٠٠+ متابع"', 'handle: "ahmed-farid"'],
+    de: ['handle: "25.000+ Follower"', 'handle: "ahmed-farid"'],
+    es: ['handle: "25.000+ seguidores"', 'handle: "ahmed-farid"'],
+    fr: ['handle: "25 000+ abonnés"', 'handle: "ahmed-farid"'],
+  }),
+  ...factEdits('LinkedIn card desc: drop network size', {
+    en: ['desc: "Career, recommendations & a 25K+ network."', 'desc: "Career history and recommendations."'],
+    ar: ['desc: "المسيرة المهنية والتوصيات وشبكة تتجاوز ٢٥ ألفًا."', 'desc: "المسيرة المهنية والتوصيات."'],
+    de: ['desc: "Karriere, Empfehlungen & ein Netzwerk von 25K+."', 'desc: "Karriere und Empfehlungen."'],
+    es: ['desc: "Carrera, recomendaciones y una red de 25K+."', 'desc: "Carrera y recomendaciones."'],
+    fr: ['desc: "Carrière, recommandations et un réseau de 25K+."', 'desc: "Carrière et recommandations."'],
+  }),
+
+  // Two more the spec's inventory missed, found by grepping the built output
+  // rather than trusting the list: the writing-section CTA, and a service chip
+  // that still offered relocation.
+  ...factEdits('writing CTA: drop follower count', {
+    en: ['25k+ followers · Read on LinkedIn', 'Read on LinkedIn'],
+    ar: ['25k+ متابع · اقرأ على LinkedIn', 'اقرأ على LinkedIn'],
+    de: ['25k+ Follower · Auf LinkedIn lesen', 'Auf LinkedIn lesen'],
+    es: ['25k+ seguidores · Leer en LinkedIn', 'Leer en LinkedIn'],
+    fr: ['25k+ abonnés · Lire sur LinkedIn', 'Lire sur LinkedIn'],
+  }),
+];
+
+// ── He is in Dubai, not heading there ───────────────────────────────────────
+// "Open to relocation" reads to a Dubai employer as *this person may leave* —
+// the opposite of the intended signal. Five places per locale, not the two the
+// spec listed: the eyebrow (twice in ar/de, which ship a short variant), the
+// hero paragraph, the About paragraph, and the contact sub-line.
+const RELOCATION_EDITS = [
+  ...factEdits('drop relocation: eyebrow', {
+    en: [' · Open to relocation 🌍', ''],
+    ar: [' · مستعدّ للانتقال 🌍', ''],
+    de: [' · Umzugsbereit 🌍', ''],
+    es: [' · Abierto a reubicación 🌍', ''],
+    fr: [' · Ouvert à la mobilité 🌍', ''],
+  }),
+  ...factEdits('drop relocation: hero paragraph', {
+    en: ['Flutter. Open to relocation.', 'Flutter.'],
+    ar: ['Flutter. مستعدّ للانتقال.', 'Flutter.'],
+    de: ['Flutter. Umzugsbereit.', 'Flutter.'],
+    es: ['Flutter. Abierto a reubicación.', 'Flutter.'],
+    fr: ['Flutter. Ouvert à la mobilité.', 'Flutter.'],
+  }),
+  ...factEdits('drop relocation: About paragraph', {
+    en: ['Dubai-based, open to relocation.', 'Dubai-based.'],
+    ar: ['مقيم في دبي، مستعدّ للانتقال.', 'مقيم في دبي.'],
+    de: ['Mit Sitz in Dubai, umzugsbereit.', 'Mit Sitz in Dubai.'],
+    es: ['Afincado en Dubái, abierto a reubicación.', 'Afincado en Dubái.'],
+    fr: ['Basé à Dubaï, ouvert à la mobilité.', 'Basé à Dubaï.'],
+  }),
+  ...factEdits('drop relocation: contact sub', {
+    en: ['Emirates · open to relocation. Pick', 'Emirates. Pick'],
+    ar: ['المتحدة · مستعدّ للانتقال. اختر', 'المتحدة. اختر'],
+    de: ['Emirate · umzugsbereit. Wählen', 'Emirate. Wählen'],
+    es: ['Unidos · abierto a reubicación. Elige', 'Unidos. Elige'],
+    fr: ['unis · ouvert à la mobilité. Choisissez', 'unis. Choisissez'],
+  }),
+
+  // The services grid still advertised relocation as a working mode.
+  ...factEdits('drop relocation: service chip', {
+    en: ['Remote / relocation', 'Remote / on-site'],
+    ar: ['عن بُعد / انتقال', 'عن بُعد / من الموقع'],
+    de: ['Remote / Umzug', 'Remote / vor Ort'],
+    es: ['Remoto / reubicación', 'Remoto / presencial'],
+    fr: ['Distanciel / mobilité', 'Distanciel / sur site'],
+  }),
+];
+
+const RELOCATION_HEAD = {
+  en: ['based in Dubai, open to relocation.', 'based in Dubai.'],
+  ar: ['مقيم في دبي، مستعدّ للانتقال.', 'مقيم في دبي.'],
+  de: ['mit Sitz in Dubai, umzugsbereit.', 'mit Sitz in Dubai.'],
+  es: ['afincado en Dubái, abierto a reubicación.', 'afincado en Dubái.'],
+  fr: ['basé à Dubaï, ouvert à la mobilité.', 'basé à Dubaï.'],
+};
+
+// ── Remove junior-coded language ────────────────────────────────────────────
+// "I learn fast and adapt to whatever stack the job needs" volunteers
+// adaptability where a senior profile should show judgement. Replaced rather
+// than deleted, because the paragraph wants a closer and the replacement makes
+// the stronger claim: choosing the stack, and owning what follows.
+const SENIORITY_EDITS = LOCALES.map((loc) => ({
+  file: fileFor(loc),
+  label: `drop "fast learner" framing (${loc})`,
+  critical: true,
+  anchor: {
+    en: 'the on-call rotation after launch.',
+    ar: 'والمناوبة بعد الإطلاق.',
+    de: 'nach dem Launch.',
+    es: 'el lanzamiento.',
+    fr: 'après le lancement.',
+  }[loc],
+  transform: (text) => {
+    const [rx, replacement] = {
+      en: [/I learn\s+fast and adapt to whatever stack the job actually needs\./,
+           'I pick the stack the problem needs and own the consequences.'],
+      ar: [/أتعلّم بسرعة وأتكيّف مع أي تقنية يحتاجها المشروع فعلًا\./,
+           'أختار التقنية التي تناسب المشكلة وأتحمّل نتائج الاختيار.'],
+      de: [/Ich lerne schnell und passe mich an jeden Stack an, den das Projekt wirklich braucht\./,
+           'Ich wähle den Stack, den das Problem verlangt, und trage die Konsequenzen.'],
+      es: [/Aprendo rápido y me adapto a cualquier stack que el proyecto realmente necesite\./,
+           'Elijo el stack que el problema necesita y asumo las consecuencias.'],
+      fr: [/J'apprends vite et je m'adapte au stack dont le projet a réellement besoin\./,
+           "Je choisis la stack que le problème exige et j'en assume les conséquences."],
+    }[loc];
+    // Self-consuming: the pattern is gone once replaced, so a second run is a
+    // no-op and reports "already applied".
+    if (!rx.test(text)) return text;
+    return text.replace(rx, replacement);
+  },
+}));
+
 
 // Each edit is an exact string match, so a failed match is loud rather than
 // silently rewriting the wrong thing.
@@ -1827,6 +2094,10 @@ const EDITS = [
   ...HEAD_EDITS,
   ...WHATSAPP_EDITS,
   ...PIXEL_EDITS,
+  ...YEARS_EDITS,
+  ...FOLLOWER_EDITS,
+  ...RELOCATION_EDITS,
+  ...SENIORITY_EDITS,
 ];
 
 // Locate the `__bundler/template` line: the document shell, stored as a single
@@ -1878,6 +2149,18 @@ function encode(asset, text) {
 let failures = 0;
 let applied = 0;
 
+// Some edits are cosmetic; some are corrections of fact. A re-export that moves
+// the markup makes both stop matching, and `--soft` lets the deploy continue
+// without them — fine for a tweak, not fine for a claim. An edit marked
+// `critical: true` says: if this one cannot be applied, the page would state
+// something untrue (five years instead of six, a follower count that was
+// deliberately removed), so fail the build instead of shipping it quietly.
+let criticalFailures = 0;
+const fail = (edit) => {
+  failures++;
+  if (edit.critical) criticalFailures++;
+};
+
 for (const edit of EDITS) {
   const raw = readFileSync(edit.file, 'utf8');
   const lines = raw.split('\n');
@@ -1889,18 +2172,18 @@ for (const edit of EDITS) {
     const tpl = findTemplateLine(lines);
     if (!tpl) {
       console.error(`✗ ${edit.label}: no bundler template found in ${edit.file}`);
-      failures++;
+      fail(edit);
       continue;
     }
     let updated;
     try { updated = edit.transform(tpl.text); } catch (e) {
       console.error(`✗ ${edit.label}: transform threw in ${edit.file} — ${e.message}`);
-      failures++;
+      fail(edit);
       continue;
     }
     if (updated == null) {
       console.error(`✗ ${edit.label}: transform could not parse the template in ${edit.file}`);
-      failures++;
+      fail(edit);
       continue;
     }
     if (updated === tpl.text) {
@@ -1913,7 +2196,7 @@ for (const edit of EDITS) {
     }
     if (edit.transform(updated) !== updated) {
       console.error(`✗ ${edit.label}: transform is not idempotent — refusing to write ${edit.file}`);
-      failures++;
+      fail(edit);
       continue;
     }
     // The template is a JSON string living *inside* a <script> element, so any
@@ -1930,7 +2213,7 @@ for (const edit of EDITS) {
   const found = findManifestLine(lines);
   if (!found) {
     console.error(`✗ ${edit.label}: no bundler manifest found in ${edit.file}`);
-    failures++;
+    fail(edit);
     continue;
   }
 
@@ -1951,18 +2234,18 @@ for (const edit of EDITS) {
     }
     if (!hit) {
       console.error(`✗ ${edit.label}: anchor not found in ${edit.file} (export may have changed)`);
-      failures++;
+      fail(edit);
       continue;
     }
     let updated;
     try { updated = edit.transform(hit.text); } catch (e) {
       console.error(`✗ ${edit.label}: transform threw in ${edit.file} — ${e.message}`);
-      failures++;
+      fail(edit);
       continue;
     }
     if (updated == null) {
       console.error(`✗ ${edit.label}: transform could not parse ${edit.file} (export may have changed)`);
-      failures++;
+      fail(edit);
       continue;
     }
     if (updated === hit.text) {
@@ -1978,7 +2261,7 @@ for (const edit of EDITS) {
     // write time instead of silently duplicating cases on the next deploy.
     if (edit.transform(updated) !== updated) {
       console.error(`✗ ${edit.label}: transform is not idempotent — refusing to write ${edit.file}`);
-      failures++;
+      fail(edit);
       continue;
     }
     obj[hit.id] = { ...hit.asset, data: encode(hit.asset, updated) };
@@ -2012,7 +2295,7 @@ for (const edit of EDITS) {
       continue;
     }
     console.error(`✗ ${edit.label}: OLD text not found in ${edit.file} (export may have changed — re-run the probe)`);
-    failures++;
+    fail(edit);
     continue;
   }
   if (target.already) {
@@ -2031,7 +2314,7 @@ for (const edit of EDITS) {
   const occurrences = target.text.split(edit.old).length - 1;
   if (occurrences !== expected) {
     console.error(`✗ ${edit.label}: expected exactly ${expected} match(es), found ${occurrences} — refusing to edit`);
-    failures++;
+    fail(edit);
     continue;
   }
 
@@ -2053,7 +2336,7 @@ for (const edit of EDITS) {
       `apply it again. Widen \`old\` to include adjacent context, or set ` +
       `allowRepeat if a later edit consumes it.`
     );
-    failures++;
+    fail(edit);
     continue;
   }
 
@@ -2065,6 +2348,22 @@ for (const edit of EDITS) {
 }
 
 console.log(`\n${CHECK ? 'check' : 'apply'} complete — ${applied} edited, ${failures} failed`);
+
+if (criticalFailures) {
+  // No soft path for these. A cosmetic edit that stops matching costs polish;
+  // one of these stops matching and the site goes back to claiming five years,
+  // or re-grows the follower count that was taken down on purpose. Shipping a
+  // false statement is worse than not shipping, so this blocks the deploy even
+  // under --soft.
+  console.error(
+    `\n✗ ${criticalFailures} CRITICAL copy edit(s) did not match — refusing to build.\n` +
+    '   These correct statements of fact, so deploying without them would put\n' +
+    '   something untrue back on the site. The exports were most likely replaced\n' +
+    '   by a fresh Claude-design export whose markup moved: re-run the probe and\n' +
+    '   update scripts/edit-copy.mjs to match the new markup.'
+  );
+  process.exit(1);
+}
 
 if (failures && SOFT) {
   // CI path: a failed match almost always means the exports were replaced by a
