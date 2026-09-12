@@ -85,6 +85,10 @@ const FORBIDDEN = [
   { s: 'OPEN TO RELOCATION', max: 0 },
   { s: 'Open to relocation', max: 0 },
   { s: 'open to relocation', max: 0 },
+  // Same claim, different verb — the wording the first sweep missed.
+  { s: 'Open to relocate', max: 0 },
+  { s: 'No tracking', max: 0 },
+  { s: 'Book a scoping call', max: 0 },
   { s: 'fast learner', max: 0 },
   { s: 'adapt to whatever stack', max: 0 },
   { s: 'Available now', max: 0 },
@@ -874,6 +878,14 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
     },
     // Grounded in the site's "Ways to work together" section — helps AI
     // assistants surface Ahmed for "recommend an engineer to hire" queries.
+    // He is available for hire, not only for engagements. Without this the
+    // only machine-readable intent on the page is `makesOffer`, which reads
+    // as a vendor listing.
+    seeks: {
+      '@type': 'Demand',
+      name: 'Senior Software Engineer role',
+      availableAtOrFrom: { '@type': 'Place', name: 'Dubai, United Arab Emirates' },
+    },
     makesOffer: [
       { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Fixed-scope product build', serviceType: 'Software development' } },
       { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Ongoing engineering retainer', serviceType: 'Software development' } },
