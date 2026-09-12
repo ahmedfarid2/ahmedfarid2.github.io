@@ -1656,6 +1656,73 @@ const FOLLOWER_EDITS = [
   }),
 ];
 
+// ── Products shipped: 27, not 23 ────────────────────────────────────────────
+// His count, not a tally of what the page displays — the site names 19
+// projects, and the stat has always covered work that is not published here.
+// Kept as "27+" to match every other stat on the row: a floor, not a precise
+// figure, so it stays true as the number grows.
+const PRODUCT_COUNT_EDITS = factEdits('products shipped: 27', {
+  en: ['v: "23+", l: "Products built or shipped"', 'v: "27+", l: "Products built or shipped"'],
+  ar: ['v: "+٢٣", l: "منتجًا تم بناؤه أو تسليمه"', 'v: "+٢٧", l: "منتجًا تم بناؤه أو تسليمه"'],
+  de: ['v: "23+", l: "Produkte gebaut oder geliefert"', 'v: "27+", l: "Produkte gebaut oder geliefert"'],
+  es: ['v: "23+", l: "Productos creados o entregados"', 'v: "27+", l: "Productos creados o entregados"'],
+  fr: ['v: "23+", l: "Produits créés ou livrés"', 'v: "27+", l: "Produits créés ou livrés"'],
+});
+
+// ── Hero stats ──────────────────────────────────────────────────────────────
+// The hero carries its own copy of the years and products numbers, separate
+// from the About facts. It was missed the first time because the markup splits
+// the value — `<em>5+</em> yrs` — so a grep for "5+ yrs" in the built output
+// reports zero while the page still says five. Matched on the markup here, and
+// the verification greps for the split form too.
+const HERO_STAT_EDITS = [
+  ...factEdits('hero: six years', {
+    en: ['<em>5+</em> yrs', '<em>6+</em> yrs'],
+    ar: ['<em>5+</em> سنوات', '<em>6+</em> سنوات'],
+    de: ['<em>5+</em> Jahre', '<em>6+</em> Jahre'],
+    es: ['<em>5+</em> años', '<em>6+</em> años'],
+    fr: ['<em>5+</em> ans', '<em>6+</em> ans'],
+  }),
+  ...factEdits('hero: 27 products', {
+    en: ['<div className="num">23+</div>\n              <div className="lbl">Products shipped & linked',
+         '<div className="num">27+</div>\n              <div className="lbl">Products shipped & linked'],
+    ar: ['<div className="num">+٢٣</div>\n              <div className="lbl">منتجًا تم تسليمه وربطه',
+         '<div className="num">+٢٧</div>\n              <div className="lbl">منتجًا تم تسليمه وربطه'],
+    de: ['<div className="num">23+</div>\n              <div className="lbl">Produkte geliefert & verlinkt',
+         '<div className="num">27+</div>\n              <div className="lbl">Produkte geliefert & verlinkt'],
+    es: ['<div className="num">23+</div>\n              <div className="lbl">Productos entregados y enlazados',
+         '<div className="num">27+</div>\n              <div className="lbl">Productos entregados y enlazados'],
+    fr: ['<div className="num">23+</div>\n              <div className="lbl">Produits livrés et liés',
+         '<div className="num">27+</div>\n              <div className="lbl">Produits livrés et liés'],
+  }),
+];
+
+// ── Yelo: Senior Software Engineer ──────────────────────────────────────────
+// The CV and LinkedIn both say Senior for Yelo as of 12 Sep 2026; the site
+// still said Software Engineer in two places, so the three sources contradicted
+// each other. Only Yelo changed — every other case study keeps its label.
+const YELO_TITLE_EDITS = [
+  ...factEdits('Yelo eyebrow: Senior', {
+    en: ['role: "Software Engineer · Gulf market (KSA)"', 'role: "Senior Software Engineer · Gulf market (KSA)"'],
+    ar: ['role: "مهندس برمجيات · سوق الخليج (السعودية)"', 'role: "مهندس برمجيات أول · سوق الخليج (السعودية)"'],
+    de: ['role: "Softwareentwickler · Golf-Markt (KSA)"', 'role: "Senior-Softwareentwickler · Golf-Markt (KSA)"'],
+    es: ['role: "Ingeniero de Software · Mercado del Golfo (KSA)"', 'role: "Ingeniero de Software Senior · Mercado del Golfo (KSA)"'],
+    fr: ['role: "Ingénieur logiciel · marché du Golfe (KSA)"', 'role: "Ingénieur logiciel senior · marché du Golfe (KSA)"'],
+  }),
+  ...factEdits('Yelo MY ROLE: Senior', {
+    en: ['role: "Software Engineer — Laravel back-end, Next.js front-end, and the Flutter mobile app."',
+         'role: "Senior Software Engineer — Laravel back-end, Next.js front-end, and the Flutter mobile app."'],
+    ar: ['role: "مهندس برمجيات — الـ Backend بـ Laravel، والـ Frontend بـ Next.js، وتطبيق الجوّال بـ Flutter."',
+         'role: "مهندس برمجيات أول — الـ Backend بـ Laravel، والـ Frontend بـ Next.js، وتطبيق الجوّال بـ Flutter."'],
+    de: ['role: "Softwareentwickler — Laravel-Backend, Next.js-Frontend und die Flutter-Mobile-App."',
+         'role: "Senior-Softwareentwickler — Laravel-Backend, Next.js-Frontend und die Flutter-Mobile-App."'],
+    es: ['role: "Ingeniero de Software — back-end en Laravel, front-end en Next.js y la app móvil Flutter."',
+         'role: "Ingeniero de Software Senior — back-end en Laravel, front-end en Next.js y la app móvil Flutter."'],
+    fr: ["role: \"Ingénieur logiciel — back-end Laravel, front-end Next.js et l'app mobile Flutter.\"",
+         "role: \"Ingénieur logiciel senior — back-end Laravel, front-end Next.js et l'app mobile Flutter.\""],
+  }),
+];
+
 // ── He is in Dubai, not heading there ───────────────────────────────────────
 // "Open to relocation" reads to a Dubai employer as *this person may leave* —
 // the opposite of the intended signal. Five places per locale, not the two the
@@ -2095,6 +2162,9 @@ const EDITS = [
   ...WHATSAPP_EDITS,
   ...PIXEL_EDITS,
   ...YEARS_EDITS,
+  ...PRODUCT_COUNT_EDITS,
+  ...HERO_STAT_EDITS,
+  ...YELO_TITLE_EDITS,
   ...FOLLOWER_EDITS,
   ...RELOCATION_EDITS,
   ...SENIORITY_EDITS,
