@@ -1030,7 +1030,8 @@ const WEEKS_EDITS = ['en', 'ar', 'de', 'es', 'fr'].flatMap((loc) => {
     ['Launchpad card note', c.noteOld, c.noteNew],
     ['Services prose', c.proseOld, c.proseNew],
     ['Services tag', c.tagOld, c.tagNew],
-    ['FAQ answer', c.faqOld, c.faqNew],
+    // ['FAQ answer', …] removed: that FAQ item moved to /services, so this
+    // edit could never match again and would fail on every run.
   ].map(([what, old, next]) => ({
     file,
     label: `3-week slice: ${what} (${loc})`,
@@ -1968,6 +1969,125 @@ const FAQ_FIRST_EDITS = LOCALES.map((loc) => ({
 // lives somewhere it does not — splitting signals across two hostnames.
 const PERSON_URL_HEAD = ['"url": "https://ahmedfarid2.github.io"', '"url": "https://iamahmedfarid.com/"'];
 
+// ── The commercial offer moves off the home page ────────────────────────────
+// The page was asking a hiring manager for a job while quoting a $9,000
+// three-week build a few sections later. Both are true — he is looking for a
+// senior role and takes a few engagements a quarter — but stacked on one page
+// they read as indecision, and indecision is what loses the interview.
+//
+// So the offer is not deleted, it is separated: pricing, tiers, add-ons and the
+// free demo now live on /work-with-me.html, linked from the footer. Each
+// audience sees one coherent page.
+//
+// Only the <Pricing/> render call is removed. The component itself stays in the
+// bundle — deleting it would fight the next Claude-design export, which will
+// ship it again, and an unused function costs nothing.
+const PRICING_OFF_HOME = LOCALES.map((loc) => ({
+  file: fileFor(loc),
+  label: `move commercial sections off the home page (${loc})`,
+  critical: true,
+  anchor: 'function Pricing()',
+  transform: (text) => {
+    let out = text;
+    // <Pricing/> is section 13 (plans, packages, the free-demo block);
+    // <Services/> is section 14 (ways to work together). Both are the offer.
+    for (const call of ['      <Pricing/>\n', '      <Services/>\n']) {
+      out = out.split(call).join('');   // self-consuming: gone means gone
+    }
+    return out;
+  },
+}));
+
+// Three FAQ answers belong to the buyer, not the reader of a CV: what an
+// engagement looks like, where the clients are, and the rate. They move with
+// the offer. The two that serve both audiences — taking a project from zero,
+// and mobile-only work — stay.
+const FAQ_MOVE_KEYS = {
+  en: ['What does a typical engagement look like?', 'Where are your clients based?', "What's your rate?"],
+  ar: ['كيف يبدو التعاقد النموذجي؟', 'أين يقع عملاؤك؟', 'ما سعرك؟'],
+  de: ['Wie sieht ein typisches Engagement aus?', 'Wo sitzen Ihre Kunden?', 'Wie hoch ist Ihr Satz?'],
+  es: ['¿Cómo es una colaboración típica?', '¿Dónde están tus clientes?', '¿Cuál es tu tarifa?'],
+  fr: ['À quoi ressemble une mission type ?', 'Où sont vos clients ?', 'Quel est votre tarif ?'],
+};
+const FAQ_MOVE_EDITS = LOCALES.map((loc) => ({
+  file: fileFor(loc),
+  label: `move commercial FAQ items to /services (${loc})`,
+  anchor: 'function FAQ()',
+  transform: (text) => {
+    let out = text;
+    for (const q of FAQ_MOVE_KEYS[loc]) {
+      const at = out.indexOf('{ q: "' + q + '"');
+      if (at < 0) continue;                       // self-consuming
+      const end = out.indexOf('" },', at);
+      if (end < 0) return null;
+      let start = at;
+      const prevNl = out.lastIndexOf('\n', at - 1);
+      if (prevNl >= 0 && out.slice(prevNl + 1, at).trim() === '') start = prevNl;
+      out = out.slice(0, start) + out.slice(end + 4);
+    }
+    return out;
+  },
+}));
+
+// The full-time answer led with "Both" and mentioned hiring last, as a caveat.
+// It now leads with what he is actually looking for, and points the freelance
+// half at the page that owns it.
+const FAQ_FULLTIME_EDITS = factEdits('FAQ: full-time answer leads', {
+  en: ["Both. I'm full-time at Recovery Advisers (remote, Dubai) and I take on a small number of freelance engagements per quarter. If you're hiring full-time, I'm open to conversations for the right team.",
+       "I'm open to full-time senior engineering roles in Dubai — that's what I'm looking for now. I'm currently full-time at Recovery Advisers (remote) and take a small number of freelance engagements alongside it; those are on the services page."],
+  ar: ['كليهما. أعمل بدوام كامل لدى Recovery Advisers (عن بُعد، دبي) وأقبل عددًا محدودًا من التعاقدات الحرّة كل ربع سنة. إن كنت توظّف بدوام كامل، فأنا منفتح على الحديث للفريق المناسب.',
+       'أبحث عن أدوار هندسية أولى بدوام كامل في دبي — هذا ما أسعى إليه الآن. أعمل حاليًا بدوام كامل لدى Recovery Advisers (عن بُعد) وآخذ إلى جانبها عددًا محدودًا من التعاقدات الحرّة، وهي معروضة في صفحة الخدمات.'],
+  de: ['Beides. Ich bin Vollzeit bei Recovery Advisers (remote, Dubai) und nehme pro Quartal eine kleine Zahl freiberuflicher Engagements an. Wenn Sie Vollzeit einstellen, bin ich offen für Gespräche für das richtige Team.',
+       'Ich suche eine Senior-Engineering-Festanstellung in Dubai — das ist mein Ziel. Derzeit bin ich Vollzeit bei Recovery Advisers (remote) und nehme daneben einige wenige freiberufliche Projekte an; die stehen auf der Services-Seite.'],
+  es: ['Ambos. Estoy a jornada completa en Recovery Advisers (remoto, Dubái) y acepto un número reducido de encargos freelance por trimestre. Si estás contratando a jornada completa, estoy abierto a conversar para el equipo adecuado.',
+       'Busco un puesto senior de ingeniería a jornada completa en Dubái — es lo que quiero ahora. Actualmente estoy a jornada completa en Recovery Advisers (remoto) y acepto algunos encargos freelance en paralelo; están en la página de servicios.'],
+  fr: ["Les deux. Je suis à temps plein chez Recovery Advisers (à distance, Dubaï) et je prends quelques missions freelance par trimestre. Si vous recrutez à temps plein, je suis ouvert à la discussion pour la bonne équipe.",
+       "Je cherche un poste senior en ingénierie à temps plein à Dubaï — c'est mon objectif aujourd'hui. Je suis actuellement à temps plein chez Recovery Advisers (à distance) et je prends quelques missions freelance en parallèle ; elles sont sur la page services."],
+});
+
+// The extra question added in the previous pass now duplicates the export's own
+// "full-time, freelance, or both?", which Commit B rewrites to lead with the
+// employment answer. Two questions asking the same thing is worse than one
+// answered well, so the invented one comes back out.
+const FAQ_DEDUPE_EDITS = LOCALES.map((loc) => ({
+  file: fileFor(loc),
+  label: `FAQ: drop the duplicated hiring question (${loc})`,
+  anchor: 'function FAQ()',
+  transform: (text) => {
+    const [, added] = FAQ_FIRST[loc];
+    if (!text.includes(added)) return text;      // self-consuming
+    return text.split(added + ',\n    ').join('');
+  },
+}));
+
+// A quiet footer link, not a nav item: it should be findable by someone who
+// wants it and invisible to someone who does not.
+const HIRE_LINK = {
+  en: 'Freelance & consulting',
+  ar: 'اعمل معي على مشروع',
+  de: 'Projektarbeit & Preise',
+  es: 'Trabaja conmigo en un proyecto',
+  fr: 'Travailler avec moi sur un projet',
+};
+const FOOTER_LINK_EDITS = LOCALES.map((loc) => ({
+  file: fileFor(loc),
+  label: `footer link to /work-with-me.html (${loc})`,
+  anchor: 'className="foot-col"',
+  transform: (text) => {
+    if (text.includes('/services/')) return text;   // self-consuming
+    // Anchored on structure, not on wording: the footer's section list is the
+    // same shape in every locale but the link text is translated, so matching
+    // the href and walking to its </li> works where matching the label does not.
+    const at = text.indexOf('href="#process"');
+    if (at < 0) return null;
+    const tok = '</li>';
+    const end = text.indexOf(tok, at);
+    if (end < 0) return null;
+    const insert = `\n              <li><a href="/services/">${HIRE_LINK[loc]}</a></li>`;
+    return text.slice(0, end + tok.length) + insert + text.slice(end + tok.length);
+  },
+}));
+
 // ── He is in Dubai, not heading there ───────────────────────────────────────
 // "Open to relocation" reads to a Dubai employer as *this person may leave* —
 // the opposite of the intended signal. Five places per locale, not the two the
@@ -2414,9 +2534,13 @@ const EDITS = [
   ...CTA_EDITS,
   ...HERO_CTA_EDITS,
   ...PRINCIPLE_EDITS,
+  ...PRICING_OFF_HOME,
+  ...FAQ_MOVE_EDITS,
+  ...FAQ_FULLTIME_EDITS,
+  ...FAQ_DEDUPE_EDITS,
+  ...FOOTER_LINK_EDITS,
   ...FOOTER_CLAIM_EDITS,
   ...RELOCATE_SHORT_EDITS,
-  ...FAQ_FIRST_EDITS,
   ...FOLLOWER_EDITS,
   ...RELOCATION_EDITS,
   ...SENIORITY_EDITS,

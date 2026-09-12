@@ -30,24 +30,59 @@ const DIST = path.join(ROOT, 'dist');
 const GH_USER = 'ahmedfarid2';
 const SITE_URL = 'https://iamahmedfarid.com';
 
-// OpenAI / ChatGPT Ads measurement pixel.
+// OpenAI / ChatGPT Ads measurement pixel — behind consent.
 //
 // It has to be injected here, not just in the export, because this build
 // rebuilds the <head> from an explicit allowlist (see `pick(...)` below) —
 // anything not on that list is dropped, and a tracking script that silently
 // disappears at build time is worse than one that was never installed.
-// edit-copy.mjs also puts it in the export template, which is what the
-// raw-export fallback ships; the two never collide because the fallback path
-// does not run this assembler.
+//
+// Nothing loads until the visitor says yes. Three of the five locales target
+// the EU, where a pixel that sets a first-party cookie needs opt-in consent,
+// not opt-out — so the default is off for everyone rather than a guess at
+// where the reader is sitting. Declining is one click and is remembered.
 //
 // The Ads Manager snippet's `debug: true` is deliberately dropped: it logs SDK
 // chatter to the console, and the people most likely to open devtools here are
 // the engineers this site is meant to impress.
-const AD_PIXEL =
-  '<script>!function(w,d,s,u){if(w.oaiq)return;var q=function(){q.q.push(arguments)};' +
-  'q.q=[];w.oaiq=q;var j=d.createElement(s);j.async=1;j.src=u;var f=d.getElementsByTagName(s)[0];' +
-  'f.parentNode.insertBefore(j,f)}(window,document,"script","https://bzrcdn.openai.com/sdk/oaiq.min.js");' +
-  'oaiq("init",{pixelId:"9ceAHjhY9TXnV8VVdRpZEx"});</script>';
+const AD_PIXEL_ID = '9ceAHjhY9TXnV8VVdRpZEx';
+const AD_PIXEL = `<style>
+.cbar{position:fixed;left:16px;right:16px;bottom:16px;z-index:9999;margin:0 auto;max-width:640px;
+display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;
+padding:14px 16px;border-radius:14px;font:400 13.5px/1.5 ui-sans-serif,system-ui,sans-serif;
+background:rgba(16,18,22,.94);color:#e7e2d8;border:1px solid rgba(255,255,255,.14);
+box-shadow:0 10px 40px rgba(0,0,0,.45)}
+.cbar p{margin:0;flex:1 1 300px;min-width:0}
+.cbar button{font:inherit;font-weight:600;cursor:pointer;border-radius:99px;padding:8px 16px;
+border:1px solid rgba(255,255,255,.18);background:transparent;color:#e7e2d8}
+.cbar button.y{background:#E6C8A0;color:#0B0D10;border-color:#E6C8A0}
+</style>
+<script>(function(){
+  var KEY='af-measure-consent';
+  function load(){
+    if(window.oaiq)return;
+    !function(w,d,s,u){var q=function(){q.q.push(arguments)};q.q=[];w.oaiq=q;
+      var j=d.createElement(s);j.async=1;j.src=u;var f=d.getElementsByTagName(s)[0];
+      f.parentNode.insertBefore(j,f)}(window,document,"script","https://bzrcdn.openai.com/sdk/oaiq.min.js");
+    oaiq("init",{pixelId:"${AD_PIXEL_ID}"});
+  }
+  var saved=null;
+  try{saved=localStorage.getItem(KEY)}catch(e){}
+  if(saved==='yes'){load();return}
+  if(saved==='no')return;
+  function ask(){
+    var b=document.createElement('div');
+    b.className='cbar';b.setAttribute('role','dialog');b.setAttribute('aria-label','Measurement consent');
+    var p=document.createElement('p');
+    p.textContent="I'd like to load one advertising-measurement pixel to see which referrals reach this site. Nothing loads unless you agree.";
+    function pick(v){try{localStorage.setItem(KEY,v)}catch(e){}b.remove();if(v==='yes')load()}
+    var no=document.createElement('button');no.textContent='No thanks';no.onclick=function(){pick('no')};
+    var yes=document.createElement('button');yes.className='y';yes.textContent='Allow';yes.onclick=function(){pick('yes')};
+    b.appendChild(p);b.appendChild(no);b.appendChild(yes);document.body.appendChild(b);
+  }
+  if(document.readyState!=='loading')setTimeout(ask,900);
+  else document.addEventListener('DOMContentLoaded',function(){setTimeout(ask,900)});
+})();</script>`;
 
 // ── Content-transform safety net ────────────────────────────────────────────
 // split/join, not String.replace: `replace` with a *string* needle substitutes
@@ -89,6 +124,12 @@ const FORBIDDEN = [
   { s: 'Open to relocate', max: 0 },
   { s: 'No tracking', max: 0 },
   { s: 'Book a scoping call', max: 0 },
+  // Pricing moved to /work-with-me.html. Banned on the home page, expected on
+  // the page that now owns the offer — so these skip that one file rather than
+  // being dropped from the list, which would stop guarding the home page too.
+  { s: 'Discuss retainer', max: 0, except: 'services/index.html' },
+  { s: 'Scope a build', max: 0, except: 'services/index.html' },
+  { s: 'Book a free demo', max: 0, except: 'services/index.html', alsoExcept: ['demo.html'] },
   { s: 'fast learner', max: 0 },
   { s: 'adapt to whatever stack', max: 0 },
   { s: 'Available now', max: 0 },
@@ -108,11 +149,14 @@ async function assertNoForbiddenStrings() {
       if (e.isDirectory()) { await walk(full); continue; }
       if (!exts.has(path.extname(e.name).toLowerCase())) continue;
       const body = await readFile(full, 'utf8');
+      const rel = path.relative(DIST, full);
       for (const f of FORBIDDEN) {
+        if (f.except && rel === f.except) continue;
+        if (f.alsoExcept && f.alsoExcept.includes(rel)) continue;
         const n = body.split(f.s).length - 1;
         if (!n) continue;
         counts.set(f.s, counts.get(f.s) + n);
-        where.set(f.s, [...(where.get(f.s) || []), `${path.relative(DIST, full)}×${n}`]);
+        where.set(f.s, [...(where.get(f.s) || []), `${rel}×${n}`]);
       }
     }
   };
@@ -132,6 +176,40 @@ async function assertNoForbiddenStrings() {
     throw err;
   }
   console.log(`  ✓ forbidden-string scan clean (${FORBIDDEN.length} patterns)`);
+}
+
+// Moving sections between pages leaves nav items and cross-references pointing
+// at anchors that no longer exist on the page being viewed. That failure is
+// silent — the link simply does nothing when clicked — so it gets its own gate.
+async function assertNoDeadAnchors() {
+  const walk = async (dir, out = []) => {
+    for (const e of await readdir(dir, { withFileTypes: true })) {
+      const full = path.join(dir, e.name);
+      if (e.isDirectory()) await walk(full, out);
+      else if (e.name.endsWith('.html')) out.push(full);
+    }
+    return out;
+  };
+  const dead = [];
+  for (const file of await walk(DIST)) {
+    const body = await readFile(file, 'utf8');
+    const ids = new Set([...body.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]));
+    for (const m of body.matchAll(/href="#([^"]+)"/g)) {
+      const target = m[1];
+      if (target === 'top' || ids.has(target)) continue;
+      dead.push(`${path.relative(DIST, file)} → #${target}`);
+    }
+  }
+  if (dead.length) {
+    const err = new Error(
+      '[build] in-page links point at anchors that do not exist:\n' +
+      [...new Set(dead)].map((d) => `   ${d}`).join('\n') +
+      '\n   A section probably moved. Clicking these does nothing, silently.'
+    );
+    err.fatal = true;
+    throw err;
+  }
+  console.log('  ✓ no dead in-page anchors');
 }
 
 // ── Locale discovery (by convention) ────────────────────────────────────────
@@ -170,6 +248,10 @@ async function copyStaticAssets() {
     if (!e.isFile()) continue;
     const name = e.name;
     if (name === 'index.html') continue;
+    // services.html is the freelance offer, and the spec's route for it is
+    // /services — so it is written as services/index.html rather than copied
+    // to the root, and skipped here so it is not also emitted twice.
+    if (name === 'services.html') continue;
     if (/^index\.[a-z]{2}\.html$/.test(name)) continue; // locale source exports
     if (name.startsWith('.')) continue;
     if (/\.(md)$/i.test(name)) continue;
@@ -310,6 +392,7 @@ async function writeSeoFiles(locales = [{ urlPath: '/' }]) {
   const EXTRA_PAGES = [
     { path: '/demo.html', priority: '0.9', changefreq: 'monthly' },
     { path: '/checklist.html', priority: '0.8', changefreq: 'yearly' },
+    { path: '/services/', priority: '0.7', changefreq: 'monthly' },
   ];
 
   const urls = locales
@@ -446,7 +529,14 @@ async function fallback(reason) {
   // works. A content-correctness failure is the opposite — the raw export is
   // precisely what carries the retired claim, so deploying it would publish
   // the thing that just failed the check. Refuse instead.
-  if (reason && reason.fatal) {
+  // A ReferenceError or TypeError is a bug in this file, not a flaky render.
+  // Falling back on one ships the raw export — which is exactly where every
+  // retired claim still lives — while the log reads like a graceful recovery.
+  // This happened once, for real: a careless edit deleted the forbidden-string
+  // check and the build "passed" by deploying the unchecked export.
+  const isProgrammerError =
+    reason instanceof ReferenceError || reason instanceof TypeError || reason instanceof SyntaxError;
+  if ((reason && reason.fatal) || isProgrammerError) {
     console.error('\n✗ Build refused — this failure must not be papered over.');
     console.error(reason.message);
     process.exitCode = 1;
@@ -1258,6 +1348,12 @@ async function build() {
 
   // ── One-time SEO + static assets ──────────────────────────────────────────
   await copyStaticAssets();
+
+  // The freelance offer lives at /services — its own URL, its own audience —
+  // so the home page can ask for a job without a price list underneath it.
+  await mkdir(path.join(DIST, 'services'), { recursive: true });
+  await copyFile(path.join(ROOT, 'services.html'), path.join(DIST, 'services', 'index.html'));
+  console.log('  wrote services/index.html');
   await writeSeoFiles(locales);
 
   // ── Verify each built page actually renders ───────────────────────────────
@@ -1290,6 +1386,7 @@ async function build() {
   // anywhere upstream — a copy edit that stopped matching, a transform that
   // matched nothing, or a stale string that came back with a re-export.
   await assertNoForbiddenStrings();
+  await assertNoDeadAnchors();
 
   console.log(`\n✓ Built ${locales.length} locale page(s); removed React/ReactDOM/Babel-standalone/editor scaffolding.`);
 }
