@@ -19,7 +19,7 @@
 // If anything goes wrong it falls back to copying the raw export so a push never
 // produces a broken deploy.
 
-import { mkdir, writeFile, copyFile, rm, readdir } from 'node:fs/promises';
+import { mkdir, writeFile, copyFile, rm, readdir, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -48,6 +48,87 @@ const AD_PIXEL =
   'q.q=[];w.oaiq=q;var j=d.createElement(s);j.async=1;j.src=u;var f=d.getElementsByTagName(s)[0];' +
   'f.parentNode.insertBefore(j,f)}(window,document,"script","https://bzrcdn.openai.com/sdk/oaiq.min.js");' +
   'oaiq("init",{pixelId:"9ceAHjhY9TXnV8VVdRpZEx"});</script>';
+
+// ── Content-transform safety net ────────────────────────────────────────────
+// split/join, not String.replace: `replace` with a *string* needle substitutes
+// only the first occurrence, which is how a value that appears twice can
+// half-survive a transform that looks correct in review.
+//
+// And it throws. A transform that matches nothing is the failure this exists to
+// catch: the export gets replaced wholesale on every design change, so "the
+// string moved" is the normal case, not the exotic one.
+function mustReplaceAll(source, needle, replacement, { min = 1, label } = {}) {
+  const parts = source.split(needle);
+  const count = parts.length - 1;
+  if (count < min) {
+    throw new Error(
+      `[build] transform "${label ?? needle}" matched ${count} times, expected >= ${min}. ` +
+      'The export probably renamed or reworded this string. Fix the transform, do not skip it.'
+    );
+  }
+  return parts.join(replacement);
+}
+
+// Strings that must never reach dist/. `max` is a ceiling, not a ban: the
+// Egyptian number is kept deliberately in the contact card, one per locale, so
+// the check has to allow exactly that many and fail on a sixth.
+//
+// Scanned as bytes over the emitted text files rather than through a parsed
+// DOM, so a string hiding in an href, a tel: link, a JSON blob or an inline
+// script cannot slip past a text-node walk.
+const FORBIDDEN = [
+  { s: 'Five years', max: 0 },
+  { s: '5+ yrs', max: 0 },
+  { s: '<em>5+</em>', max: 0 },
+  { s: '25,000', max: 0 },
+  { s: 'followers on LinkedIn', max: 0 },
+  { s: 'OPEN TO RELOCATION', max: 0 },
+  { s: 'Open to relocation', max: 0 },
+  { s: 'open to relocation', max: 0 },
+  { s: 'fast learner', max: 0 },
+  { s: 'adapt to whatever stack', max: 0 },
+  { s: 'Available now', max: 0 },
+  // One per locale, in the contact card. Six means the footer regressed.
+  { s: '+20 10', max: 5 },
+  { s: 'wa.me/20', max: 5 },
+  { s: 'tel:+20', max: 0 },
+];
+
+async function assertNoForbiddenStrings() {
+  const exts = new Set(['.html', '.txt', '.xml', '.json', '.svg']);
+  const counts = new Map(FORBIDDEN.map((f) => [f.s, 0]));
+  const where = new Map();
+  const walk = async (dir) => {
+    for (const e of await readdir(dir, { withFileTypes: true })) {
+      const full = path.join(dir, e.name);
+      if (e.isDirectory()) { await walk(full); continue; }
+      if (!exts.has(path.extname(e.name).toLowerCase())) continue;
+      const body = await readFile(full, 'utf8');
+      for (const f of FORBIDDEN) {
+        const n = body.split(f.s).length - 1;
+        if (!n) continue;
+        counts.set(f.s, counts.get(f.s) + n);
+        where.set(f.s, [...(where.get(f.s) || []), `${path.relative(DIST, full)}×${n}`]);
+      }
+    }
+  };
+  await walk(DIST);
+  const bad = FORBIDDEN.filter((f) => counts.get(f.s) > f.max);
+  if (bad.length) {
+    const err = new Error(
+      '[build] forbidden strings reached dist/:\n' +
+      bad.map((f) => `   "${f.s}" — ${counts.get(f.s)} occurrence(s), max ${f.max} ` +
+                     `(${(where.get(f.s) || []).join(', ')})`).join('\n') +
+      '\n   A correction was dropped, or a retired claim came back. Not deploying.'
+    );
+    // The raw-export fallback is the wrong answer here: the raw export is
+    // exactly where these strings come from, so falling back would ship the
+    // thing the scan just refused. Flagged fatal so `fallback()` rethrows.
+    err.fatal = true;
+    throw err;
+  }
+  console.log(`  ✓ forbidden-string scan clean (${FORBIDDEN.length} patterns)`);
+}
 
 // ── Locale discovery (by convention) ────────────────────────────────────────
 // English lives in the root export `index.html` and builds to dist/ root.
@@ -356,6 +437,17 @@ async function generateOgImage(browser) {
 }
 
 async function fallback(reason) {
+  // Most build failures are worth absorbing: a flaky render or a missing
+  // external asset should not take the site down, and the raw export still
+  // works. A content-correctness failure is the opposite — the raw export is
+  // precisely what carries the retired claim, so deploying it would publish
+  // the thing that just failed the check. Refuse instead.
+  if (reason && reason.fatal) {
+    console.error('\n✗ Build refused — this failure must not be papered over.');
+    console.error(reason.message);
+    process.exitCode = 1;
+    return;
+  }
   console.warn('\n⚠️  Optimized build failed — deploying raw export instead.');
   console.warn('   Reason:', reason && reason.stack ? reason.stack : reason);
   await rm(DIST, { recursive: true, force: true });
@@ -1002,6 +1094,10 @@ ${jsonLd}
    clicks/hover over the bottom-left — buttons there only worked after
    scrolling them out of that zone. Make the container click-through except
    its toggle and the open panel. */
+/* Build fix: .why-grid is two columns, so an odd number of principle cards
+   leaves the last one half-width beside an empty cell. Span it instead.
+   Written for any odd count, not hard-coded to five. */
+.why-grid > :last-child:nth-child(odd){grid-column:1 / -1}
 .palette{pointer-events:none}
 .palette-toggle,.palette.open .palette-pop{pointer-events:auto}
 /* RTL polish: the contact "handle" lines (URL / e-mail / phone) keep
@@ -1176,6 +1272,12 @@ async function build() {
     if (vErrors.length) console.log(`    ([${loc.lang}] ${vErrors.length} non-fatal errors — expected for blocked external assets in CI)`);
   }
   await vb.close();
+
+  // Last gate before the artifact is considered good. Runs against what was
+  // actually written to disk, so it catches a correction that was dropped
+  // anywhere upstream — a copy edit that stopped matching, a transform that
+  // matched nothing, or a stale string that came back with a re-export.
+  await assertNoForbiddenStrings();
 
   console.log(`\n✓ Built ${locales.length} locale page(s); removed React/ReactDOM/Babel-standalone/editor scaffolding.`);
 }
