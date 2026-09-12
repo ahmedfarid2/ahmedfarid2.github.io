@@ -1723,6 +1723,76 @@ const YELO_TITLE_EDITS = [
   }),
 ];
 
+// ── Agentic SDLC ────────────────────────────────────────────────────────────
+// The CV claims "Agentic SDLC — specs executed by coding agents, reviewed
+// commit by commit" and the site said nothing about it, so a recruiter who
+// read the line and looked found no trace of it.
+//
+// Written from how this repo is actually maintained, not from a description of
+// how it might be: the audit-first rule, corrections living in the pipeline
+// because the export replaces hand-edits, and the loud-failure gate — each of
+// those is a mechanism in this file, not an aspiration.
+//
+// Deliberately NOT `critical`. If a re-export moves the markup this paragraph
+// goes missing, which costs evidence; it does not put anything untrue on the
+// page, and blocking a deploy over it would be disproportionate.
+const SDLC_COPY = {
+  en: "Most of my delivery now runs through coding agents, and the discipline lives in the "
+    + "spec rather than the prompt: an audit pass against the real repository first, and where "
+    + "the audit contradicts the plan, the audit wins. Corrections live in the build pipeline "
+    + "instead of in edited files — generated sources get replaced, and a hand-edit "
+    + "disappears without an error. Anything that asserts a fact fails the build the moment it "
+    + "stops matching, because a deploy that quietly drops a correction is worse than one that "
+    + "stops. Review is commit by commit, and it stays mine.",
+  ar: "جزء كبير من التسليم عندي صار يمر عبر وكلاء برمجة، والانضباط في الـ spec لا في الـ prompt: "
+    + "مراجعة تدقيق على المستودع الحقيقي أولاً، وحين يناقض التدقيق الخطة فالتدقيق هو الذي يفوز. "
+    + "التصحيحات تعيش في خط البناء لا في ملفات مُعدَّلة يدويًا — المصادر المولَّدة تُستبدل، "
+    + "والتعديل اليدوي يختفي بلا أي خطأ. وكل ما يقرِّر واقعة يُوقف البناء لحظة توقفه عن المطابقة، "
+    + "لأن نشرة تُسقط تصحيحًا في صمت أسوأ من نشرة تتوقف. والمراجعة تتم commit بـ commit، وتبقى مسؤوليتي.",
+  de: "Ein großer Teil meiner Auslieferung läuft inzwischen über Coding-Agents, und die "
+    + "Disziplin steckt in der Spezifikation, nicht im Prompt: zuerst ein Audit gegen das echte "
+    + "Repository, und wo das Audit dem Plan widerspricht, gewinnt das Audit. Korrekturen leben in "
+    + "der Build-Pipeline statt in bearbeiteten Dateien — generierte Quellen werden ersetzt, und "
+    + "eine Handkorrektur verschwindet ohne Fehlermeldung. Alles, was eine Tatsache behauptet, bricht "
+    + "den Build, sobald es nicht mehr greift: ein Deploy, der eine Korrektur still verliert, ist "
+    + "schlimmer als einer, der stoppt. Review erfolgt Commit für Commit und bleibt bei mir.",
+  es: "Buena parte de mi entrega pasa ya por agentes de código, y la disciplina está en la "
+    + "especificación, no en el prompt: primero una auditoría contra el repositorio real, y "
+    + "donde la auditoría contradice al plan, gana la auditoría. Las correcciones viven en el "
+    + "pipeline de build y no en archivos editados a mano — las fuentes generadas se reemplazan y "
+    + "una edición manual desaparece sin ningún error. Todo lo que afirma un hecho rompe el "
+    + "build en cuanto deja de coincidir, porque un despliegue que pierde una corrección en "
+    + "silencio es peor que uno que se detiene. La revisión es commit a commit, y es mía.",
+  fr: "Une bonne partie de mes livraisons passe désormais par des agents de code, et la discipline "
+    + "tient à la spécification, pas au prompt : d'abord un audit du dépôt réel, "
+    + "et là où l'audit contredit le plan, c'est l'audit qui gagne. Les corrections vivent dans "
+    + "le pipeline de build plutôt que dans des fichiers édités — les sources "
+    + "générées sont remplacées, et une correction manuelle disparaît sans la "
+    + "moindre erreur. Tout ce qui affirme un fait fait échouer le build dès que la "
+    + "correspondance est perdue, car un déploiement qui perd une correction en silence est pire "
+    + "qu'un déploiement qui s'arrête. La revue se fait commit par commit, et elle reste la mienne.",
+};
+
+const SDLC_EDITS = LOCALES.map((loc) => ({
+  file: fileFor(loc),
+  label: `agentic SDLC paragraph (${loc})`,
+  anchor: 'className="about-facts"',
+  transform: (text) => {
+    const marker = 'className="about-p about-p-sdlc"';
+    if (text.includes(marker)) return text;           // self-consuming
+    const at = text.indexOf('<Reveal_ab delay={300}>');
+    if (at < 0) return null;
+    const block =
+      '<Reveal_ab delay={250}>\n' +
+      '              <p ' + marker + '>\n' +
+      '                ' + SDLC_COPY[loc] + '\n' +
+      '              </p>\n' +
+      '            </Reveal_ab>\n' +
+      '            ';
+    return text.slice(0, at) + block + text.slice(at);
+  },
+}));
+
 // ── He is in Dubai, not heading there ───────────────────────────────────────
 // "Open to relocation" reads to a Dubai employer as *this person may leave* —
 // the opposite of the intended signal. Five places per locale, not the two the
@@ -2165,6 +2235,7 @@ const EDITS = [
   ...PRODUCT_COUNT_EDITS,
   ...HERO_STAT_EDITS,
   ...YELO_TITLE_EDITS,
+  ...SDLC_EDITS,
   ...FOLLOWER_EDITS,
   ...RELOCATION_EDITS,
   ...SENIORITY_EDITS,
