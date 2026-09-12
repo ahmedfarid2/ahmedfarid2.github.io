@@ -1205,41 +1205,16 @@ const DEMO_EDITS = ['en', 'ar', 'de', 'es', 'fr'].map((loc) => ({
   transform: installDemoBand(loc),
 }));
 
-// ── Lead with the free offer at the top of the page ─────────────────────────
-// The hero's primary button asked for a scoping call, and the free demo sat in
-// the pricing section most visitors never scroll to. That is the ladder upside
-// down: the cheapest, lowest-commitment thing should be the first thing offered,
-// and "a free screen of your product" is a far easier yes than "give me half an
-// hour of your day". The scoping call is still offered twice in the pricing
-// section and in the contact section, so nothing is lost — it just stops being
-// the opening ask.
-function leadWithDemo(loc) {
-  const cta = jsxText(DEMO_COPY[loc].cta);
-  return (text) => {
-    // Both patterns match their own output as well as the original, so a second
-    // run rewrites them to the identical string and the transform converges.
-    const hero = /(<a href=")(?:#contact|\/demo\.html)(" className="btn btn-primary">\n\s+)[^<]*?(\s*<Arrow_h\/>)/;
-    const mobile = /<a href="(?:#contact|\/demo\.html)" className="nav-mobile-cta"[\s\S]*?<\/a>/;
-    if (!hero.test(text) || !mobile.test(text)) return null;
-
-    let out = text.replace(hero, (_m, open, mid, tail) => open + DEMO_URL + mid + cta + tail);
-    // The mobile button had a smooth-scroll handler for the #contact anchor.
-    // It now navigates to another page, so the handler is not just unnecessary
-    // — it would preventDefault the navigation and the button would do nothing.
-    out = out.replace(
-      mobile,
-      `<a href="${DEMO_URL}" className="nav-mobile-cta">${cta} →</a>`
-    );
-    return out;
-  };
-}
-
-const HERO_DEMO_EDITS = ['en', 'ar', 'de', 'es', 'fr'].map((loc) => ({
-  file: loc === 'en' ? 'index.html' : `index.${loc}.html`,
-  label: `hero + mobile nav lead with free demo (${loc})`,
-  anchor: 'className="btn btn-primary"',
-  transform: leadWithDemo(loc),
-}));
+// ── Removed: "lead with the free offer" ────────────────────────────────────
+// The hero used to lead with the free demo, on the reasoning that the
+// lowest-commitment offer should be the first ask. That was correct while the
+// site's job was winning clients. The job is now a senior role in Dubai, so
+// the hero leads with "Get in touch" instead (see HERO_CTA_EDITS).
+//
+// The old transform is deleted rather than disabled: left in place it fought
+// the new one, rewriting the hero back to the demo on every run while the new
+// edit rewrote it forward — the two never converged and `apply` never reached
+// a fixed point. The free demo is still offered in the pricing section.
 
 // ── Based in Dubai, not Cairo ───────────────────────────────────────────────
 // Changes where Ahmed says HE is. It deliberately does not touch two other
@@ -1431,7 +1406,7 @@ const HEAD_EDITS = ['en', 'ar', 'de', 'es', 'fr'].map((loc) => ({
     let out = text;
     for (const [from, to] of [
       ...HEAD_SWAPS[loc], ...HEAD_SWAPS_ALL,
-      YEARS_HEAD[loc], RELOCATION_HEAD[loc],
+      YEARS_HEAD[loc], RELOCATION_HEAD[loc], PERSON_URL_HEAD,
     ]) {
       out = out.split(from).join(to);
     }
@@ -1924,6 +1899,75 @@ const PRINCIPLE_EDITS = [
   })),
 ];
 
+// ── The footer claimed something that is no longer true ─────────────────────
+// "No tracking · No cookies" was accurate until the ChatGPT Ads pixel went in.
+// It loads on every page and manages a first-party cookie, so the line became
+// a false statement on a site whose whole argument is rigour — and the first
+// person to open devtools is exactly the audience it is written for.
+//
+// The claim is dropped rather than reworded: a smaller true claim is still a
+// claim to defend, and the version string carries its own weight.
+const FOOTER_CLAIM_EDITS = factEdits('footer: drop the false no-tracking claim', {
+  en: ['v.2026.05 · No tracking · No cookies', 'v.2026.05'],
+  ar: ['v.2026.05 · بلا تتبّع · بلا كوكيز', 'v.2026.05'],
+  de: ['v.2026.05 · Kein Tracking · Keine Cookies', 'v.2026.05'],
+  es: ['v.2026.05 · Sin rastreo · Sin cookies', 'v.2026.05'],
+  fr: ['v.2026.05 · Sans tracking · Sans cookies', 'v.2026.05'],
+});
+
+// ── Relocation, the variants the first sweep missed ─────────────────────────
+// The compact eyebrow uses a different wording — "Open to relocate", not
+// "Open to relocation" — so the forbidden-string list walked straight past it.
+// A gate is only as good as its list; the list now covers both.
+const RELOCATE_SHORT_EDITS = factEdits('drop relocation: compact eyebrow', {
+  en: [' · Open to relocate 🌍', ''],
+  es: [' · Reubicación 🌍', ''],
+  fr: [' · Mobilité 🌍', ''],
+});
+
+// ── FAQ: answer the hiring question first ───────────────────────────────────
+// Six questions, and the one a hiring manager actually has was fourth in line
+// behind engagement shape and rates. Moved to the front and rewritten to lead
+// with the full-time answer; the freelance half stays, because it is true and
+// pretending otherwise on a site that lists retainer pricing fools nobody.
+const FAQ_FIRST = {
+  en: ['{ q: "What does a typical engagement look like?"',
+       '{ q: "Are you open to a full-time role?", a: "Yes — that is what I am looking for. I am a senior engineer in Dubai, currently full-time at Recovery Advisers, open to the right team. I also take a small number of freelance engagements each quarter, and the pricing further up is for those." }'],
+  ar: ['{ q: "كيف يبدو التعاقد النموذجي؟"',
+       '{ q: "هل أنت منفتح على وظيفة بدوام كامل؟", a: "نعم — وهذا ما أبحث عنه. مهندس أول مقيم في دبي، أعمل حاليًا بدوام كامل في Recovery Advisers، ومنفتح على الفريق المناسب. وآخذ أيضًا عددًا محدودًا من المشاريع المستقلة كل ربع سنة، والأسعار في الأعلى تخصّ تلك المشاريع." }'],
+  de: ['{ q: "Wie sieht ein typisches Engagement aus?"',
+       '{ q: "Sind Sie offen für eine Festanstellung?", a: "Ja — genau danach suche ich. Senior Engineer in Dubai, derzeit fest bei Recovery Advisers, offen für das richtige Team. Daneben nehme ich pro Quartal einige wenige freiberufliche Projekte an; die Preise weiter oben gelten für diese." }'],
+  es: ['{ q: "¿Cómo es una colaboración típica?"',
+       '{ q: "¿Estás abierto a un puesto a tiempo completo?", a: "Sí — es lo que busco. Ingeniero senior en Dubái, actualmente a tiempo completo en Recovery Advisers, abierto al equipo adecuado. También acepto unos pocos proyectos freelance por trimestre, y los precios de más arriba son para esos." }'],
+  fr: ['{ q: "À quoi ressemble une mission type ?"',
+       '{ q: "Êtes-vous ouvert à un poste à temps plein ?", a: "Oui — c\'est ce que je cherche. Ingénieur senior à Dubaï, actuellement à temps plein chez Recovery Advisers, ouvert à la bonne équipe. Je prends aussi quelques missions freelance par trimestre, et les tarifs plus haut concernent celles-ci." }'],
+};
+
+// A guarded transform, not a plain replacement: the new question is inserted
+// *before* the old one, so the replacement contains the needle and a second run
+// would insert it twice. The guard is what makes it idempotent — and the
+// idempotency check refused to write the naive version, which is the whole
+// reason that check exists.
+const FAQ_FIRST_EDITS = LOCALES.map((loc) => ({
+  file: fileFor(loc),
+  label: `FAQ: lead with the hiring answer (${loc})`,
+  critical: true,
+  anchor: 'function FAQ()',
+  transform: (text) => {
+    const [needle, added] = FAQ_FIRST[loc];
+    if (text.includes(added)) return text;
+    const at = text.indexOf(needle);
+    if (at < 0) return null;
+    return text.slice(0, at) + added + ',\n    ' + text.slice(at);
+  },
+}));
+
+// ── The Person block pointed at the wrong domain ────────────────────────────
+// The template ships github.io and build.mjs merges its own fields over the
+// top without replacing `url`, so the canonical identity told Google the site
+// lives somewhere it does not — splitting signals across two hostnames.
+const PERSON_URL_HEAD = ['"url": "https://ahmedfarid2.github.io"', '"url": "https://iamahmedfarid.com/"'];
+
 // ── He is in Dubai, not heading there ───────────────────────────────────────
 // "Open to relocation" reads to a Dubai employer as *this person may leave* —
 // the opposite of the intended signal. Five places per locale, not the two the
@@ -2199,9 +2243,9 @@ const EDITS = [
   // "Start a project" asks for a commitment the visitor isn't ready to make.
   // The actual next step is a free 30-minute scoping call (already promised in
   // the services section and FAQ), so the button now says exactly that.
-  { file: 'index.html',    label: 'primary CTA (en)', expect: 3, old: 'Start a project',     new: 'Book a scoping call' },
-  { file: 'index.ar.html', label: 'primary CTA (ar)', expect: 3, old: 'ابدأ مشروعًا',         new: 'احجز مكالمة استكشافية' },
-  { file: 'index.de.html', label: 'primary CTA (de)', expect: 3, old: 'Projekt starten',     new: 'Scoping-Call buchen' },
+  { file: 'index.html',    label: 'primary CTA (en)', expect: 1, old: 'Book a scoping call', new: 'Start a conversation' },
+  { file: 'index.ar.html', label: 'primary CTA (ar)', expect: 1, old: 'احجز مكالمة استكشافية', new: 'ابدأ محادثة' },
+  { file: 'index.de.html', label: 'primary CTA (de)', expect: 1, old: 'Scoping-Call buchen', new: 'Gespräch beginnen' },
   { file: 'index.es.html', label: 'primary CTA (es)', expect: 3, old: 'Empezar un proyecto', new: 'Agendar una llamada' },
   { file: 'index.fr.html', label: 'primary CTA (fr)', expect: 3, old: 'Démarrer un projet',  new: 'Réserver un appel' },
 
@@ -2334,7 +2378,6 @@ const EDITS = [
   ...DEMO_EDITS,
 
   // ── …and lead with it, instead of burying it in the pricing section ──────
-  ...HERO_DEMO_EDITS,
 
   // ── React Native in the toolbelt ─────────────────────────────────────────
   // Added on Ahmed's word: he has the experience, and it is his CV to state.
@@ -2371,6 +2414,9 @@ const EDITS = [
   ...CTA_EDITS,
   ...HERO_CTA_EDITS,
   ...PRINCIPLE_EDITS,
+  ...FOOTER_CLAIM_EDITS,
+  ...RELOCATE_SHORT_EDITS,
+  ...FAQ_FIRST_EDITS,
   ...FOLLOWER_EDITS,
   ...RELOCATION_EDITS,
   ...SENIORITY_EDITS,
