@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Work with me on a project — packages & pricing | Ahmed Farid</title>
+<meta name="description" content="Freelance and contract engineering: architecture review, a fixed-scope production slice, or reserved monthly capacity. Transparent starting prices, quoted after a 30-minute call.">
+<link rel="canonical" href="https://iamahmedfarid.com/services/">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+<meta name="author" content="Ahmed Farid">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Ahmed Farid">
+<meta property="og:url" content="https://iamahmedfarid.com/services/">
+<meta property="og:title" content="Work with me on a project — packages & pricing">
+<meta property="og:description" content="Architecture review, a fixed-scope production slice, or reserved monthly capacity. Transparent starting points, no hourly drift.">
+<meta property="og:image" content="https://iamahmedfarid.com/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Work with me on a project — packages & pricing">
+<meta name="twitter:description" content="Architecture review, a fixed-scope slice shipped to production, or reserved monthly capacity.">
+<meta name="twitter:image" content="https://iamahmedfarid.com/og.png">
+<style>
+  :root{
+    --bg:#0B0D10; --ink:#F4F1EA; --muted:#a8a297; --accent:#E6C8A0;
+    --line:rgba(255,255,255,.12); --card:rgba(255,255,255,.03);
+    --body:#e7e2d8; --body-dim:#c9c3b8; --rule:rgba(255,255,255,.06);
+  }
+  *{margin:0;box-sizing:border-box}
+  html{color-scheme:dark}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    line-height:1.55; -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--accent)}
+  .wrap{max-width:1020px;margin:0 auto;padding:64px 40px 80px}
+  @media(max-width:640px){.wrap{padding:44px 22px 64px}}
+  .eyebrow{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-bottom:20px}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--accent);margin-right:10px;vertical-align:middle}
+  h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(32px,5.6vw,48px);line-height:1.06;letter-spacing:-.02em;font-weight:600}
+  h1 em{font-style:italic;color:var(--accent)}
+  .lede{margin-top:20px;font-size:17.5px;color:var(--body-dim);max-width:680px}
+
+  /* The whole reason this page exists: say plainly who it is for, so the
+     home page can stay pointed at hiring without contradicting itself. */
+  .whofor{margin-top:28px;padding:18px 22px;background:var(--card);border:1px solid var(--line);
+          border-left:2px solid var(--accent);border-radius:12px;font-size:15px;color:var(--body)}
+
+  .free{margin-top:40px;padding:26px 26px;background:var(--card);border:1px solid var(--accent);border-radius:16px;
+        display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:space-between}
+  .free h2{font-family:Georgia,serif;font-size:23px;font-weight:600;margin-bottom:8px}
+  .free p{color:var(--body);font-size:15px;max-width:520px}
+  .badge{display:inline-block;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#0B0D10;
+         background:var(--accent);padding:5px 11px;border-radius:99px;margin-bottom:12px;font-weight:600}
+
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);
+        border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-top:46px}
+  @media(max-width:880px){.grid{grid-template-columns:1fr}}
+  .tier{background:var(--bg);padding:30px 26px;display:flex;flex-direction:column}
+  .tier.pop{background:rgba(230,200,160,.045)}
+  .ico{font-size:22px;color:var(--accent);line-height:1}
+  .tier h3{margin:16px 0 6px;font-size:20px;font-weight:600;letter-spacing:-.01em}
+  .tier .tag{color:var(--muted);font-size:14px;min-height:42px}
+  .price{margin-top:16px;font-family:Georgia,serif;font-size:34px;letter-spacing:-.02em}
+  .price small{font-family:inherit;font-size:14px;color:var(--muted);font-weight:400}
+  .note{color:var(--muted);font-size:12.5px;margin-top:6px;letter-spacing:.01em}
+  .feats{list-style:none;padding:0;margin:20px 0 0}
+  .feats li{position:relative;padding:7px 0 7px 24px;font-size:14px;color:var(--body);line-height:1.5}
+  .feats li:before{content:"";position:absolute;left:0;top:13px;width:11px;height:11px;
+                   border:1.5px solid var(--accent);border-radius:3px}
+  .featshead{margin-top:18px;font-size:12.5px;letter-spacing:.02em;color:var(--muted)}
+  .pill{position:absolute;top:14px;right:14px;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+        color:var(--accent);border:1px solid var(--accent);border-radius:99px;padding:3px 9px}
+  .tier{position:relative}
+  .btn{display:inline-block;margin-top:24px;padding:13px 20px;border-radius:99px;text-align:center;
+       font-size:14.5px;font-weight:600;text-decoration:none;transition:filter .18s ease,transform .18s ease}
+  .btn-primary{background:var(--accent);color:#0B0D10}
+  .btn-ghost{border:1px solid var(--line);color:var(--ink)}
+  .btn:hover{filter:brightness(1.07);transform:translateY(-1px)}
+  .tier .btn{margin-top:auto}
+
+  h2.sec{font-family:Georgia,serif;font-size:26px;font-weight:600;margin:56px 0 6px;letter-spacing:-.01em}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:18px}
+  .addons{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);
+          border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  @media(max-width:880px){.addons{grid-template-columns:1fr}}
+  .addon{background:var(--bg);padding:22px 22px}
+  .addon h4{margin:0 0 8px;font-size:16px;font-weight:600}
+  .addon p{color:var(--muted);font-size:14px;margin-bottom:12px}
+  .addon .p{color:var(--accent);font-size:14px;font-weight:600}
+
+  .faq{margin-top:22px;border-top:1px solid var(--rule)}
+  .faq div{padding:16px 0;border-bottom:1px solid var(--rule)}
+  .faq b{display:block;font-size:15.5px;font-weight:600;margin-bottom:6px}
+  .faq p{color:var(--body-dim);font-size:14.5px}
+
+  footer{margin-top:60px;padding-top:22px;border-top:1px solid var(--line);font-size:13.5px;color:var(--muted)}
+  footer a{text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span class="dot"></span>Freelance &amp; contract work</div>
+
+  <h1>Clear packages, <em>scoped to you.</em></h1>
+
+  <p class="lede">
+    Transparent starting points for the most common engagements. Every project is
+    quoted after a 30-minute scoping call — no surprises, no hourly drift.
+  </p>
+
+  <p class="whofor">
+    <b>This page is for project work.</b> If you are hiring for a full-time senior
+    engineering role, the <a href="/">main site</a> is the better place to start —
+    that is what I am primarily looking for. I take on a small number of freelance
+    engagements each quarter alongside it.
+  </p>
+
+  <div class="free">
+    <div>
+      <span class="badge">Start free</span>
+      <h2>See it before you buy it.</h2>
+      <p>
+        One real screen of your product, built and deployed to a URL you can click.
+        Not a mockup. Five business days, two slots a month, no obligation.
+      </p>
+    </div>
+    <a class="btn btn-primary" href="/demo.html">Book a free demo →</a>
+  </div>
+
+  <div class="grid">
+    <div class="tier">
+      <div class="ico">◷</div>
+      <h3>Architecture Clinic</h3>
+      <div class="tag">A senior read on your system, in writing.</div>
+      <div class="price">$1,200</div>
+      <div class="note">flat · one system · 5 business days</div>
+      <ul class="feats">
+        <li>30-min scoping call + async deep-dive on your repo</li>
+        <li>Architecture, schema &amp; data-flow review</li>
+        <li>Security, scaling and cloud-cost audit</li>
+        <li>Written findings + a prioritized action plan you can hand to any engineer</li>
+        <li>One 45-min follow-up call</li>
+        <li>You keep the doc whether or not we work together</li>
+      </ul>
+      <a class="btn btn-ghost" href="/#contact">Book a review</a>
+    </div>
+
+    <div class="tier pop">
+      <span class="pill">Most picked</span>
+      <div class="ico">◆</div>
+      <h3>Launchpad</h3>
+      <div class="tag">One production-ready slice, shipped.</div>
+      <div class="price"><small>from </small>$9,000</div>
+      <div class="note">fixed scope · 3 weeks · shipped to production</div>
+      <div class="featshead">Everything in Architecture Clinic, plus:</div>
+      <ul class="feats">
+        <li>One clearly defined slice — not "the whole product"</li>
+        <li>Backend, web, and infra owned end to end</li>
+        <li>Multi-tenant / role-based architecture where it's needed</li>
+        <li>Dockerized deploy + GitHub Actions CI/CD</li>
+        <li>Payments, auth and third-party integrations</li>
+        <li>Docs, runbooks and a clean handoff</li>
+        <li>2 weeks post-launch support</li>
+        <li>Priced by the slice, not by the hour</li>
+        <li>Milestone 1 is week one. If you don't like the code, we stop there.</li>
+      </ul>
+      <a class="btn btn-primary" href="/#contact">Scope a build</a>
+    </div>
+
+    <div class="tier">
+      <div class="ico">∞</div>
+      <h3>Partner</h3>
+      <div class="tag">Reserved senior capacity, every month.</div>
+      <div class="price"><small>from </small>$3,500</div>
+      <div class="note">per month · 40 hrs reserved · cancel anytime</div>
+      <div class="featshead">Everything in Launchpad, plus:</div>
+      <ul class="feats">
+        <li>40 hours of reserved senior capacity per month</li>
+        <li>Continuous delivery + roadmap planning</li>
+        <li>Priority response, 1 business day</li>
+        <li>Scaling, performance and cost optimization</li>
+        <li>Monthly reporting + quarterly architecture review</li>
+        <li>80-hr block available at $6,000/mo</li>
+        <li>No lock-in — 30 days' notice</li>
+      </ul>
+      <a class="btn btn-ghost" href="/#contact">Discuss retainer</a>
+    </div>
+  </div>
+
+  <h2 class="sec">Add-ons</h2>
+  <p class="sub">Bolted onto any package above, priced separately.</p>
+  <div class="addons">
+    <div class="addon">
+      <h4>Mobile Launch</h4>
+      <p>iOS + Android from one Flutter codebase, both store submissions handled.</p>
+      <div class="p">from $6,000</div>
+    </div>
+    <div class="addon">
+      <h4>AI Accelerator</h4>
+      <p>RAG or LLM features in production — retrieval, evals, guardrails, fallbacks.</p>
+      <div class="p">from $4,500</div>
+    </div>
+    <div class="addon">
+      <h4>Real-time Engine</h4>
+      <p>Server-authoritative WebSocket state, presence, and sync that won't lose writes.</p>
+      <div class="p">from $4,000</div>
+    </div>
+  </div>
+
+  <h2 class="sec">Before you ask</h2>
+  <div class="faq">
+    <div>
+      <b>What does a typical engagement look like?</b>
+      <p>Most start as a 3-week scoped build — a defined slice with a clear deliverable.
+         From there it usually becomes an ongoing retainer or a longer contract.
+         I prefer fixed-scope phases over hourly drift.</p>
+    </div>
+    <div>
+      <b>What's your rate?</b>
+      <p>Depends on scope, region, and whether you need senior architecture or
+         implementation hands. You get a flat phase quote, not an hourly bill,
+         after a 30-minute scoping call.</p>
+    </div>
+    <div>
+      <b>Where are your clients based?</b>
+      <p>UAE, Saudi Arabia, the United States, and Egypt. I run on Gulf time but
+         overlap comfortably with GCC, EU, and US East / Central business hours.</p>
+    </div>
+    <div>
+      <b>Can you take a project from zero?</b>
+      <p>Yes — that's where I'm strongest. Architecture, schema, deploy, the first
+         slice in production. I can stay through scale or hand it off cleanly.</p>
+    </div>
+  </div>
+
+  <footer>
+    <a href="/">← Portfolio</a> · Senior Software Engineer · Dubai · Remote &amp; on-site<br>
+    <a href="mailto:ahmed@iamahmedfarid.com">ahmed@iamahmedfarid.com</a> ·
+    <a href="https://wa.me/971585562001">+971 58 556 2001</a>
+  </footer>
+</div>
+</body>
+</html>
