@@ -2088,6 +2088,54 @@ const FOOTER_LINK_EDITS = LOCALES.map((loc) => ({
   },
 }));
 
+// ── Renumber after the move ─────────────────────────────────────────────────
+// Section numbers are displayed. Removing 13 (pricing) and 14 (ways to work
+// together) left the tail reading 12 → 15 → 15 → 17 → 18: two gaps, and a
+// duplicate 15 that predates this change — "Writing" and "Trust signals" both
+// claimed it, and 16 never existed at all.
+//
+// Ordered longest-number-first is not needed here because each eyebrow carries
+// its own label, so the matches cannot collide with one another.
+const RENUMBER_EDITS = [
+  ...factEdits('renumber: trust signals -> 13', {
+    en: ['eyebrow="Trust signals · 15"', 'eyebrow="Trust signals · 13"'],
+    ar: ['eyebrow="إشارات الثقة · ١٥"', 'eyebrow="إشارات الثقة · ١٣"'],
+    de: ['eyebrow="Vertrauenssignale · 15"', 'eyebrow="Vertrauenssignale · 13"'],
+    es: ['eyebrow="Señales de confianza · 15"', 'eyebrow="Señales de confianza · 13"'],
+    fr: ['eyebrow="Signaux de confiance · 15"', 'eyebrow="Signaux de confiance · 13"'],
+  }),
+  ...factEdits('renumber: writing -> 14', {
+    en: ['eyebrow="Writing · 15"', 'eyebrow="Writing · 14"'],
+    ar: ['eyebrow="Writing · 15"', 'eyebrow="Writing · 14"'],
+    de: ['eyebrow="Writing · 15"', 'eyebrow="Writing · 14"'],
+    es: ['eyebrow="Writing · 15"', 'eyebrow="Writing · 14"'],
+    fr: ['eyebrow="Writing · 15"', 'eyebrow="Writing · 14"'],
+  }),
+  ...factEdits('renumber: FAQ -> 15', {
+    en: ['eyebrow="FAQ · 17"', 'eyebrow="FAQ · 15"'],
+    ar: ['eyebrow="الأسئلة الشائعة · ١٧"', 'eyebrow="الأسئلة الشائعة · ١٥"'],
+    de: ['eyebrow="FAQ · 17"', 'eyebrow="FAQ · 15"'],
+    es: ['eyebrow="FAQ · 17"', 'eyebrow="FAQ · 15"'],
+    fr: ['eyebrow="FAQ · 17"', 'eyebrow="FAQ · 15"'],
+  }),
+  ...factEdits('renumber: connect -> 16', {
+    en: ['eyebrow="Connect · 18"', 'eyebrow="Connect · 16"'],
+    ar: ['eyebrow="تواصل · ١٨"', 'eyebrow="تواصل · ١٦"'],
+    de: ['eyebrow="Kontakt · 18"', 'eyebrow="Kontakt · 16"'],
+    es: ['eyebrow="Contacto · 18"', 'eyebrow="Contacto · 16"'],
+    fr: ['eyebrow="Contact · 18"', 'eyebrow="Contact · 16"'],
+  }),
+];
+
+// ── The last thing on the page was still selling ────────────────────────────
+// "One scoping call… whether I'm the right hands for the job — or whether I
+// should point you somewhere else" is a vendor qualifying a lead. It is the
+// final impression on a page that now opens by asking for a role.
+const CLOSING_EDITS = factEdits('closing CTA speaks to an employer', {
+  en: ["One scoping call. Thirty minutes. We'll know inside that whether I'm the right hands for the job — or whether I should point you somewhere else.",
+       "Thirty minutes is usually enough to tell whether I'm the engineer your team is missing. Bring the problem you have not been able to hand to anyone yet."],
+});
+
 // ── He is in Dubai, not heading there ───────────────────────────────────────
 // "Open to relocation" reads to a Dubai employer as *this person may leave* —
 // the opposite of the intended signal. Five places per locale, not the two the
@@ -2535,6 +2583,8 @@ const EDITS = [
   ...HERO_CTA_EDITS,
   ...PRINCIPLE_EDITS,
   ...PRICING_OFF_HOME,
+  ...RENUMBER_EDITS,
+  ...CLOSING_EDITS,
   ...FAQ_MOVE_EDITS,
   ...FAQ_FULLTIME_EDITS,
   ...FAQ_DEDUPE_EDITS,
