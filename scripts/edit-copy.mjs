@@ -2134,6 +2134,18 @@ const RENUMBER_EDITS = [
 const CLOSING_EDITS = factEdits('closing CTA speaks to an employer', {
   en: ["One scoping call. Thirty minutes. We'll know inside that whether I'm the right hands for the job — or whether I should point you somewhere else.",
        "Thirty minutes is usually enough to tell whether I'm the engineer your team is missing. Bring the problem you have not been able to hand to anyone yet."],
+  // Translated to carry the same move — from "am I the right vendor for this
+  // job" to "am I the engineer this team is missing" — rather than word for
+  // word. "the problem you haven't been able to hand to anyone yet" is the
+  // line doing the work, so each language keeps that idea intact.
+  ar: ['مكالمة تحديد نطاق. ثلاثون دقيقة. خلالها سنعرف إن كنت الأيدي المناسبة للعمل — أو إن كان عليّ أن أحيلك إلى جهة أخرى.',
+       'ثلاثون دقيقة تكفي عادةً لتعرف إن كنتُ المهندس الذي ينقص فريقك. احضر ومعك المشكلة التي لم تجد من تسلّمها له حتى الآن.'],
+  de: ['Ein Scoping-Call. Dreißig Minuten. Darin wissen wir, ob ich die richtigen Hände für den Job bin — oder ob ich Sie woandershin verweisen sollte.',
+       'Dreißig Minuten genügen meist, um zu sehen, ob ich der Entwickler bin, der Ihrem Team fehlt. Bringen Sie das Problem mit, das Sie bisher niemandem übergeben konnten.'],
+  es: ['Una llamada de alcance. Treinta minutos. Dentro de ese tiempo sabremos si soy las manos adecuadas para el trabajo — o si debería remitirte a otro sitio.',
+       'Treinta minutos suelen bastar para ver si soy el ingeniero que le falta a tu equipo. Trae el problema que todavía no has podido entregarle a nadie.'],
+  fr: ["Un appel de cadrage. Trente minutes. On saura à l'intérieur si je suis les bonnes mains pour la mission — ou si je dois vous orienter ailleurs.",
+       "Trente minutes suffisent en général à savoir si je suis l'ingénieur qui manque à votre équipe. Venez avec le problème que vous n'avez encore pu confier à personne."],
 });
 
 // ── He is in Dubai, not heading there ───────────────────────────────────────
