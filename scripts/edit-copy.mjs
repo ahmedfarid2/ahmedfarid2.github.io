@@ -1793,6 +1793,137 @@ const SDLC_EDITS = LOCALES.map((loc) => ({
   },
 }));
 
+// ── Footer phone: the UAE number ────────────────────────────────────────────
+// Only the footer line changes. The contact card keeps both numbers on purpose
+// (see WHATSAPP_EDITS) — a Gulf client wants a local number, existing contacts
+// already have the Egyptian one.
+const FOOTER_PHONE_EDITS = [
+  ...factEdits('footer: UAE number (href)', {
+    en: ['tel:+201013996079', 'tel:+971585562001'],
+    ar: ['tel:+201013996079', 'tel:+971585562001'],
+    de: ['tel:+201013996079', 'tel:+971585562001'],
+    es: ['tel:+201013996079', 'tel:+971585562001'],
+    fr: ['tel:+201013996079', 'tel:+971585562001'],
+  }),
+  // Anchored on the href so it cannot touch the contact card's own display of
+  // the Egyptian number, which is the same digits in a different place.
+  ...factEdits('footer: UAE number (label)', {
+    en: ['tel:+971585562001">+20 10 1399 6079', 'tel:+971585562001">+971 58 556 2001'],
+    ar: ['display:"inline-block"}}>+20 10 1399 6079', 'display:"inline-block"}}>+971 58 556 2001'],
+    de: ['tel:+971585562001">+20 10 1399 6079', 'tel:+971585562001">+971 58 556 2001'],
+    es: ['tel:+971585562001">+20 10 1399 6079', 'tel:+971585562001">+971 58 556 2001'],
+    fr: ['tel:+971585562001">+20 10 1399 6079', 'tel:+971585562001">+971 58 556 2001'],
+  }),
+];
+
+// ── Hero speaks to an employer, not a buyer ─────────────────────────────────
+// "Available now · 2 slots" and "Book a free demo" are studio language. Every
+// other thing on the page — case studies, architecture write-ups, role labels
+// — is pitched at someone hiring. Those two lines were pitched at someone
+// buying, and the buyer framing is the one that costs the interview.
+//
+// The pricing section keeps its own demo CTA: it sits inside an explicitly
+// commercial block, where offering a demo is coherent rather than confusing.
+const AVAILABILITY_EDITS = factEdits('hero/nav: open to roles', {
+  en: ['Available now · 2 slots', 'Open to senior engineering roles · Dubai'],
+  ar: ['متاح الآن · مقعدان', 'مفتوح لأدوار هندسية أولى · دبي'],
+  de: ['Jetzt verfügbar · 2 Slots', 'Offen für Senior-Engineering-Rollen · Dubai'],
+  es: ['Disponible ahora · 2 plazas', 'Abierto a roles senior de ingeniería · Dubái'],
+  fr: ['Disponible maintenant · 2 places', 'Ouvert aux postes senior en ingénierie · Dubaï'],
+});
+
+// Nav and hero only — matched with the arrow so the pricing-section CTA, which
+// has no arrow in two locales, is not swept up by accident. Handled as two
+// edits per locale for that reason.
+const CTA_EDITS = [
+  ...factEdits('nav CTA: get in touch', {
+    en: ['Book a free demo →', 'Get in touch →'],
+    ar: ['احجز عرضًا مجانيًا →', 'تواصل معي →'],
+    de: ['Kostenlose Demo buchen →', 'Kontakt aufnehmen →'],
+    es: ['Reservar una demo gratis →', 'Ponte en contacto →'],
+    fr: ['Réserver une démo gratuite →', 'Me contacter →'],
+  }),
+];
+
+// The hero button's target moves with its label. The spec said to keep the
+// anchor, but "Get in touch" pointing at a free-demo booking form is a broken
+// promise — #contact is what the new label means. The pricing section's
+// price-cta keeps both its label and /demo.html: there, offering a demo is the
+// point of the section.
+const HERO_CTA_EDITS = factEdits('hero CTA: get in touch', {
+  en: ['<a href="/demo.html" className="btn btn-primary">\n                  Book a free demo',
+       '<a href="#contact" className="btn btn-primary">\n                  Get in touch'],
+  ar: ['<a href="/demo.html" className="btn btn-primary">\n                  احجز عرضًا مجانيًا',
+       '<a href="#contact" className="btn btn-primary">\n                  تواصل معي'],
+  de: ['<a href="/demo.html" className="btn btn-primary">\n                  Kostenlose Demo buchen',
+       '<a href="#contact" className="btn btn-primary">\n                  Kontakt aufnehmen'],
+  es: ['<a href="/demo.html" className="btn btn-primary">\n                  Reservar una demo gratis',
+       '<a href="#contact" className="btn btn-primary">\n                  Ponte en contacto'],
+  fr: ['<a href="/demo.html" className="btn btn-primary">\n                  Réserver une démo gratuite',
+       '<a href="#contact" className="btn btn-primary">\n                  Me contacter'],
+});
+
+// ── Fifth architecture principle ────────────────────────────────────────────
+// Replaces the About paragraph shipped earlier for the same claim: section 08
+// already has the right shape for it, and saying it twice on one page is worse
+// than saying it once in the right place.
+const PRINCIPLE_COPY = {
+  en: { t: 'Agents execute specs, not intentions',
+        p: "A vague instruction gets a plausible answer, and plausible is the expensive failure. So the spec names the constraint that rules out the obvious approach, every change is written to fail loudly rather than silently do nothing, and I verify against the deployed site — not against the agent's summary of it." },
+  ar: { t: 'الوكلاء ينفّذون المواصفات لا النوايا',
+        p: 'التعليمة الغامضة تنتج إجابة تبدو معقولة، والمعقول هو الفشل الغالي الثمن. لذلك تسمّي المواصفة القيد الذي يستبعد الحل البديهي، ويُكتب كل تغيير ليفشل بصوت عالٍ بدل أن يمرّ صامتًا بلا أثر، وأتحقّق من الموقع المنشور نفسه — لا من ملخّص الوكيل عنه.' },
+  de: { t: 'Agents führen Spezifikationen aus, keine Absichten',
+        p: 'Eine vage Anweisung liefert eine plausible Antwort, und plausibel ist der teure Fehlschlag. Deshalb benennt die Spezifikation die Randbedingung, die den naheliegenden Weg ausschließt, jede Änderung ist so geschrieben, dass sie laut scheitert statt still nichts zu tun, und ich prüfe gegen die ausgelieferte Seite — nicht gegen die Zusammenfassung des Agents.' },
+  es: { t: 'Los agentes ejecutan especificaciones, no intenciones',
+        p: 'Una instrucción vaga produce una respuesta plausible, y lo plausible es el fallo caro. Por eso la especificación nombra la restricción que descarta el camino obvio, cada cambio se escribe para fallar en voz alta en lugar de no hacer nada en silencio, y verifico contra el sitio desplegado — no contra el resumen del agente.' },
+  fr: { t: 'Les agents exécutent des spécifications, pas des intentions',
+        p: "Une instruction vague produit une réponse plausible, et le plausible est l'échec coûteux. La spécification nomme donc la contrainte qui écarte l'approche évidente, chaque changement est écrit pour échouer bruyamment plutôt que de ne rien faire en silence, et je vérifie sur le site déployé — pas sur le résumé de l'agent." },
+};
+
+const PRINCIPLE_EDITS = [
+  ...factEdits('arch: five principles', {
+    en: ['Four principles I apply', 'Five principles I apply'],
+    ar: ['أربعة مبادئ أطبّقها', 'خمسة مبادئ أطبّقها'],
+    de: ['Vier Prinzipien, die ich', 'Fünf Prinzipien, die ich'],
+    es: ['Cuatro principios que aplico', 'Cinco principios que aplico'],
+    fr: ["Quatre principes que j'applique", "Cinq principes que j'applique"],
+  }),
+  ...LOCALES.map((loc) => ({
+    file: fileFor(loc),
+    label: `arch: principle V (${loc})`,
+    anchor: 'function ArchitectureThinking()',
+    transform: (text) => {
+      if (text.includes('n: "v",')) return text;              // self-consuming
+      const at = text.indexOf('{ n: "iv",');
+      if (at < 0) return null;
+      const end = text.indexOf('\n  ];', at);
+      if (end < 0) return null;
+      const c = PRINCIPLE_COPY[loc];
+      const card = `\n    { n: "v", t: ${q(c.t)}, p: ${q(c.p)} },`;
+      return text.slice(0, end) + card + text.slice(end);
+    },
+  })),
+  // The About paragraph said the same thing; remove it now that the principle
+  // card carries the claim in a better place.
+  ...LOCALES.map((loc) => ({
+    file: fileFor(loc),
+    label: `remove superseded SDLC paragraph (${loc})`,
+    anchor: 'className="about-facts"',
+    transform: (text) => {
+      const at = text.indexOf('<p className="about-p about-p-sdlc">');
+      if (at < 0) return text;                                 // self-consuming
+      const open = text.lastIndexOf('<Reveal_ab', at);
+      const closeTok = '</Reveal_ab>';
+      const close = text.indexOf(closeTok, at);
+      if (open < 0 || close < 0) return null;
+      let start = open;
+      const prevNl = text.lastIndexOf('\n', open - 1);
+      if (prevNl >= 0 && text.slice(prevNl + 1, open).trim() === '') start = prevNl;
+      return text.slice(0, start) + text.slice(close + closeTok.length);
+    },
+  })),
+];
+
 // ── He is in Dubai, not heading there ───────────────────────────────────────
 // "Open to relocation" reads to a Dubai employer as *this person may leave* —
 // the opposite of the intended signal. Five places per locale, not the two the
@@ -2235,7 +2366,11 @@ const EDITS = [
   ...PRODUCT_COUNT_EDITS,
   ...HERO_STAT_EDITS,
   ...YELO_TITLE_EDITS,
-  ...SDLC_EDITS,
+  ...FOOTER_PHONE_EDITS,
+  ...AVAILABILITY_EDITS,
+  ...CTA_EDITS,
+  ...HERO_CTA_EDITS,
+  ...PRINCIPLE_EDITS,
   ...FOLLOWER_EDITS,
   ...RELOCATION_EDITS,
   ...SENIORITY_EDITS,
