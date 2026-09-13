@@ -1,5 +1,24 @@
 # 🇪🇸 Spanish copy for Claude design (`index.es.html`)
 
+> **⚠️ This file describes the Claude-design export, not the live site.**
+>
+> The export still contains things the site no longer shows. `scripts/edit-copy.mjs`
+> runs on every build and takes them back out, so a re-export from this document is
+> corrected automatically — but read it knowing the gap exists:
+>
+> | In this document | On the live site |
+> |---|---|
+> | `25,000+ followers on LinkedIn` stat and the LinkedIn follower mentions | removed everywhere |
+> | Plans & pricing, and "ways to work together" | moved to `/services` |
+> | The free-demo block | moved to `/services` |
+> | Three freelance FAQ items (engagement, clients, rate) | moved to `/services` |
+> | Five years / 23+ products | six years / 27+ products |
+> | "open to relocation" | removed — he is in Dubai and staying |
+>
+> If you change any of the strings above in Claude design, check the matching edit in
+> `scripts/edit-copy.mjs` still matches, or the build will fail loudly — which is the
+> intended behaviour, not a bug.
+
 **How to use this**
 This mirrors the **live Spanish site** (`/es/`) string-for-string, so it's a faithful reference for re-exports. When you edit in Claude design and re-export `index.es.html`, use this to keep wording consistent. The pipeline auto-builds it to **`/es/`** — no code changes needed.
 

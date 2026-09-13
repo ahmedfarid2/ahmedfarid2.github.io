@@ -207,7 +207,7 @@ Best fit if you're building:
 → A real-time system (live bidding, tracking, chat, live data)
 → Something that needs backend + web + mobile from one pair of hands
 
-Five years, 23 products shipped across the Gulf, US and UK. Laravel, Next.js,
+Six years, 27 products shipped across the Gulf, US and UK. Laravel, Next.js,
 FastAPI, Flutter.
 
 If that's you — or someone you know — DM me "BUILD" and I'll send over scoping
@@ -245,7 +245,7 @@ one that's easier to code.
 
 ### Post 11 (Thu) — Numbers + lessons
 ```
-23 products. 16 countries. 5 years. Here's what shipping across regions
+27 products. 17 countries. 6 years. Here's what shipping across regions
 actually taught me:
 
 1/ RTL is not a CSS flag.
