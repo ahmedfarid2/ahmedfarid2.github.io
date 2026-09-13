@@ -159,7 +159,7 @@ One post. To 25,000 people. Most of whom have no idea you take outside work.
 >
 > Or just reply here. I read everything.
 
-**Post it Tuesday–Thursday, 9–11am Cairo time.** Reply to every single comment
+**Post it Tuesday–Thursday, 9–11am Gulf time.** Reply to every single comment
 within the first two hours — that's what decides whether LinkedIn shows it to
 the other 24,000.
 

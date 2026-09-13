@@ -40,7 +40,7 @@ Roughly 4 teaching posts to 1 offer post. Never pure self-promotion.
 
 ## 2. 30-day calendar (3 posts/week = 12 posts)
 
-> Post Tue/Thu/Sat, ~9:00 Cairo time. Reply to every comment within the first
+> Post Tue/Thu/Sat, ~9:00 Gulf time. Reply to every comment within the first
 > 2 hours (drives reach). Each post ends with a soft CTA.
 
 **Week 1 — Establish the niche**

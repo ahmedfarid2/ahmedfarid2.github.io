@@ -89,7 +89,7 @@ from you. For the unapplied ones you have two options:
   > platforms end to end.**
 
 - **Second paragraph (keep, lightly tightened):**
-  > Based in Cairo, open to relocation. Over five years I've built multi-tenant
+  > Dubai-based. Over the last six years I've built multi-tenant
   > SaaS, real-time auction and booking systems, AI-powered tools, and a fleet
   > of mobile apps that went to production across the Gulf, US, and UK — Laravel,
   > Next.js, FastAPI, Flutter, AWS — from the first schema decision to app-store
@@ -104,7 +104,7 @@ from you. For the unapplied ones you have two options:
 
 - **Meta description:**
   > Senior software engineer specializing in real-time, multi-tenant SaaS
-  > platforms (Laravel · Next.js · Flutter). Shipped 23+ products across the
+  > platforms (Laravel · Next.js · Flutter). Shipped 27+ products across the
   > Gulf, US & UK. Available for fixed-scope builds and retainers.
 
 > Note: your build injects canonical/OG/JSON-LD automatically. If you set a
