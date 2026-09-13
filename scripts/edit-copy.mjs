@@ -2148,6 +2148,23 @@ const CLOSING_EDITS = factEdits('closing CTA speaks to an employer', {
        "Trente minutes suffisent en général à savoir si je suis l'ingénieur qui manque à votre équipe. Venez avec le problème que vous n'avez encore pu confier à personne."],
 });
 
+// ── The mobile nav button promised contact and opened the sales page ────────
+// Its label was changed to "Get in touch" in the hero/nav pass; its href was
+// not. The href had been set to /demo.html by the old "lead with the free
+// offer" transform, and deleting that transform did not undo what it had
+// already written into the committed export — a removed edit does not reverse
+// its own past output.
+//
+// A button that says "Get in touch" and opens a page titled "Book a free demo"
+// reads as bait, which is worse than the mismatch it replaced.
+const MOBILE_CTA_EDITS = factEdits('mobile nav CTA -> #contact', {
+  en: ['href="/demo.html" className="nav-mobile-cta"', 'href="#contact" className="nav-mobile-cta"'],
+  ar: ['href="/demo.html" className="nav-mobile-cta"', 'href="#contact" className="nav-mobile-cta"'],
+  de: ['href="/demo.html" className="nav-mobile-cta"', 'href="#contact" className="nav-mobile-cta"'],
+  es: ['href="/demo.html" className="nav-mobile-cta"', 'href="#contact" className="nav-mobile-cta"'],
+  fr: ['href="/demo.html" className="nav-mobile-cta"', 'href="#contact" className="nav-mobile-cta"'],
+});
+
 // ── He is in Dubai, not heading there ───────────────────────────────────────
 // "Open to relocation" reads to a Dubai employer as *this person may leave* —
 // the opposite of the intended signal. Five places per locale, not the two the
@@ -2592,6 +2609,7 @@ const EDITS = [
   ...FOOTER_PHONE_EDITS,
   ...AVAILABILITY_EDITS,
   ...CTA_EDITS,
+  ...MOBILE_CTA_EDITS,
   ...HERO_CTA_EDITS,
   ...PRINCIPLE_EDITS,
   ...PRICING_OFF_HOME,
