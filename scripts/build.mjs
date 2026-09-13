@@ -130,6 +130,10 @@ const FORBIDDEN = [
   { s: 'Discuss retainer', max: 0, except: 'services/index.html' },
   { s: 'Scope a build', max: 0, except: 'services/index.html' },
   { s: 'Book a free demo', max: 0, except: 'services/index.html', alsoExcept: ['demo.html'] },
+  // /demo.html is the freelance landing page. It stays live and indexable, but
+  // the home pages must not route anyone to it — only /services may.
+  { s: 'demo.html', max: 0, except: 'services/index.html',
+    alsoExcept: ['demo.html', 'get-checklist.html', 'checklist.html', 'sitemap.xml', 'llms.txt', '404.html'] },
   { s: 'fast learner', max: 0 },
   { s: 'adapt to whatever stack', max: 0 },
   { s: 'Available now', max: 0 },
