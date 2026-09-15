@@ -3,3 +3,7 @@ dist/
 .build/
 *.log
 .DS_Store
+
+# Claude Code: machine/account-specific notes stay local
+.claude/settings.local.json
+.claude/*.local.md
