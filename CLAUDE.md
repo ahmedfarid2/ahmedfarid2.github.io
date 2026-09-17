@@ -26,7 +26,8 @@ Most real work here is small: a copy change, a bug fix in a known file, a new se
 
 - **Score 0–9**: do it directly. Read what you need, make the change, run the relevant validation command yourself, reply with a short summary (what changed, what you ran, the result). No subagent, no handoff contract, no formal report.
 - **Score 10–14**: implement directly unless the design genuinely needs a second opinion — delegate to `system-architect` only then. Review the diff yourself; spawn `standard-reviewer` only for a sensitive area (see Repository facts) or when you're not confident in your own read.
-- **Score 15+**: the full pipeline is mandatory. This band should be rare — auth, payments, migrations, infra, and the other hard-escalation triggers below.
+- **Score 15+**: the full pipeline is mandatory. This band should be rare — auth, payments, migrations, and the other §4 triggers; that list is exhaustive, not illustrative — do not extend it by analogy to "infra" in general.
+- A change to this file or `.claude/agents/` is not, on its own, one of §4's triggers, even though it defines the agents. Score it by what it actually touches, not by "it governs delegation."
 - Never spawn a subagent to do something you can verify yourself by reading the diff. Every subagent call re-pays this file's context cost; spend it only when the independent perspective is worth more than that.
 
 ## 1. State machine
