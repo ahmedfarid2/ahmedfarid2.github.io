@@ -4,151 +4,80 @@ Personal portfolio site deployed to GitHub Pages. Claude Design exports (`index*
 
 # Engineering orchestration
 
-The main Claude session is the **engineering orchestrator** for this repository. It behaves like a senior engineering organisation, not a "plan with one model, code with another" switch. For every non-trivial task it classifies the work, selects model **and** effort independently, delegates bounded work to the project agents in `.claude/agents/`, enforces implementation contracts, prevents overlapping edits, verifies the result, obtains an independent review, and escalates when assumptions fail. Trivial tasks (score 0–4 below) are handled directly.
+The main Claude session is the engineering orchestrator for this repository: classify, delegate only when delegation earns its cost, verify, and escalate when assumptions fail. This file — and every project agent's frontmatter — is injected into every session **and every subagent spawned from it**. Keep it short; added length here is a cost every future task pays, whether or not that task needed it.
 
-Project agents (all use model-family aliases, never versioned IDs):
+Project agents (`.claude/agents/`), model-family aliases only:
 
-| Agent | Model / effort | Mode | Use for |
+| Agent | Model/effort | Mode | Use for |
 |---|---|---|---|
-| `repository-scout` | haiku / medium | read-only | Bounded discovery: files, symbols, imports, tests, schemas, conventions |
-| `system-architect` | opus / high | read-only | Design + difficult-bug investigation; produces an implementation contract |
-| `critical-architect` | opus / xhigh | read-only | Critical domains; stricter contract with failure modelling and rollout/rollback safety |
-| `fable-strategist` | fable / xhigh | read-only | Ambiguous, cross-system, long-horizon work; execution strategy with checkpoints |
-| `fable-rescue` | fable / max | read-only | Exceptional incidents/data-integrity risk only; must justify `max` over `xhigh` first |
-| `sonnet-implementer` | sonnet / high | edits + shell | Implements an approved contract |
-| `complex-implementer` | sonnet / xhigh | edits + shell | Multi-module, concurrency, approved migrations, broad well-planned refactors |
-| `standard-reviewer` | sonnet / high | read-only | Independent review against requirements, contract, diff, validation output |
-| `critical-reviewer` | opus / xhigh | read-only | Independent review for critical domains |
+| `repository-scout` | haiku/medium | read-only | Bounded discovery |
+| `system-architect` | opus/high | read-only | Design/investigation, score 10–14 when genuinely non-trivial, or a hard-escalation trigger |
+| `critical-architect` | opus/xhigh | read-only | Critical domains, score 15–19 |
+| `fable-strategist` | fable/xhigh | read-only | Ambiguous/cross-system/long-horizon, score 20–23 |
+| `fable-rescue` | fable/max | read-only | Exceptional incidents only, score 24–27; must justify `max` over `xhigh` |
+| `sonnet-implementer` | sonnet/high | edit+shell | Implements an approved contract |
+| `complex-implementer` | sonnet/xhigh | edit+shell | Multi-module/concurrency/migration, score 15–23 |
+| `standard-reviewer` | sonnet/high | read-only | Independent review, score 15+, or a sensitive area, or when your own diff read isn't enough |
+| `critical-reviewer` | opus/xhigh | read-only | Independent review, score 15+ critical domains |
 
-## 1. Session-start capability check
+## Cost discipline (read this first)
 
-At the start of a session, and again after a Claude Code upgrade or a model failure, **observe** (never probe with paid requests) what the CLI exposes:
+Most real work here is small: a copy change, a bug fix in a known file, a new section that follows an existing pattern. That belongs entirely to the orchestrator — no subagent, no contract, no formal report. The full pipeline (scout → architect → implementer → reviewer) is for what §3 actually routes there: rare, high-stakes work, not ceremony for every task.
 
-- Active model, effort and session information (`/status`, the status line, session metadata when available).
-- `/tasks` for running delegations and their resolved models.
-- `.claude/settings.json`, `.claude/settings.local.json`, organisation model restrictions, and any model-substitution warnings printed by Claude Code.
-- Whether the advisor feature is enabled (`/advisor`, `advisorModel` setting).
+- **Score 0–9**: do it directly. Read what you need, make the change, run the relevant validation command yourself, reply with a short summary (what changed, what you ran, the result). No subagent, no handoff contract, no formal report.
+- **Score 10–14**: implement directly unless the design genuinely needs a second opinion — delegate to `system-architect` only then. Review the diff yourself; spawn `standard-reviewer` only for a sensitive area (see Repository facts) or when you're not confident in your own read.
+- **Score 15+**: the full pipeline is mandatory. This band should be rare — auth, payments, migrations, infra, and the other hard-escalation triggers below.
+- Never spawn a subagent to do something you can verify yourself by reading the diff. Every subagent call re-pays this file's context cost; spend it only when the independent perspective is worth more than that.
 
-Record machine/account-specific observations in `.claude/capabilities.local.md` (gitignored). Never commit subscription, billing, quota or account-availability information. Never claim a model is available unless Claude Code confirms it or the active session exposes it. Never run a no-op request against an expensive model just to test availability.
+## 1. State machine
 
-## 2. State machine
+`INTAKE → CLASSIFY → (DISCOVER →) (PLAN →) IMPLEMENT → VERIFY → (REVIEW →) COMPLETE`. Steps in parentheses are skipped below score 10 — VERIFY still happens, it's just you reading the diff and running the command, not a subagent. On a failed assumption: `STOP → RECLASSIFY → REPLAN → IMPLEMENT` — never quietly redesign in place.
 
-```
-INTAKE → CLASSIFY → DISCOVER → PLAN → IMPLEMENT → VERIFY → INDEPENDENT REVIEW → RESOLVE FINDINGS → FINAL VERIFICATION → COMPLETE
-```
+## 2. Classification
 
-If an assumption fails during implementation:
+Score nine dimensions 0–3 (max 27) before delegating anything above score 9. For smaller tasks a quick single-number estimate is enough — don't write out all nine.
 
-```
-IMPLEMENT → STOP → RECLASSIFY → REPLAN → IMPLEMENT
-```
+Scope · Ambiguity · Novelty · Blast radius · Reversibility · Security/data sensitivity · Cross-system coupling · Investigation depth · Expected duration — each 0 (trivial/local/known/easy-revert) to 3 (system-wide/unclear/irreversible/regulated/distributed/unknown-root-cause/multi-session).
 
-States are never skipped silently. A state may be collapsed only for score 0–4 work, and the collapse is stated in the final report. DISCOVER may be empty when the relevant files are already known; PLAN for score ≤ 9 may be a short written contract by the orchestrator itself.
+## 3. Routing
 
-## 3. Task classification
-
-Score each dimension 0–3. Maximum 27.
-
-| # | Dimension | 0 | 1 | 2 | 3 |
-|---|---|---|---|---|---|
-| 1 | Scope | One local change | One module | Several modules | System-wide |
-| 2 | Ambiguity | Fully specified | Minor assumptions | Important missing decisions | Requirements or root cause unclear |
-| 3 | Novelty | Existing pattern | Small variation | New local pattern | New architecture |
-| 4 | Blast radius | Cosmetic or isolated | One workflow | Shared behaviour | Critical system behaviour |
-| 5 | Reversibility | Easy revert | Moderate | Configuration or persistent-data impact | Difficult or irreversible |
-| 6 | Security & data sensitivity | None | Normal user data | Sensitive data or permission logic | Authentication, authorization, secrets, payments or regulated data |
-| 7 | Cross-system coupling | Local | One external dependency | Several services | Distributed system or several repositories |
-| 8 | Investigation depth | Root cause known | Likely known | Investigation required | Repeated or unknown production failure |
-| 9 | Expected duration | Minutes | Less than one sitting | Long session | Several sessions or long autonomous work |
-
-State the nine scores and the total before routing. Re-score (RECLASSIFY) whenever new evidence changes any dimension.
-
-## 4. Routing table
-
-| Score | Planning | Implementation | Review |
+| Score | Plan | Implement | Review |
 |---|---|---|---|
-| 0–4 | Orchestrator, Sonnet-medium-equivalent behaviour; no subagent unless a lookup would pollute the main context | Direct, self-verified | Self-verification |
-| 5–9 | Sonnet high (orchestrator-written contract) | `sonnet-implementer` (high) | `standard-reviewer` when appropriate |
-| 10–14 | `system-architect` (opus high) | `sonnet-implementer` (high) | `standard-reviewer` (sonnet high) |
-| 15–19 | `critical-architect` (opus xhigh) | `complex-implementer` (sonnet xhigh) | `critical-reviewer` (opus xhigh), or `standard-reviewer` at high when no critical domain is involved |
-| 20–23 | `fable-strategist` (fable xhigh) | `complex-implementer` (sonnet xhigh) when the plan decomposes safely; Fable implementation only when one long-running context must be preserved | `critical-reviewer` (opus xhigh) |
-| 24–27 | `fable-rescue` (fable max) only when justified, else `fable-strategist` | Fable xhigh implementation or closely supervised `complex-implementer` | Independent Fable or `critical-reviewer` (opus xhigh); mandatory checkpoints and rollback plan |
+| 0–9 | orchestrator, inline | orchestrator, inline | orchestrator reads the diff |
+| 10–14 | orchestrator, or `system-architect` (opus/high) if genuinely non-trivial | `sonnet-implementer` (high) if a fresh context helps, else inline | orchestrator reads the diff; `standard-reviewer` for sensitive areas |
+| 15–19 | `critical-architect` (opus/xhigh) | `complex-implementer` (sonnet/xhigh) | `critical-reviewer` (opus/xhigh), mandatory |
+| 20–23 | `fable-strategist` (fable/xhigh) | `complex-implementer` when it decomposes safely, else Fable | `critical-reviewer` (opus/xhigh), mandatory |
+| 24–27 | `fable-rescue` (fable/max) only if justified, else `fable-strategist` | Fable xhigh or closely supervised `complex-implementer` | independent Fable or `critical-reviewer`; checkpoints + rollback plan mandatory |
 
-## 5. Hard escalation rules (apply regardless of score)
+## 4. Hard escalation (regardless of score)
 
-1. Authentication, authorization, payments, destructive migrations, data-loss risk, financial integrity, distributed consistency and public-API breaking changes require **at least** `system-architect` (opus high) planning.
-2. Two or more critical concerns intersecting require `critical-architect` (opus xhigh) planning and `critical-reviewer` review.
-3. Use `fable-strategist` (xhigh) when critical work is also ambiguous, systemic, long-horizon, or lacks a confirmed root cause.
-4. Escalate Sonnet → Opus when the same implementation attempt fails twice, a root cause cannot be verified, the change crosses unexpected boundaries, or a new architectural pattern is required.
-5. Escalate Opus → Fable when two architecture attempts fail, two core assumptions are invalidated, the problem persists across sessions, essential context cannot be safely divided, or systemic trade-offs remain unresolved.
-6. Never silently downgrade critical work.
-7. If the requested model is unavailable or substituted, report it in the final report.
+Auth, authorization, payments, destructive migrations, data-loss risk, financial integrity, distributed consistency, public-API breaking changes → at least `system-architect`. Two or more of those intersecting → `critical-architect` + `critical-reviewer`. Root cause unknown after real investigation, or work spans sessions/repos → `fable-strategist`. Sonnet → Opus after two failed attempts or an unverifiable root cause. Opus → Fable after two failed architecture attempts. Never silently downgrade critical work; report any model substitution.
 
-## 6. Effort selection
+## 5. Effort
 
-Model and effort are chosen **independently**. Effort is set per delegation (agent frontmatter is the default; override in the handoff when the task warrants it).
+`low` — lookup, formatting, rename. `medium` — discovery, docs, routine tests. `high` — normal implementation, bug fixing, standard review. `xhigh` — hard debugging, migrations, concurrency, critical review. `max` — exceptional ambiguity or rescue only; never the default. Model and effort are chosen independently.
 
-- `low`: exact file lookup, formatting, renaming, simple classification, short deterministic tasks.
-- `medium`: repository discovery, log summarisation, documentation, mechanical changes, routine tests, cost-sensitive work without deep judgement.
-- `high`: normal production implementation, bug fixing, standard architecture, code review, test design, everyday engineering.
-- `xhigh`: complex debugging, high-risk architecture, concurrency, migrations, broad refactors, critical review, deep cross-system reasoning.
-- `max`: exceptional ambiguity, production rescue, major data-integrity risk, failed xhigh investigations, decisions where the cost of being wrong dominates reasoning cost. Never the default; it overthinks and wastes tokens.
+## 6. Ultracode
 
-## 7. Ultracode
+A session setting, not a frontmatter value — never write `effort: ultracode`. Recommend it only for genuinely large, multi-stage work (3+ stages, several independent reviews) that a normal plan/implement/review pass can't handle safely; never for a single bug, component, or mechanical edit. Tell the user before implementing if it would help and isn't already on.
 
-`ultracode` is a Claude Code **session setting** (xhigh reasoning plus dynamic workflow orchestration), not a model effort value. Never write `effort: ultracode` in agent frontmatter, and never pretend to enable it from frontmatter or from this file.
+## 7. Model availability
 
-Recommend ultracode only when all hold: the task has at least three substantive stages; several specialists or independent reviews add value; the task is large enough to justify dynamic orchestration; workflows are available; the selected model supports xhigh; and a normal plan/implement/review sequence would not handle it safely. Never recommend it for one bug, one component, a small endpoint, formatting, documentation, a mechanical refactor or a simple test fix. If ultracode would materially improve a task and is not active, tell the user before implementation and let them enable it.
+Aliases only (`haiku`/`sonnet`/`opus`/`fable`). Fable unavailable → Opus xhigh, report it, reassess safety. Opus unavailable → Sonnet xhigh, report it, stop for confirmation if critical. Haiku unavailable → Sonnet low/medium. Never probe a paid model just to check availability; observe `/status`, `/tasks`, and substitution warnings instead. Never commit account or billing data.
 
-## 8. Model availability and fallbacks
+## 8. Advisor and parallelism
 
-- Aliases only (`haiku`, `sonnet`, `opus`, `fable`) so newer versions replace current ones automatically. Today's model list is not permanent.
-- Fable unavailable → fall back to `opus` xhigh, report the fallback, and re-evaluate whether the task remains safe to continue.
-- Opus unavailable → fall back to `sonnet` xhigh, report the fallback, and **stop for user confirmation** if the work is critical.
-- Haiku unavailable → use `sonnet` at low/medium for exploration.
-- Unsupported effort level → use the highest supported level below it and record the effective effort when observable.
-- If Fable is selected but Claude Code substitutes another model, never claim Fable completed the work.
-- Use `/status`, `/tasks`, substitution warnings and actual delegation results to determine the resolved model when observable; otherwise say "not observable".
+Advisor: only if already enabled in-session; never auto-configure a paid Fable advisor. Parallelism: only for independent read-only work (separate modules, independent reviews); exactly one owner per overlapping edit; don't reach for Agent Teams or workflows by default.
 
-## 9. Advisor
+## 9. Handoff contract (score 10+ only)
 
-Only if the experimental advisor is already enabled and supported in this session: Sonnet may consult Opus for difficult normal work and Fable for long-horizon or highly ambiguous decisions, at architectural commitment points, after repeated failures, and before completing high-risk work. Never call an expensive advisor for routine turns. Never configure a paid Fable advisor automatically; that requires the user's existing consent. If the advisor is unavailable, use the equivalent read-only agent instead.
+Objective, in/out of scope, constraints, acceptance criteria, whether editing is allowed, validation to run, stop conditions — as few lines as get the job specified. The full implementation-contract template in `system-architect` / `critical-architect` is proportional to the score; don't produce the long form for a short task.
 
-## 10. Parallelism and ownership
+## 10. Implementation rules
 
-- Parallel delegation only for **independent, read-only** work: exploring separate modules, locating tests and data models, reviewing independent concerns, running independent validation.
-- Never let two agents edit overlapping files concurrently. Exactly one implementation owner per overlapping change set; sequence the rest.
-- Do not use Agent Teams or workflows merely because they are available.
+One owner per overlapping change. Follow the approved contract; stop and reclassify on an invalidated assumption instead of quietly redesigning. Keep diffs focused — no unrelated cleanup, no public-behaviour change without an explicit requirement. Prefer repository conventions. Remove debug output you introduced.
 
-## 11. Handoff contract (required in every delegation prompt)
-
-1. Objective
-2. Relevant context (only what the agent needs, not the whole conversation)
-3. In-scope files or modules
-4. Out-of-scope work
-5. Constraints (conventions, compatibility, performance, security)
-6. Expected output format
-7. Acceptance criteria
-8. Whether editing is allowed (and which paths)
-9. Validation requirements (exact commands from §13)
-10. Stop and escalation conditions
-
-Give reviewers the requirements, contract, acceptance criteria, actual diff and validation output. Do **not** give reviewers the implementer's self-assessment unless necessary; this reduces confirmation bias.
-
-## 12. Implementation rules
-
-1. One agent owns an overlapping implementation area.
-2. Implementers follow the approved contract; they never silently redesign it.
-3. New evidence may invalidate the plan; when it does, STOP → RECLASSIFY → REPLAN instead of quietly changing architecture.
-4. Keep diffs focused; no unrelated cleanup.
-5. Do not change public behaviour without an explicit requirement.
-6. Prefer repository conventions over generic best practice.
-7. Tests validate behaviour, not implementation details, unless the detail is the contract.
-8. Read the relevant files before editing.
-9. Remove debug output and dead code you introduced.
-10. Verification must match this repository (§13).
-
-## 13. Repository verification
+## 11. Repository verification
 
 Run what applies to the change; report each command and its result verbatim in the final report.
 - `npm ci` — installs `puppeteer` and `html-minifier-terser`; `node_modules/` is absent in a fresh clone
@@ -157,37 +86,10 @@ Run what applies to the change; report each command and its result verbatim in t
 - Inspect `dist/index.html` — confirm React/Babel scripts are gone and the copy edits are present
 - Manual checks that were not performed must be listed in the final report under "Manual checks required".
 
-## 14. Review gates
+## 12. Review gates
 
-A task is **not** complete while any of the following holds:
+Not complete while: tests or the build fail because of the change; a Blocker/High finding is open; acceptance criteria aren't met; the diff has unexplained unrelated changes; a migration lacks a verified rollback; security-sensitive logic lacks tests.
 
-- Relevant tests fail.
-- The build fails because of the change.
-- Blocker or High reviewer findings are unresolved.
-- Acceptance criteria are not satisfied.
-- Model substitution made a critical review unreliable.
-- Required manual validation has not been disclosed.
-- The final diff contains unexplained unrelated changes.
-- A migration lacks a verified rollout and rollback path.
-- Security-sensitive logic lacks appropriate tests.
+## 13. Final report
 
-## 15. Final report (every substantive task)
-
-1. Complexity classification (nine scores)
-2. Risk score (total)
-3. Hard escalation triggers hit
-4. Planning model and effort
-5. Implementation model and effort
-6. Review model and effort
-7. Actual resolved models when observable
-8. Fallbacks or substitutions
-9. Agents used and why
-10. Files changed
-11. Implementation summary
-12. Validation commands
-13. Validation results
-14. Reviewer findings
-15. How findings were resolved
-16. Remaining risks
-17. Manual checks required
-18. Whether ultracode was considered and why it was or was not used
+Score 0–9: a short reply — what changed, what you ran, the result. Score 10–14: files changed, validation run and result, any risk worth flagging — a few lines. Score 15+: the full report — classification, risk score, escalation triggers, planning/implementation/review model and effort, resolved models, fallbacks, agents used, files changed, validation, reviewer findings and resolution, remaining risks, manual checks, whether ultracode was considered.
