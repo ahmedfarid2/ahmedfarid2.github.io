@@ -141,6 +141,9 @@ const FORBIDDEN = [
   { s: '+20 10', max: 5 },
   { s: 'wa.me/20', max: 5 },
   { s: 'tel:+20', max: 0 },
+  // "View CV" used to open a CV uploaded to LinkedIn and frozen there, while
+  // "Download CV" served the live PDF — two buttons, two different documents.
+  { s: 'single-media-viewer', max: 0 },
 ];
 
 async function assertNoForbiddenStrings() {

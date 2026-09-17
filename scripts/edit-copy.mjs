@@ -2165,6 +2165,21 @@ const MOBILE_CTA_EDITS = factEdits('mobile nav CTA -> #contact', {
   fr: ['href="/demo.html" className="nav-mobile-cta"', 'href="#contact" className="nav-mobile-cta"'],
 });
 
+// ── "View CV" pointed at a frozen LinkedIn upload ───────────────────────────
+// Two buttons sat side by side handing out different documents: "Download CV"
+// served /Ahmed-Farid-CV.pdf, while "View CV" opened a copy uploaded to
+// LinkedIn once and frozen there. Replacing the PDF updated one of them.
+//
+// Both now use the same file, so there is a single document to keep current
+// and no way for the two to drift apart again. The same fix went into the
+// GitHub profile's CV badge, which had the same link.
+const CV_LINK_EDITS = factEdits('View CV -> the live PDF', Object.fromEntries(
+  ['en', 'ar', 'de', 'es', 'fr'].map((loc) => [loc, [
+    'href="https://www.linkedin.com/in/ahmed-farid-b46a5221b/overlay/1782022237581/single-media-viewer?profileId=ACoAADeBkOYB6O_rbWtqld6CsWkhtTkpduSbKXo"',
+    'href="/Ahmed-Farid-CV.pdf"',
+  ]])
+));
+
 // ── He is in Dubai, not heading there ───────────────────────────────────────
 // "Open to relocation" reads to a Dubai employer as *this person may leave* —
 // the opposite of the intended signal. Five places per locale, not the two the
@@ -2613,6 +2628,7 @@ const EDITS = [
   ...HERO_CTA_EDITS,
   ...PRINCIPLE_EDITS,
   ...PRICING_OFF_HOME,
+  ...CV_LINK_EDITS,
   ...RENUMBER_EDITS,
   ...CLOSING_EDITS,
   ...FAQ_MOVE_EDITS,
