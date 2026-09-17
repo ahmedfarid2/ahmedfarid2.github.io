@@ -5,6 +5,7 @@ model: fable
 effort: max
 permissionMode: plan
 tools: Read, Grep, Glob, Bash
+maxTurns: 35
 ---
 
 # Fable rescue

@@ -5,6 +5,7 @@ model: opus
 effort: high
 permissionMode: plan
 tools: Read, Grep, Glob, Bash
+maxTurns: 25
 ---
 
 # System architect

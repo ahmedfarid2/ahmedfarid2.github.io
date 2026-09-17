@@ -13,6 +13,14 @@
       "Bash(npm run build*)",
       "Bash(node scripts/edit-copy.mjs --check*)"
     ],
+    "ask": [
+      "Agent(system-architect)",
+      "Agent(critical-architect)",
+      "Agent(fable-strategist)",
+      "Agent(fable-rescue)",
+      "Agent(standard-reviewer)",
+      "Agent(critical-reviewer)"
+    ],
     "deny": [
       "Read(./.env*)",
       "Bash(git push --force*)",

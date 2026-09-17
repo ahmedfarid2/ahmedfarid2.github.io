@@ -4,6 +4,7 @@ description: "Implements an approved implementation contract (risk score 5–14)
 model: sonnet
 effort: high
 tools: Read, Grep, Glob, Edit, Write, Bash
+maxTurns: 40
 ---
 
 # Standard implementer
