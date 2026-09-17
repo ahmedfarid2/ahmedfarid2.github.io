@@ -5,6 +5,7 @@ model: opus
 effort: xhigh
 permissionMode: plan
 tools: Read, Grep, Glob, Bash
+maxTurns: 30
 ---
 
 # Critical reviewer

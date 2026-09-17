@@ -5,6 +5,7 @@ model: fable
 effort: xhigh
 permissionMode: plan
 tools: Read, Grep, Glob, Bash
+maxTurns: 35
 ---
 
 # Fable strategist

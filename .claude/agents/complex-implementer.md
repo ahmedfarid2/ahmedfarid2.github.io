@@ -4,6 +4,7 @@ description: "Implements approved contracts that need deeper implementation reas
 model: sonnet
 effort: xhigh
 tools: Read, Grep, Glob, Edit, Write, Bash
+maxTurns: 50
 ---
 
 # Complex implementer

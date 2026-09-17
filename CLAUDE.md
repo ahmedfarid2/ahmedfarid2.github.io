@@ -29,6 +29,8 @@ Most real work here is small: a copy change, a bug fix in a known file, a new se
 - **Score 15+**: the full pipeline is mandatory. This band should be rare — auth, payments, migrations, and the other §4 triggers; that list is exhaustive, not illustrative — do not extend it by analogy to "infra" in general.
 - A change to this file or `.claude/agents/` is not, on its own, one of §4's triggers, even though it defines the agents. Score it by what it actually touches, not by "it governs delegation."
 - Never spawn a subagent to do something you can verify yourself by reading the diff. Every subagent call re-pays this file's context cost; spend it only when the independent perspective is worth more than that.
+- `system-architect`, `critical-architect`, `fable-strategist`, `fable-rescue`, `standard-reviewer` and `critical-reviewer` are gated in `.claude/settings.json` (`permissions.ask`): Claude Code will stop and ask you before any of them run, no matter what the orchestrator decides. This is enforced by the harness, not by this file's wording — treat a denial or a "is this really needed?" moment as a signal to implement inline instead. `repository-scout` and the two implementers are not gated; they're the cheap, necessary path for approved work.
+- Every subagent has a hard `maxTurns` cap (see its frontmatter). Hitting it stops that call and returns a partial result — it does not resume itself. Do not resume a subagent that hit its cap without telling the user first; a task that needs more turns than the cap usually means it was misclassified, not that the cap should be quietly worked around.
 
 ## 1. State machine
 
