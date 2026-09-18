@@ -158,7 +158,7 @@ async function assertNoForbiddenStrings() {
       const body = await readFile(full, 'utf8');
       const rel = path.relative(DIST, full);
       for (const f of FORBIDDEN) {
-        if (f.except && rel === f.except) continue;
+        if (f.except && (rel === f.except || rel.endsWith('/' + f.except))) continue;
         if (f.alsoExcept && f.alsoExcept.includes(rel)) continue;
         const n = body.split(f.s).length - 1;
         if (!n) continue;
@@ -255,10 +255,6 @@ async function copyStaticAssets() {
     if (!e.isFile()) continue;
     const name = e.name;
     if (name === 'index.html') continue;
-    // services.html is the freelance offer, and the spec's route for it is
-    // /services — so it is written as services/index.html rather than copied
-    // to the root, and skipped here so it is not also emitted twice.
-    if (name === 'services.html') continue;
     if (/^index\.[a-z]{2}\.html$/.test(name)) continue; // locale source exports
     if (name.startsWith('.')) continue;
     if (/\.(md)$/i.test(name)) continue;
@@ -566,7 +562,20 @@ async function fallback(reason) {
 // one-time work (og.png, GitHub fetch, enhancement-layer extraction,
 // sitemap/robots/404, copying static assets) is done by the orchestrator and
 // passed in — buildPage is called once per locale.
-async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enhanceJS, assetSeen }) {
+// `variant` decides which half of the rendered page survives the snapshot:
+//   'home'     — everything except the commercial sections
+//   'services' — only the commercial sections
+// Both come from the same render, so the shell, nav, fonts, reveals, texture
+// and footer are identical by construction rather than by reimplementation.
+const FAQ_BUYER_KEYS = {
+  en: ['typical engagement', 'clients based', 'your rate'],
+  ar: ['التعاقد النموذجي', 'يقع عملاؤك', 'ما سعرك'],
+  de: ['typisches Engagement', 'sitzen Ihre Kunden', 'hoch ist Ihr Satz'],
+  es: ['colaboración típica', 'están tus clientes', 'tu tarifa'],
+  fr: ['mission type', 'sont vos clients', 'votre tarif'],
+};
+
+async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enhanceJS, assetSeen, variant = 'home' }) {
   const isRoot = outDir === DIST;
   const urlPath = (locales.find((l) => l.lang === lang) || {}).urlPath || '/';
   const multi = locales.length > 1;
@@ -590,7 +599,7 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
   await new Promise((r) => setTimeout(r, 2500));
 
   console.log(`→ [${lang}] Transforming + extracting static DOM…`);
-  const result = await page.evaluate(async (ghUser, gh, hasEnhance, localeCodes) => {
+  const result = await page.evaluate(async (ghUser, gh, hasEnhance, localeCodes, pageVariant, faqBuyerKeys, localePrefix) => {
     // ── Convert <image-slot> → <img> (image lives in shadow DOM otherwise) ──
     document.querySelectorAll('image-slot').forEach((slot) => {
       const src = slot.getAttribute('src') || '';
@@ -878,6 +887,60 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
     // (correct dropdown + deployed-URL routing). So remove every baked copy
     // here; the runtime build produces exactly one working switcher. (If a
     // future export ships no such JS, the assembler injects a static fallback.)
+    // ── Slice the page ──────────────────────────────────────────────────
+    // The freelance offer and the hiring pitch are both in this render. Which
+    // one survives depends on the variant; the other is removed from the DOM
+    // before the snapshot is taken.
+    // Only these two move between pages. #faq and #contact appear on both —
+    // a buyer reading prices needs the answers and a way to reach him, and the
+    // FAQ is filtered item by item just below rather than wholesale.
+    // Every <section>, not just section[id] — three of them carry no id at all
+    // (the trust marquee and two unnamed bands), and filtering on `[id]` left
+    // them on /services showing the hiring pitch above the price list.
+    const commercial = ['pricing', 'services'];
+    const sharedOnServices = ['faq', 'contact'];
+    document.querySelectorAll('section').forEach((sec) => {
+      const id = sec.id || '';
+      const isCommercial = commercial.includes(id);
+      if (pageVariant === 'services') {
+        if (!isCommercial && !sharedOnServices.includes(id)) sec.remove();
+      } else if (isCommercial) {
+        sec.remove();
+      }
+    });
+    // The FAQ is split item by item rather than wholesale: three of its
+    // questions belong to a buyer, the rest to anyone.
+    const buyerFaq = faqBuyerKeys;
+    document.querySelectorAll('.faq-item').forEach((item) => {
+      const q = (item.textContent || '').slice(0, 120);
+      const isBuyer = buyerFaq.some((k) => q.includes(k));
+      if (pageVariant === 'services' ? !isBuyer : isBuyer) item.remove();
+    });
+    // Nav links point at sections that may no longer be on this page. On
+    // /services they become absolute links back to the home page, so nothing
+    // resolves to a dead anchor.
+    if (pageVariant === 'services') {
+      const homeHref = localePrefix || '/';
+      document.querySelectorAll('a[href^="#"]').forEach((a) => {
+        const t = a.getAttribute('href');
+        a.setAttribute('href', t === '#top' ? homeHref : homeHref + t);
+      });
+    }
+
+    if (pageVariant === 'services') {
+      // Section numbers are displayed. After the cut they would read 13, 14,
+      // 15 on a page whose first section is the first thing on it.
+      let n = 0;
+      document.querySelectorAll('section .eyebrow').forEach((eb) => {
+        if (!/·\s*[0-9٠-٩]{2}\s*$/.test(eb.textContent || '')) return;
+        n += 1;
+        const ar = /[٠-٩]/.test(eb.textContent);
+        const num = String(n).padStart(2, '0');
+        const shown = ar ? num.replace(/[0-9]/g, (d) => '٠١٢٣٤٥٦٧٨٩'[+d]) : num;
+        eb.textContent = (eb.textContent || '').replace(/·\s*[0-9٠-٩]{2}\s*$/, '· ' + shown);
+      });
+    }
+
     const ownSwitchers = [...document.querySelectorAll('.locale, .lang-switcher, [data-locale-switcher]')];
     const hasOwnSwitcher = ownSwitchers.length > 0;
     ownSwitchers.forEach((el) => el.remove());
@@ -905,7 +968,8 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
       body: document.getElementById('root').innerHTML,
       blobCount: blobUrls.length,
     };
-  }, GH_USER, ghData, !!enhanceJS, locales.map((l) => l.lang));
+  }, GH_USER, ghData, !!enhanceJS, locales.map((l) => l.lang),
+     variant, FAQ_BUYER_KEYS[lang] || FAQ_BUYER_KEYS.en, lang === 'en' ? '/' : `/${lang}/`);
 
   await page.close();
 
@@ -1339,15 +1403,15 @@ async function build() {
   const assetSeen = new Map();
   for (const loc of locales) {
     await buildPage({
-      browser,
-      src: loc.src,
-      outDir: loc.outDir,
-      lang: loc.lang,
-      dir: loc.dir,
-      locales,
-      ghData,
-      enhanceJS,
-      assetSeen,
+      browser, src: loc.src, outDir: loc.outDir, lang: loc.lang, dir: loc.dir,
+      locales, ghData, enhanceJS, assetSeen, variant: 'home',
+    });
+    // Second cut of the same render: the freelance offer, on its own URL, in
+    // the site's own design rather than a hand-built page beside it.
+    await buildPage({
+      browser, src: loc.src, outDir: path.join(loc.outDir, 'services'),
+      lang: loc.lang, dir: loc.dir,
+      locales, ghData, enhanceJS, assetSeen, variant: 'services',
     });
   }
 
@@ -1356,11 +1420,6 @@ async function build() {
   // ── One-time SEO + static assets ──────────────────────────────────────────
   await copyStaticAssets();
 
-  // The freelance offer lives at /services — its own URL, its own audience —
-  // so the home page can ask for a job without a price list underneath it.
-  await mkdir(path.join(DIST, 'services'), { recursive: true });
-  await copyFile(path.join(ROOT, 'services.html'), path.join(DIST, 'services', 'index.html'));
-  console.log('  wrote services/index.html');
   await writeSeoFiles(locales);
 
   // ── Verify each built page actually renders ───────────────────────────────
