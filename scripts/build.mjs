@@ -84,6 +84,142 @@ border:1px solid rgba(255,255,255,.18);background:transparent;color:#e7e2d8}
   else document.addEventListener('DOMContentLoaded',function(){setTimeout(ask,900)});
 })();</script>`;
 
+// ── Give the standalone pages the site's shell ──────────────────────────────
+// demo.html, checklist.html and get-checklist.html carry forms and long-form
+// content that do not exist in the Claude-design export, so unlike /services
+// they cannot be sliced out of a render. What they can have is the same shell:
+// the real nav, the real footer, the real fonts and the real colour tokens,
+// lifted out of the freshly built home page so the font hashes and values stay
+// tied to the source instead of being copied and left to rot.
+//
+// Everything lifted is *scoped* under `.site-shell`, the wrapper the nav and
+// footer are injected into. The first cut of this merged the two stylesheets
+// flat and they fought: both define `.wrap`, the page's 620px reading column
+// won, and the footer's four columns shipped squeezed into strips. Scoped, the
+// shell always wins inside itself and can never reach the page's own content.
+
+// Split minified CSS into top-level rules by walking brace depth.
+function splitCssRules(css) {
+  const rules = [];
+  let i = 0;
+  while (i < css.length) {
+    const open = css.indexOf('{', i);
+    if (open < 0) break;
+    const sel = css.slice(i, open).trim();
+    let depth = 1, j = open + 1;
+    while (j < css.length && depth > 0) {
+      if (css[j] === '{') depth++;
+      else if (css[j] === '}') depth--;
+      j++;
+    }
+    rules.push({ sel, body: css.slice(open + 1, j - 1) });
+    i = j;
+  }
+  return rules;
+}
+
+// `html`, `body` and `:root` describe the page itself. Inside the shell the
+// wrapper plays that part, so they collapse onto it instead of leaking out —
+// which is also how the design tokens (all declared on `:root`) follow the nav
+// and footer across without overwriting the page's own palette.
+function scopeSelector(sel, scope) {
+  const rest = sel.replace(/^(html|body|:root)\b/, '').trim();
+  if (!rest) return scope;
+  if (sel === rest) return `${scope} ${rest}`;
+  return /^[.#:[]/.test(rest) ? `${scope}${rest}` : `${scope} ${rest}`;
+}
+
+function scopeCss(css, scope, keep) {
+  let out = '';
+  for (const { sel, body } of splitCssRules(css)) {
+    if (/^@(media|supports)/i.test(sel)) {
+      const inner = scopeCss(body, scope, keep);
+      if (inner) out += `${sel}{${inner}}`;
+    } else if (/^@(font-face|(-\w+-)?keyframes)/i.test(sel)) {
+      out += `${sel}{${body}}`;   // no selectors inside: keep verbatim
+    } else if (sel.startsWith('@')) {
+      continue;                   // @page, @layer … nothing the shell needs
+    } else {
+      const parts = sel.split(',').map((x) => x.trim()).filter(Boolean).filter(keep);
+      if (!parts.length) continue;
+      out += `${parts.map((x) => scopeSelector(x, scope)).join(',')}{${body}}`;
+    }
+  }
+  return out;
+}
+
+async function applyShellToStandalonePages() {
+  const home = await readFile(path.join(DIST, 'index.html'), 'utf8');
+
+  const grab = (tag) => {
+    const m = home.match(new RegExp(`<${tag}\\b[\\s\\S]*?</${tag}>`));
+    return m ? m[0] : '';
+  };
+  // In-page anchors have to become absolute or they point at sections these
+  // pages do not have — which the dead-anchor gate would (correctly) fail on.
+  const absolutize = (html) => html.replace(/href="#([^"]*)"/g, (_m, id) => `href="/${id === 'top' ? '' : '#' + id}"`);
+  const nav = absolutize(grab('nav'));
+  const footer = absolutize(grab('footer'));
+
+  // Which rules to carry: the ones the shell markup can actually match. A rule
+  // is kept when every class it names appears in the nav or the footer, so
+  // `.foot-grid` and `.brand-mark` come along and the other ~1,500 rules of the
+  // home page do not. Element-only rules (`a`, `ul`, `h5`) are kept too — they
+  // are what stops the nav links rendering as underlined browser-default blue —
+  // and are harmless once scoped.
+  const markup = nav + footer;
+  const shellClasses = new Set(
+    [...markup.matchAll(/class="([^"]*)"/g)].flatMap((m) => m[1].split(/\s+/)).filter(Boolean));
+  const keep = (sel) => (sel.match(/\.[A-Za-z0-9_-]+/g) || [])
+    .every((c) => shellClasses.has(c.slice(1)));
+
+  const css = [...home.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join('');
+  const shellCss = scopeCss(css, '.site-shell', keep);
+
+  if (!nav || !footer || !shellCss.trim()) {
+    throw Object.assign(new Error(
+      '[build] could not lift the nav, footer or shell CSS out of dist/index.html — ' +
+      'the standalone pages would ship without the site shell.'), { fatal: true });
+  }
+
+  // Nothing here is interactive without the enhancement JS, so the burger and
+  // the language globe are hidden rather than shipped inert; below the mobile
+  // breakpoint the nav is the wordmark alone, which is still the way back.
+  // The nav also stops being fixed: these pages scroll their own content and
+  // never allotted it any top padding.
+  //
+  // The reset underneath it is the other half of the scoping. Scoping stops the
+  // shell reaching the page; it does not stop the page reaching the shell, and
+  // checklist.html styles bare `li` — so the first pass drew its little tick
+  // box beside every link in the footer's four columns. These are deliberately
+  // the least specific rules that can win against an unscoped element selector:
+  // every real footer rule (`.foot-col ul li`) outranks them and is untouched.
+  const extra = '<style>' +
+    '.site-shell .nav-burger,.site-shell .nav-mobile,.site-shell .locale{display:none!important}' +
+    '.site-shell .nav{position:static}' +
+    '.site-shell{display:block}' +
+    '.site-shell ul,.site-shell ol{list-style:none;padding:0;margin:0}' +
+    '.site-shell li{padding:0;margin:0;border:0;position:static}' +
+    '.site-shell li:before,.site-shell li:after{content:none}' +
+    '</style>';
+
+  const PAGES = ['demo.html', 'checklist.html', 'get-checklist.html'];
+  for (const name of PAGES) {
+    const file = path.join(DIST, name);
+    if (!existsSync(file)) continue;
+    let doc = await readFile(file, 'utf8');
+    if (doc.includes('data-site-shell')) continue;
+    // Their own one-line footer goes: the real one says the same thing and more,
+    // and two copyright lines stacked is how the first pass shipped.
+    doc = doc.replace(/\s*<footer>[\s\S]*?<\/footer>/, '');
+    doc = doc.replace('</head>', `<style data-site-shell>${shellCss}</style>${extra}</head>`);
+    doc = doc.replace(/<body([^>]*)>/, `<body$1><div class="site-shell">${nav}</div>`);
+    doc = doc.replace('</body>', `<div class="site-shell">${footer}</div></body>`);
+    await writeFile(file, doc, 'utf8');
+    console.log(`  shell applied: ${name} (+${Math.round(shellCss.length / 1024)}KB css)`);
+  }
+}
+
 // ── Content-transform safety net ────────────────────────────────────────────
 // split/join, not String.replace: `replace` with a *string* needle substitutes
 // only the first occurrence, which is how a value that appears twice can
@@ -1451,6 +1587,7 @@ async function build() {
   // actually written to disk, so it catches a correction that was dropped
   // anywhere upstream — a copy edit that stopped matching, a transform that
   // matched nothing, or a stale string that came back with a re-export.
+  await applyShellToStandalonePages();
   await assertNoForbiddenStrings();
   await assertNoDeadAnchors();
 
