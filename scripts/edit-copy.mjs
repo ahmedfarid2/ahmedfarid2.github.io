@@ -1982,50 +1982,59 @@ const PERSON_URL_HEAD = ['"url": "https://ahmedfarid2.github.io"', '"url": "http
 // Only the <Pricing/> render call is removed. The component itself stays in the
 // bundle — deleting it would fight the next Claude-design export, which will
 // ship it again, and an unused function costs nothing.
+// ── Both pages render from the same design ──────────────────────────────────
+// <Pricing/> and <Services/> used to be deleted from the render list, and
+// /services was a hand-written HTML page. That page did not have the site's
+// nav, fonts, reveals or texture, and looked like something glued on — which
+// is exactly what it was.
+//
+// They are back in the render now. build.mjs renders the export once per
+// locale and cuts the snapshot two ways: the home page drops these sections,
+// /services keeps only them. Same shell, same header, same footer, same
+// everything — because it is literally the same rendered page, sliced twice.
 const PRICING_OFF_HOME = LOCALES.map((loc) => ({
   file: fileFor(loc),
-  label: `move commercial sections off the home page (${loc})`,
+  label: `restore <Pricing/> and <Services/> to the render (${loc})`,
   critical: true,
   anchor: 'function Pricing()',
   transform: (text) => {
-    let out = text;
-    // <Pricing/> is section 13 (plans, packages, the free-demo block);
-    // <Services/> is section 14 (ways to work together). Both are the offer.
-    for (const call of ['      <Pricing/>\n', '      <Services/>\n']) {
-      out = out.split(call).join('');   // self-consuming: gone means gone
-    }
-    return out;
+    if (text.includes('      <Pricing/>\n')) return text;   // self-consuming
+    const after = '      <WhyMe/>\n';
+    const at = text.indexOf(after);
+    if (at < 0) return null;
+    const cut = at + after.length;
+    return text.slice(0, cut) + '      <Pricing/>\n      <Services/>\n' + text.slice(cut);
   },
 }));
 
-// Three FAQ answers belong to the buyer, not the reader of a CV: what an
-// engagement looks like, where the clients are, and the rate. They move with
-// the offer. The two that serve both audiences — taking a project from zero,
-// and mobile-only work — stay.
-const FAQ_MOVE_KEYS = {
-  en: ['What does a typical engagement look like?', 'Where are your clients based?', "What's your rate?"],
-  ar: ['كيف يبدو التعاقد النموذجي؟', 'أين يقع عملاؤك؟', 'ما سعرك؟'],
-  de: ['Wie sieht ein typisches Engagement aus?', 'Wo sitzen Ihre Kunden?', 'Wie hoch ist Ihr Satz?'],
-  es: ['¿Cómo es una colaboración típica?', '¿Dónde están tus clientes?', '¿Cuál es tu tarifa?'],
-  fr: ['À quoi ressemble une mission type ?', 'Où sont vos clients ?', 'Quel est votre tarif ?'],
+// The three buyer-facing FAQ items stay in the export too, for the same
+// reason: build.mjs shows them on /services and hides them on the home page.
+const FAQ_RESTORE = {
+  en: '{ q: "What does a typical engagement look like?", a: "Most start as a 3-week scoped build — a defined slice with a clear deliverable. From there it usually becomes ongoing retainer or a longer contract. I prefer fixed-scope phases over hourly drift." },\n    { q: "Where are your clients based?", a: "UAE, Saudi Arabia, the United States, and Egypt. I run on Gulf time but overlap comfortably with GCC, EU, and US East / Central business hours." },\n    { q: "What\'s your rate?", a: "Depends on scope, region, and whether you need senior architecture or implementation hands. I\'ll give you a flat phase quote, not an hourly bill, after a 30-minute scoping call." },\n    ',
+  ar: '{ q: "كيف يبدو التعاقد النموذجي؟", a: "يبدأ معظمها ببناء محدَّد النطاق في ثلاثة أسابيع — شريحة واضحة بمُخرَج واضح. ومن هناك يتحول عادةً إلى تعاقد شهري أو عقد أطول. أفضّل المراحل محددة النطاق على الاحتساب بالساعة." },\n    { q: "أين يقع عملاؤك؟", a: "الإمارات والسعودية والولايات المتحدة ومصر. أعمل بتوقيت الخليج وأتداخل بمرونة مع ساعات عمل الخليج والاتحاد الأوروبي وشرق ووسط الولايات المتحدة." },\n    { q: "ما سعرك؟", a: "يعتمد على النطاق والمنطقة وما إذا كنت تحتاج معمارية أولى أم أيادي تنفيذ. أعطيك عرضًا ثابتًا للمرحلة لا فاتورة بالساعة، بعد مكالمة تحديد نطاق مدتها ٣٠ دقيقة." },\n    ',
+  de: '{ q: "Wie sieht ein typisches Engagement aus?", a: "Die meisten starten als dreiwöchiger, klar abgegrenzter Build mit einem definierten Ergebnis. Daraus wird meist ein laufendes Retainer oder ein längerer Vertrag. Ich bevorzuge Phasen mit festem Umfang gegenüber Abrechnung nach Stunden." },\n    { q: "Wo sitzen Ihre Kunden?", a: "VAE, Saudi-Arabien, die Vereinigten Staaten und Ägypten. Ich arbeite auf Golf-Zeit, überschneide mich aber bequem mit GCC-, EU- und US-Ost-/Zentral-Geschäftszeiten." },\n    { q: "Wie hoch ist Ihr Satz?", a: "Hängt von Umfang, Region und davon ab, ob Sie Senior-Architektur oder ausführende Hände brauchen. Sie bekommen ein festes Phasenangebot statt einer Stundenrechnung, nach einem 30-minütigen Scoping-Call." },\n    ',
+  es: '{ q: "¿Cómo es una colaboración típica?", a: "La mayoría empieza como un build acotado de 3 semanas — una parte definida con un entregable claro. A partir de ahí suele convertirse en un retainer continuo o un contrato más largo. Prefiero fases de alcance fijo antes que la deriva por horas." },\n    { q: "¿Dónde están tus clientes?", a: "EAU, Arabia Saudí, Estados Unidos y Egipto. Trabajo en horario del Golfo, pero me solapo cómodamente con el CCG, la UE y el horario laboral del Este/Centro de EE. UU." },\n    { q: "¿Cuál es tu tarifa?", a: "Depende del alcance, la región y de si necesitas arquitectura senior o manos de implementación. Te doy un precio cerrado por fase, no una factura por horas, tras una llamada de 30 minutos." },\n    ',
+  fr: '{ q: "À quoi ressemble une mission type ?", a: "La plupart commencent par un build cadré de 3 semaines — un périmètre défini avec un livrable clair. Ensuite cela devient généralement un retainer ou un contrat plus long. Je préfère des phases à périmètre fixe à la dérive horaire." },\n    { q: "Où sont vos clients ?", a: "EAU, Arabie saoudite, États-Unis et Égypte. Je suis sur le fuseau du Golfe mais je chevauche confortablement les heures de bureau du CCG, de l\'UE et de l\'Est / Centre des États-Unis." },\n    { q: "Quel est votre tarif ?", a: "Cela dépend du périmètre, de la région et de savoir s\'il vous faut de l\'architecture senior ou des mains d\'exécution. Vous recevez un devis forfaitaire par phase, pas une facture horaire, après un appel de 30 minutes." },\n    ',
 };
+
 const FAQ_MOVE_EDITS = LOCALES.map((loc) => ({
   file: fileFor(loc),
-  label: `move commercial FAQ items to /services (${loc})`,
+  label: `restore the buyer-facing FAQ items (${loc})`,
+  critical: true,
   anchor: 'function FAQ()',
   transform: (text) => {
-    let out = text;
-    for (const q of FAQ_MOVE_KEYS[loc]) {
-      const at = out.indexOf('{ q: "' + q + '"');
-      if (at < 0) continue;                       // self-consuming
-      const end = out.indexOf('" },', at);
-      if (end < 0) return null;
-      let start = at;
-      const prevNl = out.lastIndexOf('\n', at - 1);
-      if (prevNl >= 0 && out.slice(prevNl + 1, at).trim() === '') start = prevNl;
-      out = out.slice(0, start) + out.slice(end + 4);
-    }
-    return out;
+    if (text.includes(FAQ_RESTORE[loc].slice(0, 40))) return text;   // self-consuming
+    // Search *after* the component, not from the top of the asset: `anchor`
+    // only picks which bundled asset to edit, and several components declare
+    // `const items = [`. Searching globally put these three questions inside
+    // WhatIBuild() and broke the render.
+    const fn = text.indexOf('function FAQ()');
+    if (fn < 0) return null;
+    const marker = 'const items = [\n    ';
+    const at = text.indexOf(marker, fn);
+    if (at < 0) return null;
+    const cut = at + marker.length;
+    return text.slice(0, cut) + FAQ_RESTORE[loc] + text.slice(cut);
   },
 }));
 
