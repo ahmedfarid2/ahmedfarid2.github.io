@@ -84,6 +84,40 @@ border:1px solid rgba(255,255,255,.18);background:transparent;color:#e7e2d8}
   else document.addEventListener('DOMContentLoaded',function(){setTimeout(ask,900)});
 })();</script>`;
 
+// ── Accessibility & touch baseline ──────────────────────────────────────────
+// Shared by every emitted page: the rendered locales get it in their build-fix
+// <style>, the standalone pages through the shell step.
+const SKIP_LABEL = {
+  en: 'Skip to content', ar: 'تخطَّ إلى المحتوى', de: 'Zum Inhalt springen',
+  es: 'Saltar al contenido', fr: 'Aller au contenu',
+};
+const skipLink = (lang) => `<a class="skip-link" href="#main">${SKIP_LABEL[lang] || SKIP_LABEL.en}</a>`;
+
+// First tab stop on every page, off-screen until focused.
+const SKIP_CSS =
+  '.skip-link{position:fixed;left:12px;top:12px;z-index:10001;padding:10px 16px;border-radius:10px;' +
+  'background:#E6C8A0;color:#0B0D10;font:600 14px/1.2 ui-sans-serif,system-ui,sans-serif;' +
+  'text-decoration:none;transform:translateY(-200%);transition:transform .15s ease}' +
+  '[dir="rtl"] .skip-link{left:auto;right:12px}' +
+  '.skip-link:focus{transform:none;outline:2px solid #F4F1EA;outline-offset:2px}' +
+  // Focus arrives on <main> programmatically (tabindex=-1); a ring round the
+  // whole page would read as a glitch, and the skip link already showed where.
+  'main:focus{outline:none}';
+
+const A11Y_CSS = SKIP_CSS +
+  // 44×44 is the floor (Apple HIG; Material asks 48). The burger shipped at
+  // 36×31 and it is the only way into the navigation on a phone; the drawer's
+  // language links were 38px and the wordmark 26px.
+  '.nav-burger{min-width:44px;min-height:44px}' +
+  '.dl-lang{min-height:44px}' +
+  '.brand{min-height:44px}' +
+  // The intro faded its name out *together* with the curtain behind it, so for
+  // ~0.6s the name sat at half opacity on top of the hero headline — two
+  // headlines, neither readable, as the first thing anyone sees. Take the name
+  // away first, then lift the curtain. Same total length.
+  '.intro-ov.intro-hide .intro-inner{opacity:0;transition:opacity .2s ease}' +
+  '.intro-ov.intro-hide{transition:opacity .45s ease .2s,visibility 0s linear .65s}';
+
 // ── Give the standalone pages the site's shell ──────────────────────────────
 // demo.html, checklist.html and get-checklist.html carry forms and long-form
 // content that do not exist in the Claude-design export, so unlike /services
@@ -201,6 +235,7 @@ async function applyShellToStandalonePages() {
     '.site-shell ul,.site-shell ol{list-style:none;padding:0;margin:0}' +
     '.site-shell li{padding:0;margin:0;border:0;position:static}' +
     '.site-shell li:before,.site-shell li:after{content:none}' +
+    SKIP_CSS +
     '</style>';
 
   const PAGES = ['demo.html', 'checklist.html', 'get-checklist.html'];
@@ -213,11 +248,174 @@ async function applyShellToStandalonePages() {
     // and two copyright lines stacked is how the first pass shipped.
     doc = doc.replace(/\s*<footer>[\s\S]*?<\/footer>/, '');
     doc = doc.replace('</head>', `<style data-site-shell>${shellCss}</style>${extra}</head>`);
-    doc = doc.replace(/<body([^>]*)>/, `<body$1><div class="site-shell">${nav}</div>`);
+    // Skip link first, so it is the first tab stop; its target is each page's
+    // own <main class="wrap" id="main">.
+    doc = doc.replace(/<body([^>]*)>/, `<body$1>${skipLink('en')}<div class="site-shell">${nav}</div>`);
     doc = doc.replace('</body>', `<div class="site-shell">${footer}</div></body>`);
     await writeFile(file, doc, 'utf8');
     console.log(`  shell applied: ${name} (+${Math.round(shellCss.length / 1024)}KB css)`);
   }
+}
+
+// ── Final passes over every emitted page ────────────────────────────────────
+// Run after the shell step, so the standalone pages are judged with the nav
+// and footer they actually ship with. google*.html are verification files and
+// are never touched (CLAUDE.md).
+async function emittedPages() {
+  const out = [];
+  const walk = async (dir) => {
+    for (const e of await readdir(dir, { withFileTypes: true })) {
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) { if (e.name !== 'assets') await walk(p); }
+      else if (e.name.endsWith('.html') && !/^google[0-9a-f]+\.html$/.test(e.name)) out.push(p);
+    }
+  };
+  await walk(DIST);
+  return out.sort();
+}
+
+// Blank out <script>/<style> so markup-shaped text inside JS strings (the
+// intro builds its overlay from an innerHTML string) is never mistaken for
+// the document's own headings.
+function maskCode(html) {
+  const masks = [];
+  const masked = html.replace(/<(script|style)\b[\s\S]*?<\/\1\s*>/gi, (m) => `\u0000${masks.push(m) - 1}\u0000`);
+  return { masked, unmask: (s) => s.replace(/\u0000(\d+)\u0000/g, (_m, i) => masks[+i]) };
+}
+
+// Heading levels are how a screen reader user skims a page. The export skips
+// them — h2 → h4 in the stack band, h3 → h5 in the footer — and on the
+// standalone pages the lifted footer jumps h1 → h3. Re-tagging would move them
+// off the CSS that styles them, so the level is corrected with aria-level,
+// which is what assistive tech reads. The rule: a heading sits at most one
+// level below the heading it falls under; siblings stay siblings.
+function fixHeadingOutline(html) {
+  const { masked, unmask } = maskCode(html);
+  const stack = [];   // { actual, eff } of the headings still "open"
+  let changed = 0;
+  const out = masked.replace(/<h([1-6])(\s[^>]*)?>/gi, (_tag, lvl, attrs = '') => {
+    const actual = +lvl;
+    const clean = attrs.replace(/\s+aria-level="\d"/g, '');
+    while (stack.length && stack[stack.length - 1].actual >= actual) stack.pop();
+    const eff = stack.length ? stack[stack.length - 1].eff + 1 : actual;
+    stack.push({ actual, eff });
+    if (eff === actual) return `<h${lvl}${clean}>`;
+    changed++;
+    return `<h${lvl}${clean} aria-level="${eff}">`;
+  });
+  return { html: unmask(out), changed };
+}
+
+// The levels a screen reader will actually announce, in document order.
+function announcedHeadingLevels(html) {
+  const { masked } = maskCode(html);
+  return [...masked.matchAll(/<h([1-6])(\s[^>]*)?>/gi)].map((m) => {
+    const aria = /\saria-level="(\d)"/.exec(m[2] || '');
+    return aria ? +aria[1] : +m[1];
+  });
+}
+
+async function fixHeadingOutlines(files) {
+  let total = 0;
+  for (const f of files) {
+    const before = await readFile(f, 'utf8');
+    const { html, changed } = fixHeadingOutline(before);
+    if (html !== before) await writeFile(f, html, 'utf8');
+    total += changed;
+  }
+  console.log(`  ✓ heading outline: ${total} heading(s) given a corrected aria-level`);
+}
+
+// Every <img> pointing at somebody else's server — client logos, and favicons
+// through Google's s2 service — is fetched once at build time and served from
+// /assets/ext/. A client renaming a logo file no longer takes it off the brand
+// wall without anyone noticing, and a visitor's browser no longer reports the
+// visit to Google and a dozen client servers. Whatever cannot be fetched stays
+// remote, which is exactly how it behaved before: a slow or blocked host
+// degrades the page to its old state rather than failing the build.
+async function vendorExternalImages(files) {
+  const { createHash } = await import('node:crypto');
+  const EXT = {
+    'image/png': 'png', 'image/jpeg': 'jpg', 'image/jpg': 'jpg', 'image/webp': 'webp',
+    'image/gif': 'gif', 'image/avif': 'avif', 'image/svg+xml': 'svg',
+    'image/x-icon': 'ico', 'image/vnd.microsoft.icon': 'ico',
+  };
+  const MAX_BYTES = 1.5e6;
+  const docs = new Map();
+  const urls = new Set();
+  for (const f of files) {
+    const html = await readFile(f, 'utf8');
+    docs.set(f, html);
+    for (const m of html.matchAll(/<img\b[^>]*?\ssrc="(https?:\/\/[^"]+)"/gi)) urls.add(m[1]);
+  }
+  if (!urls.size) return;
+
+  const dir = path.join(DIST, 'assets', 'ext');
+  await mkdir(dir, { recursive: true });
+  const local = new Map();   // url as written in the HTML → /assets/ext/<file>
+  const kept = [];
+  const fetchOne = async (attr) => {
+    const url = attr.replace(/&amp;/g, '&');
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(10000), redirect: 'follow' });
+      const type = (res.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
+      const ext = EXT[type];
+      if (!res.ok || !ext) throw new Error(`${res.status} ${type || 'no content-type'}`);
+      const buf = Buffer.from(await res.arrayBuffer());
+      if (!buf.length || buf.length > MAX_BYTES) throw new Error(`${buf.length} bytes`);
+      // An <img> cannot run an SVG's script, but the file would also be
+      // reachable directly on this origin, where it could. Only inert SVG.
+      if (ext === 'svg' && /<script|\son[a-z]+\s*=|javascript:|<foreignObject/i.test(buf.toString('utf8'))) {
+        throw new Error('active content in SVG');
+      }
+      const name = `${createHash('sha1').update(url).digest('hex').slice(0, 12)}.${ext}`;
+      await writeFile(path.join(dir, name), buf);
+      local.set(attr, `/assets/ext/${name}`);
+    } catch (e) {
+      kept.push(`${new URL(url).host} (${e.name === 'TimeoutError' ? 'timeout' : e.message || e.cause?.code || e})`);
+    }
+  };
+  const queue = [...urls];
+  await Promise.all(Array.from({ length: 6 }, async () => { while (queue.length) await fetchOne(queue.shift()); }));
+
+  for (const [f, html] of docs) {
+    let out = html;
+    for (const [attr, file] of local) out = out.split(`src="${attr}"`).join(`src="${file}"`);
+    if (out !== html) await writeFile(f, out, 'utf8');
+  }
+  console.log(`  ✓ external images: ${local.size}/${urls.size} now served from /assets/ext/`);
+  if (kept.length) console.log(`    kept remote (unreachable at build time): ${[...new Set(kept)].join(', ')}`);
+}
+
+// What the UI/UX audit found missing, kept from coming back. The export is
+// replaced wholesale on every design change, so none of the above is safe
+// from silently disappearing without a check that knows what it looks like.
+async function assertA11yBaseline(files) {
+  const problems = [];
+  for (const f of files) {
+    const rel = path.relative(DIST, f);
+    if (rel === '404.html') continue;   // no repeated nav to skip; see its template
+    const html = await readFile(f, 'utf8');
+    const { masked } = maskCode(html);
+    const mains = (masked.match(/<main\b[^>]*\sid="main"/g) || []).length;
+    if (mains !== 1) problems.push(`${rel}: ${mains} <main id="main"> (want 1)`);
+    const skip = masked.indexOf('class="skip-link" href="#main"');
+    const nav = masked.indexOf('<nav');
+    if (skip < 0 || (nav >= 0 && skip > nav)) problems.push(`${rel}: skip link missing or not before the nav`);
+    const h1 = (masked.match(/<h1[\s>]/g) || []).length;
+    if (h1 !== 1) problems.push(`${rel}: ${h1} <h1> (want 1)`);
+    const levels = announcedHeadingLevels(html);
+    levels.forEach((l, i) => {
+      if (i && l > levels[i - 1] + 1) problems.push(`${rel}: heading level jumps ${levels[i - 1]} → ${l}`);
+    });
+    const faqQ = masked.match(/<button class="faq-q"[^>]*>/g) || [];
+    if (faqQ.some((b) => !/aria-expanded=/.test(b))) problems.push(`${rel}: FAQ button without aria-expanded`);
+  }
+  if (problems.length) {
+    throw Object.assign(new Error(`[build] accessibility baseline failed:\n  ${problems.join('\n  ')}`), { fatal: true });
+  }
+  const checked = files.filter((f) => path.relative(DIST, f) !== '404.html').length;
+  console.log(`  ✓ accessibility baseline: ${checked} page(s) — landmark, skip link, one h1, no heading jumps, FAQ state`);
 }
 
 // ── Content-transform safety net ────────────────────────────────────────────
@@ -615,11 +813,12 @@ async function writeSeoFiles(locales = [{ urlPath: '/' }]) {
     `p{color:#a8a297;max-width:440px;line-height:1.5}` +
     `a{margin-top:8px;display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:99px;` +
     `border:1px solid rgba(255,255,255,.18);color:#0B0D10;background:#E6C8A0;text-decoration:none;font-weight:600;` +
-    `position:relative;transition:transform .2s}a:hover{transform:translateY(-2px)}</style></head>` +
-    `<body><div class="code">4<em>0</em>4</div>` +
+    `position:relative;transition:transform .2s}a:hover{transform:translateY(-2px)}` +
+    `main{display:flex;flex-direction:column;align-items:center;gap:18px;position:relative}</style></head>` +
+    `<body><main><div class="code">4<em>0</em>4</div>` +
     `<h1>This page wandered off.</h1>` +
     `<p>The link may be broken or the page may have moved.</p>` +
-    `<a href="/">← Back to Ahmed Farid's portfolio</a></body></html>\n`, 'utf8');
+    `<a href="/">← Back to Ahmed Farid's portfolio</a></main></body></html>\n`, 'utf8');
 
   console.log('  wrote sitemap.xml, robots.txt, llms.txt, 404.html');
 }
@@ -1089,6 +1288,50 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
       }
     });
 
+    // ── Accessibility structure ─────────────────────────────────────────
+    // Done here, before the snapshot, so it is in the static HTML rather than
+    // depending on the enhancement JS having run.
+    //
+    // A <main> around everything between the nav and the footer: the landmark
+    // a screen reader jumps to, and the target of the skip link. Every section
+    // is a direct child of #root and no rule targets `main` or `#root >`, so
+    // re-parenting them changes nothing visually.
+    const root = document.getElementById('root');
+    const navEl = root && root.querySelector(':scope > nav');
+    const footEl = root && root.querySelector(':scope > footer');
+    if (navEl && footEl && !document.getElementById('main')) {
+      const main = document.createElement('main');
+      main.id = 'main';
+      main.tabIndex = -1;   // so the skip link moves focus, not just scroll
+      root.insertBefore(main, navEl.nextSibling);
+      while (main.nextSibling && main.nextSibling !== footEl) main.appendChild(main.nextSibling);
+    }
+
+    // /services is a slice of the home render, so its <h1> — the hero — was cut
+    // away with the hero and the page opened on an <h2>. Promote the first
+    // section title. Its look is carried by `.section-title` (and
+    // `.section-title em`), not by the tag, so the swap is invisible.
+    if (pageVariant === 'services' && !document.querySelector('h1')) {
+      const first = document.querySelector('#main h2');
+      if (first) {
+        const h1 = document.createElement('h1');
+        for (const a of first.attributes) h1.setAttribute(a.name, a.value);
+        while (first.firstChild) h1.appendChild(first.firstChild);
+        first.replaceWith(h1);
+      }
+    }
+
+    // The FAQ accordion toggled a data attribute nothing but CSS could see, so
+    // a screen reader announced every question as a plain button with no state.
+    document.querySelectorAll('.faq-item').forEach((item, i) => {
+      const q = item.querySelector('.faq-q');
+      const a = item.querySelector('.faq-a');
+      if (!q || !a) return;
+      if (!a.id) a.id = `faq-a-${i + 1}`;
+      q.setAttribute('aria-controls', a.id);
+      q.setAttribute('aria-expanded', item.getAttribute('data-open') === 'true' ? 'true' : 'false');
+    });
+
     // Extract FAQ Q&A from the rendered DOM (per locale) so the Node side can
     // emit FAQPage structured data — rich results in Google and clean,
     // quotable Q&A for AI assistants. Grounded in the page's real content.
@@ -1354,8 +1597,12 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
     if(!q) return;
     q.addEventListener('click',function(){
       var isOpen=item.getAttribute('data-open')==='true';
-      document.querySelectorAll('.faq-item').forEach(function(i){i.setAttribute('data-open','false');});
+      document.querySelectorAll('.faq-item').forEach(function(i){
+        i.setAttribute('data-open','false');
+        var b=i.querySelector('.faq-q'); if(b) b.setAttribute('aria-expanded','false');
+      });
       item.setAttribute('data-open',String(!isOpen));
+      q.setAttribute('aria-expanded',String(!isOpen));
     });
   });
   // Case-study "Read the case study" deep-dive expanders.
@@ -1418,10 +1665,12 @@ ${jsonLd}
 [dir="rtl"] .connect-handle,
 [dir="rtl"] .price-amount,
 [dir="rtl"] .addon-price{text-align:right}
+${A11Y_CSS}
 ${switcherCss}
 </style>
 </head>
 <body class="${result.bodyClass}"${bodyDataAttrs ? ' ' + bodyDataAttrs : ''}>
+${skipLink(lang)}
 ${switcher}
 <div id="root">${result.body}</div>
 <script src="https://assets.calendly.com/assets/external/widget.js" async></script>
@@ -1588,6 +1837,10 @@ async function build() {
   // anywhere upstream — a copy edit that stopped matching, a transform that
   // matched nothing, or a stale string that came back with a re-export.
   await applyShellToStandalonePages();
+  const pages = await emittedPages();
+  await vendorExternalImages(pages);
+  await fixHeadingOutlines(pages);
+  await assertA11yBaseline(pages);
   await assertNoForbiddenStrings();
   await assertNoDeadAnchors();
 
