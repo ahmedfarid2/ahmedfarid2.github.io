@@ -76,7 +76,7 @@ if(v==='yes'){load();}
   .field > span .req{color:var(--accent)}
   input,select,textarea{
     width:100%;padding:13px 14px;background:var(--field);color:var(--ink);
-    border:1px solid var(--line);border-radius:10px;font:inherit;font-size:15px;
+    border:1px solid var(--line);border-radius:10px;font:inherit;font-size:16px;
     transition:border-color .18s ease, background .18s ease;
   }
   textarea{min-height:120px;resize:vertical}
@@ -105,7 +105,7 @@ if(v==='yes'){load();}
   .sel-btn{
     display:none;width:100%;padding:13px 44px 13px 14px;background:var(--field);
     color:var(--ink);border:1px solid var(--line);border-radius:10px;
-    font:inherit;font-size:15px;text-align:left;cursor:pointer;position:relative;
+    font:inherit;font-size:16px;text-align:left;cursor:pointer;position:relative;
     transition:border-color .18s ease, background .18s ease;
   }
   .sel.is-enhanced .sel-btn{display:block}
@@ -163,7 +163,7 @@ if(v==='yes'){load();}
 </style>
 </head>
 <body>
-<div class="wrap">
+<main class="wrap" id="main" tabindex="-1">
 
   <div class="eyebrow"><span class="dot"></span>Free demo · two slots a month</div>
 
@@ -317,7 +317,7 @@ if(v==='yes'){load();}
   <footer>
     © 2026 <a href="https://iamahmedfarid.com/">Ahmed Farid</a> · Senior Software Engineer · Dubai · Remote &amp; on-site
   </footer>
-</div>
+</main>
 
 <script>
   // Swap the form for the confirmation once FormSubmit bounces back with ?sent=1.
@@ -383,6 +383,11 @@ if(v==='yes'){load();}
 
     wrap.append(btn, list);
     wrap.classList.add('is-enhanced');
+    // Out of the tab order now that the listbox stands in for it — Tab used
+    // to land on a 1×1 invisible control. tabindex -1, not display:none or
+    // aria-hidden: the browser must still be able to focus it to report the
+    // field as missing (see .sel.is-enhanced select above).
+    select.tabIndex = -1;
 
     const items = [...list.children];
     const itemFor = (selIdx) => items.findIndex((li) => Number(li.dataset.idx) === selIdx);
