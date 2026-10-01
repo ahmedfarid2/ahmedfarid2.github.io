@@ -135,7 +135,7 @@ destroys everything else on the page.
 
 One post. To 25,000 people. Most of whom have no idea you take outside work.
 
-> For five years I've been building the systems other teams depend on —
+> For over six years I've been building the systems other teams depend on —
 > multi-tenant SaaS, real-time bidding under load, platforms in production
 > across the Gulf, Europe and the US.
 >

@@ -15,7 +15,11 @@ Three changes are **live** on all five exports (`index.html`, `.ar`, `.de`,
 
 1. **Hero paragraph** — leads with the niche
 2. **Lead-magnet card** in the Connect section → `/checklist.html`
-3. **Primary CTA** — "Book a scoping call" (nav, hero, about)
+3. **Contact system** — the hero carries one contact action plus the CV; the
+   `#contact` block splits into two paths: *hiring* (Contact me about a senior
+   role · View CV · LinkedIn) and *project work* (Book a 30-minute scoping call ·
+   WhatsApp Business · Email a project brief). `/services` shows the project
+   path first. The nav badge reads "Senior roles and consulting · Dubai".
 
 **You do not need to paste anything into Claude design.** The build re-applies
 these automatically on every deploy (`.github/workflows/deploy.yml` → "Apply
@@ -62,17 +66,22 @@ from you. For the unapplied ones you have two options:
   **I build the systems** / **other teams depend on.**
 
 - **Intro — ✅ APPLIED LIVE (self-healing; no action needed):**
-  > Cairo-based senior engineer specializing in real-time, multi-tenant SaaS —
-  > live bidding, role-based tenants, and the mobile apps that run on top. Five
-  > years shipping to production across the Gulf, the US, and the UK. Laravel,
-  > Next.js, FastAPI, Flutter. Open to relocation.
+  > Dubai-based senior engineer specializing in real-time, multi-tenant SaaS —
+  > live bidding, role-based tenants, and the mobile apps that run on top. Over
+  > six years shipping to production across the Gulf, the US, and the UK.
+  > Laravel, Next.js, FastAPI, Flutter.
+  >
+  > _(Superseded draft. Live facts — Dubai, 6+ years, no relocation line — come
+  > from [`scripts/site-facts.mjs`](../scripts/site-facts.mjs).)_
 
   The translated versions live in each export too — all exact strings are in
   [`scripts/edit-copy.mjs`](../scripts/edit-copy.mjs).
 
-- **Buttons — ✅ APPLIED LIVE:** `Start a project` → **Book a scoping call**
-  (all three placements: nav, hero, about). `See selected work` and
-  `Download CV ↓` unchanged.
+- **Buttons — ✅ APPLIED LIVE, then replaced (Oct 2026):** the bare "Book a
+  scoping call" is retired and the build refuses it (`FORBIDDEN` in
+  `scripts/build.mjs`). The client-path CTA is now **Book a 30-minute scoping
+  call**, used only in the `#contact` project row (EN home + EN services, capped
+  at 2 by the same scan).
 
 - **Optional scarcity line under the buttons (high-converting):**
   > _Currently taking a small number of engagements for Q4 2026._
