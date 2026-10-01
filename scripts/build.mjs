@@ -591,6 +591,74 @@ async function assertNoDeadAnchors() {
   console.log('  ✓ no dead in-page anchors');
 }
 
+// Every locale exists twice — home and /services/ — and a visitor who
+// switches language, or follows the footer's services link, must stay in the
+// same language and on the same kind of page. Checked against the written
+// files (footer link, drawer language links, canonical, hreflang) and, for the
+// language menu the export's script builds at runtime, in a browser that sees
+// dist/ under the real site origin, so the script takes its production path.
+async function assertLocaleRouting(locales) {
+  const codes = locales.map((l) => l.lang);
+  const target = (code, suffix) => (code === 'en' ? '/' : `/${code}/`) + suffix;
+  const bad = [];
+  const pagesToCheck = [];
+  for (const l of locales) {
+    for (const suffix of ['', 'services/']) {
+      const page = l.urlPath + suffix;
+      const file = path.join(DIST, page, 'index.html');
+      if (!existsSync(file)) { bad.push(`${page}: not built`); continue; }
+      pagesToCheck.push({ page, code: l.lang, suffix });
+      const body = await readFile(file, 'utf8');
+      const canon = (body.match(/<link rel="canonical" href="([^"]+)"/) || [])[1];
+      if (canon !== SITE_URL + page) bad.push(`${page}: canonical ${canon}`);
+      for (const c of codes) {
+        if (!body.includes(`<link rel="alternate" hreflang="${c}" href="${SITE_URL}${target(c, suffix)}">`))
+          bad.push(`${page}: hreflang ${c} should be ${target(c, suffix)}`);
+      }
+      if (!body.includes(`<link rel="alternate" hreflang="x-default" href="${SITE_URL}/${suffix}">`))
+        bad.push(`${page}: x-default should be /${suffix}`);
+      for (const m of body.matchAll(/<a class="dl-lang[^"]*" href="([^"]*)" hreflang="([a-z]{2})"/g))
+        if (m[1] !== target(m[2], suffix)) bad.push(`${page}: drawer ${m[2]} → ${m[1]}, expected ${target(m[2], suffix)}`);
+      const foot = body.slice(body.indexOf('<footer'));
+      const svc = [...foot.matchAll(/href="((?:\/[a-z]{2})?\/services\/)"/g)].map((m) => m[1]);
+      if (!svc.length) bad.push(`${page}: footer has no services link`);
+      for (const h of svc) if (h !== `${l.urlPath}services/`) bad.push(`${page}: footer services link → ${h}, expected ${l.urlPath}services/`);
+    }
+  }
+  const puppeteer = (await import('puppeteer')).default;
+  const b = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+  try {
+    for (const p of pagesToCheck) {
+      const tab = await b.newPage();
+      await tab.setRequestInterception(true);
+      tab.on('request', async (req) => {
+        const u = new URL(req.url());
+        if (u.origin !== SITE_URL || req.resourceType() !== 'document') return req.abort();
+        const f = path.join(DIST, decodeURIComponent(u.pathname), u.pathname.endsWith('/') ? 'index.html' : '');
+        try { req.respond({ status: 200, contentType: 'text/html; charset=utf-8', body: await readFile(f) }); }
+        catch { req.respond({ status: 404, body: '' }); }
+      });
+      await tab.goto(SITE_URL + p.page, { waitUntil: 'domcontentloaded', timeout: 60000 });
+      // The export's script builds the menu a few frames after load.
+      await tab.waitForSelector('a.locale-item[hreflang], .lang-switch a[hreflang]', { timeout: 8000 }).catch(() => {});
+      await new Promise((r) => setTimeout(r, 300));
+      const menu = await tab.evaluate(() =>
+        [...document.querySelectorAll('a.locale-item[hreflang], .lang-switch a[hreflang]')]
+          .map((a) => [a.getAttribute('hreflang'), a.getAttribute('href')]));
+      await tab.close();
+      if (menu.length < codes.length) bad.push(`${p.page}: language menu has ${menu.length} links`);
+      for (const [c, h] of menu) if (h !== target(c, p.suffix)) bad.push(`${p.page}: menu ${c} → ${h}, expected ${target(c, p.suffix)}`);
+    }
+  } finally { await b.close(); }
+  if (bad.length) {
+    const err = new Error('[build] locale routing broken:\n' + bad.map((x) => `   ${x}`).join('\n') +
+      '\n   A language switch or services link would drop the visitor on the wrong page.');
+    err.fatal = true;
+    throw err;
+  }
+  console.log(`  ✓ locale routing: ${pagesToCheck.length} pages — footer services link, language menu + drawer, canonical, hreflang`);
+}
+
 // ── Locale discovery (by convention) ────────────────────────────────────────
 // English lives in the root export `index.html` and builds to dist/ root.
 // Any sibling matching `index.<code>.html` (two-letter ISO code) is a
@@ -954,6 +1022,27 @@ const FAQ_BUYER_KEYS = {
   es: ['colaboración típica', 'están tus clientes', 'tu tarifa'],
   fr: ['mission type', 'sont vos clients', 'votre tarif'],
 };
+
+// /services is cut from the home render and has no hero. The export's
+// enhancement layer waits for `.hero-stats` before it starts, so on /services
+// it never started: no language menu, no Arabic numerals, a dead Personalize
+// button. On that page it waits for the nav alone. Its first-visit intro
+// splash stays home-only, as it was. Every other feature in the layer is
+// null-safe when the hero is missing. A re-export that changes these strings
+// leaves the page as before, and assertLocaleRouting then fails the build
+// because the language menu is missing.
+// Matched on the export's source (before minification), whitespace-tolerant.
+const ENHANCE_READY = /document\.querySelector\((['"])\.hero-stats\1\)\s*&&\s*(document\.querySelector\((['"])\.nav-links a\3\))/;
+const ENHANCE_INTRO_SEEN = /if\s*\(\s*sessionStorage\.getItem\((['"])af_intro_done\1\)\s*\)\s*return/;
+function enhanceForVariant(js, variant) {
+  if (!js || variant !== 'services') return js;
+  const count = (rx) => (js.match(new RegExp(rx.source, 'g')) || []).length;
+  if (count(ENHANCE_READY) !== 1 || count(ENHANCE_INTRO_SEEN) !== 1) {
+    console.warn('  ⚠ enhancement layer changed shape; /services runs without it (routing gate will flag the menu)');
+    return js;
+  }
+  return js.replace(ENHANCE_READY, '$2').replace(ENHANCE_INTRO_SEEN, 'return');
+}
 
 // Page-layout data for the in-page pass. Brand names are not translated, and
 // the writing categories render in English on every locale.
@@ -1422,6 +1511,17 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
       a.appendChild(document.createTextNode(domain));
     });
 
+    // Language links keep the visitor on the page they are reading: on
+    // /services each language goes to that language's /services/. The drawer
+    // links are baked into the snapshot; the runtime menu is fixed up by the
+    // vanilla layer (it is built after the snapshot by the export's script).
+    if (pageVariant === 'services') {
+      document.querySelectorAll('a.dl-lang[hreflang], a.locale-item[hreflang]').forEach((a) => {
+        const code = a.getAttribute('hreflang');
+        if (localeCodes.includes(code)) a.setAttribute('href', (code === 'en' ? '/' : `/${code}/`) + 'services/');
+      });
+    }
+
     // On /services the contact block leads with the project path (call,
     // WhatsApp, brief); on home the hiring path stays first.
     if (pageVariant === 'services') {
@@ -1742,7 +1842,7 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
     ? `<nav class="lang-switch" aria-label="Language">` +
       locales
         .map((l) =>
-          `<a href="${l.urlPath}"${l.lang === lang ? ' aria-current="true"' : ''}>` +
+          `<a href="${l.urlPath}${pageSuffix}" hreflang="${l.lang}"${l.lang === lang ? ' aria-current="true"' : ''}>` +
           `${langName[l.lang] || l.lang.toUpperCase()}</a>`)
         .join('') +
       `</nav>`
@@ -1797,6 +1897,25 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
     });},{threshold:0.12,rootMargin:'0px 0px -60px 0px'});
     reveals.forEach(function(el){io.observe(el);});
   } else { reveals.forEach(function(el){el.classList.add('in');}); }
+  // Language menu: the export's script builds it with home-page targets
+  // ("/" and "/<code>/"). On /services, point each language at its own
+  // /services/ so switching language never drops the visitor on home.
+  // The menu is built a few frames after load, so watch for it.
+  var PAGE_SUFFIX=${JSON.stringify(pageSuffix)};
+  if(PAGE_SUFFIX){
+    var fixLangLinks=function(){
+      document.querySelectorAll('a.locale-item[hreflang],a.dl-lang[hreflang],.lang-switch a[hreflang]').forEach(function(a){
+        var c=a.getAttribute('hreflang');
+        if(/^[a-z]{2}$/.test(c)){var h=(c==='en'?'/':'/'+c+'/')+PAGE_SUFFIX;if(a.getAttribute('href')!==h)a.setAttribute('href',h);}
+      });
+      return document.querySelector('a.locale-item[hreflang]')!==null;
+    };
+    if(!fixLangLinks()&&'MutationObserver' in window){
+      var mo=new MutationObserver(function(){if(fixLangLinks())mo.disconnect();});
+      mo.observe(document.body,{childList:true,subtree:true});
+      setTimeout(function(){mo.disconnect();},10000);
+    }
+  }
   // Printing (or saving as PDF) shows every case study in full, then puts
   // the folds back the way the reader left them.
   addEventListener('beforeprint',function(){
@@ -1892,7 +2011,7 @@ ${skipLink(lang)}
 ${switcher}
 <div id="root">${result.body}</div>
 <script src="https://assets.calendly.com/assets/external/widget.js" async></script>
-${enhanceJS ? `<script>${enhanceJS}</script>` : ''}
+${enhanceJS ? `<script>${enhanceForVariant(enhanceJS, variant)}</script>` : ''}
 <script>${interactivity}</script>
 </body>
 </html>`;
@@ -2061,6 +2180,7 @@ async function build() {
   await assertA11yBaseline(pages);
   await assertNoForbiddenStrings();
   await assertNoDeadAnchors();
+  await assertLocaleRouting(locales);
 
   console.log(`\n✓ Built ${locales.length} locale page(s); removed React/ReactDOM/Babel-standalone/editor scaffolding.`);
 }
