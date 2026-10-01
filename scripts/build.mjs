@@ -52,7 +52,18 @@ const GH_USER = 'ahmedfarid2';
 const PINTEREST_VERIFY_TAG = '<meta name="p:domain_verify" content="08bdb959e921275dc5041af6f822622a"/>';
 
 const AD_PIXEL_ID = '9ceAHjhY9TXnV8VVdRpZEx';
-const AD_PIXEL = `<style>
+// Banner copy per locale. The page language decides; consent behaviour is the
+// same everywhere (opt-in, nothing loads until "Allow", choice remembered).
+const CONSENT_COPY = {
+  en: { label: 'Measurement consent', text: "I'd like to load one advertising-measurement pixel to see which referrals reach this site. Nothing loads unless you agree.", no: 'No thanks', yes: 'Allow' },
+  ar: { label: 'الموافقة على القياس', text: 'أودّ تحميل بكسل واحد لقياس الإعلانات لمعرفة مصادر الزيارات التي تصل إلى هذا الموقع. لن يُحمَّل أي شيء ما لم توافق.', no: 'لا، شكرًا', yes: 'أوافق' },
+  de: { label: 'Einwilligung zur Messung', text: 'Ich würde gern ein Werbe-Messpixel laden, um zu sehen, über welche Verweise Besucher hierherkommen. Es wird nichts geladen, solange Sie nicht zustimmen.', no: 'Nein, danke', yes: 'Erlauben' },
+  es: { label: 'Consentimiento de medición', text: 'Me gustaría cargar un píxel de medición publicitaria para ver qué referencias traen visitas a este sitio. No se carga nada a menos que aceptes.', no: 'No, gracias', yes: 'Permitir' },
+  fr: { label: 'Consentement à la mesure', text: "J'aimerais charger un pixel de mesure publicitaire pour voir quelles sources amènent des visiteurs sur ce site. Rien ne se charge sans votre accord.", no: 'Non merci', yes: 'Autoriser' },
+};
+const adPixel = (lang) => {
+  const c = CONSENT_COPY[lang] || CONSENT_COPY.en;
+  return `<style>
 .cbar{position:fixed;left:16px;right:16px;bottom:16px;z-index:9999;margin:0 auto;max-width:640px;
 display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;
 padding:14px 16px;border-radius:14px;font:400 13.5px/1.5 ui-sans-serif,system-ui,sans-serif;
@@ -78,17 +89,20 @@ border:1px solid rgba(255,255,255,.18);background:transparent;color:#e7e2d8}
   if(saved==='no')return;
   function ask(){
     var b=document.createElement('div');
-    b.className='cbar';b.setAttribute('role','dialog');b.setAttribute('aria-label','Measurement consent');
+    var C=${JSON.stringify(c).replace(/</g, '\\u003c')};
+    b.className='cbar';b.setAttribute('role','dialog');b.setAttribute('aria-label',C.label);
+    b.lang=document.documentElement.lang||'en';b.dir=document.documentElement.dir||'ltr';
     var p=document.createElement('p');
-    p.textContent="I'd like to load one advertising-measurement pixel to see which referrals reach this site. Nothing loads unless you agree.";
+    p.textContent=C.text;
     function pick(v){try{localStorage.setItem(KEY,v)}catch(e){}b.remove();if(v==='yes')load()}
-    var no=document.createElement('button');no.textContent='No thanks';no.onclick=function(){pick('no')};
-    var yes=document.createElement('button');yes.className='y';yes.textContent='Allow';yes.onclick=function(){pick('yes')};
+    var no=document.createElement('button');no.textContent=C.no;no.onclick=function(){pick('no')};
+    var yes=document.createElement('button');yes.className='y';yes.textContent=C.yes;yes.onclick=function(){pick('yes')};
     b.appendChild(p);b.appendChild(no);b.appendChild(yes);document.body.appendChild(b);
   }
   if(document.readyState!=='loading')setTimeout(ask,900);
   else document.addEventListener('DOMContentLoaded',function(){setTimeout(ask,900)});
 })();</script>`;
+};
 
 // ── Accessibility & touch baseline ──────────────────────────────────────────
 // Shared by every emitted page: the rendered locales get it in their build-fix
@@ -466,7 +480,8 @@ const FORBIDDEN = [
   // owner-approved client-path CTA is the 30-minute variant below, which does
   // not contain this string; it belongs only in the EN contact block.
   { s: 'Book a scoping call', max: 0 },
-  { s: 'Book a 30-minute scoping call', max: 2 },
+  // EN home contact, EN services contact, EN services pricing CTA.
+  { s: 'Book a 30-minute scoping call', max: 3 },
   // Pricing moved to /work-with-me.html. Banned on the home page, expected on
   // the page that now owns the offer — so these skip that one file rather than
   // being dropped from the list, which would stop guarding the home page too.
@@ -1397,6 +1412,16 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
       }
     }
 
+    // Footer email: let it break after the "@" rather than mid-domain in a
+    // narrow footer column.
+    document.querySelectorAll('footer a[href^="mailto:"]').forEach((a) => {
+      if (a.children.length || !a.textContent.includes('@')) return;
+      const [local, domain] = a.textContent.split('@');
+      a.textContent = local + '@';
+      a.appendChild(document.createElement('wbr'));
+      a.appendChild(document.createTextNode(domain));
+    });
+
     // On /services the contact block leads with the project path (call,
     // WhatsApp, brief); on home the hiring path stays first.
     if (pageVariant === 'services') {
@@ -1794,7 +1819,7 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 ${PINTEREST_VERIFY_TAG}
-${AD_PIXEL}
+${adPixel(lang)}
 <title>${esc(seo.title)}</title>
 ${headMeta}
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1824,6 +1849,28 @@ ${jsonLd}
 [dir="rtl"] .connect-handle,
 [dir="rtl"] .price-amount,
 [dir="rtl"] .addon-price{text-align:right}
+/* Small screens: grid items default to min-width:auto, so one long
+   unbreakable line (a repo name, a German footer heading, the email
+   address) widened the GitHub card and the footer grid past a 320px
+   column. Let the tracks shrink and wrap long tokens instead. */
+.gh>*{min-width:0}
+@media (max-width:760px){.foot-grid>*{min-width:0}.foot-col{overflow-wrap:break-word}}
+/* The GitHub stats row (three uppercase labels, 16px cell padding) needed
+   289–304px inside a 254px card at 360px. Tighten it on phones only. */
+@media (max-width:420px){.gh-card{padding:24px 20px}.gh-stat{padding:0 10px}.gh-stat .l{letter-spacing:.06em}
+  .gh-heat-foot{gap:10px}.gh-heat-foot>:nth-child(2){text-align:center}}
+/* Italic gradient text (background-clip:text) is painted only inside the
+   element's box, so the last letter's italic overhang was cut off. Widen
+   the box without moving the text; clone repeats that on every line the
+   phrase wraps onto. */
+.cta h2 em,.hero-h1 .it{padding-inline-end:.12em;margin-inline-end:-.12em;
+  -webkit-box-decoration-break:clone;box-decoration-break:clone}
+/* .cta-inner's own padding shorthand zeroed the .wrap gutter, so the closing
+   copy touched the screen edge on phones. On phones the gutter now lives
+   here and the contact rows drop the inline padding that compensated for
+   it; wider layouts are unchanged. */
+@media (max-width:760px){.cta-inner{padding-left:var(--gutter);padding-right:var(--gutter)}
+  .cta-inner .contact-paths{padding-left:0!important;padding-right:0!important}}
 /* Case studies outside the flagship five fold Problem + Approach into a
    native <details>; Impact and the tech notes stay visible. */
 .case-more-summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:16px;

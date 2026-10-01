@@ -2553,6 +2553,19 @@ const CONTACT_PATHS_EDITS = LOCALES.map((loc) => ({
   },
 }));
 
+// ── Services pricing CTA: same wording as the contact block ───────────────
+// The pricing section's Calendly button said "Book a 30-min call" while the
+// contact block (CONTACT_PATH_COPY.call) says "Book a 30-minute scoping call".
+// Matched with the button's closing `<span className="arr">` so only that
+// button changes. Labels avoid 'Scoping-Call buchen' (the DE primary-CTA edit).
+const PRICING_CALL_EDITS = factEdits('services pricing CTA: 30-minute scoping call', {
+  en: ['>Book a 30-min call <span className="arr">', '>Book a 30-minute scoping call <span className="arr">'],
+  ar: ['>احجز مكالمة ٣٠ دقيقة <span className="arr">', '>احجز مكالمة تحديد نطاق مدتها ٣٠ دقيقة <span className="arr">'],
+  de: ['>30-Minuten-Call buchen <span className="arr">', '>30-minütigen Scoping-Call vereinbaren <span className="arr">'],
+  es: ['>Reservar una llamada de 30 min <span className="arr">', '>Reserva una llamada de alcance de 30 minutos <span className="arr">'],
+  fr: ['>Réserver un appel de 30 min <span className="arr">', '>Réserver un appel de cadrage de 30 minutes <span className="arr">'],
+});
+
 // ── RevealSite: 13+ pharmacy brands, matching By-the-numbers ───────────────
 // The case's own fleet list shows 14 products & storefronts — 13 pharmacies
 // plus the Almani institute — so "13+ white-label brands" (METRICS) is the
@@ -2970,6 +2983,7 @@ const EDITS = [
   // Last on purpose — see the comment on BRAND_EDITS.
   ...BRAND_EDITS,
   ...CONTACT_PATHS_EDITS,
+  ...PRICING_CALL_EDITS,
 ];
 
 // Locate the `__bundler/template` line: the document shell, stored as a single

@@ -114,6 +114,13 @@ export const DRIFT_GUARDS = [
   // Tracking parameter stripped from LinkedIn company links. (The Compass Med
   // link stays on http:// until its https:// form is confirmed to resolve.)
   { s: 'originalSubdomain', max: 0 },
+  // The services pricing CTA said "30-min call"; it now matches the contact
+  // block's "30-minute scoping call" wording in every locale.
+  { s: 'Book a 30-min call', max: 0 },
+  { s: 'احجز مكالمة ٣٠ دقيقة', max: 0 },
+  { s: '30-Minuten-Call buchen', max: 0 },
+  { s: 'Reservar una llamada de 30 min', max: 0 },
+  { s: 'Réserver un appel de 30 min', max: 0 },
   // RevealSite brand count is METRICS.whiteLabelBrands (13+), not 12+.
   { s: '12+ branded', max: 0 },
   { s: 'وراء +١٢', max: 0 },
