@@ -1692,13 +1692,34 @@ const YELO_TITLE_EDITS = [
 // Owner-confirmed (Oct 2026): at Compass Med (Aug 2021 – Dec 2023) he did art
 // production and built the e-commerce platform. The row said only Art
 // Production while the case study said Software Engineer.
-const COMPASS_ROLE_EDITS = factEdits('Compass Med experience row: both roles', {
-  en: ['role: "Art Production", type: "Part-time", co: "Compass Med"', 'role: "Software Engineer · Art Production", type: "Part-time", co: "Compass Med"'],
-  ar: ['role: "إنتاج فنّي", type: "دوام جزئي", co: "Compass Med"', 'role: "مهندس برمجيات · إنتاج فنّي", type: "دوام جزئي", co: "Compass Med"'],
-  de: ['role: "Kunstproduktion", type: "Teilzeit", co: "Compass Med"', 'role: "Softwareentwickler · Kunstproduktion", type: "Teilzeit", co: "Compass Med"'],
-  es: ['role: "Producción Artística", type: "Media jornada", co: "Compass Med"', 'role: "Ingeniero de Software · Producción Artística", type: "Media jornada", co: "Compass Med"'],
-  fr: ['role: "Production artistique", type: "Temps partiel", co: "Compass Med"', 'role: "Ingénieur logiciel · Production artistique", type: "Temps partiel", co: "Compass Med"'],
-});
+const COMPASS_ROLE_EDITS = [
+  // Title as on LinkedIn (the owner's source of truth). Third element = the
+  // "· Art Production" wording an earlier version of this edit wrote.
+  ...factEdits('Compass Med experience row: both roles', {
+    en: ['role: "Art Production", type: "Part-time", co: "Compass Med"',
+         'role: "Software Engineer & Art Production Director", type: "Part-time", co: "Compass Med"',
+         'role: "Software Engineer · Art Production", type: "Part-time", co: "Compass Med"'],
+    ar: ['role: "إنتاج فنّي", type: "دوام جزئي", co: "Compass Med"',
+         'role: "مهندس برمجيات ومدير الإنتاج الفني", type: "دوام جزئي", co: "Compass Med"',
+         'role: "مهندس برمجيات · إنتاج فنّي", type: "دوام جزئي", co: "Compass Med"'],
+    de: ['role: "Kunstproduktion", type: "Teilzeit", co: "Compass Med"',
+         'role: "Softwareentwickler & Leiter Art Production", type: "Teilzeit", co: "Compass Med"',
+         'role: "Softwareentwickler · Kunstproduktion", type: "Teilzeit", co: "Compass Med"'],
+    es: ['role: "Producción Artística", type: "Media jornada", co: "Compass Med"',
+         'role: "Ingeniero de Software y Director de Producción Artística", type: "Media jornada", co: "Compass Med"',
+         'role: "Ingeniero de Software · Producción Artística", type: "Media jornada", co: "Compass Med"'],
+    fr: ['role: "Production artistique", type: "Temps partiel", co: "Compass Med"',
+         'role: "Ingénieur logiciel & directeur de la production artistique", type: "Temps partiel", co: "Compass Med"',
+         'role: "Ingénieur logiciel · Production artistique", type: "Temps partiel", co: "Compass Med"'],
+  }),
+  // Company names as on LinkedIn. "iFutue" was a typo: the row already
+  // links to linkedin.com/company/interactive-future. almentor styles its
+  // name in lowercase.
+  ...factEdits('experience row: Interactive Future', Object.fromEntries(
+    LOCALES.map((l) => [l, ['co: "iFutue"', 'co: "Interactive Future"']]))),
+  ...factEdits('experience row: almentor', Object.fromEntries(
+    LOCALES.map((l) => [l, ['co: "Almentor"', 'co: "almentor"']]))),
+];
 
 // ── Agentic SDLC ────────────────────────────────────────────────────────────
 // The CV claims "Agentic SDLC — specs executed by coding agents, reviewed
