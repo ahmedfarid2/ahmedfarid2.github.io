@@ -1866,10 +1866,11 @@ ${jsonLd}
 .cta h2 em,.hero-h1 .it{padding-inline-end:.12em;margin-inline-end:-.12em;
   -webkit-box-decoration-break:clone;box-decoration-break:clone}
 /* .cta-inner's own padding shorthand zeroed the .wrap gutter, so the closing
-   copy touched the screen edge on phones. The gutter now lives here, and the
-   contact rows drop the inline padding that compensated for it. */
-.cta-inner{padding-left:var(--gutter);padding-right:var(--gutter)}
-.cta-inner .contact-paths{padding-left:0!important;padding-right:0!important}
+   copy touched the screen edge on phones. On phones the gutter now lives
+   here and the contact rows drop the inline padding that compensated for
+   it; wider layouts are unchanged. */
+@media (max-width:760px){.cta-inner{padding-left:var(--gutter);padding-right:var(--gutter)}
+  .cta-inner .contact-paths{padding-left:0!important;padding-right:0!important}}
 /* Case studies outside the flagship five fold Problem + Approach into a
    native <details>; Impact and the tech notes stay visible. */
 .case-more-summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:16px;
