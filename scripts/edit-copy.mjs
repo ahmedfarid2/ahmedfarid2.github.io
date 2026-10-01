@@ -1582,13 +1582,15 @@ const FOLLOWER_EDITS = [
   // The connect card always renders a handle, so it gets the profile slug —
   // the same shape as the Behance card's "ahmedfarid20" — rather than being
   // blanked, which would leave a visibly empty line in the grid.
-  // (Vanity slug since Oct 2026: iamahmedfarid — see BRAND_EDITS.)
+  // (Vanity slug since Oct 2026: iamahmedfarid — see BRAND_EDITS. Third
+  // element = the "ahmed-farid" handle this edit wrote before that, so an
+  // export committed in that state still converges in one pass.)
   ...factEdits('LinkedIn card: drop follower count', {
-    en: ['handle: "25,000+ followers"', 'handle: "iamahmedfarid"'],
-    ar: ['handle: "٢٥٬٠٠٠+ متابع"', 'handle: "iamahmedfarid"'],
-    de: ['handle: "25.000+ Follower"', 'handle: "iamahmedfarid"'],
-    es: ['handle: "25.000+ seguidores"', 'handle: "iamahmedfarid"'],
-    fr: ['handle: "25 000+ abonnés"', 'handle: "iamahmedfarid"'],
+    en: ['handle: "25,000+ followers"', 'handle: "iamahmedfarid"', 'handle: "ahmed-farid"'],
+    ar: ['handle: "٢٥٬٠٠٠+ متابع"', 'handle: "iamahmedfarid"', 'handle: "ahmed-farid"'],
+    de: ['handle: "25.000+ Follower"', 'handle: "iamahmedfarid"', 'handle: "ahmed-farid"'],
+    es: ['handle: "25.000+ seguidores"', 'handle: "iamahmedfarid"', 'handle: "ahmed-farid"'],
+    fr: ['handle: "25 000+ abonnés"', 'handle: "iamahmedfarid"', 'handle: "ahmed-farid"'],
   }),
   ...factEdits('LinkedIn card desc: drop network size', {
     en: ['desc: "Career, recommendations & a 25K+ network."', 'desc: "Career history and recommendations."'],
@@ -2529,12 +2531,23 @@ const CONTACT_PATHS_EDITS = LOCALES.map((loc) => ({
     if (end < 0) return null;
     const slice = text.slice(a, end);
     if (slice.includes('className="contact-paths"')) return text;
-    const b0 = slice.indexOf('<div className="cta-btns">');
+    const OPEN = '<div className="cta-btns">';
+    const b0 = slice.indexOf(OPEN);
     if (b0 < 0) return null;
-    // The button row closes at the first `</div>` after its last <a>.
-    const lastA = slice.lastIndexOf('</a>');
-    const b1 = slice.indexOf('</div>', lastA);
-    if (lastA < b0 || b1 < 0) return null;
+    // Find the row's own closing tag by div depth, so a re-export that adds
+    // anything after the row cannot be swallowed by the splice.
+    const tag = /<div\b|<\/div>/g;
+    tag.lastIndex = b0 + OPEN.length;
+    let depth = 1, b1 = -1, m;
+    while ((m = tag.exec(slice))) {
+      depth += m[0] === '</div>' ? -1 : 1;
+      if (depth === 0) { b1 = m.index; break; }
+    }
+    if (b1 < 0) return null;
+    // Only buttons may be replaced: if the row holds anything but <a> links,
+    // the export changed shape — leave it alone (soft-fails to the old row).
+    const inner = slice.slice(b0 + OPEN.length, b1);
+    if (inner.replace(/<a\b[\s\S]*?<\/a>/g, '').trim() !== '') return null;
     const next = slice.slice(0, b0) + contactPaths(loc) + slice.slice(b1 + '</div>'.length);
     return text.slice(0, a) + next + text.slice(end);
   },

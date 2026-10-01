@@ -30,15 +30,18 @@ export const CONTACT = {
   cv: '/Ahmed-Farid-CV.pdf',
 };
 
+// Documentation-grade today: the displayed numbers live in the exports and
+// edit-copy factEdits; this table is where their evidence is recorded and
+// checked before any of them changes.
 export const METRICS = {
   // Owner-confirmed canonical claim: first paid to write code in 2019.
   years: { display: '6+', evidence: 'professional since 2019 (owner-confirmed)' },
   storeApps: { display: '12+', evidence: '15 distinct App Store / Google Play links across the case studies' },
   products: { display: '27+', evidence: 'case studies + RevealSite fleet + own products + builds, all linked' },
   countries: { display: '17+', evidence: '17 country flags listed in the Reach section' },
-  flagship: { display: '9+', evidence: '12 case studies, 5 marked FLAGSHIP' },
+  flagship: { display: '9+', evidence: '12 linked case studies (5 marked FLAGSHIP); 9+ is a floor, not the flagship count' },
   whiteLabelBrands: { display: '13+', evidence: 'RevealSite fleet: 13 pharmacies + Almani institute (14 products & storefronts)' },
-  companies: { display: '8+', evidence: '12+ companies named in Experience' },
+  companies: { display: '8+', evidence: '12+ companies named in Experience; 8+ is a conservative floor' },
   tools: { display: '60+', evidence: '~93 items in the toolbelt' },
 };
 
@@ -70,7 +73,7 @@ export const SEO = {
     },
     es: {
       title: 'Ahmed Farid — Ingeniero de Software Senior en Dubái · SaaS multi-tenant',
-      description: 'Ingeniero de Software Senior en Dubái (6+ años): SaaS multi-tenant en tiempo real, de principio a fin — Laravel, Next.js, Flutter. Abierto a roles senior y consultoría.',
+      description: 'Ingeniero de Software Senior en Dubái (6+ años): SaaS multi-tenant en tiempo real, de punta a punta — Laravel, Next.js, Flutter. Roles senior y consultoría.',
     },
     fr: {
       title: 'Ahmed Farid — Ingénieur logiciel senior à Dubaï · SaaS multi-tenant',
@@ -84,7 +87,7 @@ export const SEO = {
     },
     ar: {
       title: 'العمل الحر والاستشارات — Ahmed Farid، مهندس برمجيات أول',
-      description: 'مشاريع محدّدة النطاق، وعقود هندسية مستمرة، ومراجعات معمارية لمنصّات SaaS فورية متعدّدة المستأجرين — مع الأسعار والأسئلة الشائعة ومكالمة تحديد نطاق مدتها 30 دقيقة. من دبي.',
+      description: 'مشاريع محدّدة النطاق وعقود مستمرة ومراجعات معمارية لمنصّات SaaS متعدّدة المستأجرين — الأسعار والأسئلة الشائعة ومكالمة 30 دقيقة. من دبي.',
     },
     de: {
       title: 'Freelance & Beratung — Ahmed Farid, Senior-Softwareentwickler',
@@ -92,7 +95,7 @@ export const SEO = {
     },
     es: {
       title: 'Freelance y consultoría — Ahmed Farid, Ingeniero de Software Senior',
-      description: 'Proyectos de alcance cerrado, retainers de ingeniería y revisiones de arquitectura para SaaS multi-tenant en tiempo real — con precios, FAQ y llamada de alcance de 30 min. Desde Dubái.',
+      description: 'Proyectos cerrados, retainers y revisiones de arquitectura para SaaS multi-tenant en tiempo real — precios, FAQ y llamada de alcance de 30 min. Desde Dubái.',
     },
     fr: {
       title: 'Freelance & conseil — Ahmed Farid, Ingénieur logiciel senior',
@@ -113,7 +116,13 @@ export const DRIFT_GUARDS = [
   { s: 'originalSubdomain', max: 0 },
   // RevealSite brand count is METRICS.whiteLabelBrands (13+), not 12+.
   { s: '12+ branded', max: 0 },
+  { s: 'وراء +١٢', max: 0 },
+  { s: 'hinter 12+ Marken', max: 0 },
+  { s: 'tras 12+ apps', max: 0 },
+  { s: 'derrière 12+ apps', max: 0 },
   // Years: public copy says "6+" or "over six years", never a bare six/5.
+  // These fail closed: a legitimate "twenty-six years" or "dix-six ans" would
+  // also stop the build — reword it or add a lookbehind, don't drop the guard.
   { s: 'Six years', max: 0 },
   { re: /(?<![Oo]ver |[Mm]ore than )\bsix years\b/g, max: 0 },
   { re: /(?<!أكثر من )ست سنوات/g, max: 0 },
