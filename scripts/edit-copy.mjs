@@ -1677,7 +1677,28 @@ const YELO_TITLE_EDITS = [
     fr: ["role: \"Ingénieur logiciel — back-end Laravel, front-end Next.js et l'app mobile Flutter.\"",
          "role: \"Ingénieur logiciel senior — back-end Laravel, front-end Next.js et l'app mobile Flutter.\""],
   }),
+  // Oct 2026: the Experience row was the last place still saying Software
+  // Engineer for Yelo (owner-confirmed Senior).
+  ...factEdits('Yelo experience row: Senior', {
+    en: ['role: "Software Engineer", type: "Full-time", co: "Yelo Sale"', 'role: "Senior Software Engineer", type: "Full-time", co: "Yelo Sale"'],
+    ar: ['role: "مهندس برمجيات", type: "دوام كامل", co: "Yelo Sale"', 'role: "مهندس برمجيات أول", type: "دوام كامل", co: "Yelo Sale"'],
+    de: ['role: "Softwareentwickler", type: "Vollzeit", co: "Yelo Sale"', 'role: "Senior-Softwareentwickler", type: "Vollzeit", co: "Yelo Sale"'],
+    es: ['role: "Ingeniero de Software", type: "Jornada completa", co: "Yelo Sale"', 'role: "Ingeniero de Software Senior", type: "Jornada completa", co: "Yelo Sale"'],
+    fr: ['role: "Ingénieur logiciel", type: "Temps plein", co: "Yelo Sale"', 'role: "Ingénieur logiciel senior", type: "Temps plein", co: "Yelo Sale"'],
+  }),
 ];
+
+// ── Compass Med: both roles ─────────────────────────────────────────────────
+// Owner-confirmed (Oct 2026): at Compass Med (Aug 2021 – Dec 2023) he did art
+// production and built the e-commerce platform. The row said only Art
+// Production while the case study said Software Engineer.
+const COMPASS_ROLE_EDITS = factEdits('Compass Med experience row: both roles', {
+  en: ['role: "Art Production", type: "Part-time", co: "Compass Med"', 'role: "Software Engineer · Art Production", type: "Part-time", co: "Compass Med"'],
+  ar: ['role: "إنتاج فنّي", type: "دوام جزئي", co: "Compass Med"', 'role: "مهندس برمجيات · إنتاج فنّي", type: "دوام جزئي", co: "Compass Med"'],
+  de: ['role: "Kunstproduktion", type: "Teilzeit", co: "Compass Med"', 'role: "Softwareentwickler · Kunstproduktion", type: "Teilzeit", co: "Compass Med"'],
+  es: ['role: "Producción Artística", type: "Media jornada", co: "Compass Med"', 'role: "Ingeniero de Software · Producción Artística", type: "Media jornada", co: "Compass Med"'],
+  fr: ['role: "Production artistique", type: "Temps partiel", co: "Compass Med"', 'role: "Ingénieur logiciel · Production artistique", type: "Temps partiel", co: "Compass Med"'],
+});
 
 // ── Agentic SDLC ────────────────────────────────────────────────────────────
 // The CV claims "Agentic SDLC — specs executed by coding agents, reviewed
@@ -2991,6 +3012,7 @@ const EDITS = [
   ...BRAND_EDITS,
   ...CONTACT_PATHS_EDITS,
   ...PRICING_CALL_EDITS,
+  ...COMPASS_ROLE_EDITS,
 ];
 
 // Locate the `__bundler/template` line: the document shell, stored as a single
