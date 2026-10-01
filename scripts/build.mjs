@@ -45,6 +45,12 @@ const SITE_URL = 'https://iamahmedfarid.com';
 // The Ads Manager snippet's `debug: true` is deliberately dropped: it logs SDK
 // chatter to the console, and the people most likely to open devtools here are
 // the engineers this site is meant to impress.
+// Pinterest domain verification: lets Pinterest attribute Pins from this site to
+// his account. Public by design (it only proves control of the domain). Lives
+// here, not in the export, because the head is rebuilt below from an
+// allowlist that would drop an unknown <meta>.
+const PINTEREST_VERIFY_TAG = '<meta name="p:domain_verify" content="08bdb959e921275dc5041af6f822622a"/>';
+
 const AD_PIXEL_ID = '9ceAHjhY9TXnV8VVdRpZEx';
 const AD_PIXEL = `<style>
 .cbar{position:fixed;left:16px;right:16px;bottom:16px;z-index:9999;margin:0 auto;max-width:640px;
@@ -1649,6 +1655,7 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+${PINTEREST_VERIFY_TAG}
 ${AD_PIXEL}
 <title>${result.title}</title>
 ${headMeta}
