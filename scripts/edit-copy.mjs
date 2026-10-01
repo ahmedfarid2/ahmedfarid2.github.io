@@ -84,19 +84,13 @@ function leadMagnetCard({ name, handle, desc }) {
 // "Profile", "By the numbers", "Full toolbelt" — so this follows that pattern.
 
 // ── Section 1: own products ─────────────────────────────────────────────────
-// Only the two things Ahmed chose, built and hosts himself. The section's whole
+// Only the things Ahmed chose, built and hosts himself. Applyni was the
+// first card here until Oct 2026; it is covered by its case study instead,
+// so it is not listed twice.
+// The section's whole
 // value is that claim, so anything commissioned by someone else belongs in the
 // second section below — a heading that isn't true costs more than a card gains.
 const PRODUCTS = [
-  {
-    // First, deliberately: it is the largest of the three and the only one on
-    // its own domain, so it is the strongest evidence for the section's claim.
-    // It also appears as a full case study — the card is the quick link, the
-    // case study is the depth, and the two sections sit far apart on the page.
-    name: 'Applyni',
-    href: 'https://applyni.com/ar',
-    chips: ['Next.js', 'TypeScript', 'Supabase', 'Tailwind v4'],
-  },
   {
     name: 'ReconcilePilot',
     href: 'https://reconcilepilot.iamahmedfarid.com',
@@ -164,9 +158,8 @@ const PRODUCTS_COPY = {
     eyebrow: 'Own products',
     title: ['Products I built ', 'and run myself.'],
     sub: 'Client work shows what I can deliver against someone else’s brief. These are the ones where I picked the problem, shipped the product, and host it on my own domain.',
-    cats: ['AI career agent', 'Finance ops', 'AI reporting'],
+    cats: ['Finance ops', 'AI reporting'],
     descs: [
-      'Saudi-first job-search agent: it reads your CV, matches you to companies where your experience actually fits with a plain-language reason for each, then sends from your own Gmail — only after you approve every message.',
       'Invoice ↔ bank-statement reconciliation for accountants. Upload both sheets and see what is paid, unpaid, double-paid or suspicious — every row scored for confidence with a plain-English reason.',
       'Turns a raw CSV into a business report: interactive dashboard, AI-written executive summary, findings, risks and recommendations, exportable as PDF. Parsing runs in the browser — data never leaves it.',
     ],
@@ -175,9 +168,8 @@ const PRODUCTS_COPY = {
     eyebrow: 'منتجاتي الخاصة',
     title: ['منتجات بنيتها ', 'وأُشغّلها بنفسي.'],
     sub: 'أعمال العملاء تُظهر ما أستطيع تسليمه وفق متطلبات غيري. هذه هي التي اخترت فيها المشكلة بنفسي، وأطلقت المنتج، وأستضيفه على نطاقي الخاص.',
-    cats: ['وكيل مهني بالذكاء الاصطناعي', 'عمليات مالية', 'تقارير بالذكاء الاصطناعي'],
+    cats: ['عمليات مالية', 'تقارير بالذكاء الاصطناعي'],
     descs: [
-      'وكيل بحث عن عمل، سعودي أولًا: يقرأ سيرتك، ويطابقك مع شركات تناسب خبرتك فعلًا مع سبب واضح لكل مطابقة، ثم يرسل من بريدك أنت — وفقط بعد موافقتك على كل رسالة.',
       'مطابقة الفواتير مع كشوف الحساب البنكية للمحاسبين. ارفع الملفين وشاهد ما هو مدفوع، وغير مدفوع، ومدفوع مرتين، أو مشبوه — مع درجة ثقة وسبب واضح لكل صف.',
       'يحوّل ملف CSV خامًا إلى تقرير أعمال: لوحة تفاعلية، وملخّص تنفيذي مكتوب بالذكاء الاصطناعي، ونتائج ومخاطر وتوصيات، قابل للتصدير PDF. التحليل يتم في المتصفح — البيانات لا تغادره.',
     ],
@@ -186,9 +178,8 @@ const PRODUCTS_COPY = {
     eyebrow: 'Eigene Produkte',
     title: ['Produkte, die ich gebaut habe ', 'und selbst betreibe.'],
     sub: 'Kundenarbeit zeigt, was ich nach fremder Vorgabe liefere. Hier habe ich das Problem selbst gewählt, das Produkt ausgeliefert und hoste es auf meiner eigenen Domain.',
-    cats: ['KI-Karriereagent', 'Finanzprozesse', 'KI-Reporting'],
+    cats: ['Finanzprozesse', 'KI-Reporting'],
     descs: [
-      'Jobsuche-Agent, Saudi-first: liest den Lebenslauf, matcht auf Unternehmen, zu denen die Erfahrung wirklich passt, mit verständlicher Begründung je Match, und versendet dann aus dem eigenen Gmail — erst nach Freigabe jeder Nachricht.',
       'Abgleich von Rechnungen und Kontoauszügen für Buchhalter. Beide Dateien hochladen und sehen, was bezahlt, offen, doppelt bezahlt oder auffällig ist — jede Zeile mit Konfidenzwert und verständlicher Begründung.',
       'Macht aus einer rohen CSV einen Geschäftsbericht: interaktives Dashboard, KI-geschriebene Zusammenfassung, Erkenntnisse, Risiken und Empfehlungen, als PDF exportierbar. Das Parsen läuft im Browser — die Daten verlassen ihn nie.',
     ],
@@ -197,9 +188,8 @@ const PRODUCTS_COPY = {
     eyebrow: 'Productos propios',
     title: ['Productos que construí ', 'y opero yo mismo.'],
     sub: 'El trabajo con clientes muestra lo que entrego según el encargo de otros. Estos son los que elegí yo: escogí el problema, lancé el producto y lo alojo en mi propio dominio.',
-    cats: ['Agente de carrera con IA', 'Operaciones financieras', 'Informes con IA'],
+    cats: ['Operaciones financieras', 'Informes con IA'],
     descs: [
-      'Agente de búsqueda de empleo pensado para Arabia Saudí: lee tu CV, te empareja con empresas donde tu experiencia encaja de verdad con un motivo en lenguaje claro, y envía desde tu propio Gmail — solo tras aprobar cada mensaje.',
       'Conciliación de facturas y extractos bancarios para contables. Sube ambos archivos y ve qué está pagado, pendiente, pagado dos veces o es sospechoso — cada fila con un nivel de confianza y un motivo en lenguaje claro.',
       'Convierte un CSV en bruto en un informe de negocio: panel interactivo, resumen ejecutivo escrito por IA, hallazgos, riesgos y recomendaciones, exportable a PDF. El análisis ocurre en el navegador — los datos nunca salen de él.',
     ],
@@ -208,9 +198,8 @@ const PRODUCTS_COPY = {
     eyebrow: 'Mes propres produits',
     title: ['Des produits que j’ai construits ', 'et que j’exploite moi-même.'],
     sub: 'Le travail client montre ce que je livre selon le cahier des charges d’autrui. Ici, j’ai choisi le problème, livré le produit et je l’héberge sur mon propre domaine.',
-    cats: ['Agent de carrière IA', 'Opérations financières', 'Reporting par IA'],
+    cats: ['Opérations financières', 'Reporting par IA'],
     descs: [
-      'Agent de recherche d’emploi pensé pour l’Arabie saoudite : il lit votre CV, vous rapproche d’entreprises où votre expérience colle vraiment avec une raison en clair, puis envoie depuis votre propre Gmail — seulement après validation de chaque message.',
       'Rapprochement des factures et des relevés bancaires pour les comptables. Chargez les deux fichiers et voyez ce qui est payé, impayé, payé deux fois ou suspect — chaque ligne avec un score de confiance et une raison en clair.',
       'Transforme un CSV brut en rapport d’activité : tableau de bord interactif, synthèse rédigée par IA, constats, risques et recommandations, exportable en PDF. L’analyse tourne dans le navigateur — les données n’en sortent jamais.',
     ],
@@ -439,6 +428,8 @@ const PRODUCT_SECTION_EDITS = ['en', 'ar', 'de', 'es', 'fr'].map((loc) => ({
 
 // Language-independent fields. Names, tech and URLs are never translated —
 // exactly how the existing nine cases treat them.
+// openUrl/hrefs may be a { ar, default } pair: one link per case, in the
+// visitor's language, rather than an Arabic + English pair side by side.
 const NEW_CASES = {
   proven: {
     name: 'Proven Group',
@@ -451,15 +442,15 @@ const NEW_CASES = {
     name: 'Ibdaa Course',
     shotSrc: '/ibdaa.jpg',
     stack: ['Laravel 13', 'Next.js 16', 'PostgreSQL 17', 'Nx + pnpm', 'Tailwind v4'],
-    openUrl: 'https://alpha.ibdaacourse.com/ar',
-    hrefs: ['https://alpha.ibdaacourse.com/ar', 'https://alpha.ibdaacourse.com/en'],
+    openUrl: { ar: 'https://alpha.ibdaacourse.com/ar', default: 'https://alpha.ibdaacourse.com/en' },
+    hrefs: [{ ar: 'https://alpha.ibdaacourse.com/ar', default: 'https://alpha.ibdaacourse.com/en' }],
   },
   applyni: {
     name: 'Applyni',
     shotSrc: '/applyni.jpg',
     stack: ['Next.js', 'TypeScript', 'Supabase', 'Tailwind v4', 'next-intl'],
-    openUrl: 'https://applyni.com/ar',
-    hrefs: ['https://applyni.com/ar', 'https://applyni.com/en'],
+    openUrl: { ar: 'https://applyni.com/ar', default: 'https://applyni.com/en' },
+    hrefs: [{ ar: 'https://applyni.com/ar', default: 'https://applyni.com/en' }],
   },
 };
 
@@ -488,7 +479,7 @@ const CASES_COPY = {
     ibdaa: {
       role: 'Senior Software Engineer · Arabic-first LMS',
       tag: 'Arabic-first learning platform — a Laravel 13 API and a Next.js 16 app in one Nx monorepo, delivered with full handover.',
-      labels: ['Arabic', 'English'],
+      labels: ['Website'],
       note: 'Alpha — “Ibdaa Course” is a working title, pending the client’s launch brand',
       problem: 'Arabic training providers run on platforms designed English-first with RTL bolted on afterwards — so the student experience, the certificate and the admin panel all read like a translation of something else.',
       solution: 'Built Arabic-first instead: locale-prefixed /ar and /en routes over one Next.js 16 App Router app with RTL as the default direction, backed by a Laravel 13 API split into thirteen feature modules — courses, lectures, enrolments, payments, exams, certificates with public verification, reviews, discussions, favourites and reporting. Delivered with deployment, UAT and handover docs so the client can run and extend it without me.',
@@ -506,7 +497,7 @@ const CASES_COPY = {
     applyni: {
       role: 'Solo — product, engineering and operations',
       tag: 'Saudi-first AI career agent — reads your CV, finds companies where you actually fit, and sends from your own Gmail.',
-      labels: ['Arabic', 'English'],
+      labels: ['Website'],
       problem: 'Job seekers in the Gulf blast the same CV at every opening and hear nothing back. The tools that promise to fix it mostly automate the spraying, then dress it up with invented ATS scores and match percentages that explain nothing.',
       solution: 'An agent built to do the opposite of volume. It reads your CV, matches you against Saudi companies and explains each match in words — including what it could not verify, so a weak match says so instead of hiding behind a number. It drafts the outreach, you review it, and it sends from your own Gmail on a queue with skip rules. Nothing leaves without your approval, and the spec forbids what most of this category does: never fabricate candidate information, never promise an interview, no fake ATS scores.',
       impact: [
@@ -542,7 +533,7 @@ const CASES_COPY = {
     ibdaa: {
       role: 'مهندس برمجيات أول · منصّة تعلّم عربية أولًا',
       tag: 'منصّة تعلّم عربية أولًا — واجهة برمجية Laravel 13 وتطبيق Next.js 16 داخل مستودع Nx واحد، مُسلَّمة بتوثيق تسليم كامل.',
-      labels: ['العربية', 'الإنجليزية'],
+      labels: ['الموقع'],
       note: 'نسخة تجريبية — «إبداع كورس» اسم عمل مؤقّت بانتظار هوية العميل عند الإطلاق',
       problem: 'تعمل جهات التدريب العربية على منصّات مُصمّمة بالإنجليزية أولًا ثم أُضيف إليها دعم الاتجاه من اليمين لاحقًا — فتبدو تجربة الطالب والشهادة ولوحة الإدارة كأنها ترجمة لشيء آخر.',
       solution: 'بُنيت بالعربية أولًا بدلًا من ذلك: مسارات /ar و/en داخل تطبيق Next.js 16 واحد باتجاه من اليمين إلى اليسار افتراضيًا، خلفها واجهة برمجية Laravel 13 مقسّمة إلى ثلاث عشرة وحدة — الدورات والمحاضرات والتسجيل والمدفوعات والاختبارات والشهادات مع تحقّق عام، والتقييمات والنقاشات والمفضّلة والتقارير. سُلّمت مع وثائق النشر والاختبار والتسليم ليتمكّن العميل من تشغيلها وتطويرها دوني.',
@@ -560,7 +551,7 @@ const CASES_COPY = {
     applyni: {
       role: 'منفردًا — المنتج والهندسة والتشغيل',
       tag: 'وكيل مهني بالذكاء الاصطناعي، سعودي أولًا — يقرأ سيرتك، ويجد الشركات التي تناسبك فعلًا، ويرسل من بريدك أنت.',
-      labels: ['العربية', 'الإنجليزية'],
+      labels: ['الموقع'],
       problem: 'الباحثون عن عمل في الخليج يرسلون السيرة نفسها إلى كل إعلان ولا يصلهم ردّ. والأدوات التي تَعِد بحلّ ذلك تُؤتمت الرشّ العشوائي في معظمها، ثم تُلبسه درجات توافق ونِسَب مُختلَقة لا تفسّر شيئًا.',
       solution: 'وكيل بُني ليفعل عكس الكمّ. يقرأ سيرتك، ويطابقك مع شركات سعودية، ويشرح كل مطابقة بالكلمات — بما في ذلك ما لم يستطع التحقق منه، فالمطابقة الضعيفة تقول ذلك بدل أن تختبئ خلف رقم. يجهّز لك الرسائل، وأنت تراجعها، ثم تُرسل من بريدك أنت في طابور بقواعد تخطٍّ. لا شيء يخرج دون موافقتك، والمواصفة تمنع ما تفعله معظم هذه الفئة: لا اختلاق لمعلومات المرشّح، ولا وعد بمقابلة، ولا درجات ATS وهمية.',
       impact: [
@@ -596,7 +587,7 @@ const CASES_COPY = {
     ibdaa: {
       role: 'Senior Software Engineer · Arabisch-first-LMS',
       tag: 'Arabisch-first-Lernplattform — eine Laravel-13-API und eine Next.js-16-App in einem Nx-Monorepo, mit vollständiger Übergabe geliefert.',
-      labels: ['Arabisch', 'Englisch'],
+      labels: ['Website'],
       note: 'Alpha — „Ibdaa Course“ ist ein Arbeitstitel bis zum Launch-Branding des Kunden',
       problem: 'Arabische Bildungsanbieter arbeiten mit Plattformen, die englisch-first entworfen und erst nachträglich um RTL ergänzt wurden — Lernerlebnis, Zertifikat und Adminbereich lesen sich deshalb wie die Übersetzung von etwas anderem.',
       solution: 'Stattdessen arabisch-first gebaut: Locale-präfixierte /ar- und /en-Routen in einer Next.js-16-App-Router-Anwendung mit RTL als Standardrichtung, dahinter eine Laravel-13-API in dreizehn Feature-Modulen — Kurse, Lektionen, Einschreibungen, Zahlungen, Prüfungen, Zertifikate mit öffentlicher Verifikation, Bewertungen, Diskussionen, Favoriten und Reporting. Ausgeliefert mit Deployment-, UAT- und Übergabedokumentation, damit der Kunde sie ohne mich betreiben und erweitern kann.',
@@ -614,7 +605,7 @@ const CASES_COPY = {
     applyni: {
       role: 'Allein — Produkt, Engineering und Betrieb',
       tag: 'KI-Karriereagent, Saudi-first — liest Ihren Lebenslauf, findet Unternehmen, zu denen Sie wirklich passen, und versendet aus Ihrem eigenen Gmail.',
-      labels: ['Arabisch', 'Englisch'],
+      labels: ['Website'],
       problem: 'Bewerber am Golf schicken denselben Lebenslauf an jede Ausschreibung und hören nichts zurück. Die Tools, die das beheben wollen, automatisieren meist genau dieses Gießkannenprinzip — verkleidet mit erfundenen ATS-Scores und Match-Prozenten, die nichts erklären.',
       solution: 'Ein Agent, der das Gegenteil von Masse tut. Er liest den Lebenslauf, gleicht ihn mit saudischen Unternehmen ab und erklärt jede Übereinstimmung in Worten — einschließlich dessen, was er nicht verifizieren konnte, sodass eine schwache Übereinstimmung das auch sagt, statt sich hinter einer Zahl zu verstecken. Er entwirft die Ansprache, Sie prüfen sie, und versendet wird über eine Warteschlange mit Skip-Regeln aus Ihrem eigenen Gmail. Nichts geht ohne Ihre Freigabe raus, und die Spezifikation verbietet, was die meisten dieser Kategorie tun: keine erfundenen Bewerberangaben, kein Versprechen auf ein Interview, keine Fake-ATS-Scores.',
       impact: [
@@ -650,7 +641,7 @@ const CASES_COPY = {
     ibdaa: {
       role: 'Ingeniero de Software Sénior · LMS en árabe',
       tag: 'Plataforma de aprendizaje pensada primero en árabe — una API Laravel 13 y una app Next.js 16 en un monorepo Nx, entregada con handover completo.',
-      labels: ['Árabe', 'Inglés'],
+      labels: ['Sitio web'],
       note: 'Alpha — «Ibdaa Course» es un nombre de trabajo, pendiente de la marca de lanzamiento del cliente',
       problem: 'Los proveedores de formación en árabe trabajan con plataformas diseñadas primero en inglés y con el RTL añadido después — así que la experiencia del alumno, el certificado y el panel de administración se leen como la traducción de otra cosa.',
       solution: 'Se construyó al revés, primero en árabe: rutas /ar y /en con prefijo de idioma sobre una única app Next.js 16 con App Router y RTL como dirección por defecto, respaldada por una API Laravel 13 dividida en trece módulos — cursos, lecciones, matrículas, pagos, exámenes, certificados con verificación pública, reseñas, debates, favoritos e informes. Entregada con documentación de despliegue, UAT y handover para que el cliente pueda operarla y ampliarla sin mí.',
@@ -668,7 +659,7 @@ const CASES_COPY = {
     applyni: {
       role: 'En solitario — producto, ingeniería y operación',
       tag: 'Agente de carrera con IA, pensado primero para Arabia Saudí — lee tu CV, encuentra empresas donde realmente encajas y envía desde tu propio Gmail.',
-      labels: ['Árabe', 'Inglés'],
+      labels: ['Sitio web'],
       problem: 'Quien busca trabajo en el Golfo manda el mismo CV a todas las ofertas y no recibe respuesta. Las herramientas que prometen arreglarlo automatizan sobre todo ese envío indiscriminado, y lo disfrazan con puntuaciones ATS inventadas y porcentajes de coincidencia que no explican nada.',
       solution: 'Un agente construido para hacer lo contrario del volumen. Lee tu CV, te compara con empresas saudíes y explica cada coincidencia con palabras — incluido lo que no ha podido verificar, de modo que una coincidencia débil lo dice en vez de esconderse tras un número. Redacta el mensaje, tú lo revisas, y se envía desde tu propio Gmail en una cola con reglas de omisión. Nada sale sin tu aprobación, y la especificación prohíbe lo que hace casi toda la categoría: nunca inventar información del candidato, nunca prometer una entrevista, ninguna puntuación ATS falsa.',
       impact: [
@@ -704,7 +695,7 @@ const CASES_COPY = {
     ibdaa: {
       role: 'Ingénieur logiciel senior · LMS pensé en arabe d’abord',
       tag: 'Plateforme d’apprentissage pensée en arabe d’abord — une API Laravel 13 et une app Next.js 16 dans un monorepo Nx, livrée avec une passation complète.',
-      labels: ['Arabe', 'Anglais'],
+      labels: ['Site web'],
       note: 'Alpha — « Ibdaa Course » est un nom de travail, en attente de la marque de lancement du client',
       problem: 'Les organismes de formation arabophones utilisent des plateformes conçues d’abord en anglais, le RTL étant ajouté après coup — l’expérience de l’apprenant, le certificat et l’admin se lisent alors comme la traduction d’autre chose.',
       solution: 'Construite dans l’autre sens, en arabe d’abord : des routes /ar et /en préfixées par la locale sur une seule app Next.js 16 (App Router) avec le RTL comme direction par défaut, adossée à une API Laravel 13 découpée en treize modules — cours, leçons, inscriptions, paiements, examens, certificats vérifiables publiquement, avis, discussions, favoris et reporting. Livrée avec la documentation de déploiement, d’UAT et de passation pour que le client l’exploite et la fasse évoluer sans moi.',
@@ -722,7 +713,7 @@ const CASES_COPY = {
     applyni: {
       role: 'En solo — produit, ingénierie et exploitation',
       tag: 'Agent de carrière IA pensé d’abord pour l’Arabie saoudite — il lit votre CV, trouve les entreprises où vous correspondez vraiment, et envoie depuis votre propre Gmail.',
-      labels: ['Arabe', 'Anglais'],
+      labels: ['Site web'],
       problem: 'Les candidats du Golfe envoient le même CV à toutes les offres et n’obtiennent aucune réponse. Les outils censés régler cela automatisent surtout cet arrosage, puis l’habillent de scores ATS inventés et de pourcentages de correspondance qui n’expliquent rien.',
       solution: 'Un agent conçu pour faire l’inverse du volume. Il lit votre CV, vous rapproche d’entreprises saoudiennes et explique chaque correspondance avec des mots — y compris ce qu’il n’a pas pu vérifier, de sorte qu’une correspondance faible le dit au lieu de se cacher derrière un chiffre. Il rédige l’approche, vous la relisez, puis l’envoi part de votre propre Gmail dans une file avec des règles d’exclusion. Rien ne part sans votre accord, et la spécification interdit ce que fait la plupart de cette catégorie : jamais inventer d’information sur le candidat, jamais promettre un entretien, aucun score ATS factice.',
       impact: [
@@ -745,6 +736,8 @@ const CASES_COPY = {
 // no matter where the entry ends up in the array.
 const q = (s) => JSON.stringify(String(s));
 
+const byLocale = (v, loc) => (typeof v === 'string' ? v : v[loc] ?? v.default);
+
 function caseObject(key, loc) {
   const base = NEW_CASES[key];
   const c = CASES_COPY[loc][key];
@@ -764,9 +757,9 @@ function caseObject(key, loc) {
     (base.shotSrc ? `    shotSrc: ${q(base.shotSrc)},\n` : '') +
     `    tag: ${q(c.tag)},\n` +
     `    stack: [${base.stack.map(q).join(', ')}],\n` +
-    `    openUrl: ${q(base.openUrl)},\n` +
+    `    openUrl: ${q(byLocale(base.openUrl, loc))},\n` +
     '    links: [\n' +
-    base.hrefs.map((h, i) => `      { label: ${q(c.labels[i])}, href: ${q(h)} },\n`).join('') +
+    base.hrefs.map((h, i) => `      { label: ${q(c.labels[i])}, href: ${q(byLocale(h, loc))} },\n`).join('') +
     '    ],\n' +
     (c.note ? `    note: ${q(c.note)},\n` : '') +
     `    problem: ${q(c.problem)},\n` +
@@ -1346,59 +1339,6 @@ const HEAD_SWAPS_ALL = [
   ['"addressLocality": "Cairo", "addressCountry": "EG"', '"addressLocality": "Dubai", "addressCountry": "AE"'],
 ];
 
-// ── Two WhatsApp numbers ────────────────────────────────────────────────────
-// A Gulf client seeing only a +20 number reads "offshore, different country".
-// The UAE number goes first because that is where he now is; the Egyptian one
-// stays because it is the number his existing contacts already have.
-//
-// Only the label, handle and href change — the card's own `desc` and inline SVG
-// come from whatever the locale already has, so the icon and translated copy
-// are carried over rather than re-authored here.
-const WA_UAE = { handle: '+971 58 556 2001', href: 'https://wa.me/971585562001' };
-const WA_COPY = {
-  en: { uae: 'WhatsApp · UAE', eg: 'WhatsApp · Egypt', egDesc: 'Same person, Egyptian number.' },
-  ar: { uae: 'WhatsApp · الإمارات', eg: 'WhatsApp · مصر', egDesc: 'نفس الشخص، رقم مصري.' },
-  de: { uae: 'WhatsApp · VAE', eg: 'WhatsApp · Ägypten', egDesc: 'Dieselbe Person, ägyptische Nummer.' },
-  es: { uae: 'WhatsApp · EAU', eg: 'WhatsApp · Egipto', egDesc: 'La misma persona, número egipcio.' },
-  fr: { uae: 'WhatsApp · EAU', eg: 'WhatsApp · Égypte', egDesc: 'La même personne, numéro égyptien.' },
-};
-
-function splitWhatsApp(loc) {
-  const c = WA_COPY[loc];
-  return (text) => {
-    // Already applied: the single generic card is gone, both labelled ones are
-    // present. Returning the text unchanged reports "already applied" instead
-    // of failing.
-    if (text.includes(`name: ${q(c.uae)}`) && text.includes(`name: ${q(c.eg)}`)) return text;
-
-    const at = text.indexOf('name: "WhatsApp",');
-    if (at < 0) return null;
-    const start = text.lastIndexOf('\n    {\n', at);
-    const endTok = '\n    },\n';
-    const end = text.indexOf(endTok, at);
-    if (start < 0 || end < 0) return null;
-    const entry = text.slice(start, end + endTok.length);
-    if (!entry.includes('href: "https://wa.me/')) return null;
-
-    const uae = entry
-      .replace('name: "WhatsApp",', `name: ${q(c.uae)},`)
-      .replace(/handle: "[^"]*",/, `handle: ${q(WA_UAE.handle)},`)
-      .replace(/href: "https:\/\/wa\.me\/[^"]*",/, `href: ${q(WA_UAE.href)},`);
-    const eg = entry
-      .replace('name: "WhatsApp",', `name: ${q(c.eg)},`)
-      .replace(/desc: "[^"]*",/, `desc: ${q(c.egDesc)},`);
-
-    return text.slice(0, start) + uae + eg.replace(/^\n/, '') + text.slice(end + endTok.length);
-  };
-}
-
-const WHATSAPP_EDITS = ['en', 'ar', 'de', 'es', 'fr'].map((loc) => ({
-  file: loc === 'en' ? 'index.html' : `index.${loc}.html`,
-  label: `WhatsApp: UAE + Egypt (${loc})`,
-  anchor: 'https://wa.me/',
-  transform: splitWhatsApp(loc),
-}));
-
 const HEAD_EDITS = ['en', 'ar', 'de', 'es', 'fr'].map((loc) => ({
   file: loc === 'en' ? 'index.html' : `index.${loc}.html`,
   label: `head: based in Dubai (${loc})`,
@@ -1605,12 +1545,13 @@ const FOLLOWER_EDITS = [
   // The connect card always renders a handle, so it gets the profile slug —
   // the same shape as the Behance card's "ahmedfarid20" — rather than being
   // blanked, which would leave a visibly empty line in the grid.
+  // (Vanity slug since Oct 2026: iamahmedfarid — see BRAND_EDITS.)
   ...factEdits('LinkedIn card: drop follower count', {
-    en: ['handle: "25,000+ followers"', 'handle: "ahmed-farid"'],
-    ar: ['handle: "٢٥٬٠٠٠+ متابع"', 'handle: "ahmed-farid"'],
-    de: ['handle: "25.000+ Follower"', 'handle: "ahmed-farid"'],
-    es: ['handle: "25.000+ seguidores"', 'handle: "ahmed-farid"'],
-    fr: ['handle: "25 000+ abonnés"', 'handle: "ahmed-farid"'],
+    en: ['handle: "25,000+ followers"', 'handle: "iamahmedfarid"'],
+    ar: ['handle: "٢٥٬٠٠٠+ متابع"', 'handle: "iamahmedfarid"'],
+    de: ['handle: "25.000+ Follower"', 'handle: "iamahmedfarid"'],
+    es: ['handle: "25.000+ seguidores"', 'handle: "iamahmedfarid"'],
+    fr: ['handle: "25 000+ abonnés"', 'handle: "iamahmedfarid"'],
   }),
   ...factEdits('LinkedIn card desc: drop network size', {
     en: ['desc: "Career, recommendations & a 25K+ network."', 'desc: "Career history and recommendations."'],
@@ -1768,29 +1709,6 @@ const SDLC_EDITS = LOCALES.map((loc) => ({
     return text.slice(0, at) + block + text.slice(at);
   },
 }));
-
-// ── Footer phone: the UAE number ────────────────────────────────────────────
-// Only the footer line changes. The contact card keeps both numbers on purpose
-// (see WHATSAPP_EDITS) — a Gulf client wants a local number, existing contacts
-// already have the Egyptian one.
-const FOOTER_PHONE_EDITS = [
-  ...factEdits('footer: UAE number (href)', {
-    en: ['tel:+201013996079', 'tel:+971585562001'],
-    ar: ['tel:+201013996079', 'tel:+971585562001'],
-    de: ['tel:+201013996079', 'tel:+971585562001'],
-    es: ['tel:+201013996079', 'tel:+971585562001'],
-    fr: ['tel:+201013996079', 'tel:+971585562001'],
-  }),
-  // Anchored on the href so it cannot touch the contact card's own display of
-  // the Egyptian number, which is the same digits in a different place.
-  ...factEdits('footer: UAE number (label)', {
-    en: ['tel:+971585562001">+20 10 1399 6079', 'tel:+971585562001">+971 58 556 2001'],
-    ar: ['display:"inline-block"}}>+20 10 1399 6079', 'display:"inline-block"}}>+971 58 556 2001'],
-    de: ['tel:+971585562001">+20 10 1399 6079', 'tel:+971585562001">+971 58 556 2001'],
-    es: ['tel:+971585562001">+20 10 1399 6079', 'tel:+971585562001">+971 58 556 2001'],
-    fr: ['tel:+971585562001">+20 10 1399 6079', 'tel:+971585562001">+971 58 556 2001'],
-  }),
-];
 
 // ── Hero speaks to an employer, not a buyer ─────────────────────────────────
 // "Available now · 2 slots" and "Book a free demo" are studio language. Every
@@ -2281,6 +2199,199 @@ const SENIORITY_EDITS = LOCALES.map((loc) => ({
 
 // Each edit is an exact string match, so a failed match is loud rather than
 // silently rewriting the wrong thing.
+// ── Personal-brand contact channels (Oct 2026) ──────────────────────────────
+// Mirrors the GitHub profile README. One handle everywhere (@iamahmedfarid),
+// LinkedIn on its vanity URL, and no phone number published anywhere: the two
+// direct-number WhatsApp cards and the footer tel: link give way to one
+// WhatsApp Business link. The Recovery Advisers work email comes off the
+// personal site. Behance stays, last, as secondary to the engineering brand.
+//
+// These replace the old WHATSAPP_EDITS (UAE + Egypt split) and
+// FOOTER_PHONE_EDITS. Each transform accepts both a fresh export (one
+// WhatsApp card, +20 footer number) and an already-edited one and produces the
+// same result, so it is idempotent by construction.
+//
+// They run LAST: CV_LINK_EDITS matches a LinkedIn URL that still carries the
+// old slug in a fresh export, so the slug must not change before it runs.
+const LINKEDIN_URL = 'https://www.linkedin.com/in/iamahmedfarid';
+const WHATSAPP_URL = 'https://wa.me/message/CFOPUVBTQVPLM1';
+const SOCIALS = [
+  { key: 'instagram', name: 'Instagram', href: 'https://www.instagram.com/iamahmedfarid',
+    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7.0301.084c-1.2768.0602-2.1487.264-2.911.5634-.7888.3075-1.4575.72-2.1228 1.3877-.6652.6677-1.075 1.3368-1.3802 2.127-.2954.7638-.4956 1.6365-.552 2.914-.0564 1.2775-.0689 1.6882-.0626 4.947.0062 3.2586.0206 3.6671.0825 4.9473.061 1.2765.264 2.1482.5635 2.9107.308.7889.72 1.4573 1.388 2.1228.6679.6655 1.3365 1.0743 2.1285 1.38.7632.295 1.6361.4961 2.9134.552 1.2773.056 1.6884.069 4.9462.0627 3.2578-.0062 3.668-.0207 4.9478-.0814 1.28-.0607 2.147-.2652 2.9098-.5633.7889-.3086 1.4578-.72 2.1228-1.3881.665-.6682 1.0745-1.3378 1.3795-2.1284.2957-.7632.4966-1.636.552-2.9124.056-1.2809.0692-1.6898.063-4.948-.0063-3.2583-.021-3.6668-.0817-4.9465-.0607-1.2797-.264-2.1487-.5633-2.9117-.3084-.7889-.72-1.4568-1.3876-2.1228C21.2982 1.33 20.628.9208 19.8378.6165 19.074.321 18.2017.1197 16.9244.0645 15.6471.0093 15.236-.005 11.977.0014 8.718.0076 8.31.0215 7.0301.0839m.1402 21.6932c-1.17-.0509-1.8053-.2453-2.2287-.408-.5606-.216-.96-.4771-1.3819-.895-.422-.4178-.6811-.8186-.9-1.378-.1644-.4234-.3624-1.058-.4171-2.228-.0595-1.2645-.072-1.6442-.079-4.848-.007-3.2037.0053-3.583.0607-4.848.05-1.169.2456-1.805.408-2.2282.216-.5613.4762-.96.895-1.3816.4188-.4217.8184-.6814 1.3783-.9003.423-.1651 1.0575-.3614 2.227-.4171 1.2655-.06 1.6447-.072 4.848-.079 3.2033-.007 3.5835.005 4.8495.0608 1.169.0508 1.8053.2445 2.228.408.5608.216.96.4754 1.3816.895.4217.4194.6816.8176.9005 1.3787.1653.4217.3617 1.056.4169 2.2263.0602 1.2655.0739 1.645.0796 4.848.0058 3.203-.0055 3.5834-.061 4.848-.051 1.17-.245 1.8055-.408 2.2294-.216.5604-.4763.96-.8954 1.3814-.419.4215-.8181.6811-1.3783.9-.4224.1649-1.0577.3617-2.2262.4174-1.2656.0595-1.6448.072-4.8493.079-3.2045.007-3.5825-.006-4.848-.0608M16.953 5.5864A1.44 1.44 0 1 0 18.39 4.144a1.44 1.44 0 0 0-1.437 1.4424M5.8385 12.012c.0067 3.4032 2.7706 6.1557 6.173 6.1493 3.4026-.0065 6.157-2.7701 6.1506-6.1733-.0065-3.4032-2.771-6.1565-6.174-6.1498-3.403.0067-6.156 2.771-6.1496 6.1738M8 12.0077a4 4 0 1 1 4.008 3.9921A3.9996 3.9996 0 0 1 8 12.0077"/></svg>' },
+  { key: 'x', name: 'X', href: 'https://x.com/iamahmedfarid',
+    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14.234 10.162 22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299-.929-1.329L3.076 1.56h3.182l5.965 8.532.929 1.329 7.754 11.09h-3.182z"/></svg>' },
+  { key: 'youtube', name: 'YouTube', href: 'https://www.youtube.com/@iamahmedfarid',
+    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>' },
+  { key: 'tiktok', name: 'TikTok', href: 'https://www.tiktok.com/@iamahmedfarid',
+    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>' },
+];
+const SOCIAL_HANDLE = '@iamahmedfarid';
+const SOCIAL_DESC = {
+  en: { instagram: 'Behind the scenes and updates.', x: 'Short notes on engineering.', youtube: 'Videos and walkthroughs.', tiktok: 'Short-form videos.' },
+  ar: { instagram: 'كواليس العمل والتحديثات.', x: 'ملاحظات قصيرة عن الهندسة.', youtube: 'فيديوهات وشروحات.', tiktok: 'فيديوهات قصيرة.' },
+  de: { instagram: 'Hinter den Kulissen und Updates.', x: 'Kurze Notizen zu Engineering.', youtube: 'Videos und Walkthroughs.', tiktok: 'Kurzvideos.' },
+  es: { instagram: 'Entre bastidores y novedades.', x: 'Notas breves sobre ingeniería.', youtube: 'Vídeos y recorridos.', tiktok: 'Vídeos cortos.' },
+  fr: { instagram: 'Coulisses et actualités.', x: "Notes courtes sur l'ingénierie.", youtube: 'Vidéos et démonstrations.', tiktok: 'Vidéos courtes.' },
+};
+
+// The old vanity slug, wherever it appears. The trailing-slash form is the
+// one the export uses; the bare form catches anything else.
+const fixLinkedIn = (text) =>
+  text
+    .split('https://www.linkedin.com/in/ahmed-farid-b46a5221b/').join(LINKEDIN_URL)
+    .split('https://www.linkedin.com/in/ahmed-farid-b46a5221b').join(LINKEDIN_URL);
+
+const CH_OPEN = 'const channels = [';
+const CH_CLOSE = '\n  ];';
+const CH_END = '\n    },';
+
+function rebuildChannels(loc) {
+  return (text) => {
+    const a = text.indexOf(CH_OPEN);
+    if (a < 0) return null;
+    const b = text.indexOf(CH_CLOSE, a);
+    if (b < 0) return null;
+    const body = text.slice(a + CH_OPEN.length, b);
+    if (!body.endsWith(CH_END)) return null;
+    // Entries are `\n    { … \n      ),` chunks between `\n    },` separators;
+    // nested objects are indented deeper, so the split is unambiguous.
+    const entries = body.slice(0, -CH_END.length).split(CH_END);
+    const hrefOf = (e) => (e.match(/href: "([^"]*)"/) || [])[1] || '';
+    const first = (fn) => entries.find((e) => fn(hrefOf(e)));
+
+    const checklist = first((h) => h === LM_HREF);
+    const linkedin = first((h) => h.includes('linkedin.com/'));
+    const github = first((h) => h.includes('github.com/'));
+    const email = first((h) => h === 'mailto:ahmed@iamahmedfarid.com');
+    const wa = first((h) => h.startsWith('https://wa.me/'));
+    const behance = first((h) => h.includes('behance.net/'));
+    if (!linkedin || !github || !email || !wa || !behance) return null;
+
+    // Anything not recognised is kept rather than silently dropped. The work
+    // email (any other mailto:) and every extra WhatsApp card are dropped.
+    const known = (h) =>
+      h === LM_HREF || h.includes('linkedin.com/') || h.includes('github.com/') ||
+      h.startsWith('mailto:') || h.startsWith('https://wa.me/') || h.includes('behance.net/') ||
+      SOCIALS.some((s) => s.href === h);
+    const others = entries.filter((e) => !known(hrefOf(e)));
+
+    const set = (e, field, value) =>
+      e.replace(new RegExp(`(\\n      ${field}: )"[^"]*",`), (_, k) => `${k}${q(value)},`);
+    const li = set(set(linkedin, 'handle', 'iamahmedfarid'), 'href', LINKEDIN_URL);
+    const whatsapp = set(set(set(wa, 'name', 'WhatsApp'), 'handle', 'WhatsApp Business'), 'href', WHATSAPP_URL);
+    const socials = SOCIALS.map((s) =>
+      '\n    {\n' +
+      `      name: ${q(s.name)},\n` +
+      `      handle: ${q(SOCIAL_HANDLE)},\n` +
+      `      href: ${q(s.href)},\n` +
+      `      desc: ${q(SOCIAL_DESC[loc][s.key])},\n` +
+      '      icon: (\n' +
+      `        ${s.icon}\n` +
+      '      ),');
+
+    const ordered = [checklist, li, github, email, whatsapp, ...socials, ...others, behance].filter(Boolean);
+    return text.slice(0, a + CH_OPEN.length) + ordered.map((e) => e + CH_END).join('') + text.slice(b);
+  };
+}
+
+const FOOT_TEL = /<li><a href="tel:[^"]*"[^>]*>[^<]*<\/a><\/li>/g;
+const FOOT_WA = `<li><a href="${WHATSAPP_URL}" target="_blank" rel="noreferrer">WhatsApp</a></li>`;
+
+const BRAND_EDITS = LOCALES.flatMap((loc) => [
+  {
+    file: fileFor(loc),
+    label: `contact channels: brand handles, WhatsApp Business, no work email (${loc})`,
+    critical: true,
+    anchor: CH_OPEN,
+    transform: rebuildChannels(loc),
+  },
+  {
+    file: fileFor(loc),
+    label: `footer: WhatsApp Business instead of a phone number (${loc})`,
+    critical: true,
+    anchor: 'className="foot-grid"',
+    transform: (text) => {
+      const out = text.replace(FOOT_TEL, FOOT_WA);
+      if (out !== text) return out;
+      return text.includes(FOOT_WA) ? text : null;
+    },
+  },
+  {
+    file: fileFor(loc),
+    label: `footer: social profiles before Behance (${loc})`,
+    anchor: 'className="foot-grid"',
+    // Cloned from the Behance line so the markup (external-link glyph, rel,
+    // class) stays identical to its neighbours; Behance stays last.
+    transform: (text) => {
+      if (text.includes(`href="${SOCIALS[0].href}" target="_blank" rel="noreferrer" className="foot-link"`)) return text;
+      const rx = /\n([ \t]*)(<li><a href="https:\/\/www\.behance\.net\/ahmedfarid20"[^\n]*className="foot-link">)Behance(<svg[^\n]*<\/a><\/li>)/;
+      const m = text.match(rx);
+      if (!m) return null;
+      const [, indent, open, rest] = m;
+      const lines = SOCIALS.map((s) =>
+        '\n' + indent + open.replace('https://www.behance.net/ahmedfarid20', s.href) + s.name + rest);
+      return text.replace(rx, (whole) => lines.join('') + whole);
+    },
+  },
+  {
+    file: fileFor(loc),
+    label: `LinkedIn vanity URL (${loc})`,
+    anchor: CH_OPEN,
+    transform: fixLinkedIn,
+  },
+  {
+    file: fileFor(loc),
+    label: `head: LinkedIn URL + social profiles in sameAs (${loc})`,
+    template: true,
+    transform: (text) => {
+      const out = fixLinkedIn(text);
+      if (out.includes(SOCIALS[0].href)) return out;
+      const rx = /("https:\/\/www\.behance\.net\/ahmedfarid20")(\s*\])/;
+      if (!rx.test(out)) return null;
+      return out.replace(rx, (_, be, close) => be + SOCIALS.map((s) => `,\n      "${s.href}"`).join('') + close);
+    },
+  },
+]);
+
+// ── Toolbelt grouped like the GitHub README ─────────────────────────────────
+// Core Stack first as the summary (the only group that repeats items), then
+// the full range. Nothing that was listed is dropped except ChatGPT, which
+// duplicated OpenAI; Kubernetes, App Store, Google Play, Anthropic, Gemini,
+// Grok and Kimi are added to match the README.
+const TOOLBELT_ITEMS = [
+  ['Laravel', 'Next.js', 'TypeScript', 'React', 'Flutter', 'PostgreSQL', 'Redis', 'AWS', 'Docker'],
+  ['PHP', 'JavaScript', 'TypeScript', 'Dart', 'Python', 'Go', 'HTML', 'CSS'],
+  ['Laravel', 'Node.js', 'Express', 'NestJS', 'FastAPI', 'Django'],
+  ['React', 'Next.js', 'Vue', 'Tailwind', 'Bootstrap', 'Material UI', 'Vite', 'Sass', 'shadcn/ui', 'Flutter', 'React Native'],
+  ['MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'Supabase', 'MariaDB', 'InfluxDB', 'pgvector'],
+  ['Docker', 'Kubernetes', 'AWS', 'GCP', 'Firebase', 'Cloudflare', 'Nginx', 'Linux', 'Ubuntu', 'GitHub Actions', 'Grafana', 'Sentry', 'Vercel', 'Apache', 'Auth0', 'Hostinger', 'GoDaddy', 'Hetzner', 'App Store', 'Google Play'],
+  ['Git', 'GitHub', 'pnpm', 'Postman', 'Figma', 'Notion', 'Replit', 'Swagger', 'Jira', 'Nx'],
+  ['Discord', 'Slack', 'Google Chat', 'ClickUp', 'Asana'],
+  ['OpenAI', 'Claude', 'Anthropic', 'Codex', 'Cursor', 'Gemini', 'Grok', 'Kimi', 'OpenRouter'],
+];
+const TOOLBELT_CATS = {
+  en: ['Core Stack', 'Languages', 'Backend', 'Frontend & Mobile', 'Data & Storage', 'DevOps & Cloud', 'Engineering Tools', 'Collaboration', 'AI & AI Engineering'],
+  ar: ['التقنيات الأساسية', 'اللغات', 'الواجهة الخلفية', 'الواجهة الأمامية والجوال', 'البيانات والتخزين', 'DevOps والسحابة', 'أدوات هندسية', 'التعاون', 'الذكاء الاصطناعي وهندسته'],
+  de: ['Kern-Stack', 'Sprachen', 'Backend', 'Frontend & Mobile', 'Daten & Speicher', 'DevOps & Cloud', 'Engineering-Werkzeuge', 'Zusammenarbeit', 'KI & KI-Engineering'],
+  es: ['Stack principal', 'Lenguajes', 'Backend', 'Frontend y móvil', 'Datos y almacenamiento', 'DevOps y Cloud', 'Herramientas de ingeniería', 'Colaboración', 'IA e ingeniería de IA'],
+  fr: ['Stack principal', 'Langages', 'Backend', 'Frontend et mobile', 'Données et stockage', 'DevOps et Cloud', "Outils d'ingénierie", 'Collaboration', 'IA et ingénierie IA'],
+};
+
+const TOOLBELT_EDITS = LOCALES.map((loc) => ({
+  file: fileFor(loc),
+  label: `toolbelt: grouped like the README, core stack first (${loc})`,
+  anchor: 'function Toolbelt() {',
+  transform: (text) => {
+    const fn = text.indexOf('function Toolbelt() {');
+    const a = text.indexOf('const groups = [', fn);
+    const b = text.indexOf('\n  ];', a);
+    if (fn < 0 || a < 0 || b < 0) return null;
+    const groups = TOOLBELT_CATS[loc].map((cat, i) =>
+      `    { cat: ${q(cat)}, items: [${TOOLBELT_ITEMS[i].map(q).join(', ')}] },`).join('\n');
+    return text.slice(0, a) + 'const groups = [\n' + groups + text.slice(b);
+  },
+}));
+
 const EDITS = [
   {
     file: 'index.html',
@@ -2607,30 +2718,19 @@ const EDITS = [
   // named, shipped project and all of the mobile ones are Flutter. Putting it
   // in a project stack would attach the claim to work that did not use it.
   //
-  // Placed next to React rather than next to Flutter: it is the same ecosystem
-  // as the React and Next.js already there, and the list is grouped by family
-  // rather than by platform.
-  ...['index.html', 'index.ar.html', 'index.de.html', 'index.es.html', 'index.fr.html'].map((file) => ({
-    file,
-    label: `toolbelt: React Native (${file.split('.')[1] === 'html' ? 'en' : file.split('.')[1]})`,
-    appliedMarker: '"React", "React Native"',
-    // Framework names are not translated in any locale, so one anchor serves
-    // all five. Spans the following entry so the anchor is consumed.
-    old: '"React", "Next.js"',
-    new: '"React", "React Native", "Next.js"',
-  })),
+  // Now part of TOOLBELT_EDITS, which regenerates every group (React Native
+  // sits with Flutter under Frontend & Mobile). A separate insert here would
+  // fight that rewrite on every run, so it is no longer a standalone edit.
 
   // ── Based in Dubai ───────────────────────────────────────────────────────
   // Last, so it also catches the hero-sub this file rewrites earlier.
   ...CITY_EDITS,
   ...HEAD_EDITS,
-  ...WHATSAPP_EDITS,
   ...PIXEL_EDITS,
   ...YEARS_EDITS,
   ...PRODUCT_COUNT_EDITS,
   ...HERO_STAT_EDITS,
   ...YELO_TITLE_EDITS,
-  ...FOOTER_PHONE_EDITS,
   ...AVAILABILITY_EDITS,
   ...CTA_EDITS,
   ...MOBILE_CTA_EDITS,
@@ -2649,6 +2749,9 @@ const EDITS = [
   ...FOLLOWER_EDITS,
   ...RELOCATION_EDITS,
   ...SENIORITY_EDITS,
+  ...TOOLBELT_EDITS,
+  // Last on purpose — see the comment on BRAND_EDITS.
+  ...BRAND_EDITS,
 ];
 
 // Locate the `__bundler/template` line: the document shell, stored as a single
