@@ -13,11 +13,12 @@
 // committed PDF no longer matches it (scripts/build.mjs, assertPublicPdfs).
 
 import { readFile, writeFile } from 'node:fs/promises';
+import { existsSync, realpathSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import puppeteer from 'puppeteer';
 import { CONTACT, LOCATION_LABEL } from './site-facts.mjs';
-import { inspectPdf, pdfProblems, PDF_REQUIRED_URIS } from './pdf-check.mjs';
+import { inspectPdf, pdfProblems, textFingerprint, PDF_REQUIRED_URIS } from './pdf-check.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const CHECKLIST_SRC = path.join(ROOT, 'lead-magnet', 'multi-tenant-saas-architecture-checklist.html');
@@ -69,11 +70,24 @@ async function main() {
     console.error('✗ rendered checklist PDF failed validation:\n' + problems.map((p) => `   ${p}`).join('\n'));
     process.exit(1);
   }
-  for (const out of OUTS) await writeFile(out, pdf);
+  // Chrome stamps a creation date into every PDF, so a byte-for-byte rewrite
+  // would churn git on every run. Write only when what a reader sees — text
+  // or links — actually changed.
+  const sameAs = async (file) => {
+    if (!existsSync(file)) return false;
+    const cur = await inspectPdf(file);
+    return textFingerprint(cur.text) === textFingerprint(info.text) &&
+      [...cur.uris].sort().join(' ') === [...info.uris].sort().join(' ');
+  };
+  const stale = [];
+  for (const out of OUTS) if (!(await sameAs(out))) stale.push(out);
+  for (const out of stale) await writeFile(out, pdf);
   const footer = info.pageTexts.at(-1).split('\n').map((l) => l.trim()).filter((l) => l.startsWith('©')).pop();
-  console.log(`✓ wrote ${OUTS.map((o) => path.relative(ROOT, o)).join(' + ')} (${info.pages} pages, ${(pdf.length / 1024).toFixed(0)} KB)`);
+  console.log(stale.length
+    ? `✓ wrote ${stale.map((o) => path.relative(ROOT, o)).join(' + ')} (${info.pages} pages, ${(pdf.length / 1024).toFixed(0)} KB)`
+    : `✓ checklist PDFs already match the source (${info.pages} pages) — not rewritten`);
   console.log(`  footer: ${footer}`);
   console.log(`  links:  ${info.uris.join('  ')}`);
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) await main();
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) await main();

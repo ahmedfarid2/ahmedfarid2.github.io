@@ -672,8 +672,20 @@ async function assertLocaleRouting(locales) {
 // source: if the committed PDF no longer says what the source says, it was
 // replaced by hand or not rebuilt, and the deploy stops.
 async function assertPublicPdfs() {
+  // Any error in here — not just a failed check, but a Chrome launch or a
+  // parse error — must stop the deploy. A plain error would send the build
+  // to the raw-export fallback, which copies the same PDFs unchecked.
+  try { await checkPublicPdfs(); } catch (e) { e.fatal = true; throw e; }
+}
+async function checkPublicPdfs() {
   const pdfs = (await readdir(DIST)).filter((f) => f.toLowerCase().endsWith('.pdf'));
   const bad = [];
+  // The repo's lead-magnet/ copy is handed out too; hold it to the same rules.
+  const leadCopy = path.join(ROOT, 'lead-magnet', CHECKLIST_PDF);
+  if (existsSync(leadCopy)) {
+    for (const p of pdfProblems(await inspectPdf(leadCopy), { requireUris: CHECKLIST_REQUIRED_URIS, requireText: CHECKLIST_REQUIRED_TEXT }))
+      bad.push(`lead-magnet/${CHECKLIST_PDF}: ${p}`);
+  }
   for (const f of pdfs) {
     const info = await inspectPdf(path.join(DIST, f));
     const isChecklist = f === CHECKLIST_PDF;
@@ -1040,6 +1052,17 @@ async function fallback(reason) {
   await mkdir(DIST, { recursive: true });
   await copyFile(SRC, path.join(DIST, 'index.html'));
   await copyStaticAssets();
+  // The fallback still publishes the PDFs; they get the same retired-fact
+  // check (no browser needed), and a failure stops the deploy.
+  const pdfBad = [];
+  for (const f of (await readdir(DIST)).filter((x) => x.toLowerCase().endsWith('.pdf'))) {
+    for (const p of pdfProblems(await inspectPdf(path.join(DIST, f)), { requireUris: PDF_REQUIRED_URIS })) pdfBad.push(`${f}: ${p}`);
+  }
+  if (pdfBad.length) {
+    console.error('\n✗ Fallback refused — a public PDF fails the brand check:\n' + pdfBad.map((x) => `   ${x}`).join('\n'));
+    process.exitCode = 1;
+    return;
+  }
   await writeSeoFiles();
   console.log('✓ Raw export copied to dist/ (site stays functional, unoptimized).');
 }
