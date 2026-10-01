@@ -108,6 +108,6 @@ I do architecture reviews and fixed-scope builds for real-time, multi-tenant
 SaaS. A 30-minute scoping call is free — and often saves a six-month rewrite.
 
 → **[Book a call at iamahmedfarid.com](https://iamahmedfarid.com)**
-→ LinkedIn: [Ahmed Farid](https://www.linkedin.com/in/ahmed-farid-b46a5221b/)
+→ LinkedIn: [Ahmed Farid](https://www.linkedin.com/in/iamahmedfarid)
 
 _© 2026 Ahmed Farid._

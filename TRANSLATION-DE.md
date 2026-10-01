@@ -14,6 +14,9 @@
 > | Three freelance FAQ items (engagement, clients, rate) | moved to `/services` |
 > | Five years / 23+ products | six years / 27+ products |
 > | "open to relocation" | removed — he is in Dubai and staying |
+> | Two WhatsApp numbers, the footer phone, the Recovery Advisers work email | one WhatsApp Business link; no phone number or work email |
+> | LinkedIn `ahmed-farid-b46a5221b`; GitHub, LinkedIn and Behance only | LinkedIn `/in/iamahmedfarid`, plus Instagram, X, YouTube and TikTok (`@iamahmedfarid`); Behance last |
+> | Toolbelt in seven groups | nine groups, Core Stack first, matching the GitHub README |
 >
 > If you change any of the strings above in Claude design, check the matching edit in
 > `scripts/edit-copy.mjs` still matches, or the build will fail loudly — which is the

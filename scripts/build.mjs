@@ -438,9 +438,8 @@ function mustReplaceAll(source, needle, replacement, { min = 1, label } = {}) {
   return parts.join(replacement);
 }
 
-// Strings that must never reach dist/. `max` is a ceiling, not a ban: the
-// Egyptian number is kept deliberately in the contact card, one per locale, so
-// the check has to allow exactly that many and fail on a sixth.
+// Strings that must never reach dist/. `max` is a ceiling, not a ban, for the
+// few strings allowed a fixed number of times.
 //
 // Scanned as bytes over the emitted text files rather than through a parsed
 // DOM, so a string hiding in an href, a tel: link, a JSON blob or an inline
@@ -471,10 +470,17 @@ const FORBIDDEN = [
   { s: 'fast learner', max: 0 },
   { s: 'adapt to whatever stack', max: 0 },
   { s: 'Available now', max: 0 },
-  // One per locale, in the contact card. Six means the footer regressed.
-  { s: '+20 10', max: 5 },
-  { s: 'wa.me/20', max: 5 },
+  // No phone number is published (Oct 2026): WhatsApp goes through the
+  // Business link, and the work email stays off the personal site.
+  { s: '+20 10', max: 0 },
+  { s: 'wa.me/20', max: 0 },
   { s: 'tel:+20', max: 0 },
+  { s: '+971 58', max: 0 },
+  { s: 'wa.me/971', max: 0 },
+  { s: 'tel:+971', max: 0 },
+  { s: 'a.farid@recoveryadvisers.com', max: 0 },
+  // LinkedIn moved to /in/iamahmedfarid; the old slug no longer resolves.
+  { s: 'ahmed-farid-b46a5221b', max: 0 },
   // "View CV" used to open a CV uploaded to LinkedIn and frozen there, while
   // "Download CV" served the live PDF — two buttons, two different documents.
   { s: 'single-media-viewer', max: 0 },
@@ -790,8 +796,12 @@ async function writeSeoFiles(locales = [{ urlPath: '/' }]) {
     `- Technical advisory & architecture review\n\n` +
     `## Links\n\n` +
     `- Website: ${SITE_URL}\n` +
-    `- LinkedIn: https://www.linkedin.com/in/ahmed-farid-b46a5221b/\n` +
+    `- LinkedIn: https://www.linkedin.com/in/iamahmedfarid\n` +
     `- GitHub: https://github.com/ahmedfarid2\n` +
+    `- Instagram: https://www.instagram.com/iamahmedfarid\n` +
+    `- X: https://x.com/iamahmedfarid\n` +
+    `- YouTube: https://www.youtube.com/@iamahmedfarid\n` +
+    `- TikTok: https://www.tiktok.com/@iamahmedfarid\n` +
     `- Behance: https://www.behance.net/ahmedfarid20\n` +
     `- CV (PDF): ${SITE_URL}/Ahmed-Farid-CV.pdf\n\n` +
     `## Contact\n\n` +
@@ -1432,8 +1442,12 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
       { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Technical advisory & architecture review', serviceType: 'Technical consulting' } },
     ],
     sameAs: [
-      'https://www.linkedin.com/in/ahmed-farid-b46a5221b/',
+      'https://www.linkedin.com/in/iamahmedfarid',
       'https://github.com/ahmedfarid2',
+      'https://www.instagram.com/iamahmedfarid',
+      'https://x.com/iamahmedfarid',
+      'https://www.youtube.com/@iamahmedfarid',
+      'https://www.tiktok.com/@iamahmedfarid',
       'https://www.behance.net/ahmedfarid20',
     ],
   };
