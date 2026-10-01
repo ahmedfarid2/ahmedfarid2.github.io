@@ -24,6 +24,8 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { SITE_URL, LOCATION, LOCATION_LABEL, CONTACT, YEARS_PROSE, SEO, DRIFT_GUARDS } from './site-facts.mjs';
+import { inspectPdf, pdfProblems, textFingerprint, PDF_REQUIRED_URIS } from './pdf-check.mjs';
+import { renderChecklist, CHECKLIST_PDF, CHECKLIST_REQUIRED_URIS, CHECKLIST_REQUIRED_TEXT } from './build-checklist.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = path.join(ROOT, 'index.html');
@@ -480,8 +482,9 @@ const FORBIDDEN = [
   // owner-approved client-path CTA is the 30-minute variant below, which does
   // not contain this string; it belongs only in the EN contact block.
   { s: 'Book a scoping call', max: 0 },
-  // EN home contact, EN services contact, EN services pricing CTA.
-  { s: 'Book a 30-minute scoping call', max: 3 },
+  // EN home contact, EN services contact, EN services pricing CTA, and the
+  // checklist page's call CTA.
+  { s: 'Book a 30-minute scoping call', max: 4 },
   // Pricing moved to /work-with-me.html. Banned on the home page, expected on
   // the page that now owns the offer — so these skip that one file rather than
   // being dropped from the list, which would stop guarding the home page too.
@@ -661,6 +664,40 @@ async function assertLocaleRouting(locales) {
     throw err;
   }
   console.log(`  ✓ locale routing: ${pagesToCheck.length} pages — footer services link, language menu + drawer, canonical, hreflang`);
+}
+
+// Every PDF the site serves (the CV, the checklist) is read the way a visitor
+// sees it — visible text and link targets — because the HTML forbidden-string
+// scan cannot look inside a PDF. The checklist is also re-rendered from its
+// source: if the committed PDF no longer says what the source says, it was
+// replaced by hand or not rebuilt, and the deploy stops.
+async function assertPublicPdfs() {
+  const pdfs = (await readdir(DIST)).filter((f) => f.toLowerCase().endsWith('.pdf'));
+  const bad = [];
+  for (const f of pdfs) {
+    const info = await inspectPdf(path.join(DIST, f));
+    const isChecklist = f === CHECKLIST_PDF;
+    const problems = pdfProblems(info, isChecklist
+      ? { requireUris: CHECKLIST_REQUIRED_URIS, requireText: CHECKLIST_REQUIRED_TEXT }
+      : { requireUris: PDF_REQUIRED_URIS });
+    for (const p of problems) bad.push(`${f}: ${p}`);
+    if (isChecklist) {
+      const puppeteer = (await import('puppeteer')).default;
+      const b = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+      let fresh;
+      try { fresh = await inspectPdf(await renderChecklist(b)); } finally { await b.close(); }
+      const sameText = textFingerprint(fresh.text) === textFingerprint(info.text);
+      const sameLinks = [...fresh.uris].sort().join(' ') === [...info.uris].sort().join(' ');
+      if (!sameText || !sameLinks) bad.push(`${f}: out of date with lead-magnet source (${sameText ? 'links' : 'text'} differ) — run npm run checklist:build`);
+    }
+  }
+  if (!pdfs.includes(CHECKLIST_PDF)) bad.push(`${CHECKLIST_PDF} missing from dist/`);
+  if (bad.length) {
+    const err = new Error('[build] public PDF check failed:\n' + bad.map((x) => `   ${x}`).join('\n'));
+    err.fatal = true;
+    throw err;
+  }
+  console.log(`  ✓ public PDFs: ${pdfs.join(', ')} — text + links clean; checklist matches its source`);
 }
 
 // ── Locale discovery (by convention) ────────────────────────────────────────
@@ -2197,6 +2234,7 @@ async function build() {
   await assertNoForbiddenStrings();
   await assertNoDeadAnchors();
   await assertLocaleRouting(locales);
+  await assertPublicPdfs();
 
   console.log(`\n✓ Built ${locales.length} locale page(s); removed React/ReactDOM/Babel-standalone/editor scaffolding.`);
 }

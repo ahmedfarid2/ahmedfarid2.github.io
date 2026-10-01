@@ -8,10 +8,12 @@
     "build": "node scripts/build.mjs",
     "copy:apply": "node scripts/edit-copy.mjs",
     "copy:check": "node scripts/edit-copy.mjs --check",
-    "cv:build": "node scripts/build-cv.mjs"
+    "cv:build": "node scripts/build-cv.mjs",
+    "checklist:build": "node scripts/build-checklist.mjs"
   },
   "devDependencies": {
     "html-minifier-terser": "^7.2.0",
+    "pdfjs-dist": "^4.10.38",
     "puppeteer": "^24.10.0"
   }
 }
