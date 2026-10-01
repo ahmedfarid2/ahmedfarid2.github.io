@@ -12,10 +12,12 @@
 > | Plans & pricing, and "ways to work together" | moved to `/services` |
 > | The free-demo block | moved to `/services` |
 > | Three freelance FAQ items (engagement, clients, rate) | moved to `/services` |
-> | Five years / 23+ products | six years / 27+ products |
+> | Five years / 23+ products | 6+ years (prose: "over six years") / 27+ products — values in `scripts/site-facts.mjs` |
+> | RevealSite "12+" brands | 13+ (13 pharmacies + Almani) |
+> | Hero/About/closing CTAs ("Book a free demo", "Start a conversation", …) | one hero contact action + CV; `#contact` split into a hiring path and a project path |
 > | "open to relocation" | removed — he is in Dubai and staying |
 > | Two WhatsApp numbers, the footer phone, the Recovery Advisers work email | one WhatsApp Business link; no phone number or work email |
-> | LinkedIn `ahmed-farid-b46a5221b`; GitHub, LinkedIn and Behance only | LinkedIn `/in/iamahmedfarid`, plus Instagram, X, YouTube and TikTok (`@iamahmedfarid`); Behance last |
+> | LinkedIn `ahmed-farid-b46a5221b`; GitHub, LinkedIn and Behance only | Connect grid: email, LinkedIn `/in/iamahmedfarid`, GitHub, WhatsApp Business, 30-minute call, checklist. Instagram, X, YouTube, TikTok and Behance stay in the footer and JSON-LD only |
 > | Toolbelt in seven groups | nine groups, Core Stack first, matching the GitHub README |
 >
 > If you change any of the strings above in Claude design, check the matching edit in

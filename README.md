@@ -1,7 +1,7 @@
 # ahmedfarid2.github.io
 
 Personal portfolio of **Ahmed Farid** — Senior Software Engineer.
-Live at **https://ahmedfarid2.github.io**
+Live at **https://iamahmedfarid.com** (custom domain in `CNAME`)
 
 ---
 
@@ -45,8 +45,14 @@ across versions. It:
 - **Converts** `<image-slot>` elements to plain `<img>` so your photos stay.
 - **Re-embeds** fonts (and extracts large images) as cacheable files in
   `assets/`, so the HTML document is tiny and images lazy-load.
-- **Swaps** the placeholder GitHub block for **live, auto-updating**
-  github-readme-stats images.
+- **Fills** the GitHub block with live data fetched at build time
+  (contribution calendar, repo count, pinned repos).
+- **Rebuilds the `<head>`**: title, description, canonical, hreflang, Open
+  Graph and JSON-LD per page, from [`scripts/site-facts.mjs`](scripts/site-facts.mjs).
+- **Builds `/services/`** per locale from the same render (commercial sections
+  only), with its own canonical and sitemap entry.
+- **Refuses to deploy** if a retired claim reaches `dist/` (the forbidden-string
+  scan; see `FORBIDDEN` in `build.mjs`).
 - **Self-heals** the region count badges from the actual list.
 - **Adds** a tiny vanilla-JS layer for the nav menu, FAQ accordion, scroll
   reveal, and the Calendly popup — no framework.
@@ -66,20 +72,19 @@ npx serve dist     # preview (any static server works)
 
 ---
 
-## ✍️ Copy fixes to make in Claude design
+## ✍️ Facts and copy
 
-These are small content inconsistencies. The build can't safely guess the right
-values, so edit them at the source (Claude design) and re-export:
-
-- **Product count:** the hero says “20+ products” / “12+ apps”, the About block
-  says “23 products.” Pick one canonical number and use it everywhere.
-- **Services section** (“Ways to work together”) is the only section header
-  missing its sequence number — it sits between “Why me · 12” and
-  “Trust signals · 13.” Add `· 13` (and bump the rest) or leave it unnumbered
-  intentionally.
-- ~~Consider adding an **`og:image`** meta tag~~ — **done automatically.** The
-  build generates a branded 1200×630 card (`dist/og.png`) and wires up
-  `og:image` / `twitter:image` per locale. No action needed.
+- **One source of truth:** location, contact links, every proof number (6+
+  years, 27+ products, 13+ brands, …) and the per-page SEO title/description
+  live in [`scripts/site-facts.mjs`](scripts/site-facts.mjs), each number with
+  the evidence it rests on. Change a fact there, never in a single section.
+- **Copy corrections** to the export are applied by
+  [`scripts/edit-copy.mjs`](scripts/edit-copy.mjs) on every deploy
+  (`npm run copy:apply`; `npm run copy:check` reports their state). Never edit
+  the compressed bundle inside an export by hand.
+- **Lead magnet:** `multi-tenant-saas-checklist.pdf` at the repo root is the
+  deployed file; [`lead-magnet/`](lead-magnet/) is its source and is not
+  deployed.
 
 ---
 

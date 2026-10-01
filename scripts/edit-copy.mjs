@@ -26,6 +26,7 @@
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import zlib from 'node:zlib';
+import { CONTACT } from './site-facts.mjs';
 
 const CHECK = process.argv.includes('--check');
 const SOFT = process.argv.includes('--soft');
@@ -1347,7 +1348,7 @@ const HEAD_EDITS = ['en', 'ar', 'de', 'es', 'fr'].map((loc) => ({
     let out = text;
     for (const [from, to] of [
       ...HEAD_SWAPS[loc], ...HEAD_SWAPS_ALL,
-      YEARS_HEAD[loc], RELOCATION_HEAD[loc], PERSON_URL_HEAD,
+      YEARS_HEAD[loc], YEARS_HEAD_PROSE[loc], YEARS_LD_HEAD, RELOCATION_HEAD[loc], PERSON_URL_HEAD,
     ]) {
       out = out.split(from).join(to);
     }
@@ -1413,11 +1414,27 @@ const fileFor = (loc) => (loc === 'en' ? 'index.html' : `index.${loc}.html`);
 const rxEscape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const flexible = (s) => new RegExp(s.trim().split(/\s+/).map(rxEscape).join('\\s+'), 'g');
 
+// A table row may be [from, to, ...prior]. `prior` lists texts an earlier
+// version of this same edit produced: when the wording moves on, the old
+// output is migrated to the new `to` instead of the edit failing because
+// neither `from` nor `to` is present any more. Any `from`/`prior` element may
+// be a RegExp (must carry the `g` flag), used as-is instead of the
+// whitespace-flexible string match.
+//
+// Rule: a prior must never be a substring of `to` — it would re-match the
+// new output on every run. Use a lookbehind RegExp in that case. The
+// engine's write-time idempotency check is the backstop.
+const toRx = (s) => {
+  if (s instanceof RegExp) return s;
+  const lead = /^\s/.test(s) ? '\\s*' : '';
+  return new RegExp(lead + flexible(s).source, 'g');
+};
+
 function factEdits(label, table, extra = {}) {
   return LOCALES.filter((loc) => table[loc]).map((loc) => {
-    const [from, to] = table[loc];
-    const lead = /^\s/.test(from) ? '\\s*' : '';
-    const rx = new RegExp(lead + flexible(from).source, 'g');
+    const [from, to, ...prior] = table[loc];
+    const rx = toRx(from);
+    const priors = prior.map(toRx);
     return {
       file: fileFor(loc),
       label: `${label} (${loc})`,
@@ -1426,8 +1443,9 @@ function factEdits(label, table, extra = {}) {
       // asset, and none of them touches this class name.
       anchor: 'className="about-p"',
       transform: (text) => {
-        if (rx.test(text)) { rx.lastIndex = 0; return text.replace(rx, to); }
-        rx.lastIndex = 0;
+        let out = text;
+        for (const r of [rx, ...priors]) { r.lastIndex = 0; out = out.replace(r, to); r.lastIndex = 0; }
+        if (out !== text) return out;
         // Not matched. Either already applied, or the export moved and this
         // correction is now silently dropped — which for a `critical` edit
         // must fail. A non-empty replacement is detectable, so check for it.
@@ -1447,15 +1465,22 @@ function factEdits(label, table, extra = {}) {
 // description in the template and the llms.txt/JSON-LD copy in build.mjs.
 const YEARS_EDITS = [
   ...factEdits('six years: hero line', {
+    // Third element onward = earlier output of this edit (see factEdits).
+    // Canonical claim is 6+ years; prose says "over six years" (site-facts).
     en: ['Five years shipping to production across the Gulf, the US, and the UK.',
+         'Over six years shipping to production across the Gulf, the US, and the UK.',
          'Six years shipping to production across the Gulf, the US, and the UK.'],
     ar: ['خمس سنوات من الإطلاق في الإنتاج عبر الخليج والولايات المتحدة والمملكة المتحدة.',
-         'ست سنوات من الإطلاق في الإنتاج عبر الخليج والولايات المتحدة والمملكة المتحدة.'],
+         'أكثر من ست سنوات من الإطلاق في الإنتاج عبر الخليج والولايات المتحدة والمملكة المتحدة.',
+         /(?<!أكثر من )ست سنوات من الإطلاق في الإنتاج عبر الخليج والولايات المتحدة والمملكة المتحدة\./g],
     de: ['Fünf Jahre in Produktion im Golfraum, in den USA und in Großbritannien.',
+         'Über sechs Jahre in Produktion im Golfraum, in den USA und in Großbritannien.',
          'Sechs Jahre in Produktion im Golfraum, in den USA und in Großbritannien.'],
     es: ['Cinco años llevando sistemas a producción en el Golfo, EE',
+         'Más de seis años llevando sistemas a producción en el Golfo, EE',
          'Seis años llevando sistemas a producción en el Golfo, EE'],
     fr: ['Cinq ans de mise en production dans le Golfe, aux États-Unis et au Royaume-Uni.',
+         'Plus de six ans de mise en production dans le Golfe, aux États-Unis et au Royaume-Uni.',
          'Six ans de mise en production dans le Golfe, aux États-Unis et au Royaume-Uni.'],
   }),
   ...factEdits('six years: About stat', {
@@ -1468,11 +1493,11 @@ const YEARS_EDITS = [
   // The spec listed three occurrences; this is a fourth it missed. Left alone
   // the About paragraph would still open with "over the last five years".
   ...factEdits('six years: About paragraph', {
-    en: ["Over the last five years I've built", "Over the last six years I've built"],
-    ar: ['خلال السنوات الخمس الماضية', 'خلال السنوات الست الماضية'],
-    de: ['In den letzten fünf Jahren', 'In den letzten sechs Jahren'],
-    es: ['En los últimos cinco años', 'En los últimos seis años'],
-    fr: ['Ces cinq dernières années', 'Ces six dernières années'],
+    en: ["Over the last five years I've built", "For over six years I've built", "Over the last six years I've built"],
+    ar: ['خلال السنوات الخمس الماضية', 'على مدى أكثر من ست سنوات', 'خلال السنوات الست الماضية'],
+    de: ['In den letzten fünf Jahren', 'In über sechs Jahren', 'In den letzten sechs Jahren'],
+    es: ['En los últimos cinco años', 'En más de seis años', 'En los últimos seis años'],
+    fr: ['Ces cinq dernières années', 'En plus de six ans', 'Ces six dernières années'],
   }),
 ];
 
@@ -1484,6 +1509,18 @@ const YEARS_HEAD = {
   es: ['Cinco años construyendo SaaS multi-tenant', 'Seis años construyendo SaaS multi-tenant'],
   fr: ['Cinq ans à construire des SaaS multi-tenant', 'Six ans à construire des SaaS multi-tenant'],
 };
+
+// Second step for the head: bare "six years" → the canonical prose form. Only
+// matters for the raw-fallback deploy; the build writes its own description.
+// Each `from` carries context so it is never a substring of its `to`.
+const YEARS_HEAD_PROSE = {
+  en: ['Six years building multi-tenant SaaS', 'Over six years building multi-tenant SaaS'],
+  ar: ['دبي. ست سنوات', 'دبي. أكثر من ست سنوات'],
+  de: ['Dubai. Sechs Jahre Aufbau', 'Dubai. Über sechs Jahre Aufbau'],
+  es: ['Dubái. Seis años construyendo', 'Dubái. Más de seis años construyendo'],
+  fr: ['Dubaï. Six ans à construire', 'Dubaï. Plus de six ans à construire'],
+};
+const YEARS_LD_HEAD = ['Engineer with six years building', 'Engineer with over six years building'];
 
 // ── Remove the LinkedIn follower count ──────────────────────────────────────
 // The number was true (27,034 on 12 Sep 2026). It comes down because it is the
@@ -1545,13 +1582,15 @@ const FOLLOWER_EDITS = [
   // The connect card always renders a handle, so it gets the profile slug —
   // the same shape as the Behance card's "ahmedfarid20" — rather than being
   // blanked, which would leave a visibly empty line in the grid.
-  // (Vanity slug since Oct 2026: iamahmedfarid — see BRAND_EDITS.)
+  // (Vanity slug since Oct 2026: iamahmedfarid — see BRAND_EDITS. Third
+  // element = the "ahmed-farid" handle this edit wrote before that, so an
+  // export committed in that state still converges in one pass.)
   ...factEdits('LinkedIn card: drop follower count', {
-    en: ['handle: "25,000+ followers"', 'handle: "iamahmedfarid"'],
-    ar: ['handle: "٢٥٬٠٠٠+ متابع"', 'handle: "iamahmedfarid"'],
-    de: ['handle: "25.000+ Follower"', 'handle: "iamahmedfarid"'],
-    es: ['handle: "25.000+ seguidores"', 'handle: "iamahmedfarid"'],
-    fr: ['handle: "25 000+ abonnés"', 'handle: "iamahmedfarid"'],
+    en: ['handle: "25,000+ followers"', 'handle: "iamahmedfarid"', 'handle: "ahmed-farid"'],
+    ar: ['handle: "٢٥٬٠٠٠+ متابع"', 'handle: "iamahmedfarid"', 'handle: "ahmed-farid"'],
+    de: ['handle: "25.000+ Follower"', 'handle: "iamahmedfarid"', 'handle: "ahmed-farid"'],
+    es: ['handle: "25.000+ seguidores"', 'handle: "iamahmedfarid"', 'handle: "ahmed-farid"'],
+    fr: ['handle: "25 000+ abonnés"', 'handle: "iamahmedfarid"', 'handle: "ahmed-farid"'],
   }),
   ...factEdits('LinkedIn card desc: drop network size', {
     en: ['desc: "Career, recommendations & a 25K+ network."', 'desc: "Career history and recommendations."'],
@@ -1719,11 +1758,17 @@ const SDLC_EDITS = LOCALES.map((loc) => ({
 // The pricing section keeps its own demo CTA: it sits inside an explicitly
 // commercial block, where offering a demo is coherent rather than confusing.
 const AVAILABILITY_EDITS = factEdits('hero/nav: open to roles', {
-  en: ['Available now · 2 slots', 'Open to senior engineering roles · Dubai'],
-  ar: ['متاح الآن · مقعدان', 'مفتوح لأدوار هندسية أولى · دبي'],
-  de: ['Jetzt verfügbar · 2 Slots', 'Offen für Senior-Engineering-Rollen · Dubai'],
-  es: ['Disponible ahora · 2 plazas', 'Abierto a roles senior de ingeniería · Dubái'],
-  fr: ['Disponible maintenant · 2 places', 'Ouvert aux postes senior en ingénierie · Dubaï'],
+  // Oct 2026: both audiences in one line — roles first, consulting second —
+  // so neither a recruiter nor a founder reads it as "not for me". The pulse
+  // dot already says "available", so the label drops "Open to": every locale
+  // is now shorter than the roles-only wording, which already wrapped the
+  // desktop nav at 1025–1280px. Measure the nav before lengthening these.
+  // Third element = the roles-only wording this edit used to write.
+  en: ['Available now · 2 slots', 'Senior roles and consulting · Dubai', 'Open to senior engineering roles · Dubai'],
+  ar: ['متاح الآن · مقعدان', 'أدوار أولى واستشارات · دبي', 'مفتوح لأدوار هندسية أولى · دبي'],
+  de: ['Jetzt verfügbar · 2 Slots', 'Senior-Rollen und Beratung · Dubai', 'Offen für Senior-Engineering-Rollen · Dubai'],
+  es: ['Disponible ahora · 2 plazas', 'Roles senior y consultoría · Dubái', 'Abierto a roles senior de ingeniería · Dubái'],
+  fr: ['Disponible maintenant · 2 places', 'Postes senior et conseil · Dubaï', 'Ouvert aux postes senior en ingénierie · Dubaï'],
 });
 
 // Nav and hero only — matched with the arrow so the pricing-section CTA, which
@@ -2059,19 +2104,27 @@ const RENUMBER_EDITS = [
 // should point you somewhere else" is a vendor qualifying a lead. It is the
 // final impression on a page that now opens by asking for a role.
 const CLOSING_EDITS = factEdits('closing CTA speaks to an employer', {
+  // Oct 2026: opens with both audiences (hiring, or a system to build); the
+  // contact block underneath splits into the two matching paths. Third
+  // element = the employer-only wording this edit used to write.
   en: ["One scoping call. Thirty minutes. We'll know inside that whether I'm the right hands for the job — or whether I should point you somewhere else.",
+       "Hiring a senior engineer, or need a system built? Thirty minutes is usually enough to tell whether I'm the right fit. Bring the problem you have not been able to hand to anyone yet.",
        "Thirty minutes is usually enough to tell whether I'm the engineer your team is missing. Bring the problem you have not been able to hand to anyone yet."],
   // Translated to carry the same move — from "am I the right vendor for this
   // job" to "am I the engineer this team is missing" — rather than word for
   // word. "the problem you haven't been able to hand to anyone yet" is the
   // line doing the work, so each language keeps that idea intact.
   ar: ['مكالمة تحديد نطاق. ثلاثون دقيقة. خلالها سنعرف إن كنت الأيدي المناسبة للعمل — أو إن كان عليّ أن أحيلك إلى جهة أخرى.',
+       'تبحث عن مهندس أول، أو تحتاج إلى بناء نظام؟ ثلاثون دقيقة تكفي عادةً لنعرف إن كنتُ الشخص المناسب. احضر ومعك المشكلة التي لم تجد من تسلّمها له حتى الآن.',
        'ثلاثون دقيقة تكفي عادةً لتعرف إن كنتُ المهندس الذي ينقص فريقك. احضر ومعك المشكلة التي لم تجد من تسلّمها له حتى الآن.'],
   de: ['Ein Scoping-Call. Dreißig Minuten. Darin wissen wir, ob ich die richtigen Hände für den Job bin — oder ob ich Sie woandershin verweisen sollte.',
+       'Sie suchen einen Senior-Engineer oder brauchen ein System? Dreißig Minuten genügen meist, um zu sehen, ob ich der Richtige bin. Bringen Sie das Problem mit, das Sie bisher niemandem übergeben konnten.',
        'Dreißig Minuten genügen meist, um zu sehen, ob ich der Entwickler bin, der Ihrem Team fehlt. Bringen Sie das Problem mit, das Sie bisher niemandem übergeben konnten.'],
   es: ['Una llamada de alcance. Treinta minutos. Dentro de ese tiempo sabremos si soy las manos adecuadas para el trabajo — o si debería remitirte a otro sitio.',
+       '¿Buscas un ingeniero senior o necesitas construir un sistema? Treinta minutos suelen bastar para ver si encajo. Trae el problema que todavía no has podido entregarle a nadie.',
        'Treinta minutos suelen bastar para ver si soy el ingeniero que le falta a tu equipo. Trae el problema que todavía no has podido entregarle a nadie.'],
   fr: ["Un appel de cadrage. Trente minutes. On saura à l'intérieur si je suis les bonnes mains pour la mission — ou si je dois vous orienter ailleurs.",
+       "Vous recrutez un ingénieur senior ou avez un système à construire ? Trente minutes suffisent en général à savoir si je suis la bonne personne. Venez avec le problème que vous n'avez encore pu confier à personne.",
        "Trente minutes suffisent en général à savoir si je suis l'ingénieur qui manque à votre équipe. Venez avec le problème que vous n'avez encore pu confier à personne."],
 });
 
@@ -2213,8 +2266,8 @@ const SENIORITY_EDITS = LOCALES.map((loc) => ({
 //
 // They run LAST: CV_LINK_EDITS matches a LinkedIn URL that still carries the
 // old slug in a fresh export, so the slug must not change before it runs.
-const LINKEDIN_URL = 'https://www.linkedin.com/in/iamahmedfarid';
-const WHATSAPP_URL = 'https://wa.me/message/CFOPUVBTQVPLM1';
+const LINKEDIN_URL = CONTACT.linkedin;
+const WHATSAPP_URL = CONTACT.whatsapp;
 const SOCIALS = [
   { key: 'instagram', name: 'Instagram', href: 'https://www.instagram.com/iamahmedfarid',
     icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7.0301.084c-1.2768.0602-2.1487.264-2.911.5634-.7888.3075-1.4575.72-2.1228 1.3877-.6652.6677-1.075 1.3368-1.3802 2.127-.2954.7638-.4956 1.6365-.552 2.914-.0564 1.2775-.0689 1.6882-.0626 4.947.0062 3.2586.0206 3.6671.0825 4.9473.061 1.2765.264 2.1482.5635 2.9107.308.7889.72 1.4573 1.388 2.1228.6679.6655 1.3365 1.0743 2.1285 1.38.7632.295 1.6361.4961 2.9134.552 1.2773.056 1.6884.069 4.9462.0627 3.2578-.0062 3.668-.0207 4.9478-.0814 1.28-.0607 2.147-.2652 2.9098-.5633.7889-.3086 1.4578-.72 2.1228-1.3881.665-.6682 1.0745-1.3378 1.3795-2.1284.2957-.7632.4966-1.636.552-2.9124.056-1.2809.0692-1.6898.063-4.948-.0063-3.2583-.021-3.6668-.0817-4.9465-.0607-1.2797-.264-2.1487-.5633-2.9117-.3084-.7889-.72-1.4568-1.3876-2.1228C21.2982 1.33 20.628.9208 19.8378.6165 19.074.321 18.2017.1197 16.9244.0645 15.6471.0093 15.236-.005 11.977.0014 8.718.0076 8.31.0215 7.0301.0839m.1402 21.6932c-1.17-.0509-1.8053-.2453-2.2287-.408-.5606-.216-.96-.4771-1.3819-.895-.422-.4178-.6811-.8186-.9-1.378-.1644-.4234-.3624-1.058-.4171-2.228-.0595-1.2645-.072-1.6442-.079-4.848-.007-3.2037.0053-3.583.0607-4.848.05-1.169.2456-1.805.408-2.2282.216-.5613.4762-.96.895-1.3816.4188-.4217.8184-.6814 1.3783-.9003.423-.1651 1.0575-.3614 2.227-.4171 1.2655-.06 1.6447-.072 4.848-.079 3.2033-.007 3.5835.005 4.8495.0608 1.169.0508 1.8053.2445 2.228.408.5608.216.96.4754 1.3816.895.4217.4194.6816.8176.9005 1.3787.1653.4217.3617 1.056.4169 2.2263.0602 1.2655.0739 1.645.0796 4.848.0058 3.203-.0055 3.5834-.061 4.848-.051 1.17-.245 1.8055-.408 2.2294-.216.5604-.4763.96-.8954 1.3814-.419.4215-.8181.6811-1.3783.9-.4224.1649-1.0577.3617-2.2262.4174-1.2656.0595-1.6448.072-4.8493.079-3.2045.007-3.5825-.006-4.848-.0608M16.953 5.5864A1.44 1.44 0 1 0 18.39 4.144a1.44 1.44 0 0 0-1.437 1.4424M5.8385 12.012c.0067 3.4032 2.7706 6.1557 6.173 6.1493 3.4026-.0065 6.157-2.7701 6.1506-6.1733-.0065-3.4032-2.771-6.1565-6.174-6.1498-3.403.0067-6.156 2.771-6.1496 6.1738M8 12.0077a4 4 0 1 1 4.008 3.9921A3.9996 3.9996 0 0 1 8 12.0077"/></svg>' },
@@ -2236,10 +2289,18 @@ const SOCIAL_DESC = {
 
 // The old vanity slug, wherever it appears. The trailing-slash form is the
 // one the export uses; the bare form catches anything else.
+// A sub-path keeps its separator (`…/recent-activity/all/`). The first version
+// of this replaced `<old>/` with the bare new URL and swallowed that slash,
+// writing `iamahmedfaridrecent-activity` into the exports; the last step
+// repairs that baked-in output. The build's drift guard fails on the broken
+// form, so it cannot ship again.
+const OLD_LI = 'https://www.linkedin.com/in/ahmed-farid-b46a5221b';
 const fixLinkedIn = (text) =>
   text
-    .split('https://www.linkedin.com/in/ahmed-farid-b46a5221b/').join(LINKEDIN_URL)
-    .split('https://www.linkedin.com/in/ahmed-farid-b46a5221b').join(LINKEDIN_URL);
+    .replace(/https:\/\/www\.linkedin\.com\/in\/ahmed-farid-b46a5221b\/(?=[A-Za-z0-9])/g, LINKEDIN_URL + '/')
+    .split(OLD_LI + '/').join(LINKEDIN_URL)
+    .split(OLD_LI).join(LINKEDIN_URL)
+    .replace(/(linkedin\.com\/in\/iamahmedfarid)(?=recent-activity)/g, '$1/');
 
 const CH_OPEN = 'const channels = [';
 const CH_CLOSE = '\n  ];';
@@ -2264,35 +2325,54 @@ function rebuildChannels(loc) {
     const github = first((h) => h.includes('github.com/'));
     const email = first((h) => h === 'mailto:ahmed@iamahmedfarid.com');
     const wa = first((h) => h.startsWith('https://wa.me/'));
-    const behance = first((h) => h.includes('behance.net/'));
-    if (!linkedin || !github || !email || !wa || !behance) return null;
+    if (!linkedin || !github || !email || !wa) return null;
 
     // Anything not recognised is kept rather than silently dropped. The work
-    // email (any other mailto:) and every extra WhatsApp card are dropped.
+    // email (any other mailto:), every extra WhatsApp card, the creator
+    // platforms and Behance are dropped from the grid: Connect is where a
+    // visitor decides how to reach him, and cards whose own copy is "short-form
+    // videos" carry no hiring or client proof. They stay in the footer's
+    // Profiles list and in the JSON-LD sameAs, so identity stays consolidated.
     const known = (h) =>
       h === LM_HREF || h.includes('linkedin.com/') || h.includes('github.com/') ||
       h.startsWith('mailto:') || h.startsWith('https://wa.me/') || h.includes('behance.net/') ||
-      SOCIALS.some((s) => s.href === h);
+      h.includes('calendly.com/') || SOCIALS.some((s) => s.href === h);
     const others = entries.filter((e) => !known(hrefOf(e)));
 
     const set = (e, field, value) =>
       e.replace(new RegExp(`(\\n      ${field}: )"[^"]*",`), (_, k) => `${k}${q(value)},`);
     const li = set(set(linkedin, 'handle', 'iamahmedfarid'), 'href', LINKEDIN_URL);
     const whatsapp = set(set(set(wa, 'name', 'WhatsApp'), 'handle', 'WhatsApp Business'), 'href', WHATSAPP_URL);
-    const socials = SOCIALS.map((s) =>
+    const calendly =
       '\n    {\n' +
-      `      name: ${q(s.name)},\n` +
-      `      handle: ${q(SOCIAL_HANDLE)},\n` +
-      `      href: ${q(s.href)},\n` +
-      `      desc: ${q(SOCIAL_DESC[loc][s.key])},\n` +
+      `      name: "Calendly",\n` +
+      `      handle: ${q(CALENDLY_CARD[loc].handle)},\n` +
+      `      href: ${q(CONTACT.calendly)},\n` +
+      `      desc: ${q(CALENDLY_CARD[loc].desc)},\n` +
       '      icon: (\n' +
-      `        ${s.icon}\n` +
-      '      ),');
+      `        ${CALENDAR_ICON}\n` +
+      '      ),';
 
-    const ordered = [checklist, li, github, email, whatsapp, ...socials, ...others, behance].filter(Boolean);
-    return text.slice(0, a + CH_OPEN.length) + ordered.map((e) => e + CH_END).join('') + text.slice(b);
+    // Email first, never LinkedIn: the lead-magnet edit tests LM_ANCHOR (a
+    // channels array that opens with LinkedIn) before its appliedMarker, so a
+    // LinkedIn-first array would make it insert another card on every run.
+    const ordered = [email, li, github, whatsapp, calendly, checklist, ...others].filter(Boolean);
+    const out = text.slice(0, a + CH_OPEN.length) + ordered.map((e) => e + CH_END).join('') + text.slice(b);
+    if (out.includes(LM_ANCHOR)) throw new Error('channels would start with LinkedIn (see LM_ANCHOR)');
+    return out;
   };
 }
+
+const CALENDAR_ICON =
+  '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">' +
+  '<rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>';
+const CALENDLY_CARD = {
+  en: { handle: '30-minute scoping call', desc: 'For project work — pick a time that suits you.' },
+  ar: { handle: 'مكالمة تحديد نطاق ٣٠ دقيقة', desc: 'لأعمال المشاريع — اختر الوقت المناسب لك.' },
+  de: { handle: '30-minütiger Scoping-Call', desc: 'Für Projektarbeit — wählen Sie einen passenden Termin.' },
+  es: { handle: 'Llamada de alcance de 30 minutos', desc: 'Para proyectos — elige el horario que te venga bien.' },
+  fr: { handle: 'Appel de cadrage de 30 minutes', desc: 'Pour un projet — choisissez le créneau qui vous convient.' },
+};
 
 const FOOT_TEL = /<li><a href="tel:[^"]*"[^>]*>[^<]*<\/a><\/li>/g;
 const FOOT_WA = `<li><a href="${WHATSAPP_URL}" target="_blank" rel="noreferrer">WhatsApp</a></li>`;
@@ -2391,6 +2471,140 @@ const TOOLBELT_EDITS = LOCALES.map((loc) => ({
     return text.slice(0, a) + 'const groups = [\n' + groups + text.slice(b);
   },
 }));
+
+
+// ── Contact: one block, two explicit paths ──────────────────────────────────
+// The closing section had one row (Calendly / CV / email) that served neither
+// audience fully. It now splits into "hiring for a senior role" (email about a
+// role, CV, LinkedIn) and "have a project" (30-minute scoping call, WhatsApp
+// Business, email a brief). Same btn classes, inline layout only, so the raw
+// fallback renders it too. Every "contact" CTA on the page lands here.
+//
+// Non-critical: on a re-export whose buttons moved it soft-fails and the old
+// buttons ship, which are still valid.
+const CONTACT_PATH_COPY = {
+  en: { hire: 'Hiring for a senior role', role: 'Contact me about a senior role', cv: 'View CV ↗', proj: 'Have a project', call: 'Book a 30-minute scoping call', brief: 'Email a project brief' },
+  ar: { hire: 'للتوظيف في دور هندسي أول', role: 'راسلني بشأن دور أول', cv: 'اعرض السيرة الذاتية ↗', proj: 'لديك مشروع', call: 'احجز مكالمة تحديد نطاق مدتها ٣٠ دقيقة', brief: 'أرسل ملخّص مشروعك بالبريد' },
+  de: { hire: 'Sie besetzen eine Senior-Rolle', role: 'Schreiben Sie mir zu einer Senior-Rolle', cv: 'Lebenslauf ansehen ↗', proj: 'Sie haben ein Projekt', call: '30-minütigen Scoping-Call vereinbaren', brief: 'Projektbriefing per E-Mail senden' },
+  es: { hire: '¿Contratas para un puesto senior?', role: 'Escríbeme sobre un puesto senior', cv: 'Ver CV ↗', proj: '¿Tienes un proyecto?', call: 'Reserva una llamada de alcance de 30 minutos', brief: 'Envía un brief del proyecto por email' },
+  fr: { hire: 'Vous recrutez pour un poste senior', role: 'Écrivez-moi pour un poste senior', cv: 'Voir le CV ↗', proj: 'Vous avez un projet', call: 'Réserver un appel de cadrage de 30 minutes', brief: 'Envoyer un brief de projet par e-mail' },
+};
+// Labels must not contain an older old/new edit's `old` text (e.g. the DE
+// "primary CTA" edit rewrites any 'Scoping-Call buchen' on every run).
+const CONTACT_OPEN = '<section className="cta" id="contact">';
+
+function contactPaths(loc) {
+  const c = CONTACT_PATH_COPY[loc];
+  const mail = (subject) => `mailto:${CONTACT.email}?subject=${encodeURIComponent(subject)}`;
+  const row = (label, links) =>
+    `            <div className="contact-path" role="group" aria-label=${q(label)} style={{display:'flex',flexWrap:'wrap',gap:12,alignItems:'center',justifyContent:'center'}}>\n` +
+    `              <span className="fineprint" style={{flexBasis:'100%'}}>${label}</span>\n` +
+    links.join('') +
+    '            </div>\n';
+  const a = (href, cls, label, ext, extra = '') =>
+    `              <a href=${q(href)}${extra}${ext ? ' target="_blank" rel="noreferrer"' : ''} className=${q(cls)}>\n                ${label}\n              </a>\n`;
+  const calendlyClick = ` onClick={(e) => { if (window.Calendly) { e.preventDefault(); window.Calendly.initPopupWidget({ url: '${CONTACT.calendly}' }); } }}`;
+  return (
+    '<div className="contact-paths" style={{display:\'grid\',gap:28,marginTop:48,padding:\'0 20px\'}}>\n' +
+    row(c.hire, [
+      a(mail('Senior engineering role'), 'btn btn-primary', `${c.role} <Arrow_t/>`, false),
+      a(CONTACT.cv, 'btn btn-ghost', c.cv, true),
+      a(CONTACT.linkedin, 'btn btn-ghost', 'LinkedIn ↗', true),
+    ]) +
+    row(c.proj, [
+      a(CONTACT.calendly, 'btn btn-primary', `${c.call} <Arrow_t/>`, true, calendlyClick),
+      a(CONTACT.whatsapp, 'btn btn-ghost', 'WhatsApp Business ↗', true),
+      a(mail('Project brief'), 'btn btn-ghost', c.brief, false),
+    ]) +
+    '          </div>'
+  );
+}
+
+const CONTACT_PATHS_EDITS = LOCALES.map((loc) => ({
+  file: fileFor(loc),
+  label: `contact: two paths — hiring / project (${loc})`,
+  anchor: CONTACT_OPEN,
+  transform: (text) => {
+    const a = text.indexOf(CONTACT_OPEN);
+    if (a < 0) return null;
+    const end = text.indexOf('</section>', a);
+    if (end < 0) return null;
+    const slice = text.slice(a, end);
+    if (slice.includes('className="contact-paths"')) return text;
+    const OPEN = '<div className="cta-btns">';
+    const b0 = slice.indexOf(OPEN);
+    if (b0 < 0) return null;
+    // Find the row's own closing tag by div depth, so a re-export that adds
+    // anything after the row cannot be swallowed by the splice.
+    const tag = /<div\b|<\/div>/g;
+    tag.lastIndex = b0 + OPEN.length;
+    let depth = 1, b1 = -1, m;
+    while ((m = tag.exec(slice))) {
+      depth += m[0] === '</div>' ? -1 : 1;
+      if (depth === 0) { b1 = m.index; break; }
+    }
+    if (b1 < 0) return null;
+    // Only buttons may be replaced: if the row holds anything but <a> links,
+    // the export changed shape — leave it alone (soft-fails to the old row).
+    const inner = slice.slice(b0 + OPEN.length, b1);
+    if (inner.replace(/<a\b[\s\S]*?<\/a>/g, '').trim() !== '') return null;
+    const next = slice.slice(0, b0) + contactPaths(loc) + slice.slice(b1 + '</div>'.length);
+    return text.slice(0, a) + next + text.slice(end);
+  },
+}));
+
+// ── RevealSite: 13+ pharmacy brands, matching By-the-numbers ───────────────
+// The case's own fleet list shows 14 products & storefronts — 13 pharmacies
+// plus the Almani institute — so "13+ white-label brands" (METRICS) is the
+// supported figure and "12+" here undersold and contradicted it. The hero's
+// separate "12+ apps on App Store / Play" store count is a different metric
+// and is left alone.
+const REVEALSITE_EDITS = [
+  ...factEdits('RevealSite: 13+ pharmacy brands (tagline)', {
+    en: ['behind 12+ branded pharmacy apps', 'behind 13+ branded pharmacy apps'],
+    ar: ['وراء +١٢ تطبيقًا', 'وراء +١٣ تطبيقًا'],
+    de: ['hinter 12+ Marken-Apotheken-Apps', 'hinter 13+ Marken-Apotheken-Apps'],
+    es: ['tras 12+ apps y tiendas de farmacia', 'tras 13+ apps y tiendas de farmacia'],
+    fr: ['derrière 12+ apps et boutiques', 'derrière 13+ apps et boutiques'],
+  }),
+  ...factEdits('RevealSite: 13+ pharmacy brands (impact)', {
+    en: ['{ v: "12+", l: "Apps & storefronts" }', '{ v: "13+", l: "Apps & storefronts" }'],
+    ar: ['{ v: "12+", l: "تطبيقات وواجهات" }', '{ v: "13+", l: "تطبيقات وواجهات" }'],
+    de: ['{ v: "12+", l: "Apps & Schaufenster" }', '{ v: "13+", l: "Apps & Schaufenster" }'],
+    es: ['{ v: "12+", l: "Apps y tiendas" }', '{ v: "13+", l: "Apps y tiendas" }'],
+    fr: ['{ v: "12+", l: "Apps et boutiques" }', '{ v: "13+", l: "Apps et boutiques" }'],
+  }),
+];
+
+// ── The ongoing freelance role is run from Dubai now ───────────────────────
+// Owner-confirmed (Oct 2026): living in Dubai. Every ended role keeps the city
+// it was worked from; only this "— Now" entry moves, to the same per-locale
+// string the Recovery Advisers entry already uses. Anchored on the entry's
+// last company link so no other Cairo role can match.
+const FREELANCE_LOC_EDITS = factEdits('experience: current freelance role in Dubai', {
+  en: ['alnaimi-studios/" },\n      ], logo: null, loc: "Cairo · Remote" }', 'alnaimi-studios/" },\n      ], logo: null, loc: "Dubai, UAE · Remote" }'],
+  ar: ['alnaimi-studios/" },\n      ], logo: null, loc: "القاهرة · عن بُعد" }', 'alnaimi-studios/" },\n      ], logo: null, loc: "دبي، الإمارات · عن بُعد" }'],
+  de: ['alnaimi-studios/" },\n      ], logo: null, loc: "Kairo · Remote" }', 'alnaimi-studios/" },\n      ], logo: null, loc: "Dubai, VAE · Remote" }'],
+  es: ['alnaimi-studios/" },\n      ], logo: null, loc: "El Cairo · Remoto" }', 'alnaimi-studios/" },\n      ], logo: null, loc: "Dubái, EAU · Remoto" }'],
+  fr: ['alnaimi-studios/" },\n      ], logo: null, loc: "Le Caire · Distanciel" }', 'alnaimi-studios/" },\n      ], logo: null, loc: "Dubaï, EAU · Distanciel" }'],
+});
+
+// ── Footer tagline: spearhead + both audiences ─────────────────────────────
+// "multi-tenant platforms, B2B/B2C systems, and the mobile apps" read as a
+// generalist list. It now states the spearhead and that both senior roles and
+// selected consulting are open. Cosmetic, so not critical.
+const FOOTER_TAG_EDITS = factEdits('footer tagline: spearhead + availability', {
+  en: ['Senior Software Engineer building multi-tenant platforms, B2B/B2C systems, and the mobile apps that ride on top.',
+       'Senior Software Engineer — real-time, multi-tenant SaaS and end-to-end product engineering. Open to senior roles and selected consulting.'],
+  ar: ['مهندس برمجيات أول يبني منصّات متعدّدة المستأجرين وأنظمة B2B/B2C وتطبيقات الجوّال التي تعمل فوقها.',
+       'مهندس برمجيات أول — منصّات SaaS فورية متعدّدة المستأجرين وهندسة المنتجات من البداية إلى النهاية. متاح لأدوار أولى واستشارات مختارة.'],
+  de: ['Senior-Softwareentwickler, der Multi-Tenant-Plattformen, B2B/B2C-Systeme und die mobilen Apps baut, die obendrauf laufen.',
+       'Senior-Softwareentwickler — Echtzeit-Multi-Tenant-SaaS und Produktentwicklung end to end. Offen für Senior-Rollen und ausgewählte Beratung.'],
+  es: ['Ingeniero de Software Senior que construye plataformas multi-tenant, sistemas B2B/B2C y las apps móviles que se montan encima.',
+       'Ingeniero de Software Senior — SaaS multi-tenant en tiempo real e ingeniería de producto de principio a fin. Abierto a roles senior y consultoría selecta.'],
+  fr: ['Ingénieur logiciel senior, je construis des plateformes multi-tenant, des systèmes B2B/B2C et les applications mobiles qui les accompagnent.',
+       'Ingénieur logiciel senior — SaaS multi-tenant temps réel et ingénierie produit de bout en bout. Ouvert aux postes senior et à des missions de conseil choisies.'],
+}, { critical: false });
 
 const EDITS = [
   {
@@ -2750,8 +2964,12 @@ const EDITS = [
   ...RELOCATION_EDITS,
   ...SENIORITY_EDITS,
   ...TOOLBELT_EDITS,
+  ...REVEALSITE_EDITS,
+  ...FREELANCE_LOC_EDITS,
+  ...FOOTER_TAG_EDITS,
   // Last on purpose — see the comment on BRAND_EDITS.
   ...BRAND_EDITS,
+  ...CONTACT_PATHS_EDITS,
 ];
 
 // Locate the `__bundler/template` line: the document shell, stored as a single

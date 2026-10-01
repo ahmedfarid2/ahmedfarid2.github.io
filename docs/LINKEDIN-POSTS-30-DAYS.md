@@ -207,7 +207,7 @@ Best fit if you're building:
 → A real-time system (live bidding, tracking, chat, live data)
 → Something that needs backend + web + mobile from one pair of hands
 
-Six years, 27 products shipped across the Gulf, US and UK. Laravel, Next.js,
+6+ years, 27+ products shipped across the Gulf, US and UK. Laravel, Next.js,
 FastAPI, Flutter.
 
 If that's you — or someone you know — DM me "BUILD" and I'll send over scoping

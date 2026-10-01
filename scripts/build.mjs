@@ -11,8 +11,8 @@
 //   • drops React / ReactDOM / Babel-standalone / editor scaffolding entirely
 //   • converts <image-slot> custom elements to plain <img> (keeps the photos)
 //   • re-embeds blob: fonts as data: URLs so they survive as static assets
-//   • swaps the placeholder "illustrative" GitHub block for live, auto-updating
-//     github-readme-stats images
+//   • fills the placeholder GitHub block with live data fetched at build time
+//     (contribution calendar, repo count, pinned repos)
 //   • adds a tiny vanilla-JS layer for the nav menu, FAQ accordion, scroll
 //     reveal and the Calendly popup (no framework)
 //
@@ -23,12 +23,12 @@ import { mkdir, writeFile, copyFile, rm, readdir, readFile } from 'node:fs/promi
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { SITE_URL, LOCATION, LOCATION_LABEL, CONTACT, YEARS_PROSE, SEO, DRIFT_GUARDS } from './site-facts.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = path.join(ROOT, 'index.html');
 const DIST = path.join(ROOT, 'dist');
 const GH_USER = 'ahmedfarid2';
-const SITE_URL = 'https://iamahmedfarid.com';
 
 // OpenAI / ChatGPT Ads measurement pixel — behind consent.
 //
@@ -462,7 +462,11 @@ const FORBIDDEN = [
   // Same claim, different verb — the wording the first sweep missed.
   { s: 'Open to relocate', max: 0 },
   { s: 'No tracking', max: 0 },
+  // Guards hero, nav and About against the old bare export CTA. The
+  // owner-approved client-path CTA is the 30-minute variant below, which does
+  // not contain this string; it belongs only in the EN contact block.
   { s: 'Book a scoping call', max: 0 },
+  { s: 'Book a 30-minute scoping call', max: 2 },
   // Pricing moved to /work-with-me.html. Banned on the home page, expected on
   // the page that now owns the offer — so these skip that one file rather than
   // being dropped from the list, which would stop guarding the home page too.
@@ -490,11 +494,17 @@ const FORBIDDEN = [
   // "View CV" used to open a CV uploaded to LinkedIn and frozen there, while
   // "Download CV" served the live PDF — two buttons, two different documents.
   { s: 'single-media-viewer', max: 0 },
+  // Facts that drifted before (years, brand count, LinkedIn slug, tracking
+  // params). Kept next to the values they protect, in site-facts.mjs.
+  ...DRIFT_GUARDS,
 ];
+const forbiddenKey = (f) => f.s ?? String(f.re);
+const countForbidden = (body, f) =>
+  f.re ? (body.match(f.re) || []).length : body.split(f.s).length - 1;
 
 async function assertNoForbiddenStrings() {
   const exts = new Set(['.html', '.txt', '.xml', '.json', '.svg']);
-  const counts = new Map(FORBIDDEN.map((f) => [f.s, 0]));
+  const counts = new Map(FORBIDDEN.map((f) => [forbiddenKey(f), 0]));
   const where = new Map();
   const walk = async (dir) => {
     for (const e of await readdir(dir, { withFileTypes: true })) {
@@ -506,20 +516,21 @@ async function assertNoForbiddenStrings() {
       for (const f of FORBIDDEN) {
         if (f.except && (rel === f.except || rel.endsWith('/' + f.except))) continue;
         if (f.alsoExcept && f.alsoExcept.includes(rel)) continue;
-        const n = body.split(f.s).length - 1;
+        const n = countForbidden(body, f);
         if (!n) continue;
-        counts.set(f.s, counts.get(f.s) + n);
-        where.set(f.s, [...(where.get(f.s) || []), `${rel}×${n}`]);
+        const k = forbiddenKey(f);
+        counts.set(k, counts.get(k) + n);
+        where.set(k, [...(where.get(k) || []), `${rel}×${n}`]);
       }
     }
   };
   await walk(DIST);
-  const bad = FORBIDDEN.filter((f) => counts.get(f.s) > f.max);
+  const bad = FORBIDDEN.filter((f) => counts.get(forbiddenKey(f)) > f.max);
   if (bad.length) {
     const err = new Error(
       '[build] forbidden strings reached dist/:\n' +
-      bad.map((f) => `   "${f.s}" — ${counts.get(f.s)} occurrence(s), max ${f.max} ` +
-                     `(${(where.get(f.s) || []).join(', ')})`).join('\n') +
+      bad.map((f) => `   "${forbiddenKey(f)}" — ${counts.get(forbiddenKey(f))} occurrence(s), max ${f.max} ` +
+                     `(${(where.get(forbiddenKey(f)) || []).join(', ')})`).join('\n') +
       '\n   A correction was dropped, or a retired claim came back. Not deploying.'
     );
     // The raw-export fallback is the wrong answer here: the raw export is
@@ -741,14 +752,16 @@ async function writeSeoFiles(locales = [{ urlPath: '/' }]) {
   const EXTRA_PAGES = [
     { path: '/demo.html', priority: '0.9', changefreq: 'monthly' },
     { path: '/checklist.html', priority: '0.8', changefreq: 'yearly' },
-    { path: '/services/', priority: '0.7', changefreq: 'monthly' },
   ];
+  // /services exists once per locale (/services/, /ar/services/, …), each with
+  // its own canonical, so each is listed.
+  const servicesPages = locales.map((l) => ({ path: `${l.urlPath}services/`, priority: '0.7', changefreq: 'monthly' }));
 
   const urls = locales
     .map((l, i) =>
       `  <url><loc>${SITE_URL}${l.urlPath}</loc><lastmod>${today}</lastmod>` +
       `<changefreq>monthly</changefreq><priority>${i === 0 ? '1.0' : '0.9'}</priority></url>`)
-    .concat(EXTRA_PAGES.map((p) =>
+    .concat([...EXTRA_PAGES, ...servicesPages].map((p) =>
       `  <url><loc>${SITE_URL}${p.path}</loc><lastmod>${today}</lastmod>` +
       `<changefreq>${p.changefreq}</changefreq><priority>${p.priority}</priority></url>`))
     .join('\n');
@@ -784,13 +797,13 @@ async function writeSeoFiles(locales = [{ urlPath: '/' }]) {
   // so tools like ChatGPT/Claude/Perplexity can recommend him accurately.
   await writeFile(path.join(DIST, 'llms.txt'),
     `# Ahmed Farid — Senior Software Engineer\n\n` +
-    `> Senior Software Engineer based in Dubai, United Arab Emirates. ` +
-    `Six years building multi-tenant SaaS, real-time platforms, AI tools, and mobile ` +
-    `apps shipped to production across the Gulf, US, and UK.\n\n` +
+    `> Senior Software Engineer based in ${LOCATION_LABEL}. ` +
+    `${YEARS_PROSE.en[0].toUpperCase()}${YEARS_PROSE.en.slice(1)} building real-time, multi-tenant SaaS, AI tools and mobile ` +
+    `apps shipped to production across the Gulf, US, and UK. Open to senior roles and selected consulting.\n\n` +
     `## About\n\n` +
     `- Name: Ahmed Farid\n` +
     `- Role: Senior Software Engineer\n` +
-    `- Location: Dubai, United Arab Emirates — remote and on-site\n` +
+    `- Location: ${LOCATION_LABEL} — remote and on-site\n` +
     `- Currently: full-time at Recovery Advisers (Dubai)\n` +
     `- Availability: a small number of freelance/contract engagements per quarter; open to full-time roles\n\n` +
     `## Core skills\n\n` +
@@ -802,16 +815,17 @@ async function writeSeoFiles(locales = [{ urlPath: '/' }]) {
     `- Technical advisory & architecture review\n\n` +
     `## Links\n\n` +
     `- Website: ${SITE_URL}\n` +
-    `- LinkedIn: https://www.linkedin.com/in/iamahmedfarid\n` +
-    `- GitHub: https://github.com/ahmedfarid2\n` +
+    `- LinkedIn: ${CONTACT.linkedin}\n` +
+    `- GitHub: ${CONTACT.github}\n` +
     `- Instagram: https://www.instagram.com/iamahmedfarid\n` +
     `- X: https://x.com/iamahmedfarid\n` +
     `- YouTube: https://www.youtube.com/@iamahmedfarid\n` +
     `- TikTok: https://www.tiktok.com/@iamahmedfarid\n` +
     `- Behance: https://www.behance.net/ahmedfarid20\n` +
-    `- CV (PDF): ${SITE_URL}/Ahmed-Farid-CV.pdf\n\n` +
+    `- CV (PDF): ${SITE_URL}${CONTACT.cv}\n\n` +
     `## Contact\n\n` +
-    `Email: ahmed@iamahmedfarid.com\n`, 'utf8');
+    `- Senior roles: email ${CONTACT.email}, or LinkedIn\n` +
+    `- Project work: book a 30-minute scoping call (${CONTACT.calendly}) or WhatsApp Business (${CONTACT.whatsapp})\n`, 'utf8');
 
   await writeFile(path.join(DIST, '404.html'),
     `<!doctype html><html lang="en"><head><meta charset="utf-8">\n` +
@@ -862,7 +876,7 @@ async function generateOgImage(browser) {
     .tags{position:absolute;right:90px;bottom:64px;font-size:19px;color:#8b857b;letter-spacing:.05em}
   </style></head><body>
     <div class="grid"></div><div class="glow"></div>
-    <div class="eyebrow"><span class="dot"></span>Senior Software Engineer · Dubai · Multi-tenant SaaS \u0026 real-time</div>
+    <div class="eyebrow"><span class="dot"></span>Senior Software Engineer · ${LOCATION.city} · Multi-tenant SaaS \u0026 real-time</div>
     <h1>I build the systems<br>other teams <em>depend on.</em></h1>
     <div class="sub">Multi-tenant SaaS · real-time platforms · AI tools · mobile apps shipped across the Gulf, US &amp; UK.</div>
     <div class="foot"><b>Ahmed Farid</b> &nbsp;·&nbsp; iamahmedfarid.com</div>
@@ -926,6 +940,14 @@ const FAQ_BUYER_KEYS = {
   fr: ['mission type', 'sont vos clients', 'votre tarif'],
 };
 
+// Page-layout data for the in-page pass. Brand names are not translated, and
+// the writing categories render in English on every locale.
+const PAGE_LAYOUT = {
+  flagship: ['Yelo Sale', 'Qoralia', 'KhebraOS', 'Phonic Maps', 'Recovery Advisers'],
+  expectedCollapsed: 7,
+  writingRank: ['Debugging', 'Testing', 'Fundamentals', 'Hiring', 'Career'],
+};
+
 async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enhanceJS, assetSeen, variant = 'home' }) {
   const isRoot = outDir === DIST;
   const urlPath = (locales.find((l) => l.lang === lang) || {}).urlPath || '/';
@@ -950,7 +972,7 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
   await new Promise((r) => setTimeout(r, 2500));
 
   console.log(`→ [${lang}] Transforming + extracting static DOM…`);
-  const result = await page.evaluate(async (ghUser, gh, hasEnhance, localeCodes, pageVariant, faqBuyerKeys, localePrefix) => {
+  const result = await page.evaluate(async (ghUser, gh, hasEnhance, localeCodes, pageVariant, faqBuyerKeys, localePrefix, layout) => {
     // ── Convert <image-slot> → <img> (image lives in shadow DOM otherwise) ──
     document.querySelectorAll('image-slot').forEach((slot) => {
       const src = slot.getAttribute('src') || '';
@@ -1292,6 +1314,97 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
       });
     }
 
+    // ── Link hygiene ────────────────────────────────────────────────────
+    // LinkedIn appends a tracking/geo parameter to company URLs copied from
+    // the app; the bare URL resolves to the same page.
+    document.querySelectorAll('a[href*="linkedin.com/company/"]').forEach((a) => {
+      try {
+        const u = new URL(a.getAttribute('href'));
+        if (!u.searchParams.has('originalSubdomain')) return;
+        u.searchParams.delete('originalSubdomain');
+        a.setAttribute('href', u.toString());
+      } catch { /* not a parseable URL — leave it */ }
+    });
+
+    const warnings = [];
+    if (pageVariant === 'home') {
+      // ── Writing: engineering topics before career notes ───────────────
+      // Stable sort by category rank; unknown categories keep their order at
+      // the end. Every card still links to the same LinkedIn activity feed —
+      // per-post URLs are not invented here.
+      const grid = document.querySelector('#writing .writing-grid');
+      if (grid) {
+        const cards = [...grid.querySelectorAll(':scope > .writing-card')];
+        const rank = (c) => {
+          const cat = (c.querySelector('.writing-card-cat')?.textContent || '').trim();
+          const i = layout.writingRank.indexOf(cat);
+          return i < 0 ? layout.writingRank.length : i;
+        };
+        const unknown = cards.filter((c) => rank(c) === layout.writingRank.length);
+        if (unknown.length) warnings.push(`writing: ${unknown.length} card(s) with an unranked category`);
+        cards.map((c, i) => ({ c, i, r: rank(c) }))
+          .sort((x, y) => x.r - y.r || x.i - y.i)
+          .forEach(({ c }) => grid.appendChild(c));
+      } else {
+        warnings.push('writing: #writing .writing-grid not found');
+      }
+
+      // ── Case studies: progressive disclosure ───────────────────────────
+      // The five flagship cases stay fully open. The others keep their
+      // header, screenshot, Impact and tech notes visible, and fold Problem +
+      // Approach into a native <details>: indexed by search engines, opened
+      // by find-in-page, keyboard-accessible, no JS required.
+      const cases = [...document.querySelectorAll('article.case')].filter((c) => {
+        const name = (c.querySelector('.case-name')?.textContent || '').trim();
+        return !layout.flagship.includes(name);
+      });
+      if (cases.length !== layout.expectedCollapsed) {
+        warnings.push(`cases: expected ${layout.expectedCollapsed} non-flagship cases, found ${cases.length} — disclosure skipped`);
+      } else {
+        cases.forEach((c) => {
+          const body = c.querySelector('.case-body');
+          const problem = body && body.querySelector(':scope > .case-block.problem');
+          if (!problem) { warnings.push('cases: a case has no Problem block'); return; }
+          const moved = [];
+          for (let n = problem; n; n = n.nextElementSibling) {
+            if (n.querySelector('.case-impact') || n.classList.contains('case-mock')) break;
+            moved.push(n);
+          }
+          const labels = moved
+            .map((n) => (n.querySelector(':scope > .lbl')?.textContent || '').trim())
+            .filter(Boolean).slice(0, 2);
+          const details = document.createElement('details');
+          details.className = 'case-more';
+          const summary = document.createElement('summary');
+          summary.className = 'case-more-summary';
+          const text = document.createElement('span');
+          text.textContent = labels.join(' · ');
+          const chev = document.createElement('span');
+          chev.className = 'case-more-chev';
+          chev.setAttribute('aria-hidden', 'true');
+          chev.textContent = '↓';
+          summary.append(text, chev);
+          const inner = document.createElement('div');
+          inner.className = 'case-more-inner';
+          body.insertBefore(details, problem);
+          moved.forEach((n) => {
+            if (n.classList.contains('reveal')) n.classList.add('in');
+            n.classList.remove('reveal');
+            inner.appendChild(n);
+          });
+          details.append(summary, inner);
+        });
+      }
+    }
+
+    // On /services the contact block leads with the project path (call,
+    // WhatsApp, brief); on home the hiring path stays first.
+    if (pageVariant === 'services') {
+      const paths = document.querySelectorAll('#contact .contact-paths > .contact-path');
+      if (paths.length === 2) paths[0].parentNode.insertBefore(paths[1], paths[0]);
+      else warnings.push(`services: expected 2 contact paths, found ${paths.length}`);
+    }
+
     const ownSwitchers = [...document.querySelectorAll('.locale, .lang-switcher, [data-locale-switcher]')];
     const hasOwnSwitcher = ownSwitchers.length > 0;
     ownSwitchers.forEach((el) => el.remove());
@@ -1359,14 +1472,18 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
       .filter((x) => x.q && x.a);
 
     return {
-      title, lang, meta, css, bodyClass, rootAttrs, bodyAttrs, hasOwnSwitcher, faq,
+      title, lang, meta, css, bodyClass, rootAttrs, bodyAttrs, hasOwnSwitcher, faq, warnings,
       body: document.getElementById('root').innerHTML,
       blobCount: blobUrls.length,
     };
   }, GH_USER, ghData, !!enhanceJS, locales.map((l) => l.lang),
-     variant, FAQ_BUYER_KEYS[lang] || FAQ_BUYER_KEYS.en, lang === 'en' ? '/' : `/${lang}/`);
+     variant, FAQ_BUYER_KEYS[lang] || FAQ_BUYER_KEYS.en, lang === 'en' ? '/' : `/${lang}/`, PAGE_LAYOUT);
 
   await page.close();
+
+  // Layout passes are best-effort: a re-export that renames a class leaves the
+  // page as the export drew it, which is valid, so warn rather than fail.
+  for (const w of result.warnings || []) console.warn(`  [${lang}/${variant}] ⚠ ${w}`);
 
   if (pageErrors.length) {
     console.log(`  [${lang}] (${pageErrors.length} non-fatal page errors during render — expected for blocked external assets)`);
@@ -1405,17 +1522,16 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
     name: 'Ahmed Farid',
     jobTitle: 'Senior Software Engineer',
     description:
-      'Senior Software Engineer with six years building multi-tenant SaaS, ' +
-      'real-time platforms, AI tools, and mobile apps shipped to production ' +
-      'across the Gulf, US, and UK.',
+      `Senior Software Engineer in ${LOCATION.city} with ${YEARS_PROSE.en} building real-time, ` +
+      'multi-tenant SaaS, AI tools and mobile apps shipped to production across the Gulf, US and UK.',
     url: `${SITE_URL}/`,
     image: `${SITE_URL}/og.png`,
-    email: 'ahmed@iamahmedfarid.com',
+    email: CONTACT.email,
     nationality: { '@type': 'Country', name: 'Egypt' },
     // Nationality stays Egyptian — that is a fact about him, not about where he
     // works from. Address/homeLocation are the "where do I hire from" signal.
-    address: { '@type': 'PostalAddress', addressLocality: 'Dubai', addressCountry: 'AE' },
-    homeLocation: { '@type': 'Place', name: 'Dubai, United Arab Emirates' },
+    address: { '@type': 'PostalAddress', addressLocality: LOCATION.city, addressCountry: LOCATION.countryCode },
+    homeLocation: { '@type': 'Place', name: LOCATION_LABEL },
     worksFor: { '@type': 'Organization', name: 'Recovery Advisers' },
     alumniOf: { '@type': 'CollegeOrUniversity', name: 'Helwan University' },
     knowsLanguage: ['English', 'Arabic'],
@@ -1440,7 +1556,7 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
     seeks: {
       '@type': 'Demand',
       name: 'Senior Software Engineer role',
-      availableAtOrFrom: { '@type': 'Place', name: 'Dubai, United Arab Emirates' },
+      availableAtOrFrom: { '@type': 'Place', name: LOCATION_LABEL },
     },
     makesOffer: [
       { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Fixed-scope product build', serviceType: 'Software development' } },
@@ -1448,8 +1564,8 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
       { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Technical advisory & architecture review', serviceType: 'Technical consulting' } },
     ],
     sameAs: [
-      'https://www.linkedin.com/in/iamahmedfarid',
-      'https://github.com/ahmedfarid2',
+      CONTACT.linkedin,
+      CONTACT.github,
       'https://www.instagram.com/iamahmedfarid',
       'https://x.com/iamahmedfarid',
       'https://www.youtube.com/@iamahmedfarid',
@@ -1472,13 +1588,21 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
           if (k === '@context' || k === '@type' || k === 'name') continue;
           if (obj[k] == null) obj[k] = personLd[k];
         }
+        // Facts owned by site-facts.mjs win over whatever the export says, so
+        // a stale years/location claim in the export cannot reach JSON-LD.
+        for (const k of ['description', 'address', 'homeLocation']) obj[k] = personLd[k];
         return `${mm[1]}${JSON.stringify(obj)}${mm[3]}`;
       }
     } catch { /* leave malformed ld+json untouched */ }
     return m;
   });
 
-  const pageUrl = `${SITE_URL}${urlPath}`;
+  // /services is its own page per locale, with its own canonical: pointing it
+  // at the home page told search engines to drop it.
+  const pageSuffix = variant === 'services' ? 'services/' : '';
+  const pageUrl = `${SITE_URL}${urlPath}${pageSuffix}`;
+  const seo = (SEO[variant] || SEO.home)[lang] || (SEO[variant] || SEO.home).en;
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
   // Point og:image / twitter:image at the generated card (drop the export's
   // square-avatar one), set og:url to THIS locale's URL, and override the
@@ -1489,6 +1613,7 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
   const cleanedMeta = result.meta.filter(
     (m) =>
       !/og:image|twitter:image|og:url|og:site_name|og:locale/i.test(m) &&
+      !/name=["']?description["'\s>]|og:title|og:description|twitter:title|twitter:description/i.test(m) &&
       !/rel=["']?canonical/i.test(m) &&
       !/name=["']?robots/i.test(m)
   );
@@ -1497,7 +1622,12 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
   const ogMeta = [
     // Let Google show large image previews + full-length snippets (better CTR).
     `<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">`,
+    `<meta name="description" content="${esc(seo.description)}">`,
     `<link rel="canonical" href="${pageUrl}">`,
+    `<meta property="og:title" content="${esc(seo.title)}">`,
+    `<meta property="og:description" content="${esc(seo.description)}">`,
+    `<meta name="twitter:title" content="${esc(seo.title)}">`,
+    `<meta name="twitter:description" content="${esc(seo.description)}">`,
     `<meta property="og:site_name" content="Ahmed Farid">`,
     `<meta property="og:locale" content="${ogLocale[lang] || 'en_US'}">`,
     ...(multi
@@ -1518,8 +1648,8 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
   // Lists every locale plus x-default → English root.
   const hreflang = multi
     ? locales
-        .map((l) => `<link rel="alternate" hreflang="${l.lang}" href="${SITE_URL}${l.urlPath}">`)
-        .concat(`<link rel="alternate" hreflang="x-default" href="${SITE_URL}/">`)
+        .map((l) => `<link rel="alternate" hreflang="${l.lang}" href="${SITE_URL}${l.urlPath}${pageSuffix}">`)
+        .concat(`<link rel="alternate" hreflang="x-default" href="${SITE_URL}/${pageSuffix}">`)
         .join('\n')
     : '';
 
@@ -1642,6 +1772,14 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
     });},{threshold:0.12,rootMargin:'0px 0px -60px 0px'});
     reveals.forEach(function(el){io.observe(el);});
   } else { reveals.forEach(function(el){el.classList.add('in');}); }
+  // Printing (or saving as PDF) shows every case study in full, then puts
+  // the folds back the way the reader left them.
+  addEventListener('beforeprint',function(){
+    document.querySelectorAll('details.case-more:not([open])').forEach(function(d){d.open=true;d.setAttribute('data-print-opened','');});
+  });
+  addEventListener('afterprint',function(){
+    document.querySelectorAll('details.case-more[data-print-opened]').forEach(function(d){d.open=false;d.removeAttribute('data-print-opened');});
+  });
   // Calendly popup for any calendly link (keeps the in-page popup behaviour).
   document.querySelectorAll('a[href*="calendly.com"]').forEach(function(a){
     a.addEventListener('click',function(e){
@@ -1657,7 +1795,7 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
 <meta name="viewport" content="width=device-width, initial-scale=1">
 ${PINTEREST_VERIFY_TAG}
 ${AD_PIXEL}
-<title>${result.title}</title>
+<title>${esc(seo.title)}</title>
 ${headMeta}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1686,6 +1824,18 @@ ${jsonLd}
 [dir="rtl"] .connect-handle,
 [dir="rtl"] .price-amount,
 [dir="rtl"] .addon-price{text-align:right}
+/* Case studies outside the flagship five fold Problem + Approach into a
+   native <details>; Impact and the tech notes stay visible. */
+.case-more-summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:16px;
+  padding:14px 18px;border:1px solid var(--line-strong);border-radius:12px;font-family:var(--mono);
+  font-size:12.5px;letter-spacing:.02em;color:var(--ink-mute);transition:border-color .2s,color .2s}
+.case-more-summary::-webkit-details-marker{display:none}
+.case-more-summary:hover{border-color:var(--accent);color:var(--accent)}
+.case-more-chev{transition:transform .2s}
+.case-more[open] .case-more-chev{transform:rotate(180deg)}
+.case-more-inner{display:grid;gap:32px;padding-top:24px}
+:root[data-corners=sharp] .case-more-summary{border-radius:2px}
+@media print{.case-more-summary{display:none}}
 ${A11Y_CSS}
 ${switcherCss}
 </style>
