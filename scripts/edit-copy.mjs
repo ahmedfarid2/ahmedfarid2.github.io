@@ -2041,12 +2041,19 @@ const HIRE_LINK = {
   es: 'Trabaja conmigo en un proyecto',
   fr: 'Travailler avec moi sur un projet',
 };
+// The link keeps the visitor's language: /services/ is English only, each
+// locale has its own /<code>/services/ build. An earlier version of this edit
+// wrote /services/ for every locale; that form is migrated in place.
+const servicesHref = (loc) => (loc === 'en' ? '/services/' : `/${loc}/services/`);
 const FOOTER_LINK_EDITS = LOCALES.map((loc) => ({
   file: fileFor(loc),
-  label: `footer link to /work-with-me.html (${loc})`,
+  label: `footer link to this locale's /services/ (${loc})`,
   anchor: 'className="foot-col"',
   transform: (text) => {
-    if (text.includes('/services/')) return text;   // self-consuming
+    const want = `<a href="${servicesHref(loc)}">${HIRE_LINK[loc]}</a>`;
+    if (text.includes(want)) return text;           // self-consuming
+    const legacy = `<a href="/services/">${HIRE_LINK[loc]}</a>`;
+    if (text.includes(legacy)) return text.split(legacy).join(want);
     // Anchored on structure, not on wording: the footer's section list is the
     // same shape in every locale but the link text is translated, so matching
     // the href and walking to its </li> works where matching the label does not.
@@ -2055,7 +2062,7 @@ const FOOTER_LINK_EDITS = LOCALES.map((loc) => ({
     const tok = '</li>';
     const end = text.indexOf(tok, at);
     if (end < 0) return null;
-    const insert = `\n              <li><a href="/services/">${HIRE_LINK[loc]}</a></li>`;
+    const insert = `\n              <li>${want}</li>`;
     return text.slice(0, end + tok.length) + insert + text.slice(end + tok.length);
   },
 }));
