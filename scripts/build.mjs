@@ -1424,6 +1424,11 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
     }
 
     // ── Link hygiene ────────────────────────────────────────────────────
+    // Compass Med serves its site over HTTPS (search engines index the https
+    // pages); the export still links the http:// form.
+    document.querySelectorAll('a[href^="http://www.compass-egy.com"], a[href^="http://compass-egy.com"]').forEach((a) => {
+      a.setAttribute('href', a.getAttribute('href').replace(/^http:/, 'https:'));
+    });
     // LinkedIn appends a tracking/geo parameter to company URLs copied from
     // the app; the bare URL resolves to the same page.
     document.querySelectorAll('a[href*="linkedin.com/company/"]').forEach((a) => {

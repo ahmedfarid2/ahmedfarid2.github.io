@@ -111,8 +111,8 @@ export const DRIFT_GUARDS = [
   // LinkedIn slug repair: a path must keep its separator.
   { s: 'iamahmedfaridrecent', max: 0 },
   { re: /linkedin\.com\/in\/iamahmedfarid[A-Za-z0-9]/g, max: 0 },
-  // Tracking parameter stripped from LinkedIn company links. (The Compass Med
-  // link stays on http:// until its https:// form is confirmed to resolve.)
+  // Insecure / tracking link forms the build cleans.
+  { s: 'http://www.compass-egy.com', max: 0 },
   { s: 'originalSubdomain', max: 0 },
   // The services pricing CTA said "30-min call"; it now matches the contact
   // block's "30-minute scoping call" wording in every locale.
