@@ -88,6 +88,36 @@ npx serve dist     # preview (any static server works)
 
 ---
 
+## 📄 CV
+
+`Ahmed-Farid-CV.pdf` (served at `/Ahmed-Farid-CV.pdf`) is generated, not
+hand-made. Edit [`cv/cv.html`](cv/cv.html) and run:
+
+```bash
+npm run cv:build   # renders cv/cv.html → Ahmed-Farid-CV.pdf (needs a Chromium)
+```
+
+The script refuses to write the PDF if the CV no longer fits on one A4 page,
+if it lacks a canonical contact detail from `scripts/site-facts.mjs`, or if
+it carries a retired one (personal Gmail, a phone number, the relocation
+line). Titles and dates follow the site's Experience section; no phone
+number is published. The GitHub profile repo keeps a copy as
+`Ahmed_Farid_CV.pdf`, so copy the new PDF there when it changes.
+
+## Optional improvements
+
+- **Writing cards → individual LinkedIn posts.** The six cards in *Writing*
+  all link to the LinkedIn activity feed
+  (`/in/iamahmedfarid/recent-activity/all/`). LinkedIn posts aren't indexed,
+  so per-post URLs can't be looked up and are not guessed. When the owner
+  supplies them ("…" → "Copy link to post" on each post), point each card at
+  its own post.
+- **Calendly username.** The booking link is
+  `calendly.com/ahmedfareed2025/30min`, a username derived from a personal
+  Gmail address. Renaming it in Calendly (and in `scripts/site-facts.mjs`
+  `CONTACT.calendly` plus the GitHub README) would finish the move to the
+  professional identity.
+
 ## 📈 Growth & client acquisition
 
 Strategy docs for turning this portfolio into a client pipeline live in

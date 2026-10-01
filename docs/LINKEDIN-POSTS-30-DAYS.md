@@ -124,12 +124,12 @@ Anyone else find the "small" tasks eat the week? 👇
 
 ### Post 6 (Sat) — Client outcome: leverage
 ```
-12+ pharmacy apps. 12+ storefronts. One codebase.
+13+ pharmacy brands. Patient apps and storefronts. One codebase.
 
 Over a dozen independent US and UK pharmacies each needed branded patient apps
 and websites. None of them could justify a dedicated engineering team.
 
-So we didn't build twelve products. We built one white-label platform:
+So we didn't build thirteen products. We built one white-label platform:
 
 → A new pharmacy launches with a client_id — own branding, hours, storefront
 → Patients get prescription refills, transfers, appointment booking,

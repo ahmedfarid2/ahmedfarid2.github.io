@@ -7,7 +7,8 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "copy:apply": "node scripts/edit-copy.mjs",
-    "copy:check": "node scripts/edit-copy.mjs --check"
+    "copy:check": "node scripts/edit-copy.mjs --check",
+    "cv:build": "node scripts/build-cv.mjs"
   },
   "devDependencies": {
     "html-minifier-terser": "^7.2.0",

@@ -98,7 +98,7 @@ from you. For the unapplied ones you have two options:
   > platforms end to end.**
 
 - **Second paragraph (keep, lightly tightened):**
-  > Dubai-based. Over the last six years I've built multi-tenant
+  > Dubai-based. For over six years I've built multi-tenant
   > SaaS, real-time auction and booking systems, AI-powered tools, and a fleet
   > of mobile apps that went to production across the Gulf, US, and UK — Laravel,
   > Next.js, FastAPI, Flutter, AWS — from the first schema decision to app-store

@@ -51,7 +51,7 @@ Roughly 4 teaching posts to 1 offer post. Never pure self-promotion.
 **Week 2 — Show range within the niche**
 - **Tue (War story):** Recovery Advisers webhook near-real-time sync post.
 - **Thu (Build-in-open):** A small thing you shipped + a lesson.
-- **Sat (Client-outcome):** RevealSite — 12+ pharmacy apps from one codebase.
+- **Sat (Client-outcome):** RevealSite — 13+ pharmacy brands (apps + storefronts) from one codebase.
 
 **Week 3 — Depth + AI angle**
 - **Tue (War story):** KhebraOS 6-stage AI course pipeline (script → promo video).
