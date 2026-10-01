@@ -27,7 +27,7 @@
   a { color: inherit; text-decoration: none; }
   h1 { font-size: 20pt; letter-spacing: .01em; margin: 0; font-weight: 700; color: #0d1014; }
   .role { margin: 2pt 0 0; font-size: 10.2pt; font-weight: 600; color: #8a6a3c; }
-  .contact { margin: 4pt 0 0; font-size: 8.2pt; color: #3a4047; white-space: nowrap; }
+  .contact { margin: 4pt 0 0; font-size: 7.9pt; color: #3a4047; white-space: nowrap; }
   .contact span + span::before { content: "·"; margin: 0 4pt; color: #9aa0a6; }
   h2 {
     margin: 7pt 0 2.5pt; padding-bottom: 1.2pt; font-size: 8.6pt; font-weight: 700;
@@ -100,7 +100,7 @@
   <ul>
     <li>Multi-tenant debt-recovery platform, six-stage lifecycle from leads to invoices; role-based access enforced at the data layer, not hidden in the UI.</li>
     <li>Replaced polling with event-driven webhook sync to client environments; per-case sequence numbers keep mirrored state from moving backwards on late or duplicated deliveries.</li>
-    <li>Isolated Next.js 15 client portal for creditors and law firms; SSO via Microsoft Entra ID (OAuth 2.0 / OIDC). <span class="stack">Laravel 13 (Octane, Reverb) · MySQL</span></li>
+    <li>Isolated client portal for creditors and law firms; SSO via Microsoft Entra ID (OAuth 2.0 / OIDC). <span class="stack">Laravel 13 (Octane, Reverb) · Next.js · MySQL</span></li>
   </ul>
 </div>
 
@@ -113,7 +113,7 @@
   <ul>
     <li><span class="b">Qoralia</span> — AI-assisted decarbonization planning: the model surfaces candidate grants, deterministic scoring decides eligibility, the UI shows which rule decided. <span class="stack">FastAPI · React · PostgreSQL + pgvector</span></li>
     <li><span class="b">KhebraOS</span> — Arabic-first academy platform, a branded school per tenant; RTL from the first component, AI course generation. <span class="stack">React 19 · Express 5 · PostgreSQL</span></li>
-    <li><span class="b">Phonic Maps</span> — multi-tenant location and review management; reviews synced across Google Business Profile, Meta and X with bulk auto-reply. <span class="stack">Laravel 12 · Next.js 16 · PostgreSQL · Redis</span></li>
+    <li><span class="b">Phonic Maps</span> — multi-tenant location and review management: Google Business Profile sync, AI-suggested review replies, per-location auto-reply rules. <span class="stack">Laravel 12 · Next.js 16 · PostgreSQL · Redis</span></li>
   </ul>
 </div>
 
@@ -131,6 +131,15 @@
 </div>
 
 <div class="job">
+  <div class="job-head"><span class="job-title">Shorter engagements</span><span class="job-dates">2024</span></div>
+  <ul class="compact">
+    <li><span class="b">Arab Bank</span> — Software Engineer, Cairo, on-site (Mar – May 2024): backend services and APIs for digital banking.</li>
+    <li><span class="b">iFutue</span> — Software Engineer, Saudi Arabia, freelance (Jun – Dec 2024): full-stack work on travel-technology platforms.</li>
+    <li><span class="b">Almentor</span> — Software Programming Instructor, freelance (Jun – Nov 2024): taught and code-reviewed backend, frontend and database work.</li>
+  </ul>
+</div>
+
+<div class="job">
   <div class="job-head">
     <span class="job-title"><span class="co">RevealSite</span> — Software Engineer</span>
     <span class="job-dates">May 2023 – Mar 2024</span>
@@ -142,13 +151,7 @@
   </ul>
 </div>
 
-<div class="job">
-  <ul class="compact" style="margin-top:0">
-    <li><span class="b">Arab Bank</span> — Software Engineer, Cairo, on-site (Mar – May 2024): backend services and APIs for digital banking.</li>
-    <li><span class="b">iFutue</span> — Software Engineer, Saudi Arabia, freelance (Jun – Dec 2024): full-stack work on travel-technology platforms.</li>
-    <li><span class="b">Almentor</span> — Software Programming Instructor, freelance (Jun – Nov 2024): taught and code-reviewed backend, frontend and database work.</li>
-  </ul>
-</div>
+
 
 <h2>Own product</h2>
 <p><span class="b">Applyni</span> — founder and sole engineer of a Saudi-first AI career agent in production: multi-step agent pipeline with review gates, 21 feature modules, 96 test files. <span class="stack">Next.js · TypeScript · Supabase / PostgreSQL</span></p>
