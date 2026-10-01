@@ -617,7 +617,10 @@ async function assertLocaleRouting(locales) {
       }
       if (!body.includes(`<link rel="alternate" hreflang="x-default" href="${SITE_URL}/${suffix}">`))
         bad.push(`${page}: x-default should be /${suffix}`);
-      for (const m of body.matchAll(/<a class="dl-lang[^"]*" href="([^"]*)" hreflang="([a-z]{2})"/g))
+      const drawer = [...body.matchAll(/<a class="dl-lang[^"]*" href="([^"]*)" hreflang="([a-z]{2})"/g)];
+      const drawerCodes = drawer.map((m) => m[2]).sort().join(',');
+      if (drawerCodes !== [...codes].sort().join(',')) bad.push(`${page}: drawer languages [${drawerCodes}], expected [${[...codes].sort()}]`);
+      for (const m of drawer)
         if (m[1] !== target(m[2], suffix)) bad.push(`${page}: drawer ${m[2]} → ${m[1]}, expected ${target(m[2], suffix)}`);
       const foot = body.slice(body.indexOf('<footer'));
       const svc = [...foot.matchAll(/href="((?:\/[a-z]{2})?\/services\/)"/g)].map((m) => m[1]);
@@ -646,7 +649,8 @@ async function assertLocaleRouting(locales) {
         [...document.querySelectorAll('a.locale-item[hreflang], .lang-switch a[hreflang]')]
           .map((a) => [a.getAttribute('hreflang'), a.getAttribute('href')]));
       await tab.close();
-      if (menu.length < codes.length) bad.push(`${p.page}: language menu has ${menu.length} links`);
+      const menuCodes = menu.map(([c]) => c).sort().join(',');
+      if (menuCodes !== [...codes].sort().join(',')) bad.push(`${p.page}: language menu [${menuCodes}], expected [${[...codes].sort()}]`);
       for (const [c, h] of menu) if (h !== target(c, p.suffix)) bad.push(`${p.page}: menu ${c} → ${h}, expected ${target(c, p.suffix)}`);
     }
   } finally { await b.close(); }
@@ -1031,7 +1035,8 @@ const FAQ_BUYER_KEYS = {
 // null-safe when the hero is missing. A re-export that changes these strings
 // leaves the page as before, and assertLocaleRouting then fails the build
 // because the language menu is missing.
-// Matched on the export's source (before minification), whitespace-tolerant.
+// Matched on the extracted layer as the export ships it (already minified),
+// tolerant of whitespace and quote style.
 const ENHANCE_READY = /document\.querySelector\((['"])\.hero-stats\1\)\s*&&\s*(document\.querySelector\((['"])\.nav-links a\3\))/;
 const ENHANCE_INTRO_SEEN = /if\s*\(\s*sessionStorage\.getItem\((['"])af_intro_done\1\)\s*\)\s*return/;
 function enhanceForVariant(js, variant) {
@@ -1516,7 +1521,7 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
     // links are baked into the snapshot; the runtime menu is fixed up by the
     // vanilla layer (it is built after the snapshot by the export's script).
     if (pageVariant === 'services') {
-      document.querySelectorAll('a.dl-lang[hreflang], a.locale-item[hreflang]').forEach((a) => {
+      document.querySelectorAll('a.dl-lang[hreflang]').forEach((a) => {
         const code = a.getAttribute('hreflang');
         if (localeCodes.includes(code)) a.setAttribute('href', (code === 'en' ? '/' : `/${code}/`) + 'services/');
       });
@@ -1910,11 +1915,17 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
       });
       return document.querySelector('a.locale-item[hreflang]')!==null;
     };
+    // No time limit: in a background tab the export's rAF loop is paused, so
+    // the menu can appear long after load. The observer stops once it has.
     if(!fixLangLinks()&&'MutationObserver' in window){
       var mo=new MutationObserver(function(){if(fixLangLinks())mo.disconnect();});
       mo.observe(document.body,{childList:true,subtree:true});
-      setTimeout(function(){mo.disconnect();},10000);
     }
+    // Backstop at click time, whatever the timing was.
+    document.addEventListener('click',function(e){
+      var a=e.target&&e.target.closest&&e.target.closest('a.locale-item[hreflang],a.dl-lang[hreflang],.lang-switch a[hreflang]');
+      if(a)fixLangLinks();
+    },true);
   }
   // Printing (or saving as PDF) shows every case study in full, then puts
   // the folds back the way the reader left them.
