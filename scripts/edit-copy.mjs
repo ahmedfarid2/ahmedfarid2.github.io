@@ -1719,6 +1719,12 @@ const COMPASS_ROLE_EDITS = [
     LOCALES.map((l) => [l, ['co: "iFutue"', 'co: "Interactive Future"']]))),
   ...factEdits('experience row: almentor', Object.fromEntries(
     LOCALES.map((l) => [l, ['co: "Almentor"', 'co: "almentor"']]))),
+  // Same spelling in the About award line and the Brands logo tile (its
+  // name feeds the tile's caption, title and alt text).
+  ...factEdits('about award: almentor', Object.fromEntries(
+    LOCALES.map((l) => [l, ['<span className="about-award-s">Almentor ·', '<span className="about-award-s">almentor ·']]))),
+  ...factEdits('brands tile: almentor', Object.fromEntries(
+    LOCALES.map((l) => [l, ['{ name: "Almentor", domain: "almentor.net"', '{ name: "almentor", domain: "almentor.net"']]))),
 ];
 
 // ── Agentic SDLC ────────────────────────────────────────────────────────────

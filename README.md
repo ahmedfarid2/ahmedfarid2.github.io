@@ -104,6 +104,23 @@ line). Titles and dates follow the site's Experience section; no phone
 number is published. The GitHub profile repo keeps a copy as
 `Ahmed_Farid_CV.pdf`, so copy the new PDF there when it changes.
 
+## 📋 Checklist PDF
+
+`multi-tenant-saas-checklist.pdf` (served at `/multi-tenant-saas-checklist.pdf`,
+copy in `lead-magnet/`) is generated from
+[`lead-magnet/multi-tenant-saas-architecture-checklist.html`](lead-magnet/multi-tenant-saas-architecture-checklist.html):
+
+```bash
+npm run checklist:build   # renders the source → both PDF copies, then validates the PDF
+```
+
+Never replace the PDF by hand. `npm run build` reads every PDF in `dist/`
+(visible text and link targets) and fails the deploy on a retired fact (old
+LinkedIn slug, Gmail, phone number, relocation line, Cairo as current
+location). It also re-renders the checklist and fails if the committed PDF no
+longer matches its source. The "Book a call" link must equal
+`CONTACT.calendly` in `scripts/site-facts.mjs`.
+
 ## Optional improvements
 
 - **Writing cards → individual LinkedIn posts.** The six cards in *Writing*

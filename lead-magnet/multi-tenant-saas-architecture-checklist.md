@@ -107,7 +107,7 @@ Everything else you can refactor. These six, you live with.
 I do architecture reviews and fixed-scope builds for real-time, multi-tenant
 SaaS. A 30-minute scoping call is free — and often saves a six-month rewrite.
 
-→ **[Book a call at iamahmedfarid.com](https://iamahmedfarid.com)**
+→ **[Book a 30-minute scoping call](https://calendly.com/ahmedfareed2025/30min)**
 → LinkedIn: [Ahmed Farid](https://www.linkedin.com/in/iamahmedfarid)
 
-_© 2026 Ahmed Farid._
+_© 2026 Ahmed Farid · Senior Software Engineer · Dubai, United Arab Emirates · [ahmed@iamahmedfarid.com](mailto:ahmed@iamahmedfarid.com) · [iamahmedfarid.com](https://iamahmedfarid.com/)_
