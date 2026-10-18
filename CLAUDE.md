@@ -14,12 +14,13 @@ Personal portfolio site deployed to GitHub Pages. Claude Design exports (`index*
 - `scripts/site-facts.mjs` — single source of truth for location, contact links, proof metrics, per-page SEO titles/descriptions (`SEO`), localized nav labels (`NAV`) and the flagship slugs (`FLAGSHIP`)
 - `scripts/edit-copy.mjs` — applies idempotent copy edits inside the export's `__bundler/manifest` bundle; `npm run copy:apply` / `npm run copy:check`
 - `scripts/build-cv.mjs`, `scripts/build-checklist.mjs` — render `cv/cv.html` and the lead magnet to the committed root PDFs (`npm run cv:build`, `npm run checklist:build`); `scripts/pdf-check.mjs` backs the public-PDF gate
+- `scripts/indexnow.mjs` + `.github/workflows/indexnow.yml` — after each successful deploy of `main`, submit the live sitemap to IndexNow (Bing and others; not Google). `npm run indexnow -- --dry-run` prints the payload from `dist/sitemap.xml` without sending
 - `.github/workflows/deploy.yml` — on pull requests to `main`: build only; on push to `main`: `npm ci` → `npm run copy:apply -- --soft` → `npm run build` → deploy `dist/` to Pages (with one retry)
 - `TRANSLATION-*.md` — translation sources; `docs/*.md` — marketing playbooks (not site content); `CNAME`; `google*.html` — Search Console verification files
 
 **Conventions.**
 - Never hand-edit the compressed `__bundler/manifest` script inside an export; add an edit to `scripts/edit-copy.mjs` instead so it survives re-exports.
-- Never modify `CNAME` or the `google*.html` verification files.
+- Never modify `CNAME` or the `google*.html` verification files, or the IndexNow key file `<INDEXNOW_KEY>.txt` at the root (rotate it only together with `INDEXNOW_KEY` in `site-facts.mjs`).
 - Changes to `deploy.yml` affect production deploys; treat as infrastructure.
 - To add or move a page or section, change `PAGE_SPECS` (plus `SEO`/`NAV` in `site-facts.mjs`); the build refuses a spec missing any of them. Never relax a build gate to get green.
 - Old `/#<id>` links to sections that left home are redirected by the build (`REDIRECTS`); keep section ids stable.

@@ -9,7 +9,8 @@
     "copy:apply": "node scripts/edit-copy.mjs",
     "copy:check": "node scripts/edit-copy.mjs --check",
     "cv:build": "node scripts/build-cv.mjs",
-    "checklist:build": "node scripts/build-checklist.mjs"
+    "checklist:build": "node scripts/build-checklist.mjs",
+    "indexnow": "node scripts/indexnow.mjs"
   },
   "devDependencies": {
     "html-minifier-terser": "^7.2.0",

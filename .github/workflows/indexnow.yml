@@ -1,0 +1,39 @@
+name: Notify IndexNow
+
+# After a successful deploy of main, submit every URL in the live sitemap to
+# IndexNow (Bing, Yandex, Seznam, Naver…). Google is not part of IndexNow; it
+# finds the sitemap through robots.txt. Separate from deploy.yml so a
+# search-engine hiccup can never block or fail a deploy.
+
+on:
+  workflow_run:
+    workflows: ["Build & Deploy Portfolio"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: indexnow
+  cancel-in-progress: true
+
+jobs:
+  submit:
+    # Only real deploys: a push to main that succeeded (PR builds never deploy).
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Submit sitemap URLs to IndexNow
+        run: node scripts/indexnow.mjs
