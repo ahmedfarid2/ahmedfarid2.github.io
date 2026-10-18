@@ -3045,7 +3045,9 @@ async function build() {
   }
 
   console.log('→ Generating Open Graph card…');
-  try { await generateOgImage(browser); } catch (e) { console.log('  (og.png generation skipped:', e.message + ')'); }
+  // Every page's og:image and JSON-LD image point at /og.png, so a missing
+  // card is a broken page set: refuse rather than ship without it.
+  try { await generateOgImage(browser); } catch (e) { e.fatal = true; e.message = `og.png could not be generated: ${e.message}`; throw e; }
 
   // ── Per-locale pages (shared assets folder, deduped via assetSeen) ────────
   // One render per locale; every page in PAGE_SPECS is a cut of it.
