@@ -11,6 +11,12 @@
 
 export const SITE_URL = 'https://iamahmedfarid.com';
 
+// IndexNow (Bing, Yandex, Seznam…) proves site ownership by fetching
+// /<key>.txt from the site. The file lives at the repo root and is deployed
+// by copyStaticAssets; scripts/indexnow.mjs submits the sitemap with it.
+// Rotating the key means renaming that file in the same commit.
+export const INDEXNOW_KEY = '9c4d4d137838a4b86f90f8070f173b53';
+
 // Owner-confirmed (Oct 2026): living in Dubai now.
 export const LOCATION = {
   city: 'Dubai',
