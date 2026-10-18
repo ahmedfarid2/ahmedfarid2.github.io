@@ -1399,6 +1399,66 @@ const HOME_SERVICE_ORDER = {
   fr: ['Projet à périmètre fixe', 'Partenaire au long cours', 'Conseil technique', 'Poste à temps plein'],
 };
 
+// Buyer-facing copy the build sets on the home page (and the pricing badge),
+// per locale. Each piece replaces export text found by its class, and warns —
+// never fails — when a re-export moves it.
+//   tag          the hero label: what is sold and where, not a job title
+//   trust        the strip of shipped products: labelled as products, not as
+//                client logos ("Trusted across …" read as a logo wall)
+//   svcHeading   [from, to] — home shows three ways to work; the full-time
+//                role is a hiring path and lives on /services/ and /about/
+//   direct       next to the portrait in the closing block
+//   notReady / checklist  a low-commitment step for visitors not ready to call
+//   recommended  replaces the "Most popular" pricing badge, which had no
+//                numbers behind it
+const HOME_COPY = {
+  en: {
+    tag: { 'tag-full': 'Laravel & Next.js SaaS builds · Dubai, UAE 🇦🇪', 'tag-short': 'SaaS builds · Dubai 🇦🇪', 'tag-tiny': 'SaaS · Dubai 🇦🇪' },
+    trust: 'Products<br>I\'ve shipped',
+    svcHeading: ['Four ways', 'Three ways'],
+    direct: 'You talk to me directly — no account managers, no hand-offs.',
+    notReady: 'Not ready for a call?',
+    checklist: 'Get the free multi-tenant SaaS architecture checklist →',
+    recommended: 'Recommended',
+  },
+  ar: {
+    tag: { 'tag-full': 'بناء منصّات SaaS بـ Laravel وNext.js · دبي، الإمارات 🇦🇪', 'tag-short': 'بناء منصّات SaaS · دبي 🇦🇪', 'tag-tiny': 'SaaS · دبي 🇦🇪' },
+    trust: 'منتجات<br>أطلقتُها',
+    svcHeading: ['أربع طرق', 'ثلاث طرق'],
+    direct: 'ستتحدث معي مباشرةً — بلا وسطاء ولا تسليم لفريق آخر.',
+    notReady: 'لست مستعدًا لمكالمة بعد؟',
+    checklist: 'حمّل قائمة التحقق المجانية لمعمارية SaaS متعدّدة المستأجرين (بالإنجليزية) →',
+    recommended: 'موصى به',
+  },
+  de: {
+    tag: { 'tag-full': 'SaaS-Entwicklung mit Laravel & Next.js · Dubai, VAE 🇦🇪', 'tag-short': 'SaaS-Entwicklung · Dubai 🇦🇪', 'tag-tiny': 'SaaS · Dubai 🇦🇪' },
+    trust: 'Produkte, die<br>ich gebaut habe',
+    svcHeading: ['Vier Wege', 'Drei Wege'],
+    direct: 'Sie sprechen direkt mit mir — keine Account-Manager, keine Übergaben.',
+    notReady: 'Noch nicht bereit für ein Gespräch?',
+    checklist: 'Kostenlose Checkliste zur Multi-Tenant-SaaS-Architektur (Englisch) →',
+    recommended: 'Empfohlen',
+  },
+  es: {
+    tag: { 'tag-full': 'Desarrollo SaaS con Laravel y Next.js · Dubái, EAU 🇦🇪', 'tag-short': 'Desarrollo SaaS · Dubái 🇦🇪', 'tag-tiny': 'SaaS · Dubái 🇦🇪' },
+    trust: 'Productos que<br>he lanzado',
+    svcHeading: ['Cuatro formas', 'Tres formas'],
+    direct: 'Hablas directamente conmigo, sin gestores de cuenta ni intermediarios.',
+    notReady: '¿Aún no estás listo para una llamada?',
+    checklist: 'Descarga gratis la checklist de arquitectura SaaS multi-tenant (en inglés) →',
+    recommended: 'Recomendado',
+  },
+  fr: {
+    tag: { 'tag-full': 'Développement SaaS Laravel & Next.js · Dubaï, EAU 🇦🇪', 'tag-short': 'Développement SaaS · Dubaï 🇦🇪', 'tag-tiny': 'SaaS · Dubaï 🇦🇪' },
+    trust: 'Produits que<br>j\'ai livrés',
+    svcHeading: ['Quatre façons', 'Trois façons'],
+    direct: 'Vous parlez directement avec moi — sans chef de projet ni intermédiaire.',
+    notReady: 'Pas encore prêt pour un appel ?',
+    checklist: 'Téléchargez la checklist gratuite d’architecture SaaS multi-tenant (en anglais) →',
+    recommended: 'Recommandé',
+  },
+};
+
 // "Ways to work together" opens with a sentence about the price list above it
 // ("Those are the packaged offers above."). A page without that list drops
 // exactly this sentence, as the export words it in each locale.
@@ -1502,7 +1562,7 @@ const PAGE_SPECS = [
     // questions stay on /services/, which owns them (and old #faq links are
     // forwarded there).
     key: 'home', suffix: '',
-    sections: ['top', 'trust', 'position', 'bynumbers', 'work', 'process', 'services', 'testimonials', 'contact'],
+    sections: ['top', 'trust', 'position', 'work', 'process', 'services', 'testimonials', 'contact'],
     keepUnknown: false, faq: null, anchors: 'resolve', renumber: true, work: 'teaser',
     sortWriting: false, foldCases: false, contactFirst: 'project', promoteH1: false,
     ld: ['service'], priority: '0.9', primaryPriority: '1.0',
@@ -1526,7 +1586,7 @@ const PAGE_SPECS = [
   },
   {
     key: 'about', suffix: 'about/',
-    sections: ['about', 'depth', 'arch', 'github', 'experience', 'why', 'writing', 'faq', 'connect', 'contact'],
+    sections: ['about', 'bynumbers', 'depth', 'arch', 'github', 'experience', 'why', 'writing', 'faq', 'connect', 'contact'],
     keepUnknown: true, faq: 'other', anchors: 'resolve', renumber: true,
     sortWriting: true, foldCases: false, contactFirst: 'hire', promoteH1: true,
     ld: ['profile', 'faq', 'breadcrumb'], priority: '0.6',
@@ -1547,7 +1607,7 @@ const PAGE_SPECS = [
 // carry it. `contact` is on every page and `position` has no id, so neither
 // is listed. Each value is a PAGE_SPECS key.
 const LINK_OWNER = {
-  top: 'home', 'what-i-do': 'home', trust: 'home', bynumbers: 'home', process: 'home', testimonials: 'home',
+  top: 'home', 'what-i-do': 'home', trust: 'home', process: 'home', testimonials: 'home', bynumbers: 'about',
   about: 'about', depth: 'about', arch: 'about', github: 'about', experience: 'about',
   why: 'about', writing: 'about', connect: 'about',
   work: 'work', products: 'work', builds: 'work', build: 'work', domains: 'work',
@@ -2060,6 +2120,9 @@ async function snapshotVariant({ page, spec, lang, locales }) {
   const snap = await fatalIfThrown(`[${lang}] ${spec.key}`, page.evaluate((pageSpec, localeCodes, faqBuyerKeys, localePrefix, layout, knownKeys, links, labels, copy) => {
     document.getElementById('root').replaceWith(window.__afPristine.cloneNode(true));
     const warnings = [];
+    // The portrait lives in #about, which home does not keep; take a copy
+    // before the slice so the closing block can show who you will talk to.
+    const portraitImg = document.querySelector('.about-portrait img')?.cloneNode(true) || null;
 
     // ── Slice the page ──────────────────────────────────────────────────
     // The freelance offer and the hiring pitch are both in this render. Which
@@ -2120,10 +2183,31 @@ async function snapshotVariant({ page, spec, lang, locales }) {
           const a = el('a', 'writing-card');
           a.setAttribute('href', `${localePrefix}work/${f.slug}/`);
           a.setAttribute('data-flagship', f.slug);
+          // The case study's own product screenshot (not a link favicon) on top.
+          const shot = [...art.querySelectorAll('img')].find((i) => !i.closest('.case-links') && !i.classList.contains('chip-fav'));
+          if (shot) {
+            const box = el('div', 'wc-shot');
+            const im = shot.cloneNode(true);
+            im.removeAttribute('style');
+            im.setAttribute('alt', '');
+            box.appendChild(im);
+            a.appendChild(box);
+          }
           const head = el('div', 'writing-card-head');
           head.appendChild(el('span', 'writing-card-cat', (art.querySelector('.case-num')?.textContent || '').trim()));
           a.append(head, el('h3', 'writing-card-title', f.name),
             el('p', 'writing-card-desc', (art.querySelector('.case-tagline')?.textContent || '').trim()));
+          // One highlight from the case study's impact cells — the first with a
+          // number in it, else the first — verbatim, so nothing is invented.
+          const cells = [...art.querySelectorAll('.case-impact-cell')]
+            .map((c) => ({ v: (c.querySelector('.v')?.textContent || '').trim(), l: (c.querySelector('.l')?.textContent || '').trim() }))
+            .filter((c) => c.v);
+          const pick = cells.find((c) => /[0-9\u0660-\u0669]/.test(c.v)) || cells[0];
+          if (pick) {
+            const hl = el('p', 'wc-impact');
+            hl.append(el('strong', null, pick.v), document.createTextNode(pick.l ? ` · ${pick.l}` : ''));
+            a.appendChild(hl);
+          }
           const stack = art.querySelector('.case-stack');
           if (stack) a.appendChild(stack.cloneNode(true));
           a.appendChild(el('span', 'writing-card-arr', `${labels.caseStudy} →`));
@@ -2281,10 +2365,70 @@ async function snapshotVariant({ page, spec, lang, locales }) {
           if (num && nums[i] != null) num.textContent = nums[i];
           c.style.transitionDelay = delays[i];
         });
+        // The full-time role is a hiring path: on home the client sees the
+        // three ways to buy, and the role stays on /services/ and /about/.
+        ordered[ordered.length - 1].remove();
+        const title = document.querySelector('#services .section-title');
+        const first = title && [...title.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
+        const [from, to] = copy.home.svcHeading;
+        if (first && first.textContent.trimStart().startsWith(from)) first.textContent = first.textContent.replace(from, to);
+        else warnings.push(`services: heading does not start with "${from}" — left as exported while showing three cards`);
       } else {
         warnings.push(`services: the four cards were not found by heading (${copy.serviceOrder.join(' | ')}) — left in the export's order`);
       }
     }
+    // Home, buyer-facing: the hero says what is sold, the primary button books
+    // the call (same link and words as the closing block), "See selected work"
+    // goes (the work is the next thing on the page), the product strip is
+    // labelled as products, and the closing block shows who answers.
+    if (pageSpec.key === 'home') {
+      const H = copy.home;
+      const tag = document.querySelector('#top .hero-tag');
+      for (const [cls, text] of Object.entries(H.tag)) {
+        const span = tag && tag.querySelector(`.${cls}`);
+        if (span) span.textContent = text;
+        else warnings.push(`hero: .hero-tag .${cls} not found — left as exported`);
+      }
+      const heroBtns = document.querySelector('#top .hero-meta');
+      const primary = heroBtns && heroBtns.querySelector('a.btn-primary');
+      const call = document.querySelector('#contact a[href*="calendly.com"]');
+      const callText = call ? [...call.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join('').trim() : '';
+      const label = primary && [...primary.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
+      if (primary && call && callText && label) {
+        primary.setAttribute('href', call.getAttribute('href'));
+        primary.setAttribute('target', '_blank');
+        primary.setAttribute('rel', 'noreferrer');
+        label.textContent = `${callText} `;
+        heroBtns.querySelectorAll('a[href="#work"]').forEach((a) => a.remove());
+      } else warnings.push('hero: primary button or the scoping-call link not found — hero buttons left as exported');
+      const trustLabel = document.querySelector('.trust .trust-label');
+      if (trustLabel) trustLabel.innerHTML = H.trust;
+      else warnings.push('trust: .trust-label not found — left as exported');
+      const paths = document.querySelector('#contact .contact-paths');
+      if (paths) {
+        const person = document.createElement('div');
+        person.className = 'cta-person';
+        if (portraitImg) {
+          portraitImg.removeAttribute('style');
+          portraitImg.setAttribute('alt', '');
+          person.appendChild(portraitImg);
+        }
+        const who = document.createElement('span');
+        who.textContent = H.direct;
+        person.appendChild(who);
+        paths.before(person);
+        const alt = document.createElement('p');
+        alt.className = 'contact-alt';
+        alt.appendChild(document.createTextNode(`${H.notReady} `));
+        const lm = document.createElement('a');
+        lm.setAttribute('href', '/checklist.html');
+        lm.textContent = H.checklist;
+        alt.appendChild(lm);
+        paths.after(alt);
+      } else warnings.push('contact: .contact-paths not found — no portrait or checklist line');
+    }
+    document.querySelectorAll('.is-popular .price-badge').forEach((b) => { b.textContent = copy.home.recommended; });
+
     // Nav and footer links point at sections that may not be on this page.
     // One that is here stays an in-page link; one that lives on another page
     // becomes a link to that page, so nothing resolves to a dead anchor. An id
@@ -2469,7 +2613,7 @@ async function snapshotVariant({ page, spec, lang, locales }) {
   }, spec, locales.map((l) => l.lang), FAQ_BUYER_KEYS[lang] || FAQ_BUYER_KEYS.en, prefix, PAGE_LAYOUT, SECTION_KEYS,
     { owner: LINK_OWNER, paths: Object.fromEntries(PAGE_SPECS.map((s) => [s.key, s.suffix])) },
     NAV[lang],
-    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en }));
+    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en }));
 
   // Layout passes are best-effort: a re-export that renames a class leaves the
   // page as the export drew it, which is valid, so warn rather than fail.
@@ -3003,6 +3147,24 @@ ${jsonLd}
 .nav-links a[aria-current="page"]{color:var(--ink)}
 .nav-links a[aria-current="page"] span.idx{color:var(--accent)}
 .nav-links a[aria-current="page"]::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:1px;background:var(--accent);box-shadow:0 0 8px var(--accent-glow)}
+/* Hero: keep "depend on." together so "on." never ends up alone on a line. */
+.hero-h1 .it{white-space:nowrap}
+/* Product strip: the letter placeholders read as stand-in client logos. */
+.trust .trust-mark{display:none}
+/* Project cards: screenshot on top, one highlight under the description. */
+.writing-card .wc-shot{aspect-ratio:16/9;border-radius:10px;overflow:hidden;margin:0 0 16px;border:1px solid var(--line);background:var(--bg-elev)}
+.writing-card .wc-shot img{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 0}
+.writing-card .wc-impact{margin:2px 0 12px;font-size:13px;color:var(--ink-mute)}
+.writing-card .wc-impact strong{color:var(--accent);font-weight:600}
+/* Closing block: who you will talk to, and a step for visitors not ready to call. */
+.cta-person{display:flex;align-items:center;justify-content:center;gap:12px;margin:22px auto 6px;color:var(--ink-mute);font-size:14px;max-width:560px}
+.cta-person img{width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid var(--line-strong)}
+.contact-alt{margin:22px 0 0;text-align:center;font-size:14px;color:var(--ink-dim)}
+.contact-alt a{color:var(--accent)}
+/* Phones: the floating Personalize (theme) button sits at the bottom-left and,
+   on an 844px-tall screen, lands on the hero's second button at first paint.
+   A theme picker is not worth covering a sales button; tablets and up keep it. */
+@media (max-width:640px){.palette{display:none!important}}
 /* Drawn AF badge: the SVG fills the 26px badge; its letters already carry
    their own inset, so the badge's text padding goes. */
 .brand-mark--drawn{padding:0}
