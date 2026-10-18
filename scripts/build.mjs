@@ -1316,6 +1316,30 @@ const FAQ_BUYER_KEYS = {
   fr: ['mission type', 'sont vos clients', 'votre tarif'],
 };
 
+// Home's "Four ways to put me to work" cards, client-first: the full-time role
+// is the hiring path and goes last. Each entry is the card heading as the
+// export ships it, per locale; a card is found by its heading, so a re-export
+// that rewords one is warned about at build time rather than silently left in
+// the old order.
+const HOME_SERVICE_ORDER = {
+  en: ['Fixed-scope build', 'Ongoing partner', 'Technical advisory', 'Full-time role'],
+  ar: ['بناء بنطاق محدّد', 'شريك مستمرّ', 'استشارة تقنية', 'دور بدوام كامل'],
+  de: ['Festumfang-Build', 'Laufender Partner', 'Technische Beratung', 'Vollzeitstelle'],
+  es: ['Proyecto de alcance cerrado', 'Socio continuo', 'Asesoría técnica', 'Puesto a jornada completa'],
+  fr: ['Projet à périmètre fixe', 'Partenaire au long cours', 'Conseil technique', 'Poste à temps plein'],
+};
+
+// "Ways to work together" opens with a sentence about the price list above it
+// ("Those are the packaged offers above."). A page without that list drops
+// exactly this sentence, as the export words it in each locale.
+const PACKAGED_ABOVE = {
+  en: 'Those are the packaged offers above.',
+  ar: 'تلك هي الباقات في الأعلى.',
+  de: 'Das sind die Pakete oben.',
+  es: 'Esos son los paquetes de arriba.',
+  fr: 'Ce sont les forfaits ci-dessus.',
+};
+
 // Every page but home is cut from the home render and has no hero. The
 // export's enhancement layer waits for `.hero-stats` before it starts, so on
 // those pages it never started: no language menu, no Arabic numerals, a dead
@@ -1963,7 +1987,7 @@ async function fatalIfThrown(label, pending) {
 async function snapshotVariant({ page, spec, lang, locales }) {
   const prefix = lang === 'en' ? '/' : `/${lang}/`;
   console.log(`→ [${lang}] Cutting ${spec.key} page…`);
-  const snap = await fatalIfThrown(`[${lang}] ${spec.key}`, page.evaluate((pageSpec, localeCodes, faqBuyerKeys, localePrefix, layout, knownKeys, links, labels) => {
+  const snap = await fatalIfThrown(`[${lang}] ${spec.key}`, page.evaluate((pageSpec, localeCodes, faqBuyerKeys, localePrefix, layout, knownKeys, links, labels, copy) => {
     document.getElementById('root').replaceWith(window.__afPristine.cloneNode(true));
     const warnings = [];
 
@@ -2158,12 +2182,38 @@ async function snapshotVariant({ page, spec, lang, locales }) {
     }
     // "Ways to work together" opens with "Those are the packaged offers above."
     // On a page without the price list there is no "above"; drop that sentence.
+    // It is matched as the locale's own sentence, not "everything up to the
+    // first full stop", so a reworded sub-line is warned about, not trimmed.
     if (!pageSpec.sections.includes('pricing') && pageSpec.sections.includes('services')) {
       const sub = document.querySelector('#services .section-sub');
-      const text = sub ? sub.textContent : '';
-      const cut = text.indexOf('. ');
-      if (sub && cut > 0 && !sub.children.length) sub.textContent = text.slice(cut + 2);
-      else if (sub) warnings.push('services: could not drop the "packaged offers above" sentence');
+      const text = sub ? sub.textContent.trim() : '';
+      if (sub && !sub.children.length && text.startsWith(copy.packagedAbove)) {
+        sub.textContent = text.slice(copy.packagedAbove.length).trim();
+      } else warnings.push(`services: the "packaged offers above" sentence (${copy.packagedAbove}) was not found at the start of #services .section-sub — left as exported`);
+    }
+    // Home: the four service cards run full-time role first, which is the
+    // hiring path. For a client the fixed-scope build, the retainer and the
+    // advisory call come first and the role last. The cards are found by
+    // heading (HOME_SERVICE_ORDER); their numbers and stagger delays belong to
+    // the position, so they stay put while the cards move. /services/ keeps the
+    // export's order.
+    if (pageSpec.key === 'home') {
+      const grid = document.querySelector('#services .services-grid');
+      const cards = grid ? [...grid.querySelectorAll(':scope > .service-card')] : [];
+      const headingOf = (c) => (c.querySelector('.service-t')?.textContent || '').trim();
+      const ordered = copy.serviceOrder.map((t) => cards.find((c) => headingOf(c) === t));
+      if (grid && cards.length === ordered.length && ordered.every(Boolean)) {
+        const nums = cards.map((c) => c.querySelector('.service-num')?.textContent);
+        const delays = cards.map((c) => c.style.transitionDelay);
+        ordered.forEach((c, i) => {
+          grid.appendChild(c);
+          const num = c.querySelector('.service-num');
+          if (num && nums[i] != null) num.textContent = nums[i];
+          c.style.transitionDelay = delays[i];
+        });
+      } else {
+        warnings.push(`services: the four cards were not found by heading (${copy.serviceOrder.join(' | ')}) — left in the export's order`);
+      }
     }
     // Nav and footer links point at sections that may not be on this page.
     // One that is here stays an in-page link; one that lives on another page
@@ -2175,7 +2225,8 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         if (id && document.getElementById(id)) return;
         if (id === 'top') { a.setAttribute('href', localePrefix); return; }
         if (!id) return;
-        const ownerPath = links.owner[id] ? links.paths[links.owner[id]] : undefined;
+        const owner = Object.prototype.hasOwnProperty.call(links.owner, id) ? links.owner[id] : undefined;
+        const ownerPath = owner ? links.paths[owner] : undefined;
         if (ownerPath != null) a.setAttribute('href', `${localePrefix}${ownerPath}#${id}`);
       });
     }
@@ -2347,7 +2398,8 @@ async function snapshotVariant({ page, spec, lang, locales }) {
     };
   }, spec, locales.map((l) => l.lang), FAQ_BUYER_KEYS[lang] || FAQ_BUYER_KEYS.en, prefix, PAGE_LAYOUT, SECTION_KEYS,
     { owner: LINK_OWNER, paths: Object.fromEntries(PAGE_SPECS.map((s) => [s.key, s.suffix])) },
-    NAV[lang]));
+    NAV[lang],
+    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en }));
 
   // Layout passes are best-effort: a re-export that renames a class leaves the
   // page as the export drew it, which is valid, so warn rather than fail.
@@ -2859,17 +2911,17 @@ ${jsonLd}
 :root[data-corners=sharp] .case-more-summary{border-radius:2px}
 @media print{.case-more-summary{display:none}}
 /* Project pages: breadcrumb trail, the "all work" link under a card grid, the
-   flagship cards above /work/'s folded cases, and the case write-up shown open
-   (its toggle would only close what the page is for). Logical properties
-   throughout, so Arabic mirrors without a second rule. */
+   flagship cards above /work/'s folded cases, and the case write-up shown open.
+   Its toggle stays and works: the panel starts open (max-height lifted, as the
+   write-up can outgrow the export's 2400px cap) and collapses to the export's
+   own closed state when it is clicked. Logical properties throughout, so
+   Arabic mirrors without a second rule. */
 .crumbs ol{display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0 0 28px;padding:0;font-family:var(--mono);font-size:12px;color:var(--ink-dim)}
 .crumbs a{color:var(--ink-mute)}
 .crumbs li+li::before{content:"/";margin-inline-end:8px}
 .work-more{margin-top:32px}
 .work-flagships{margin-bottom:56px}
-#case .deepdive-toggle{display:none}
-#case .deepdive-panel{max-height:none}
-#case .deepdive-inner{padding-top:24px}
+#case .deepdive.open .deepdive-panel{max-height:none}
 /* The page the visitor is on, in the four-link navigation. Same mark the
    export's scroll-spy uses for the section in view. */
 .nav-links a[aria-current="page"]{color:var(--ink)}
