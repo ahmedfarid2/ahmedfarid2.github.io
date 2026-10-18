@@ -2666,20 +2666,29 @@ const FREELANCE_LOC_EDITS = factEdits('experience: current freelance role in Dub
   fr: ['alnaimi-studios/" },\n      ], logo: null, loc: "Le Caire · Distanciel" }', 'alnaimi-studios/" },\n      ], logo: null, loc: "Dubaï, EAU · Distanciel" }'],
 });
 
-// ── Footer tagline: spearhead + both audiences ─────────────────────────────
+// ── Footer tagline: spearhead + what a client can buy ──────────────────────
 // "multi-tenant platforms, B2B/B2C systems, and the mobile apps" read as a
-// generalist list. It now states the spearhead and that both senior roles and
-// selected consulting are open. Cosmetic, so not critical.
-const FOOTER_TAG_EDITS = factEdits('footer tagline: spearhead + availability', {
+// generalist list. It now states the spearhead, then closes on what a client
+// can hire (fixed-scope builds, retainers, architecture consulting): the site
+// is a client-facing one, and the hiring path lives on /about/. Only the last
+// sentence moved on from "Open to senior roles and selected consulting."; the
+// whole earlier output is the prior so a committed export migrates. Cosmetic,
+// so not critical.
+const FOOTER_TAG_EDITS = factEdits('footer tagline: spearhead + what a client can buy', {
   en: ['Senior Software Engineer building multi-tenant platforms, B2B/B2C systems, and the mobile apps that ride on top.',
+       'Senior Software Engineer — real-time, multi-tenant SaaS and end-to-end product engineering. Fixed-scope builds, retainers and architecture consulting.',
        'Senior Software Engineer — real-time, multi-tenant SaaS and end-to-end product engineering. Open to senior roles and selected consulting.'],
   ar: ['مهندس برمجيات أول يبني منصّات متعدّدة المستأجرين وأنظمة B2B/B2C وتطبيقات الجوّال التي تعمل فوقها.',
+       'مهندس برمجيات أول — منصّات SaaS فورية متعدّدة المستأجرين وهندسة المنتجات من البداية إلى النهاية. مشاريع محدّدة النطاق، وعقود دعم مستمر، واستشارات معمارية.',
        'مهندس برمجيات أول — منصّات SaaS فورية متعدّدة المستأجرين وهندسة المنتجات من البداية إلى النهاية. متاح لأدوار أولى واستشارات مختارة.'],
   de: ['Senior-Softwareentwickler, der Multi-Tenant-Plattformen, B2B/B2C-Systeme und die mobilen Apps baut, die obendrauf laufen.',
+       'Senior-Softwareentwickler — Echtzeit-Multi-Tenant-SaaS und Produktentwicklung end to end. Festpreis-Projekte, Retainer und Architekturberatung.',
        'Senior-Softwareentwickler — Echtzeit-Multi-Tenant-SaaS und Produktentwicklung end to end. Offen für Senior-Rollen und ausgewählte Beratung.'],
   es: ['Ingeniero de Software Senior que construye plataformas multi-tenant, sistemas B2B/B2C y las apps móviles que se montan encima.',
+       'Ingeniero de Software Senior — SaaS multi-tenant en tiempo real e ingeniería de producto de principio a fin. Proyectos cerrados, retainers y consultoría de arquitectura.',
        'Ingeniero de Software Senior — SaaS multi-tenant en tiempo real e ingeniería de producto de principio a fin. Abierto a roles senior y consultoría selecta.'],
   fr: ['Ingénieur logiciel senior, je construis des plateformes multi-tenant, des systèmes B2B/B2C et les applications mobiles qui les accompagnent.',
+       'Ingénieur logiciel senior — SaaS multi-tenant temps réel et ingénierie produit de bout en bout. Projets au forfait, retainers et conseil en architecture.',
        'Ingénieur logiciel senior — SaaS multi-tenant temps réel et ingénierie produit de bout en bout. Ouvert aux postes senior et à des missions de conseil choisies.'],
 }, { critical: false });
 
