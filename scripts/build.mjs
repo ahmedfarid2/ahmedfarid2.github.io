@@ -539,6 +539,8 @@ const FORBIDDEN = [
   // Same claim, different verb — the wording the first sweep missed.
   { s: 'Open to relocate', max: 0 },
   { s: 'No tracking', max: 0 },
+  // Calendly does not redirect a renamed user: the old link is a dead page.
+  { s: 'calendly.com/ahmedfareed2025', max: 0 },
   // Guards hero, nav and About against the old bare export CTA. The
   // owner-approved client-path CTA is the 30-minute variant below, which does
   // not contain this string; it belongs only in the EN contact block.

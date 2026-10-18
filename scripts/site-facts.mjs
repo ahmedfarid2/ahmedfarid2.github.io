@@ -39,7 +39,7 @@ export const CONTACT = {
   linkedin: 'https://www.linkedin.com/in/iamahmedfarid',
   github: 'https://github.com/ahmedfarid2',
   whatsapp: 'https://wa.me/message/CFOPUVBTQVPLM1',
-  calendly: 'https://calendly.com/ahmedfareed2025/30min',
+  calendly: 'https://calendly.com/iamahmedfarid/30min',
   cv: '/Ahmed-Farid-CV.pdf',
 };
 

@@ -19,6 +19,7 @@ import { CONTACT } from './site-facts.mjs';
 export const PDF_RETIRED = [
   { label: 'old LinkedIn slug', rx: /ahmed-farid-b46a5221b/i },
   { label: 'personal Gmail', rx: /@gmail\.com/i },
+  { label: 'old Calendly username', rx: /calendly\.com\/ahmedfareed2025/i },
   { label: 'relocation line', rx: /open\s+to\s+relocat/i },
   // Cairo is fine for past roles and the university, so only the forms that
   // state it as where he is now are retired. A bare "Cairo, Egypt" in a
