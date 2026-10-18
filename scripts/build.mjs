@@ -20,7 +20,7 @@
 // produces a broken deploy.
 
 import { mkdir, writeFile, copyFile, rm, readdir, readFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { SITE_URL, LOCATION, LOCATION_LABEL, CONTACT, YEARS_PROSE, SEO, DRIFT_GUARDS } from './site-facts.mjs';
@@ -460,8 +460,12 @@ function mustReplaceAll(source, needle, replacement, { min = 1, label } = {}) {
   return parts.join(replacement);
 }
 
-// Strings that must never reach dist/. `max` is a ceiling, not a ban, for the
-// few strings allowed a fixed number of times.
+// Strings that must never reach dist/. `max` is a ceiling across all of dist/,
+// `maxPerFile` a ceiling for any single file — not a ban — for the few strings
+// allowed a fixed number of times. A string with neither is banned outright.
+// Per-file, because a total grows with every page that carries the same block
+// (the contact section is on every page) and a total that has to be raised
+// each time a page is added stops guarding anything.
 //
 // Scanned as bytes over the emitted text files rather than through a parsed
 // DOM, so a string hiding in an href, a tel: link, a JSON blob or an inline
@@ -482,9 +486,10 @@ const FORBIDDEN = [
   // owner-approved client-path CTA is the 30-minute variant below, which does
   // not contain this string; it belongs only in the EN contact block.
   { s: 'Book a scoping call', max: 0 },
-  // EN home contact, EN services contact, EN services pricing CTA, and the
-  // checklist page's call CTA.
-  { s: 'Book a 30-minute scoping call', max: 4 },
+  // The contact block carries it once (every page that has one), and the EN
+  // services page a second time on its pricing CTA; the checklist page's call
+  // CTA is a third file with one.
+  { s: 'Book a 30-minute scoping call', maxPerFile: 2 },
   // Pricing moved to /work-with-me.html. Banned on the home page, expected on
   // the page that now owns the offer — so these skip that one file rather than
   // being dropped from the list, which would stop guarding the home page too.
@@ -524,6 +529,7 @@ async function assertNoForbiddenStrings() {
   const exts = new Set(['.html', '.txt', '.xml', '.json', '.svg']);
   const counts = new Map(FORBIDDEN.map((f) => [forbiddenKey(f), 0]));
   const where = new Map();
+  const perFile = new Map();   // key → [{ rel, n }]
   const walk = async (dir) => {
     for (const e of await readdir(dir, { withFileTypes: true })) {
       const full = path.join(dir, e.name);
@@ -539,16 +545,25 @@ async function assertNoForbiddenStrings() {
         const k = forbiddenKey(f);
         counts.set(k, counts.get(k) + n);
         where.set(k, [...(where.get(k) || []), `${rel}×${n}`]);
+        perFile.set(k, [...(perFile.get(k) || []), { rel, n }]);
       }
     }
   };
   await walk(DIST);
-  const bad = FORBIDDEN.filter((f) => counts.get(forbiddenKey(f)) > f.max);
+  // Over the total ceiling, or any one file over its own.
+  const total = (f) => f.max ?? (f.maxPerFile == null ? 0 : Infinity);
+  const overFiles = (f) => f.maxPerFile == null ? []
+    : (perFile.get(forbiddenKey(f)) || []).filter((x) => x.n > f.maxPerFile);
+  const bad = FORBIDDEN.filter((f) => counts.get(forbiddenKey(f)) > total(f) || overFiles(f).length);
   if (bad.length) {
     const err = new Error(
       '[build] forbidden strings reached dist/:\n' +
-      bad.map((f) => `   "${forbiddenKey(f)}" — ${counts.get(forbiddenKey(f))} occurrence(s), max ${f.max} ` +
-                     `(${(where.get(forbiddenKey(f)) || []).join(', ')})`).join('\n') +
+      bad.map((f) => {
+        const k = forbiddenKey(f);
+        const ceiling = [f.max != null || f.maxPerFile == null ? `max ${total(f)}` : '',
+          f.maxPerFile != null ? `max ${f.maxPerFile} per file` : ''].filter(Boolean).join(', ');
+        return `   "${k}" — ${counts.get(k)} occurrence(s), ${ceiling} (${(where.get(k) || []).join(', ')})`;
+      }).join('\n') +
       '\n   A correction was dropped, or a retired claim came back. Not deploying.'
     );
     // The raw-export fallback is the wrong answer here: the raw export is
@@ -594,9 +609,9 @@ async function assertNoDeadAnchors() {
   console.log('  ✓ no dead in-page anchors');
 }
 
-// Every locale exists twice — home and /services/ — and a visitor who
-// switches language, or follows the footer's services link, must stay in the
-// same language and on the same kind of page. Checked against the written
+// Every locale carries every page type in PAGE_SPECS (home, /services/, …), and
+// a visitor who switches language, or follows the footer's services link, must
+// stay in the same language and on the same kind of page. Checked against the written
 // files (footer link, drawer language links, canonical, hreflang) and, for the
 // language menu the export's script builds at runtime, in a browser that sees
 // dist/ under the real site origin, so the script takes its production path.
@@ -606,7 +621,7 @@ async function assertLocaleRouting(locales) {
   const bad = [];
   const pagesToCheck = [];
   for (const l of locales) {
-    for (const suffix of ['', 'services/']) {
+    for (const suffix of PAGE_SPECS.map((spec) => spec.suffix)) {
       const page = l.urlPath + suffix;
       const file = path.join(DIST, page, 'index.html');
       if (!existsSync(file)) { bad.push(`${page}: not built`); continue; }
@@ -664,6 +679,149 @@ async function assertLocaleRouting(locales) {
     throw err;
   }
   console.log(`  ✓ locale routing: ${pagesToCheck.length} pages — footer services link, language menu + drawer, canonical, hreflang`);
+}
+
+// ── Page inventory ──────────────────────────────────────────────────────────
+// Every page the build is supposed to write, from the one table that drives it.
+function localePages(locales) {
+  return locales.flatMap((loc) => PAGE_SPECS.map((spec) => ({
+    loc, spec, urlPath: loc.urlPath + spec.suffix,
+    rel: path.posix.join(loc.urlPath.slice(1), spec.suffix, 'index.html'),
+  })));
+}
+
+// Pages are cut from a render, so "a page was written" proves little: the cut
+// is where content is lost. This checks the files and the sitemap against the
+// table, and — per locale — that every section, case study and FAQ question the
+// export holds is published on at least one page.
+async function assertPageInventory(locales, coverage) {
+  const bad = [];
+  const pages = localePages(locales);
+  const expected = new Set(pages.map((p) => p.rel));
+  for (const p of pages) if (!existsSync(path.join(DIST, p.rel))) bad.push(`${p.rel}: not written`);
+
+  const found = [];
+  const walk = async (dir) => {
+    for (const e of await readdir(dir, { withFileTypes: true })) {
+      const full = path.join(dir, e.name);
+      if (e.isDirectory()) { if (e.name !== 'assets') await walk(full); }
+      else if (e.name === 'index.html') found.push(path.relative(DIST, full).split(path.sep).join('/'));
+    }
+  };
+  await walk(DIST);
+  for (const f of found) if (!expected.has(f)) bad.push(`${f}: written but not in the page map`);
+
+  const sitemap = await readFile(path.join(DIST, 'sitemap.xml'), 'utf8');
+  const listed = new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]));
+  const want = new Set(sitemapPages(locales).map((x) => SITE_URL + x.path));
+  for (const u of want) if (!listed.has(u)) bad.push(`sitemap.xml: missing ${u}`);
+  for (const u of listed) if (!want.has(u)) bad.push(`sitemap.xml: unexpected ${u}`);
+
+  const counts = [];
+  for (const { lang, shared, snaps } of coverage) {
+    const published = (pick) => new Set(snaps.flatMap(pick));
+    const keys = published((s) => s.keptKeys);
+    const cases = published((s) => s.caseNames);
+    const qs = published((s) => s.faq.map((f) => f.q));
+    for (const k of new Set(shared.pristineKeys)) if (!keys.has(k)) bad.push(`[${lang}] section "${k || '(unnamed)'}" is on no page`);
+    for (const c of new Set(shared.caseNames)) if (!cases.has(c)) bad.push(`[${lang}] case study "${c}" is on no page`);
+    for (const q of new Set(shared.faqQs)) if (!qs.has(q)) bad.push(`[${lang}] FAQ question "${q}" is on no page`);
+    counts.push(`${new Set(shared.pristineKeys).size}/${new Set(shared.caseNames).size}/${new Set(shared.faqQs).size}`);
+  }
+  if (bad.length) {
+    const err = new Error('[build] page inventory incomplete:\n' + bad.map((x) => `   ${x}`).join('\n') +
+      '\n   A page was not written, or a cut dropped content that no other page carries.');
+    err.fatal = true;
+    throw err;
+  }
+  console.log(`  ✓ page inventory: ${pages.length} pages (${locales.length} locales × ${PAGE_SPECS.length}), sitemap ${listed.size} URLs; ` +
+    `every section, case study and FAQ question is published (${[...new Set(counts)].join(' | ')} per locale)`);
+}
+
+// Every link that stays on this site has to land somewhere: a file in dist/,
+// and — when it names a fragment — an id in that file. The dead-anchor gate
+// covers `#id` on the same page; this covers `/path/` and `/path/#id`, which is
+// what pages cut from one render link each other with.
+async function assertInternalLinks(files) {
+  const idsCache = new Map();
+  const idsOf = async (file) => {
+    if (!idsCache.has(file)) {
+      const { masked } = maskCode(await readFile(file, 'utf8'));
+      idsCache.set(file, new Set([...masked.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1])));
+    }
+    return idsCache.get(file);
+  };
+  const resolveFile = (pathname) => {
+    let p;
+    try { p = decodeURIComponent(pathname); } catch { return null; }
+    const abs = path.join(DIST, p);
+    if (abs !== DIST && !abs.startsWith(DIST + path.sep)) return null;
+    const isFile = (f) => existsSync(f) && statSync(f).isFile();
+    if (!p.endsWith('/') && isFile(abs)) return abs;
+    const index = path.join(abs, 'index.html');
+    return isFile(index) ? index : null;
+  };
+  const dead = [];
+  let checked = 0;
+  for (const f of files) {
+    const { masked } = maskCode(await readFile(f, 'utf8'));
+    const rel = path.relative(DIST, f);
+    for (const m of masked.matchAll(/\shref="([^"]*)"/g)) {
+      let href = m[1].replace(/&amp;/g, '&');
+      if (href.startsWith(SITE_URL + '/') || href === SITE_URL) href = href.slice(SITE_URL.length) || '/';
+      if (!href.startsWith('/') || href.startsWith('//')) continue;
+      checked += 1;
+      const [pathAndQuery, fragment] = href.split('#');
+      const target = resolveFile(pathAndQuery.split('?')[0]);
+      if (!target) { dead.push(`${rel} → ${href} (no such file)`); continue; }
+      if (fragment && fragment !== 'top' && target.endsWith('.html') && !(await idsOf(target)).has(fragment))
+        dead.push(`${rel} → ${href} (no #${fragment} in ${path.relative(DIST, target)})`);
+    }
+  }
+  if (dead.length) {
+    const err = new Error('[build] internal links point at nothing:\n' +
+      [...new Set(dead)].map((d) => `   ${d}`).join('\n') +
+      '\n   A page or section moved. Clicking these lands on a 404 or the top of the wrong page.');
+    err.fatal = true;
+    throw err;
+  }
+  console.log(`  ✓ internal links: ${checked} on-site href(s) all resolve — to a file, and to an id where they name one`);
+}
+
+// What search engines and share cards read: the title and description of every
+// locale page, and its structured data. Limits are what a result snippet shows
+// before cutting; uniqueness is what keeps 45 pages from competing as one.
+const HEAD_LIMITS = { title: 80, description: 170 };
+async function assertHeadMeta(locales) {
+  const bad = [];
+  const attr = (s) => String(s ?? '').replace(/&lt;/g, '<').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+  const seen = { title: new Map(), description: new Map() };
+  let blocks = 0;
+  for (const { urlPath, rel } of localePages(locales)) {
+    const body = await readFile(path.join(DIST, rel), 'utf8');
+    const head = {
+      title: attr((body.match(/<title>([\s\S]*?)<\/title>/) || [])[1]),
+      description: attr((body.match(/<meta name="description" content="([^"]*)"/) || [])[1]),
+    };
+    for (const k of ['title', 'description']) {
+      if (!head[k]) { bad.push(`${urlPath}: no ${k}`); continue; }
+      if (head[k].length > HEAD_LIMITS[k]) bad.push(`${urlPath}: ${k} is ${head[k].length} chars (max ${HEAD_LIMITS[k]})`);
+      if (seen[k].has(head[k])) bad.push(`${urlPath}: ${k} duplicates ${seen[k].get(head[k])}`);
+      else seen[k].set(head[k], urlPath);
+    }
+    for (const m of body.matchAll(/<script[^>]*ld\+json[^>]*>([\s\S]*?)<\/script>/gi)) {
+      blocks += 1;
+      try { JSON.parse(m[1]); } catch { bad.push(`${urlPath}: a JSON-LD block does not parse`); }
+      // A "<" inside a JSON string can close the <script> early.
+      if (m[1].includes('<')) bad.push(`${urlPath}: a JSON-LD block holds a raw "<" (escape it as \\u003c)`);
+    }
+  }
+  if (bad.length) {
+    const err = new Error('[build] page head or structured data broken:\n' + bad.map((x) => `   ${x}`).join('\n'));
+    err.fatal = true;
+    throw err;
+  }
+  console.log(`  ✓ page heads: ${seen.title.size} unique titles (≤${HEAD_LIMITS.title}) and descriptions (≤${HEAD_LIMITS.description}); ${blocks} JSON-LD blocks parse and are script-safe`);
 }
 
 // Every PDF the site serves (the CV, the checklist) is read the way a visitor
@@ -871,35 +1029,47 @@ async function extractEnhancementLayer() {
   return null;
 }
 
-// sitemap.xml + robots.txt + a styled 404.html. No browser needed, so this
-// runs in both the optimized build and the raw-export fallback.
-async function writeSeoFiles(locales = [{ urlPath: '/' }]) {
-  const today = new Date().toISOString().slice(0, 10);
-  // Standalone pages that aren't locale builds but should still be discoverable.
-  // The checklist is public on purpose: it's the strongest topical content on
-  // the site, it targets exactly the people who hire for this work, and it ends
-  // in a "Book a call" CTA. Ranking and being cited by AI assistants is worth
-  // more here than gating it behind the capture form (which stays the primary
-  // path from the site and from LinkedIn).
-  // Hand-written pages that live outside the design export. They are copied
-  // into dist/ by copyStaticAssets, but nothing else would put them in the
-  // sitemap. /demo.html gets the higher priority of the two: it is the page a
-  // conversion actually happens on.
-  const EXTRA_PAGES = [
-    { path: '/demo.html', priority: '0.9', changefreq: 'monthly' },
-    { path: '/checklist.html', priority: '0.8', changefreq: 'yearly' },
-  ];
-  // /services exists once per locale (/services/, /ar/services/, …), each with
-  // its own canonical, so each is listed.
-  const servicesPages = locales.map((l) => ({ path: `${l.urlPath}services/`, priority: '0.7', changefreq: 'monthly' }));
+// Hand-written pages that live outside the design export. They are copied
+// into dist/ by copyStaticAssets, but nothing else would put them in the
+// sitemap. /demo.html gets the higher priority of the two: it is the page a
+// conversion actually happens on.
+//
+// The checklist is public on purpose: it's the strongest topical content on
+// the site, it targets exactly the people who hire for this work, and it ends
+// in a "Book a call" CTA. Ranking and being cited by AI assistants is worth
+// more here than gating it behind the capture form (which stays the primary
+// path from the site and from LinkedIn).
+const EXTRA_PAGES = [
+  { path: '/demo.html', priority: '0.9', changefreq: 'monthly' },
+  { path: '/checklist.html', priority: '0.8', changefreq: 'yearly' },
+];
 
-  const urls = locales
-    .map((l, i) =>
-      `  <url><loc>${SITE_URL}${l.urlPath}</loc><lastmod>${today}</lastmod>` +
-      `<changefreq>monthly</changefreq><priority>${i === 0 ? '1.0' : '0.9'}</priority></url>`)
-    .concat([...EXTRA_PAGES, ...servicesPages].map((p) =>
+// Every URL the sitemap lists, in order: the locale homes, the hand-written
+// pages, then every other page type per locale. Each page type exists once per
+// locale with its own canonical, so each is listed. The inventory gate reads
+// the same list.
+function sitemapPages(locales, specs = PAGE_SPECS) {
+  const own = (spec) => locales.map((l, i) => ({
+    path: `${l.urlPath}${spec.suffix}`,
+    priority: i === 0 && spec.primaryPriority ? spec.primaryPriority : spec.priority,
+    changefreq: 'monthly',
+  }));
+  return [
+    ...specs.filter((s) => s.key === 'home').flatMap(own),
+    ...EXTRA_PAGES,
+    ...specs.filter((s) => s.key !== 'home').flatMap(own),
+  ];
+}
+
+// sitemap.xml + robots.txt + a styled 404.html. No browser needed, so this
+// runs in both the optimized build and the raw-export fallback (which has no
+// page but the root, and passes only the home spec).
+async function writeSeoFiles(locales = [{ urlPath: '/' }], specs = PAGE_SPECS) {
+  const today = new Date().toISOString().slice(0, 10);
+  const urls = sitemapPages(locales, specs)
+    .map((p) =>
       `  <url><loc>${SITE_URL}${p.path}</loc><lastmod>${today}</lastmod>` +
-      `<changefreq>${p.changefreq}</changefreq><priority>${p.priority}</priority></url>`))
+      `<changefreq>${p.changefreq}</changefreq><priority>${p.priority}</priority></url>`)
     .join('\n');
   await writeFile(path.join(DIST, 'sitemap.xml'),
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
@@ -1063,7 +1233,7 @@ async function fallback(reason) {
     process.exitCode = 1;
     return;
   }
-  await writeSeoFiles();
+  await writeSeoFiles(undefined, PAGE_SPECS.filter((spec) => spec.key === 'home'));
   console.log('✓ Raw export copied to dist/ (site stays functional, unoptimized).');
 }
 
@@ -1129,6 +1299,10 @@ const PAGE_LAYOUT = {
 //   foldCases    fold Problem + Approach of the non-flagship cases
 //   contactFirst 'project' puts the project path before the hiring path
 //   promoteH1    promote the first section title to <h1> (no hero on the page)
+//   priority     sitemap priority (primaryPriority: the default locale's)
+//   verify       floor for the built-output check: innerText length and
+//                section[id] count, each floor(0.7 × the first green English
+//                measurement). Deliberately resizing a page means re-measuring.
 const SECTION_KEYS = [
   'top', 'trust', 'position', 'about', 'bynumbers', 'work', 'products', 'builds', 'build',
   'domains', 'brands', 'regions', 'depth', 'arch', 'github', 'experience', 'process', 'why',
@@ -1141,14 +1315,47 @@ const PAGE_SPECS = [
     sections: SECTION_KEYS.filter((k) => !COMMERCIAL_SECTIONS.includes(k)),
     keepUnknown: true, faq: 'other', anchors: null, renumber: false,
     sortWriting: true, foldCases: true, contactFirst: 'hire', promoteH1: false,
+    priority: '0.9', primaryPriority: '1.0',
+    verify: { minText: 21730, minSections: 14 },   // measured 31044 chars, 20 sections
   },
   {
     key: 'services', suffix: 'services/',
     sections: ['pricing', 'services', 'faq', 'contact'],
     keepUnknown: false, faq: 'buyer', anchors: 'home', renumber: true,
     sortWriting: false, foldCases: false, contactFirst: 'project', promoteH1: true,
+    priority: '0.7',
+    verify: { minText: 3865, minSections: 2 },     // measured 5522 chars, 4 sections
   },
 ];
+
+// Checked before anything renders: a table that drives every page would
+// otherwise turn a typo (a section key, a missing SEO row for one locale) into a
+// quietly thin page or a silently borrowed English title.
+function assertPageSpecs(locales) {
+  const bad = [];
+  const keys = new Set();
+  const suffixes = new Set();
+  for (const spec of PAGE_SPECS) {
+    if (keys.has(spec.key)) bad.push(`duplicate page key "${spec.key}"`);
+    if (suffixes.has(spec.suffix)) bad.push(`${spec.key}: duplicate suffix "${spec.suffix}"`);
+    keys.add(spec.key);
+    suffixes.add(spec.suffix);
+    if (!/^([a-z0-9]+(-[a-z0-9]+)*\/)*$/.test(spec.suffix))
+      bad.push(`${spec.key}: suffix "${spec.suffix}" must be empty or lowercase path segments each ending in "/"`);
+    for (const k of spec.sections) if (!SECTION_KEYS.includes(k)) bad.push(`${spec.key}: unknown section key "${k}"`);
+    if (!spec.verify || !(spec.verify.minText > 0) || !(spec.verify.minSections > 0)) bad.push(`${spec.key}: no verify floor`);
+    for (const l of locales) {
+      const seo = (SEO[spec.key] || {})[l.lang];
+      if (!seo || !seo.title || !seo.description) bad.push(`SEO.${spec.key}.${l.lang} is missing`);
+    }
+  }
+  if (!PAGE_SPECS.some((spec) => spec.key === 'home' && spec.suffix === '')) bad.push('no home page at the locale root');
+  if (bad.length) {
+    const err = new Error('[build] page map invalid:\n' + bad.map((x) => `   ${x}`).join('\n'));
+    err.fatal = true;
+    throw err;
+  }
+}
 
 // A section's key: its id, or — for the three the export ships without one —
 // the thing that identifies it: the trust marquee (`section.trust`), "What I do"
@@ -1768,6 +1975,10 @@ async function snapshotVariant({ page, spec, lang, locales }) {
   return snap;
 }
 
+// JSON-LD goes inside a <script>, where a "<" in any string (an FAQ answer, a
+// case name) could close the tag early. Every block is serialised through here.
+const ldJson = (obj) => JSON.stringify(obj).replace(/</g, '\\u003c');
+
 // Node-side assembly of one page: head, structured data, document, externalised
 // assets, minify, write. Driven by the page's spec; `shared` is the locale's
 // render result, `snap` this page's cut of it.
@@ -1880,7 +2091,7 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
         // Facts owned by site-facts.mjs win over whatever the export says, so
         // a stale years/location claim in the export cannot reach JSON-LD.
         for (const k of ['description', 'address', 'homeLocation']) obj[k] = personLd[k];
-        return `${mm[1]}${JSON.stringify(obj)}${mm[3]}`;
+        return `${mm[1]}${ldJson(obj)}${mm[3]}`;
       }
     } catch { /* leave malformed ld+json untouched */ }
     return m;
@@ -1890,7 +2101,7 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
   // at the home page told search engines to drop it.
   const pageSuffix = spec.suffix;
   const pageUrl = `${SITE_URL}${urlPath}${pageSuffix}`;
-  const seo = (SEO[spec.key] || SEO.home)[lang] || (SEO[spec.key] || SEO.home).en;
+  const seo = SEO[spec.key][lang];   // present for every page × locale: assertPageSpecs
   const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
   // Point og:image / twitter:image at the generated card (drop the export's
@@ -1973,9 +2184,9 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
         }
       : null;
   const jsonLd = [
-    hasLd ? '' : `<script type="application/ld+json">${JSON.stringify(personLd)}</script>`,
-    `<script type="application/ld+json">${JSON.stringify(webSiteLd)}</script>`,
-    faqLd ? `<script type="application/ld+json">${JSON.stringify(faqLd)}</script>` : '',
+    hasLd ? '' : `<script type="application/ld+json">${ldJson(personLd)}</script>`,
+    `<script type="application/ld+json">${ldJson(webSiteLd)}</script>`,
+    faqLd ? `<script type="application/ld+json">${ldJson(faqLd)}</script>` : '',
   ].filter(Boolean).join('\n');
 
   // ── Language switcher (only when multiple locales exist) ──────────────────
@@ -2262,6 +2473,7 @@ async function build() {
 
   const locales = await discoverLocales();
   console.log(`→ Locales discovered: ${locales.map((l) => `${l.lang}${l.dir === 'rtl' ? '(rtl)' : ''} → ${l.urlPath}`).join(', ')}`);
+  assertPageSpecs(locales);
 
   await rm(DIST, { recursive: true, force: true });
   await mkdir(DIST, { recursive: true });
@@ -2294,11 +2506,15 @@ async function build() {
   // ── Per-locale pages (shared assets folder, deduped via assetSeen) ────────
   // One render per locale; every page in PAGE_SPECS is a cut of it.
   const assetSeen = new Map();
+  const coverage = [];   // per locale: what the render held, and what each cut kept
   for (const loc of locales) {
     const { page, shared } = await renderLocale({ browser, loc, ghData, enhanceJS, locales });
+    const snaps = [];
+    coverage.push({ lang: loc.lang, shared, snaps });
     try {
       for (const spec of PAGE_SPECS) {
         const snap = await snapshotVariant({ page, spec, lang: loc.lang, locales });
+        snaps.push({ spec, keptKeys: snap.keptKeys, caseNames: snap.caseNames, faq: snap.faq });
         await writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, assetSeen });
       }
     } finally {
@@ -2311,16 +2527,17 @@ async function build() {
   // ── One-time SEO + static assets ──────────────────────────────────────────
   await copyStaticAssets();
 
-  await writeSeoFiles(locales);
+  await writeSeoFiles(locales, PAGE_SPECS);
 
   // ── Verify each built page actually renders ───────────────────────────────
   console.log('→ Verifying built output…');
   const vb = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox', '--disable-setuid-sandbox', '--ignore-certificate-errors'] });
-  for (const loc of locales) {
+  for (const { loc, spec } of localePages(locales)) {
+    const label = spec.suffix ? `${loc.lang} /${spec.suffix}` : loc.lang;
     const vp = await vb.newPage();
     const vErrors = [];
     vp.on('pageerror', (e) => vErrors.push(String(e)));
-    await vp.goto(pathToFileURL(path.join(loc.outDir, 'index.html')).href, { waitUntil: 'load', timeout: 60000 });
+    await vp.goto(pathToFileURL(path.join(loc.outDir, spec.suffix, 'index.html')).href, { waitUntil: 'load', timeout: 60000 });
     const check = await vp.evaluate(() => ({
       text: (document.body.innerText || '').length,
       sections: document.querySelectorAll('section[id]').length,
@@ -2329,12 +2546,12 @@ async function build() {
       faq: document.querySelectorAll('.faq-item').length,
     }));
     await vp.close();
-    if (check.text < 5000 || check.sections < 8) {
+    if (check.text < spec.verify.minText || check.sections < spec.verify.minSections) {
       await vb.close();
-      throw new Error(`[${loc.lang}] Verification failed: text=${check.text} sections=${check.sections}`);
+      throw new Error(`[${label}] Verification failed: text=${check.text} (min ${spec.verify.minText}) sections=${check.sections} (min ${spec.verify.minSections})`);
     }
-    console.log(`  ✓ [${loc.lang}] renders: ${check.text} chars, ${check.sections} sections, ${check.imgs} images, ${check.faq} FAQ items, React shipped=${check.hasReact}`);
-    if (vErrors.length) console.log(`    ([${loc.lang}] ${vErrors.length} non-fatal errors — expected for blocked external assets in CI)`);
+    console.log(`  ✓ [${label}] renders: ${check.text} chars, ${check.sections} sections, ${check.imgs} images, ${check.faq} FAQ items, React shipped=${check.hasReact}`);
+    if (vErrors.length) console.log(`    ([${label}] ${vErrors.length} non-fatal errors — expected for blocked external assets in CI)`);
   }
   await vb.close();
 
@@ -2344,11 +2561,17 @@ async function build() {
   // matched nothing, or a stale string that came back with a re-export.
   await applyShellToStandalonePages();
   const pages = await emittedPages();
+  // Gates, in order (the two transforms in between are not gates). The PDF
+  // check stays last: it is the slowest and the one that needs the checklist
+  // source.
+  await assertPageInventory(locales, coverage);
   await vendorExternalImages(pages);
   await fixHeadingOutlines(pages);
   await assertA11yBaseline(pages);
   await assertNoForbiddenStrings();
   await assertNoDeadAnchors();
+  await assertInternalLinks(pages);
+  await assertHeadMeta(locales);
   await assertLocaleRouting(locales);
   await assertPublicPdfs();
 
