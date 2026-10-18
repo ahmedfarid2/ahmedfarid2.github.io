@@ -4,25 +4,30 @@ Personal portfolio site deployed to GitHub Pages. Claude Design exports (`index*
 
 ## Repository facts
 
-**What it is.** Ahmed Farid's personal portfolio, published to GitHub Pages at the custom domain in `CNAME`. Multilingual (`index.html`, `index.{ar,de,es,fr}.html`) plus `services.html`, `checklist.html`, `get-checklist.html`, `demo.html` and `lead-magnet/`.
+**What it is.** Ahmed Farid's personal portfolio, published to GitHub Pages at the custom domain in `CNAME`, pitched at clients (projects and consulting; hiring/CV lives on `/about/`). Five locales (`en` at `/`, `ar` RTL, `de`, `es`, `fr` under `/<code>/`), each with 9 pages: home, `/work/`, `/work/<slug>/` for the 5 flagships, `/services/`, `/about/` — 45 pages, 47 sitemap URLs. Plus `checklist.html`, `get-checklist.html`, `demo.html` and `lead-magnet/`.
 
 **Stack.** Static HTML produced from Claude Design exports by a Node 20 ESM build pipeline (`scripts/build.mjs`: puppeteer renders the export, snapshots the DOM, strips React/Babel, inlines fonts, adds a small vanilla-JS layer; `html-minifier-terser`). No framework at runtime.
 
 **Structure.**
-- `index*.html`, `services.html`, `checklist.html`, `get-checklist.html`, `demo.html`, `lead-magnet/*.html` — Claude Design exports (source of truth for the site)
-- `scripts/build.mjs` — builds `dist/` (gitignored); falls back to copying the raw export on failure
+- `index*.html`, `checklist.html`, `get-checklist.html`, `demo.html`, `lead-magnet/*.html` — Claude Design exports (source of truth for the site). There is no per-page export: every page in a locale is cut from that locale's `index*.html`.
+- `scripts/build.mjs` — builds `dist/` (gitignored). Renders each locale once, then cuts every page from that render; `PAGE_SPECS` is the page map (which sections each page keeps, its JSON-LD, sitemap priority, verify floors). Runs build gates (page inventory/coverage, accessibility, forbidden strings, dead anchors, internal links, head limits + JSON-LD, page roles, locale routing, public PDFs). **Fails closed:** any error exits 1 and nothing is deployed, so the last good deploy stays live.
+- `scripts/site-facts.mjs` — single source of truth for location, contact links, proof metrics, per-page SEO titles/descriptions (`SEO`), localized nav labels (`NAV`) and the flagship slugs (`FLAGSHIP`)
 - `scripts/edit-copy.mjs` — applies idempotent copy edits inside the export's `__bundler/manifest` bundle; `npm run copy:apply` / `npm run copy:check`
-- `.github/workflows/deploy.yml` — on push to `main`: `npm ci` → `npm run copy:apply -- --soft` → `npm run build` → deploy `dist/` to Pages (with one retry)
+- `scripts/build-cv.mjs`, `scripts/build-checklist.mjs` — render `cv/cv.html` and the lead magnet to the committed root PDFs (`npm run cv:build`, `npm run checklist:build`); `scripts/pdf-check.mjs` backs the public-PDF gate
+- `.github/workflows/deploy.yml` — on pull requests to `main`: build only; on push to `main`: `npm ci` → `npm run copy:apply -- --soft` → `npm run build` → deploy `dist/` to Pages (with one retry)
 - `TRANSLATION-*.md` — translation sources; `docs/*.md` — marketing playbooks (not site content); `CNAME`; `google*.html` — Search Console verification files
 
 **Conventions.**
 - Never hand-edit the compressed `__bundler/manifest` script inside an export; add an edit to `scripts/edit-copy.mjs` instead so it survives re-exports.
 - Never modify `CNAME` or the `google*.html` verification files.
 - Changes to `deploy.yml` affect production deploys; treat as infrastructure.
+- To add or move a page or section, change `PAGE_SPECS` (plus `SEO`/`NAV` in `site-facts.mjs`); the build refuses a spec missing any of them. Never relax a build gate to get green.
+- Old `/#<id>` links to sections that left home are redirected by the build (`REDIRECTS`); keep section ids stable.
 
 **Sensitive areas (treat changes as higher blast radius).**
 - `scripts/build.mjs`
 - `scripts/edit-copy.mjs`
+- `scripts/site-facts.mjs`
 - `.github/workflows/deploy.yml`
 - `CNAME`
 - `google*.html`
@@ -31,7 +36,8 @@ Personal portfolio site deployed to GitHub Pages. Claude Design exports (`index*
 - `npm ci` — installs `puppeteer` and `html-minifier-terser`; `node_modules/` is absent in a fresh clone
 - `npm run copy:check` — reports whether each copy edit is applied; must not report a failed match
 - `npm run build` — produces `dist/`; needs a Chromium. In a sandbox where puppeteer cannot download one, set `PUPPETEER_EXECUTABLE_PATH` to an installed Chromium (this cloud environment provides `/opt/pw-browsers/chromium`)
-- Inspect `dist/index.html` — confirm React/Babel scripts are gone and the copy edits are present
+- Known sandbox quirk: locally the last gate can fail with `multi-tenant-saas-checklist.pdf: out of date with lead-magnet source (text differ)` even on an untouched `main`. Every gate before it still runs; report it verbatim, don't run `checklist:build` to "fix" it, and treat the PR's CI run (same build on ubuntu) as the authoritative full pass
+- Inspect `dist/` — confirm React/Babel scripts are gone, the copy edits are present, and the gate lines report 45 pages / 47 sitemap URLs
 
 ## Engineering orchestration
 
