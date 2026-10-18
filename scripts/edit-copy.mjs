@@ -2666,6 +2666,21 @@ const FREELANCE_LOC_EDITS = factEdits('experience: current freelance role in Dub
   fr: ['alnaimi-studios/" },\n      ], logo: null, loc: "Le Caire · Distanciel" }', 'alnaimi-studios/" },\n      ], logo: null, loc: "Dubaï, EAU · Distanciel" }'],
 });
 
+// ── Booking link: one canonical Calendly URL ───────────────────────────────
+// The contact-path, channel-card and pricing edits write CONTACT.calendly, but
+// they detect "already applied" by structure, not by URL — so a renamed
+// Calendly user (ahmedfareed2025 → iamahmedfarid, Oct 2026) stayed baked into
+// the committed exports. Calendly does not redirect an old username, so a stale
+// link is a dead booking page. This rewrites any 30-minute Calendly link to the
+// canonical one; idempotent because the canonical URL matches itself.
+const CALENDLY_LINK = /https:\/\/calendly\.com\/[A-Za-z0-9_-]+\/30min/g;
+const CALENDLY_EDITS = LOCALES.map((loc) => ({
+  file: fileFor(loc),
+  label: `booking link: canonical Calendly URL (${loc})`,
+  anchor: 'calendly.com/',
+  transform: (text) => text.replace(CALENDLY_LINK, CONTACT.calendly),
+}));
+
 // ── Footer tagline: spearhead + what a client can buy ──────────────────────
 // "multi-tenant platforms, B2B/B2C systems, and the mobile apps" read as a
 // generalist list. It now states the spearhead, then closes on what a client
@@ -3058,6 +3073,8 @@ const EDITS = [
   ...CONTACT_PATHS_EDITS,
   ...PRICING_CALL_EDITS,
   ...COMPASS_ROLE_EDITS,
+  // After every edit that writes a booking link, so it rewrites their output.
+  ...CALENDLY_EDITS,
 ];
 
 // Locate the `__bundler/template` line: the document shell, stored as a single

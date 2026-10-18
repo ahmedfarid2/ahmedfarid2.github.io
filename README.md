@@ -130,11 +130,6 @@ longer matches its source. The "Book a call" link must equal
   so per-post URLs can't be looked up and are not guessed. When the owner
   supplies them ("…" → "Copy link to post" on each post), point each card at
   its own post.
-- **Calendly username.** The booking link is
-  `calendly.com/ahmedfareed2025/30min`, a username derived from a personal
-  Gmail address. Renaming it in Calendly (and in `scripts/site-facts.mjs`
-  `CONTACT.calendly` plus the GitHub README) would finish the move to the
-  professional identity.
 
 ## 📈 Growth & client acquisition
 
