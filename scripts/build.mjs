@@ -337,7 +337,13 @@ async function applyShellToStandalonePages() {
     // These pages carry their own copy of the pixel loader (it only runs for a
     // visitor who already said yes on the main site). With the pixel off,
     // nobody can say yes, so the loader goes too.
-    if (!AD_PIXEL_ID) doc = doc.replace(/\s*<!-- OpenAI \/ ChatGPT Ads[\s\S]*?<\/script>/, '');
+    if (!AD_PIXEL_ID) {
+      const stripped = doc.replace(/\s*<!-- OpenAI \/ ChatGPT Ads[\s\S]*?<\/script>/, '');
+      // A re-export that rewords the comment leaves the loader in place; the
+      // forbidden-string gate then fails the build, and this says why.
+      if (stripped === doc && doc.includes(AD_PIXEL_SRC)) console.warn(`  ⚠ ${name}: pixel loader found but not stripped (its comment changed?)`);
+      doc = stripped;
+    }
     doc = doc.replace('</head>', `${ICON_LINKS}<style data-site-shell>${shellCss}</style>${extra}${analyticsTag}</head>`);
     // Skip link first, so it is the first tab stop; its target is each page's
     // own <main class="wrap" id="main">.
@@ -563,7 +569,8 @@ const FORBIDDEN = [
   // The contact block carries it once (every page that has one); a second
   // copy is allowed on the EN services page (its pricing CTA) and on EN home
   // (the hero's primary button, by design). The checklist page's call CTA is
-  // a third file with one.
+  // a third file with one. Each project page is at the ceiling too: its
+  // contact block plus the side-column button (.case-cta).
   { s: 'Book a 30-minute scoping call', maxPerFile: 2 },
   // The pricing ladder and the free demo live on /services/ only (all five
   // locales' copies of that page). Banned on every other page — home, /work/,
