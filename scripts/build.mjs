@@ -26,6 +26,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { SITE_URL, LOCATION, LOCATION_LABEL, CONTACT, YEARS_PROSE, SEO, NAV, FLAGSHIP, DRIFT_GUARDS, ANALYTICS } from './site-facts.mjs';
 import { inspectPdf, pdfProblems, textFingerprint, PDF_REQUIRED_URIS } from './pdf-check.mjs';
+import { faviconSvg, appleIconSvg, badgeSvg, ICON_LINKS } from './brand-mark.mjs';
 import { renderChecklist, CHECKLIST_PDF, CHECKLIST_REQUIRED_URIS, CHECKLIST_REQUIRED_TEXT } from './build-checklist.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -133,6 +134,19 @@ const CLICK_EVENTS = [
   [/checklist/, 'checklist'],
 ];
 const PROJECT_HREF = /^(?:\/[a-z]{2})?\/work\/([a-z0-9]+(?:-[a-z0-9]+)*)\/$/;
+// The nav badge's text "AF" becomes the drawn monogram (scripts/brand-mark.mjs),
+// so it matches the favicon instead of falling back to the visitor's own
+// monospace font. A re-export that changes the badge markup keeps the text and
+// warns rather than failing: the page is still correct, only less polished.
+const BRAND_MARK_TEXT = '<span class="brand-mark">AF</span>';
+function drawBrandMark(html, lang, key) {
+  if (!html.includes(BRAND_MARK_TEXT)) {
+    console.warn(`  [${lang}/${key}] ⚠ nav badge markup changed; kept the text "AF" instead of the drawn mark`);
+    return html;
+  }
+  return html.split(BRAND_MARK_TEXT).join(`<span class="brand-mark brand-mark--drawn">${badgeSvg()}</span>`);
+}
+
 // Language-switcher links (they carry hreflang) are navigation, not intent, and
 // are skipped. Attributes go at the end of the tag so existing attribute order —
 // which the routing gate reads — is left exactly as it was.
@@ -310,7 +324,8 @@ async function applyShellToStandalonePages() {
     // Their own one-line footer goes: the real one says the same thing and more,
     // and two copyright lines stacked is how the first pass shipped.
     doc = doc.replace(/\s*<footer>[\s\S]*?<\/footer>/, '');
-    doc = doc.replace('</head>', `<style data-site-shell>${shellCss}</style>${extra}${analyticsTag}</head>`);
+    doc = doc.replace(/\s*<link rel="(?:icon|apple-touch-icon)"[^>]*>/g, '');
+    doc = doc.replace('</head>', `${ICON_LINKS}<style data-site-shell>${shellCss}</style>${extra}${analyticsTag}</head>`);
     // Skip link first, so it is the first tab stop; its target is each page's
     // own <main class="wrap" id="main">.
     doc = doc.replace(/<body([^>]*)>/, `<body$1>${skipLink('en')}<div class="site-shell">${nav}</div>`);
@@ -1268,7 +1283,7 @@ async function writeSeoFiles(locales, specs, projects = null) {
   await writeFile(path.join(DIST, '404.html'),
     `<!doctype html><html lang="en"><head><meta charset="utf-8">\n` +
     `<meta name="viewport" content="width=device-width, initial-scale=1">\n` +
-    `<title>404 — Ahmed Farid</title><meta name="robots" content="noindex">\n` +
+    `<title>404 — Ahmed Farid</title><meta name="robots" content="noindex">\n${ICON_LINKS}\n` +
     `<style>:root{color-scheme:dark}*{margin:0;box-sizing:border-box}` +
     `body{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;` +
     `gap:18px;text-align:center;padding:24px;background:#0B0D10;color:#F4F1EA;` +
@@ -1294,6 +1309,20 @@ async function writeSeoFiles(locales, specs, projects = null) {
 // Generate a real 1200×630 Open Graph card (branded, on-theme) so LinkedIn /
 // Twitter / Slack previews show a proper landscape image instead of the square
 // avatar. Rendered with the same headless browser.
+// The AF monogram as files every page links to: /favicon.svg as drawn, and the
+// iPhone home-screen icon rendered to a 180px PNG (iOS takes no SVG there).
+async function generateIcons(browser) {
+  await writeFile(path.join(DIST, 'favicon.svg'), faviconSvg(), 'utf8');
+  const page = await browser.newPage();
+  try {
+    await page.setViewport({ width: 180, height: 180, deviceScaleFactor: 1 });
+    await page.setContent(`<!doctype html><html><head><style>*{margin:0}html,body{width:180px;height:180px}svg{display:block;width:180px;height:180px}</style></head><body>${appleIconSvg()}</body></html>`);
+    await page.screenshot({ path: path.join(DIST, 'apple-touch-icon.png'), clip: { x: 0, y: 0, width: 180, height: 180 } });
+  } finally {
+    await page.close();
+  }
+}
+
 async function generateOgImage(browser) {
   const card = `<!doctype html><html><head><meta charset="utf-8"><style>
     *{margin:0;box-sizing:border-box}html,body{width:1200px;height:630px}
@@ -2625,6 +2654,7 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
       !/og:image|twitter:image|og:url|og:site_name|og:locale/i.test(m) &&
       !/name=["']?description["'\s>]|og:title|og:description|twitter:title|twitter:description/i.test(m) &&
       !/rel=["']?canonical/i.test(m) &&
+      !/rel=["']?(icon|apple-touch-icon)["'\s>]/i.test(m) &&
       !/name=["']?robots/i.test(m)
   );
   // Facebook-style locale codes per language, plus alternates for the others.
@@ -2894,6 +2924,7 @@ ${adPixel(lang)}
 ${analyticsTag}
 <title>${esc(seo.title)}</title>
 ${headMeta}
+${ICON_LINKS}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://assets.calendly.com/assets/external/widget.css">
@@ -2972,6 +3003,10 @@ ${jsonLd}
 .nav-links a[aria-current="page"]{color:var(--ink)}
 .nav-links a[aria-current="page"] span.idx{color:var(--accent)}
 .nav-links a[aria-current="page"]::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:1px;background:var(--accent);box-shadow:0 0 8px var(--accent-glow)}
+/* Drawn AF badge: the SVG fills the 26px badge; its letters already carry
+   their own inset, so the badge's text padding goes. */
+.brand-mark--drawn{padding:0}
+.brand-mark--drawn svg{width:100%;height:100%;display:block}
 /* Service-card tags: the export styles .chip only inside project and build
    cards, so these rendered as plain run-together text. */
 .service-tags .chip{font-family:var(--mono);font-size:10.5px;padding:4px 9px;border:1px solid var(--line-strong);border-radius:99px;color:var(--ink-mute)}
@@ -2982,7 +3017,7 @@ ${switcherCss}
 <body class="${result.bodyClass}"${bodyDataAttrs ? ' ' + bodyDataAttrs : ''}>
 ${skipLink(lang)}
 ${switcher}
-<div id="root">${tagClicks(result.body)}</div>
+<div id="root">${tagClicks(drawBrandMark(result.body, lang, spec.key))}</div>
 <script src="https://assets.calendly.com/assets/external/widget.js" async></script>
 ${enhanceJS ? `<script>${enhanceForVariant(enhanceJS, spec)}</script>` : ''}
 <script>${interactivity}</script>
@@ -3096,6 +3131,8 @@ async function build() {
   // Every page's og:image and JSON-LD image point at /og.png, so a missing
   // card is a broken page set: refuse rather than ship without it.
   try { await generateOgImage(browser); } catch (e) { e.fatal = true; e.message = `og.png could not be generated: ${e.message}`; throw e; }
+  // Same reasoning as og.png: every page links to these, so a missing one is a broken page set.
+  try { await generateIcons(browser); } catch (e) { e.fatal = true; e.message = `site icons could not be generated: ${e.message}`; throw e; }
 
   // ── Per-locale pages (shared assets folder, deduped via assetSeen) ────────
   // One render per locale; every page in PAGE_SPECS is a cut of it.
