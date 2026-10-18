@@ -742,7 +742,7 @@ async function assertPageInventory(locales, coverage) {
 // and — when it names a fragment — an id in that file. The dead-anchor gate
 // covers `#id` on the same page; this covers `/path/` and `/path/#id`, which is
 // what pages cut from one render link each other with.
-async function assertInternalLinks(files) {
+async function assertInternalLinks(files, locales = []) {
   const idsCache = new Map();
   const idsOf = async (file) => {
     if (!idsCache.has(file)) {
@@ -778,6 +778,15 @@ async function assertInternalLinks(files) {
         dead.push(`${rel} → ${href} (no #${fragment} in ${path.relative(DIST, target)})`);
     }
   }
+  // The home page's forwarding of old deep links (REDIRECTS): each id must be
+  // on the page it forwards to, in every locale.
+  for (const l of locales) {
+    for (const [id, suffix] of Object.entries(REDIRECTS)) {
+      const target = path.join(DIST, l.urlPath, suffix, 'index.html');
+      const ids = existsSync(target) ? await idsOf(target) : new Set();
+      if (!ids.has(id)) dead.push(`redirect #${id} → ${l.urlPath}${suffix} (no #${id} there)`);
+    }
+  }
   if (dead.length) {
     const err = new Error('[build] internal links point at nothing:\n' +
       [...new Set(dead)].map((d) => `   ${d}`).join('\n') +
@@ -785,7 +794,8 @@ async function assertInternalLinks(files) {
     err.fatal = true;
     throw err;
   }
-  console.log(`  ✓ internal links: ${checked} on-site href(s) all resolve — to a file, and to an id where they name one`);
+  console.log(`  ✓ internal links: ${checked} on-site href(s) all resolve — to a file, and to an id where they name one; ` +
+    `${Object.keys(REDIRECTS).length} legacy #id redirect(s) land on a page that has the id`);
 }
 
 // What search engines and share cards read: the title and description of every
@@ -1302,7 +1312,9 @@ const PAGE_LAYOUT = {
 //   promoteH1    promote the first section title to <h1> (no hero on the page)
 //   ld           extra JSON-LD for the page: 'profile' (ProfilePage),
 //                'collection' (CollectionPage), 'breadcrumb' (BreadcrumbList —
-//                needs a NAV label); FAQPage follows from the FAQ items kept
+//                needs a NAV label), 'faq' (FAQPage from the FAQ items kept;
+//                home shows the buyer questions without it, so the same
+//                questions are not marked up twice on the site)
 //   priority     sitemap priority (primaryPriority: the default locale's)
 //   verify       floor for the built-output check: innerText length and
 //                section[id] count, each floor(0.7 × the first green English
@@ -1312,22 +1324,23 @@ const SECTION_KEYS = [
   'domains', 'brands', 'regions', 'depth', 'arch', 'github', 'experience', 'process', 'why',
   'testimonials', 'writing', 'pricing', 'services', 'faq', 'connect', 'contact',
 ];
-const COMMERCIAL_SECTIONS = ['pricing', 'services'];
 const PAGE_SPECS = [
   {
+    // The client-facing front door: what I do, proof in numbers, how I work, the
+    // ways to hire me, buyer FAQ, contact. Everything longer lives on its own page.
     key: 'home', suffix: '',
-    sections: SECTION_KEYS.filter((k) => !COMMERCIAL_SECTIONS.includes(k)),
-    keepUnknown: true, faq: 'other', anchors: null, renumber: false,
-    sortWriting: true, foldCases: true, contactFirst: 'hire', promoteH1: false,
+    sections: ['top', 'trust', 'position', 'bynumbers', 'process', 'services', 'testimonials', 'faq', 'contact'],
+    keepUnknown: false, faq: 'buyer', anchors: 'resolve', renumber: true,
+    sortWriting: false, foldCases: false, contactFirst: 'hire', promoteH1: false,
     ld: [], priority: '0.9', primaryPriority: '1.0',
-    verify: { minText: 21730, minSections: 14 },   // measured 31044 chars, 20 sections
+    verify: { minText: 4526, minSections: 5 },   // measured 6466 chars, 8 sections
   },
   {
     key: 'services', suffix: 'services/',
     sections: ['pricing', 'services', 'faq', 'contact'],
     keepUnknown: false, faq: 'buyer', anchors: 'resolve', renumber: true,
     sortWriting: false, foldCases: false, contactFirst: 'project', promoteH1: true,
-    ld: [], priority: '0.7',
+    ld: ['faq', 'breadcrumb'], priority: '0.8',
     verify: { minText: 3865, minSections: 2 },     // measured 5522 chars, 4 sections
   },
   {
@@ -1344,7 +1357,7 @@ const PAGE_SPECS = [
     sections: ['about', 'depth', 'arch', 'github', 'experience', 'why', 'writing', 'faq', 'connect', 'contact'],
     keepUnknown: true, faq: 'other', anchors: 'resolve', renumber: true,
     sortWriting: true, foldCases: false, contactFirst: 'hire', promoteH1: true,
-    ld: ['profile', 'breadcrumb'], priority: '0.6',
+    ld: ['profile', 'faq', 'breadcrumb'], priority: '0.6',
     verify: { minText: 7350, minSections: 7 },       // measured 10501 chars, 10 sections
   },
 ];
@@ -1353,13 +1366,32 @@ const PAGE_SPECS = [
 // carry it. `contact` is on every page and `position` has no id, so neither
 // is listed. Each value is a PAGE_SPECS key.
 const LINK_OWNER = {
-  top: 'home', trust: 'home', bynumbers: 'home', process: 'home', testimonials: 'home',
+  top: 'home', 'what-i-do': 'home', trust: 'home', bynumbers: 'home', process: 'home', testimonials: 'home',
   about: 'about', depth: 'about', arch: 'about', github: 'about', experience: 'about',
   why: 'about', writing: 'about', connect: 'about',
   work: 'work', products: 'work', builds: 'work', build: 'work', domains: 'work',
   brands: 'work', regions: 'work',
   pricing: 'services', services: 'services', faq: 'services',
 };
+
+// The single-page site's deep links (/#brands, /#experience …) are still out
+// there: LinkedIn posts, résumés, bookmarks. Home no longer carries those
+// sections, so it forwards each such hash to the page that owns the section.
+// Derived, not typed: an id is forwarded exactly when some other page owns it
+// and home does not carry it, so moving a section needs no second edit here.
+// Sections the export ships without an id (see sectionKeyOf): nothing can link
+// to them, so there is nothing to forward.
+const UNNAMED_SECTIONS = ['trust', 'position', 'domains'];
+const NAV_LABELS = ['work', 'services', 'about', 'contact', 'caseStudy', 'allWork', 'moreWork', 'pricing'];
+const REDIRECTS = (() => {
+  const home = PAGE_SPECS.find((spec) => spec.key === 'home');
+  const out = {};
+  for (const [id, owner] of Object.entries(LINK_OWNER)) {
+    if (owner === 'home' || home.sections.includes(id) || UNNAMED_SECTIONS.includes(id)) continue;
+    out[id] = PAGE_SPECS.find((spec) => spec.key === owner).suffix;
+  }
+  return out;
+})();
 
 // Checked before anything renders: a table that drives every page would
 // otherwise turn a typo (a section key, a missing SEO row for one locale) into a
@@ -1376,12 +1408,17 @@ function assertPageSpecs(locales) {
     if (!/^([a-z0-9]+(-[a-z0-9]+)*\/)*$/.test(spec.suffix))
       bad.push(`${spec.key}: suffix "${spec.suffix}" must be empty or lowercase path segments each ending in "/"`);
     for (const k of spec.sections) if (!SECTION_KEYS.includes(k)) bad.push(`${spec.key}: unknown section key "${k}"`);
+    if (spec.ld.includes('faq') && !spec.faq) bad.push(`${spec.key}: ld "faq" but the page keeps no FAQ items`);
     if (!spec.verify || !(spec.verify.minText > 0) || !(spec.verify.minSections > 0)) bad.push(`${spec.key}: no verify floor`);
     for (const l of locales) {
       const seo = (SEO[spec.key] || {})[l.lang];
       if (!seo || !seo.title || !seo.description) bad.push(`SEO.${spec.key}.${l.lang} is missing`);
       if (spec.ld.includes('breadcrumb') && !(NAV[l.lang] || {})[spec.key]) bad.push(`NAV.${l.lang}.${spec.key} is missing (breadcrumb name)`);
     }
+  }
+  // Every page's navigation, breadcrumbs and cards read these labels.
+  for (const l of locales) {
+    for (const k of NAV_LABELS) if (!(NAV[l.lang] || {})[k]) bad.push(`NAV.${l.lang}.${k} is missing`);
   }
   for (const [id, owner] of Object.entries(LINK_OWNER)) if (!keys.has(owner)) bad.push(`LINK_OWNER ${id} → unknown page "${owner}"`);
   if (!PAGE_SPECS.some((spec) => spec.key === 'home' && spec.suffix === '')) bad.push('no home page at the locale root');
@@ -1794,7 +1831,7 @@ async function renderLocale({ browser, loc, ghData, enhanceJS, locales }) {
 async function snapshotVariant({ page, spec, lang, locales }) {
   const prefix = lang === 'en' ? '/' : `/${lang}/`;
   console.log(`→ [${lang}] Cutting ${spec.key} page…`);
-  const snap = await page.evaluate((pageSpec, localeCodes, faqBuyerKeys, localePrefix, layout, knownKeys, links) => {
+  const snap = await page.evaluate((pageSpec, localeCodes, faqBuyerKeys, localePrefix, layout, knownKeys, links, labels) => {
     document.getElementById('root').replaceWith(window.__afPristine.cloneNode(true));
     const warnings = [];
 
@@ -1812,6 +1849,8 @@ async function snapshotVariant({ page, spec, lang, locales }) {
       const known = knownKeys.includes(key);
       if (pageSpec.sections.includes(key) || (pageSpec.keepUnknown && !known)) {
         keptKeys.push(key);
+        // "What I do" ships without an id; the hero's scroll cue points at it.
+        if (key === 'position' && !sec.id) sec.id = 'what-i-do';
         if (!known) warnings.push(`section "${key || '(unnamed)'}" is not in the page map — kept on ${pageSpec.key}`);
       } else {
         sec.remove();
@@ -1826,6 +1865,54 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         if (pageSpec.faq === 'buyer' ? !isBuyer : isBuyer) item.remove();
       });
     }
+    // The navigation is the same four links on every page: three pages and the
+    // contact block. The export's six in-page anchors (Work, Brands, Engineering,
+    // Experience, Process, FAQ) described a single long page. Numbers are taken
+    // from the links being replaced, so Arabic keeps its Arabic-Indic digits.
+    {
+      const here = pageSpec.key;
+      const items = [
+        { key: 'work', href: `${localePrefix}work/`, label: labels.work },
+        { key: 'services', href: `${localePrefix}services/`, label: labels.services },
+        { key: 'about', href: `${localePrefix}about/`, label: labels.about },
+        { key: 'contact', href: '#contact', label: labels.contact },
+      ];
+      const fill = (container, existing, anchorBefore) => {
+        const nums = existing.slice(0, items.length).map((a) => (a.querySelector('.idx') || {}).textContent);
+        existing.forEach((a) => a.remove());
+        items.forEach((it, i) => {
+          const a = document.createElement('a');
+          a.setAttribute('href', it.href);
+          if (it.key === here) a.setAttribute('aria-current', 'page');
+          const idx = document.createElement('span');
+          idx.className = 'idx';
+          idx.textContent = nums[i] || String(i + 1).padStart(2, '0');
+          a.append(idx, document.createTextNode(it.label));
+          container.insertBefore(a, anchorBefore);
+        });
+      };
+      const links = document.querySelector('#root > nav .nav-links');
+      const drawer = document.querySelector('#root > nav .nav-mobile');
+      if (links) fill(links, [...links.querySelectorAll(':scope > a')], null);
+      else warnings.push('nav: .nav-links not found — navigation left as exported');
+      if (drawer) {
+        const own = [...drawer.querySelectorAll(':scope > a')].filter((a) => !a.classList.contains('nav-mobile-avail') && !a.classList.contains('nav-mobile-cta'));
+        fill(drawer, own, drawer.querySelector(':scope > .nav-mobile-cta'));
+      } else warnings.push('nav: .nav-mobile not found — drawer left as exported');
+    }
+    // The hero's scroll cue pointed at the Profile section, which now lives on
+    // /about/. "What I do" is what comes next on this page.
+    const scrollCue = document.querySelector('.hero-scroll');
+    if (scrollCue && document.getElementById('what-i-do')) scrollCue.setAttribute('href', '#what-i-do');
+    // "Ways to work together" opens with "Those are the packaged offers above."
+    // On a page without the price list there is no "above"; drop that sentence.
+    if (!pageSpec.sections.includes('pricing') && pageSpec.sections.includes('services')) {
+      const sub = document.querySelector('#services .section-sub');
+      const text = sub ? sub.textContent : '';
+      const cut = text.indexOf('. ');
+      if (sub && cut > 0 && !sub.children.length) sub.textContent = text.slice(cut + 2);
+      else if (sub) warnings.push('services: could not drop the "packaged offers above" sentence');
+    }
     // Nav and footer links point at sections that may not be on this page.
     // One that is here stays an in-page link; one that lives on another page
     // becomes a link to that page, so nothing resolves to a dead anchor. An id
@@ -1833,8 +1920,9 @@ async function snapshotVariant({ page, spec, lang, locales }) {
     if (pageSpec.anchors === 'resolve') {
       document.querySelectorAll('a[href^="#"]').forEach((a) => {
         const id = a.getAttribute('href').slice(1);
+        if (id && document.getElementById(id)) return;
         if (id === 'top') { a.setAttribute('href', localePrefix); return; }
-        if (!id || document.getElementById(id)) return;
+        if (!id) return;
         const ownerPath = links.owner[id] ? links.paths[links.owner[id]] : undefined;
         if (ownerPath != null) a.setAttribute('href', `${localePrefix}${ownerPath}#${id}`);
       });
@@ -2006,7 +2094,8 @@ async function snapshotVariant({ page, spec, lang, locales }) {
       body: document.getElementById('root').innerHTML,
     };
   }, spec, locales.map((l) => l.lang), FAQ_BUYER_KEYS[lang] || FAQ_BUYER_KEYS.en, prefix, PAGE_LAYOUT, SECTION_KEYS,
-    { owner: LINK_OWNER, paths: Object.fromEntries(PAGE_SPECS.map((s) => [s.key, s.suffix])) });
+    { owner: LINK_OWNER, paths: Object.fromEntries(PAGE_SPECS.map((s) => [s.key, s.suffix])) },
+    NAV[lang]);
 
   // Layout passes are best-effort: a re-export that renames a class leaves the
   // page as the export drew it, which is valid, so warn rather than fail.
@@ -2209,7 +2298,7 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
     about: { '@id': `${SITE_URL}/#person` },
   };
   const faqLd =
-    result.faq && result.faq.length
+    spec.ld.includes('faq') && result.faq && result.faq.length
       ? {
           '@context': 'https://schema.org',
           '@type': 'FAQPage',
@@ -2382,11 +2471,20 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
   });
 })();`.trim();
 
+  // Home only: forward the old single-page deep links (see REDIRECTS). The map
+  // is a build constant and is looked up with hasOwnProperty, so a hash such as
+  // "#__proto__" or "#constructor" cannot reach anything.
+  const redirectScript = spec.key === 'home' && Object.keys(REDIRECTS).length
+    ? `<script>(function(){var m=${JSON.stringify(REDIRECTS)},h=location.hash.slice(1);` +
+      `if(h&&Object.prototype.hasOwnProperty.call(m,h))location.replace(${JSON.stringify(urlPath)}+m[h]+'#'+h)})()</script>`
+    : '';
+
   const html = `<!doctype html>
 <html ${htmlAttrs}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+${redirectScript}
 ${PINTEREST_VERIFY_TAG}
 ${adPixel(lang)}
 <title>${esc(seo.title)}</title>
@@ -2452,6 +2550,11 @@ ${jsonLd}
 .case-more-inner{display:grid;gap:32px;padding-top:24px}
 :root[data-corners=sharp] .case-more-summary{border-radius:2px}
 @media print{.case-more-summary{display:none}}
+/* The page the visitor is on, in the four-link navigation. Same mark the
+   export's scroll-spy uses for the section in view. */
+.nav-links a[aria-current="page"]{color:var(--ink)}
+.nav-links a[aria-current="page"] span.idx{color:var(--accent)}
+.nav-links a[aria-current="page"]::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:1px;background:var(--accent);box-shadow:0 0 8px var(--accent-glow)}
 ${A11Y_CSS}
 ${switcherCss}
 </style>
@@ -2639,7 +2742,7 @@ async function build() {
   await assertA11yBaseline(pages);
   await assertNoForbiddenStrings();
   await assertNoDeadAnchors();
-  await assertInternalLinks(pages);
+  await assertInternalLinks(pages, locales);
   await assertHeadMeta(locales);
   await assertLocaleRouting(locales);
   await assertPublicPdfs();

@@ -148,15 +148,20 @@ export const SEO = {
   },
 };
 
-// Page names as the navigation and breadcrumbs say them, per locale. `work` is
-// the export's own #work nav label in each locale (read from the built pages,
-// not translated here); `about` is the label for the /about/ page.
+// Page names and link labels the build writes into the navigation, breadcrumbs
+// and cards, per locale. `work` is the export's own #work nav label in each
+// locale (read from the built pages, not translated here). Brand and case names
+// are never translated and do not appear here. Arrows are written by the build
+// as "→" in every locale.
+//   work/services/about/contact  the four navigation links
+//   pricing                      the home hero's button to /services/
+//   caseStudy / allWork / moreWork  project cards and the links around them
 export const NAV = {
-  en: { work: 'Work', about: 'About' },
-  ar: { work: 'أعمال', about: 'نبذة عني' },
-  de: { work: 'Arbeiten', about: 'Über mich' },
-  es: { work: 'Proyectos', about: 'Sobre mí' },
-  fr: { work: 'Projets', about: 'À propos' },
+  en: { work: 'Work', services: 'Services', about: 'About', contact: 'Contact', caseStudy: 'Case study', allWork: 'All work', moreWork: 'More work', pricing: 'Services & pricing' },
+  ar: { work: 'أعمال', services: 'الخدمات', about: 'نبذة عني', contact: 'تواصل', caseStudy: 'دراسة الحالة', allWork: 'كل الأعمال', moreWork: 'أعمال أخرى', pricing: 'الخدمات والأسعار' },
+  de: { work: 'Arbeiten', services: 'Leistungen', about: 'Über mich', contact: 'Kontakt', caseStudy: 'Fallstudie', allWork: 'Alle Arbeiten', moreWork: 'Weitere Arbeiten', pricing: 'Leistungen & Preise' },
+  es: { work: 'Proyectos', services: 'Servicios', about: 'Sobre mí', contact: 'Contacto', caseStudy: 'Caso de estudio', allWork: 'Todo el trabajo', moreWork: 'Más trabajo', pricing: 'Servicios y precios' },
+  fr: { work: 'Projets', services: 'Services', about: 'À propos', contact: 'Contact', caseStudy: 'Étude de cas', allWork: 'Toutes les réalisations', moreWork: 'Autres réalisations', pricing: 'Services et tarifs' },
 };
 
 // Strings that mean a fact drifted back to a retired value. Merged into the
