@@ -17,6 +17,13 @@ export const SITE_URL = 'https://iamahmedfarid.com';
 // Rotating the key means renaming that file in the same commit.
 export const INDEXNOW_KEY = '9c4d4d137838a4b86f90f8070f173b53';
 
+// Visitor analytics (Umami Cloud — free, cookieless, no consent banner needed).
+// Empty = no analytics script on any page. To turn it on: create a free account
+// at cloud.umami.is, add the website iamahmedfarid.com, and paste its Website ID
+// (a UUID) here. Clicks on book-a-call, WhatsApp, email, CV, LinkedIn, services
+// and project cards are already tagged by the build and show up as events.
+export const ANALYTICS = { umamiWebsiteId: '' };
+
 // Owner-confirmed (Oct 2026): living in Dubai now.
 export const LOCATION = {
   city: 'Dubai',

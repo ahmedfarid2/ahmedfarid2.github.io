@@ -24,7 +24,7 @@ import { mkdir, writeFile, copyFile, rm, readdir, readFile } from 'node:fs/promi
 import { existsSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { SITE_URL, LOCATION, LOCATION_LABEL, CONTACT, YEARS_PROSE, SEO, NAV, FLAGSHIP, DRIFT_GUARDS } from './site-facts.mjs';
+import { SITE_URL, LOCATION, LOCATION_LABEL, CONTACT, YEARS_PROSE, SEO, NAV, FLAGSHIP, DRIFT_GUARDS, ANALYTICS } from './site-facts.mjs';
 import { inspectPdf, pdfProblems, textFingerprint, PDF_REQUIRED_URIS } from './pdf-check.mjs';
 import { renderChecklist, CHECKLIST_PDF, CHECKLIST_REQUIRED_URIS, CHECKLIST_REQUIRED_TEXT } from './build-checklist.mjs';
 
@@ -106,6 +106,46 @@ border:1px solid rgba(255,255,255,.18);background:transparent;color:#e7e2d8}
   else document.addEventListener('DOMContentLoaded',function(){setTimeout(ask,900)});
 })();</script>`;
 };
+
+// Visitor analytics — Umami Cloud, cookieless, so it needs no consent banner
+// (unlike the ad pixel above). Nothing loads until ANALYTICS.umamiWebsiteId is
+// set in site-facts.mjs. A malformed id stops the build instead of shipping a
+// script that silently records nothing.
+const UMAMI_ID = ANALYTICS.umamiWebsiteId || '';
+if (UMAMI_ID && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(UMAMI_ID)) {
+  throw new Error(`[build] ANALYTICS.umamiWebsiteId "${UMAMI_ID}" is not an Umami website id (a UUID)`);
+}
+const analyticsTag = UMAMI_ID
+  ? `<script defer src="https://cloud.umami.is/script.js" data-website-id="${UMAMI_ID}"></script>`
+  : '';
+
+// Names the clicks that matter, so analytics can count them: every way to
+// book, message or hire, and every project card. Umami reads data-umami-event
+// on click; without the script the attributes are inert. Matched on the link
+// target, so it survives copy changes and works in every locale.
+const CLICK_EVENTS = [
+  [/calendly\.com\//, 'book-call'],
+  [/^https:\/\/wa\.me\//, 'whatsapp'],
+  [/^mailto:/, 'email'],
+  [/Ahmed-Farid-CV\.pdf$/, 'cv'],
+  [/linkedin\.com\/in\//, 'linkedin'],
+  [/\/services\/(#[\w-]*)?$/, 'services'],
+  [/checklist/, 'checklist'],
+];
+const PROJECT_HREF = /^(?:\/[a-z]{2})?\/work\/([a-z0-9]+(?:-[a-z0-9]+)*)\/$/;
+// Language-switcher links (they carry hreflang) are navigation, not intent, and
+// are skipped. Attributes go at the end of the tag so existing attribute order —
+// which the routing gate reads — is left exactly as it was.
+function tagClicks(html) {
+  return html.replace(/<a\b([^>]*?)\shref="([^"]+)"([^>]*)>/g, (tag, _pre, href) => {
+    if (/data-umami-event|\shreflang=/.test(tag)) return tag;
+    const project = href.match(PROJECT_HREF);
+    const attrs = project
+      ? ` data-umami-event="project" data-umami-event-project="${project[1]}"`
+      : (() => { const hit = CLICK_EVENTS.find(([re]) => re.test(href)); return hit ? ` data-umami-event="${hit[1]}"` : ''; })();
+    return attrs ? tag.slice(0, -1) + attrs + '>' : tag;
+  });
+}
 
 // ── Accessibility & touch baseline ──────────────────────────────────────────
 // Shared by every emitted page: the rendered locales get it in their build-fix
@@ -270,11 +310,12 @@ async function applyShellToStandalonePages() {
     // Their own one-line footer goes: the real one says the same thing and more,
     // and two copyright lines stacked is how the first pass shipped.
     doc = doc.replace(/\s*<footer>[\s\S]*?<\/footer>/, '');
-    doc = doc.replace('</head>', `<style data-site-shell>${shellCss}</style>${extra}</head>`);
+    doc = doc.replace('</head>', `<style data-site-shell>${shellCss}</style>${extra}${analyticsTag}</head>`);
     // Skip link first, so it is the first tab stop; its target is each page's
     // own <main class="wrap" id="main">.
     doc = doc.replace(/<body([^>]*)>/, `<body$1>${skipLink('en')}<div class="site-shell">${nav}</div>`);
     doc = doc.replace('</body>', `<div class="site-shell">${footer}</div></body>`);
+    doc = tagClicks(doc);
     await writeFile(file, doc, 'utf8');
     console.log(`  shell applied: ${name} (+${Math.round(shellCss.length / 1024)}KB css)`);
   }
@@ -2850,6 +2891,7 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
 ${redirectScript}
 ${PINTEREST_VERIFY_TAG}
 ${adPixel(lang)}
+${analyticsTag}
 <title>${esc(seo.title)}</title>
 ${headMeta}
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2938,7 +2980,7 @@ ${switcherCss}
 <body class="${result.bodyClass}"${bodyDataAttrs ? ' ' + bodyDataAttrs : ''}>
 ${skipLink(lang)}
 ${switcher}
-<div id="root">${result.body}</div>
+<div id="root">${tagClicks(result.body)}</div>
 <script src="https://assets.calendly.com/assets/external/widget.js" async></script>
 ${enhanceJS ? `<script>${enhanceForVariant(enhanceJS, spec)}</script>` : ''}
 <script>${interactivity}</script>
