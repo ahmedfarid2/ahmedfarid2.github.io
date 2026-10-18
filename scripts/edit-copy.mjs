@@ -1811,12 +1811,15 @@ const AVAILABILITY_EDITS = factEdits('hero/nav: open to roles', {
   // dot already says "available", so the label drops "Open to": every locale
   // is now shorter than the roles-only wording, which already wrapped the
   // desktop nav at 1025–1280px. Measure the nav before lengthening these.
-  // Third element = the roles-only wording this edit used to write.
-  en: ['Available now · 2 slots', 'Senior roles and consulting · Dubai', 'Open to senior engineering roles · Dubai'],
-  ar: ['متاح الآن · مقعدان', 'أدوار أولى واستشارات · دبي', 'مفتوح لأدوار هندسية أولى · دبي'],
-  de: ['Jetzt verfügbar · 2 Slots', 'Senior-Rollen und Beratung · Dubai', 'Offen für Senior-Engineering-Rollen · Dubai'],
-  es: ['Disponible ahora · 2 plazas', 'Roles senior y consultoría · Dubái', 'Abierto a roles senior de ingeniería · Dubái'],
-  fr: ['Disponible maintenant · 2 places', 'Postes senior et conseil · Dubaï', 'Ouvert aux postes senior en ingénierie · Dubaï'],
+  // Third element onward = earlier wording this edit used to write.
+  //
+  // Oct 2026 (client-first home): projects lead, consulting second; the senior
+  // role pitch lives on /about/ and in the contact block's hiring path.
+  en: ['Available now · 2 slots', 'Projects & consulting · Dubai', 'Senior roles and consulting · Dubai', 'Open to senior engineering roles · Dubai'],
+  ar: ['متاح الآن · مقعدان', 'مشاريع واستشارات · دبي', 'أدوار أولى واستشارات · دبي', 'مفتوح لأدوار هندسية أولى · دبي'],
+  de: ['Jetzt verfügbar · 2 Slots', 'Projekte & Beratung · Dubai', 'Senior-Rollen und Beratung · Dubai', 'Offen für Senior-Engineering-Rollen · Dubai'],
+  es: ['Disponible ahora · 2 plazas', 'Proyectos y consultoría · Dubái', 'Roles senior y consultoría · Dubái', 'Abierto a roles senior de ingeniería · Dubái'],
+  fr: ['Disponible maintenant · 2 places', 'Projets et conseil · Dubaï', 'Postes senior et conseil · Dubaï', 'Ouvert aux postes senior en ingénierie · Dubaï'],
 });
 
 // Nav and hero only — matched with the arrow so the pricing-section CTA, which
@@ -2159,10 +2162,12 @@ const RENUMBER_EDITS = [
 // should point you somewhere else" is a vendor qualifying a lead. It is the
 // final impression on a page that now opens by asking for a role.
 const CLOSING_EDITS = factEdits('closing CTA speaks to an employer', {
-  // Oct 2026: opens with both audiences (hiring, or a system to build); the
-  // contact block underneath splits into the two matching paths. Third
-  // element = the employer-only wording this edit used to write.
+  // Oct 2026: opens with both audiences, project first (a system to build, or
+  // hiring); the contact block underneath splits into the two matching paths,
+  // in the same order. Third element onward = earlier wording of this edit.
+  // The hiring-first wording is a prior so a committed export migrates.
   en: ["One scoping call. Thirty minutes. We'll know inside that whether I'm the right hands for the job — or whether I should point you somewhere else.",
+       "Need a system built, or hiring a senior engineer? Thirty minutes is usually enough to tell whether I'm the right fit. Bring the problem you have not been able to hand to anyone yet.",
        "Hiring a senior engineer, or need a system built? Thirty minutes is usually enough to tell whether I'm the right fit. Bring the problem you have not been able to hand to anyone yet.",
        "Thirty minutes is usually enough to tell whether I'm the engineer your team is missing. Bring the problem you have not been able to hand to anyone yet."],
   // Translated to carry the same move — from "am I the right vendor for this
@@ -2170,15 +2175,19 @@ const CLOSING_EDITS = factEdits('closing CTA speaks to an employer', {
   // word. "the problem you haven't been able to hand to anyone yet" is the
   // line doing the work, so each language keeps that idea intact.
   ar: ['مكالمة تحديد نطاق. ثلاثون دقيقة. خلالها سنعرف إن كنت الأيدي المناسبة للعمل — أو إن كان عليّ أن أحيلك إلى جهة أخرى.',
+       'تحتاج إلى بناء نظام، أو تبحث عن مهندس أول؟ ثلاثون دقيقة تكفي عادةً لنعرف إن كنتُ الشخص المناسب. احضر ومعك المشكلة التي لم تجد من تسلّمها له حتى الآن.',
        'تبحث عن مهندس أول، أو تحتاج إلى بناء نظام؟ ثلاثون دقيقة تكفي عادةً لنعرف إن كنتُ الشخص المناسب. احضر ومعك المشكلة التي لم تجد من تسلّمها له حتى الآن.',
        'ثلاثون دقيقة تكفي عادةً لتعرف إن كنتُ المهندس الذي ينقص فريقك. احضر ومعك المشكلة التي لم تجد من تسلّمها له حتى الآن.'],
   de: ['Ein Scoping-Call. Dreißig Minuten. Darin wissen wir, ob ich die richtigen Hände für den Job bin — oder ob ich Sie woandershin verweisen sollte.',
+       'Sie brauchen ein System oder suchen einen Senior-Engineer? Dreißig Minuten genügen meist, um zu sehen, ob ich der Richtige bin. Bringen Sie das Problem mit, das Sie bisher niemandem übergeben konnten.',
        'Sie suchen einen Senior-Engineer oder brauchen ein System? Dreißig Minuten genügen meist, um zu sehen, ob ich der Richtige bin. Bringen Sie das Problem mit, das Sie bisher niemandem übergeben konnten.',
        'Dreißig Minuten genügen meist, um zu sehen, ob ich der Entwickler bin, der Ihrem Team fehlt. Bringen Sie das Problem mit, das Sie bisher niemandem übergeben konnten.'],
   es: ['Una llamada de alcance. Treinta minutos. Dentro de ese tiempo sabremos si soy las manos adecuadas para el trabajo — o si debería remitirte a otro sitio.',
+       '¿Necesitas construir un sistema o buscas un ingeniero senior? Treinta minutos suelen bastar para ver si encajo. Trae el problema que todavía no has podido entregarle a nadie.',
        '¿Buscas un ingeniero senior o necesitas construir un sistema? Treinta minutos suelen bastar para ver si encajo. Trae el problema que todavía no has podido entregarle a nadie.',
        'Treinta minutos suelen bastar para ver si soy el ingeniero que le falta a tu equipo. Trae el problema que todavía no has podido entregarle a nadie.'],
   fr: ["Un appel de cadrage. Trente minutes. On saura à l'intérieur si je suis les bonnes mains pour la mission — ou si je dois vous orienter ailleurs.",
+       "Vous avez un système à construire ou recrutez un ingénieur senior ? Trente minutes suffisent en général à savoir si je suis la bonne personne. Venez avec le problème que vous n'avez encore pu confier à personne.",
        "Vous recrutez un ingénieur senior ou avez un système à construire ? Trente minutes suffisent en général à savoir si je suis la bonne personne. Venez avec le problème que vous n'avez encore pu confier à personne.",
        "Trente minutes suffisent en général à savoir si je suis l'ingénieur qui manque à votre équipe. Venez avec le problème que vous n'avez encore pu confier à personne."],
 });
@@ -2657,20 +2666,29 @@ const FREELANCE_LOC_EDITS = factEdits('experience: current freelance role in Dub
   fr: ['alnaimi-studios/" },\n      ], logo: null, loc: "Le Caire · Distanciel" }', 'alnaimi-studios/" },\n      ], logo: null, loc: "Dubaï, EAU · Distanciel" }'],
 });
 
-// ── Footer tagline: spearhead + both audiences ─────────────────────────────
+// ── Footer tagline: spearhead + what a client can buy ──────────────────────
 // "multi-tenant platforms, B2B/B2C systems, and the mobile apps" read as a
-// generalist list. It now states the spearhead and that both senior roles and
-// selected consulting are open. Cosmetic, so not critical.
-const FOOTER_TAG_EDITS = factEdits('footer tagline: spearhead + availability', {
+// generalist list. It now states the spearhead, then closes on what a client
+// can hire (fixed-scope builds, retainers, architecture consulting): the site
+// is a client-facing one, and the hiring path lives on /about/. Only the last
+// sentence moved on from "Open to senior roles and selected consulting."; the
+// whole earlier output is the prior so a committed export migrates. Cosmetic,
+// so not critical.
+const FOOTER_TAG_EDITS = factEdits('footer tagline: spearhead + what a client can buy', {
   en: ['Senior Software Engineer building multi-tenant platforms, B2B/B2C systems, and the mobile apps that ride on top.',
+       'Senior Software Engineer — real-time, multi-tenant SaaS and end-to-end product engineering. Fixed-scope builds, retainers and architecture consulting.',
        'Senior Software Engineer — real-time, multi-tenant SaaS and end-to-end product engineering. Open to senior roles and selected consulting.'],
   ar: ['مهندس برمجيات أول يبني منصّات متعدّدة المستأجرين وأنظمة B2B/B2C وتطبيقات الجوّال التي تعمل فوقها.',
+       'مهندس برمجيات أول — منصّات SaaS فورية متعدّدة المستأجرين وهندسة المنتجات من البداية إلى النهاية. مشاريع محدّدة النطاق، وعقود دعم مستمر، واستشارات معمارية.',
        'مهندس برمجيات أول — منصّات SaaS فورية متعدّدة المستأجرين وهندسة المنتجات من البداية إلى النهاية. متاح لأدوار أولى واستشارات مختارة.'],
   de: ['Senior-Softwareentwickler, der Multi-Tenant-Plattformen, B2B/B2C-Systeme und die mobilen Apps baut, die obendrauf laufen.',
+       'Senior-Softwareentwickler — Echtzeit-Multi-Tenant-SaaS und Produktentwicklung end to end. Festpreis-Projekte, Retainer und Architekturberatung.',
        'Senior-Softwareentwickler — Echtzeit-Multi-Tenant-SaaS und Produktentwicklung end to end. Offen für Senior-Rollen und ausgewählte Beratung.'],
   es: ['Ingeniero de Software Senior que construye plataformas multi-tenant, sistemas B2B/B2C y las apps móviles que se montan encima.',
+       'Ingeniero de Software Senior — SaaS multi-tenant en tiempo real e ingeniería de producto de principio a fin. Proyectos cerrados, retainers y consultoría de arquitectura.',
        'Ingeniero de Software Senior — SaaS multi-tenant en tiempo real e ingeniería de producto de principio a fin. Abierto a roles senior y consultoría selecta.'],
   fr: ['Ingénieur logiciel senior, je construis des plateformes multi-tenant, des systèmes B2B/B2C et les applications mobiles qui les accompagnent.',
+       'Ingénieur logiciel senior — SaaS multi-tenant temps réel et ingénierie produit de bout en bout. Projets au forfait, retainers et conseil en architecture.',
        'Ingénieur logiciel senior — SaaS multi-tenant temps réel et ingénierie produit de bout en bout. Ouvert aux postes senior et à des missions de conseil choisies.'],
 }, { critical: false });
 

@@ -16,14 +16,15 @@
 //   • adds a tiny vanilla-JS layer for the nav menu, FAQ accordion, scroll
 //     reveal and the Calendly popup (no framework)
 //
-// If anything goes wrong it falls back to copying the raw export so a push never
-// produces a broken deploy.
+// The build fails closed: if it cannot produce the full page set and pass every
+// gate it exits 1 and writes nothing deployable, so the workflow skips the Pages
+// deploy and the last good deploy stays live. There is no raw-export fallback.
 
 import { mkdir, writeFile, copyFile, rm, readdir, readFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { SITE_URL, LOCATION, LOCATION_LABEL, CONTACT, YEARS_PROSE, SEO, DRIFT_GUARDS } from './site-facts.mjs';
+import { SITE_URL, LOCATION, LOCATION_LABEL, CONTACT, YEARS_PROSE, SEO, NAV, FLAGSHIP, DRIFT_GUARDS } from './site-facts.mjs';
 import { inspectPdf, pdfProblems, textFingerprint, PDF_REQUIRED_URIS } from './pdf-check.mjs';
 import { renderChecklist, CHECKLIST_PDF, CHECKLIST_REQUIRED_URIS, CHECKLIST_REQUIRED_TEXT } from './build-checklist.mjs';
 
@@ -460,8 +461,12 @@ function mustReplaceAll(source, needle, replacement, { min = 1, label } = {}) {
   return parts.join(replacement);
 }
 
-// Strings that must never reach dist/. `max` is a ceiling, not a ban, for the
-// few strings allowed a fixed number of times.
+// Strings that must never reach dist/. `max` is a ceiling across all of dist/,
+// `maxPerFile` a ceiling for any single file — not a ban — for the few strings
+// allowed a fixed number of times. A string with neither is banned outright.
+// Per-file, because a total grows with every page that carries the same block
+// (the contact section is on every page) and a total that has to be raised
+// each time a page is added stops guarding anything.
 //
 // Scanned as bytes over the emitted text files rather than through a parsed
 // DOM, so a string hiding in an href, a tel: link, a JSON blob or an inline
@@ -482,17 +487,21 @@ const FORBIDDEN = [
   // owner-approved client-path CTA is the 30-minute variant below, which does
   // not contain this string; it belongs only in the EN contact block.
   { s: 'Book a scoping call', max: 0 },
-  // EN home contact, EN services contact, EN services pricing CTA, and the
-  // checklist page's call CTA.
-  { s: 'Book a 30-minute scoping call', max: 4 },
-  // Pricing moved to /work-with-me.html. Banned on the home page, expected on
-  // the page that now owns the offer — so these skip that one file rather than
-  // being dropped from the list, which would stop guarding the home page too.
+  // The contact block carries it once (every page that has one), and the EN
+  // services page a second time on its pricing CTA; the checklist page's call
+  // CTA is a third file with one.
+  { s: 'Book a 30-minute scoping call', maxPerFile: 2 },
+  // The pricing ladder and the free demo live on /services/ only (all five
+  // locales' copies of that page). Banned on every other page — home, /work/,
+  // /about/ and the project pages — and expected on the one that owns the
+  // offer, so these skip that one file rather than being dropped from the list,
+  // which would stop guarding the rest of the site too.
   { s: 'Discuss retainer', max: 0, except: 'services/index.html' },
   { s: 'Scope a build', max: 0, except: 'services/index.html' },
   { s: 'Book a free demo', max: 0, except: 'services/index.html', alsoExcept: ['demo.html'] },
   // /demo.html is the freelance landing page. It stays live and indexable, but
-  // the home pages must not route anyone to it — only /services may.
+  // no page may route anyone to it except /services/ (home included: its hero
+  // sends a buyer to /services/ instead).
   { s: 'demo.html', max: 0, except: 'services/index.html',
     alsoExcept: ['demo.html', 'get-checklist.html', 'checklist.html', 'sitemap.xml', 'llms.txt', '404.html'] },
   { s: 'fast learner', max: 0 },
@@ -524,6 +533,7 @@ async function assertNoForbiddenStrings() {
   const exts = new Set(['.html', '.txt', '.xml', '.json', '.svg']);
   const counts = new Map(FORBIDDEN.map((f) => [forbiddenKey(f), 0]));
   const where = new Map();
+  const perFile = new Map();   // key → [{ rel, n }]
   const walk = async (dir) => {
     for (const e of await readdir(dir, { withFileTypes: true })) {
       const full = path.join(dir, e.name);
@@ -539,21 +549,28 @@ async function assertNoForbiddenStrings() {
         const k = forbiddenKey(f);
         counts.set(k, counts.get(k) + n);
         where.set(k, [...(where.get(k) || []), `${rel}×${n}`]);
+        perFile.set(k, [...(perFile.get(k) || []), { rel, n }]);
       }
     }
   };
   await walk(DIST);
-  const bad = FORBIDDEN.filter((f) => counts.get(forbiddenKey(f)) > f.max);
+  // Over the total ceiling, or any one file over its own.
+  const total = (f) => f.max ?? (f.maxPerFile == null ? 0 : Infinity);
+  const overFiles = (f) => f.maxPerFile == null ? []
+    : (perFile.get(forbiddenKey(f)) || []).filter((x) => x.n > f.maxPerFile);
+  const bad = FORBIDDEN.filter((f) => counts.get(forbiddenKey(f)) > total(f) || overFiles(f).length);
   if (bad.length) {
     const err = new Error(
       '[build] forbidden strings reached dist/:\n' +
-      bad.map((f) => `   "${forbiddenKey(f)}" — ${counts.get(forbiddenKey(f))} occurrence(s), max ${f.max} ` +
-                     `(${(where.get(forbiddenKey(f)) || []).join(', ')})`).join('\n') +
+      bad.map((f) => {
+        const k = forbiddenKey(f);
+        const ceiling = [f.max != null || f.maxPerFile == null ? `max ${total(f)}` : '',
+          f.maxPerFile != null ? `max ${f.maxPerFile} per file` : ''].filter(Boolean).join(', ');
+        return `   "${k}" — ${counts.get(k)} occurrence(s), ${ceiling} (${(where.get(k) || []).join(', ')})`;
+      }).join('\n') +
       '\n   A correction was dropped, or a retired claim came back. Not deploying.'
     );
-    // The raw-export fallback is the wrong answer here: the raw export is
-    // exactly where these strings come from, so falling back would ship the
-    // thing the scan just refused. Flagged fatal so `fallback()` rethrows.
+    // Flagged fatal: a deliberate gate failure, reported by message (no stack).
     err.fatal = true;
     throw err;
   }
@@ -594,9 +611,9 @@ async function assertNoDeadAnchors() {
   console.log('  ✓ no dead in-page anchors');
 }
 
-// Every locale exists twice — home and /services/ — and a visitor who
-// switches language, or follows the footer's services link, must stay in the
-// same language and on the same kind of page. Checked against the written
+// Every locale carries every page type in PAGE_SPECS (home, /services/, …), and
+// a visitor who switches language, or follows the footer's services link, must
+// stay in the same language and on the same kind of page. Checked against the written
 // files (footer link, drawer language links, canonical, hreflang) and, for the
 // language menu the export's script builds at runtime, in a browser that sees
 // dist/ under the real site origin, so the script takes its production path.
@@ -606,7 +623,7 @@ async function assertLocaleRouting(locales) {
   const bad = [];
   const pagesToCheck = [];
   for (const l of locales) {
-    for (const suffix of ['', 'services/']) {
+    for (const suffix of PAGE_SPECS.map((spec) => spec.suffix)) {
       const page = l.urlPath + suffix;
       const file = path.join(DIST, page, 'index.html');
       if (!existsSync(file)) { bad.push(`${page}: not built`); continue; }
@@ -666,6 +683,227 @@ async function assertLocaleRouting(locales) {
   console.log(`  ✓ locale routing: ${pagesToCheck.length} pages — footer services link, language menu + drawer, canonical, hreflang`);
 }
 
+// ── Page inventory ──────────────────────────────────────────────────────────
+// Every page the build is supposed to write, from the one table that drives it.
+function localePages(locales) {
+  return locales.flatMap((loc) => PAGE_SPECS.map((spec) => ({
+    loc, spec, urlPath: loc.urlPath + spec.suffix,
+    rel: path.posix.join(loc.urlPath.slice(1), spec.suffix, 'index.html'),
+  })));
+}
+
+// Pages are cut from a render, so "a page was written" proves little: the cut
+// is where content is lost. This checks the files and the sitemap against the
+// table, and — per locale — that every section, case study and FAQ question the
+// export holds is published on at least one page.
+async function assertPageInventory(locales, coverage) {
+  const bad = [];
+  const pages = localePages(locales);
+  const expected = new Set(pages.map((p) => p.rel));
+  for (const p of pages) if (!existsSync(path.join(DIST, p.rel))) bad.push(`${p.rel}: not written`);
+
+  const found = [];
+  const walk = async (dir) => {
+    for (const e of await readdir(dir, { withFileTypes: true })) {
+      const full = path.join(dir, e.name);
+      if (e.isDirectory()) { if (e.name !== 'assets') await walk(full); }
+      else if (e.name === 'index.html') found.push(path.relative(DIST, full).split(path.sep).join('/'));
+    }
+  };
+  await walk(DIST);
+  for (const f of found) if (!expected.has(f)) bad.push(`${f}: written but not in the page map`);
+
+  const sitemap = await readFile(path.join(DIST, 'sitemap.xml'), 'utf8');
+  const listed = new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]));
+  const want = new Set(sitemapPages(locales).map((x) => SITE_URL + x.path));
+  for (const u of want) if (!listed.has(u)) bad.push(`sitemap.xml: missing ${u}`);
+  for (const u of listed) if (!want.has(u)) bad.push(`sitemap.xml: unexpected ${u}`);
+
+  const counts = [];
+  for (const { lang, shared, snaps } of coverage) {
+    const published = (pick) => new Set(snaps.flatMap(pick));
+    const keys = published((s) => s.keptKeys);
+    const cases = published((s) => s.caseNames);
+    const qs = published((s) => s.faq.map((f) => f.q));
+    for (const k of new Set(shared.pristineKeys)) if (!keys.has(k)) bad.push(`[${lang}] section "${k || '(unnamed)'}" is on no page`);
+    for (const c of new Set(shared.caseNames)) if (!cases.has(c)) bad.push(`[${lang}] case study "${c}" is on no page`);
+    for (const q of new Set(shared.faqQs)) if (!qs.has(q)) bad.push(`[${lang}] FAQ question "${q}" is on no page`);
+    counts.push(`${new Set(shared.pristineKeys).size}/${new Set(shared.caseNames).size}/${new Set(shared.faqQs).size}`);
+  }
+  if (bad.length) {
+    const err = new Error('[build] page inventory incomplete:\n' + bad.map((x) => `   ${x}`).join('\n') +
+      '\n   A page was not written, or a cut dropped content that no other page carries.');
+    err.fatal = true;
+    throw err;
+  }
+  console.log(`  ✓ page inventory: ${pages.length} pages (${locales.length} locales × ${PAGE_SPECS.length}), sitemap ${listed.size} URLs; ` +
+    `every section, case study and FAQ question is published (${[...new Set(counts)].join(' | ')} per locale)`);
+}
+
+// Every link that stays on this site has to land somewhere: a file in dist/,
+// and — when it names a fragment — an id in that file. The dead-anchor gate
+// covers `#id` on the same page; this covers `/path/` and `/path/#id`, which is
+// what pages cut from one render link each other with.
+async function assertInternalLinks(files, locales = []) {
+  const idsCache = new Map();
+  const idsOf = async (file) => {
+    if (!idsCache.has(file)) {
+      const { masked } = maskCode(await readFile(file, 'utf8'));
+      idsCache.set(file, new Set([...masked.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1])));
+    }
+    return idsCache.get(file);
+  };
+  const resolveFile = (pathname) => {
+    let p;
+    try { p = decodeURIComponent(pathname); } catch { return null; }
+    const abs = path.join(DIST, p);
+    if (abs !== DIST && !abs.startsWith(DIST + path.sep)) return null;
+    const isFile = (f) => existsSync(f) && statSync(f).isFile();
+    if (!p.endsWith('/') && isFile(abs)) return abs;
+    const index = path.join(abs, 'index.html');
+    return isFile(index) ? index : null;
+  };
+  const dead = [];
+  let checked = 0;
+  for (const f of files) {
+    const { masked } = maskCode(await readFile(f, 'utf8'));
+    const rel = path.relative(DIST, f);
+    for (const m of masked.matchAll(/\shref="([^"]*)"/g)) {
+      let href = m[1].replace(/&amp;/g, '&');
+      if (href.startsWith(SITE_URL + '/') || href === SITE_URL) href = href.slice(SITE_URL.length) || '/';
+      if (!href.startsWith('/') || href.startsWith('//')) continue;
+      checked += 1;
+      const [pathAndQuery, fragment] = href.split('#');
+      const target = resolveFile(pathAndQuery.split('?')[0]);
+      if (!target) { dead.push(`${rel} → ${href} (no such file)`); continue; }
+      if (fragment && fragment !== 'top' && target.endsWith('.html') && !(await idsOf(target)).has(fragment))
+        dead.push(`${rel} → ${href} (no #${fragment} in ${path.relative(DIST, target)})`);
+    }
+  }
+  // The home page's forwarding of old deep links (REDIRECTS): each id must be
+  // on the page it forwards to, in every locale.
+  for (const l of locales) {
+    for (const [id, suffix] of Object.entries(REDIRECTS)) {
+      const target = path.join(DIST, l.urlPath, suffix, 'index.html');
+      const ids = existsSync(target) ? await idsOf(target) : new Set();
+      if (!ids.has(id)) dead.push(`redirect #${id} → ${l.urlPath}${suffix} (no #${id} there)`);
+    }
+  }
+  if (dead.length) {
+    const err = new Error('[build] internal links point at nothing:\n' +
+      [...new Set(dead)].map((d) => `   ${d}`).join('\n') +
+      '\n   A page or section moved. Clicking these lands on a 404 or the top of the wrong page.');
+    err.fatal = true;
+    throw err;
+  }
+  console.log(`  ✓ internal links: ${checked} on-site href(s) all resolve — to a file, and to an id where they name one; ` +
+    `${Object.keys(REDIRECTS).length} legacy #id redirect(s) land on a page that has the id`);
+}
+
+// Each page type has a job, and the file is where a cut can quietly get it
+// wrong: the order of the contact paths, the four-link navigation, the cards
+// that reach the project pages, the one h1, the structured data. Checked on the
+// written pages, from the same table that drives them.
+const LD_TYPES = {
+  service: 'ProfessionalService', project: 'CreativeWork', profile: 'ProfilePage',
+  collection: 'CollectionPage', breadcrumb: 'BreadcrumbList', faq: 'FAQPage',
+};
+async function assertPageRoles(locales) {
+  const bad = [];
+  const pages = localePages(locales);
+  for (const { loc, spec, urlPath, rel } of pages) {
+    const body = await readFile(path.join(DIST, rel), 'utf8');
+    const { masked } = maskCode(body);
+    // The navigation: exactly these four links, in this order.
+    const navBlock = (masked.match(/<div class="nav-links">([\s\S]*?)<\/div>/) || [])[1] || '';
+    const navHrefs = [...navBlock.matchAll(/<a href="([^"]*)"/g)].map((m) => m[1]);
+    const wantNav = [`${loc.urlPath}work/`, `${loc.urlPath}services/`, `${loc.urlPath}about/`, '#contact'];
+    if (navHrefs.join(' ') !== wantNav.join(' ')) bad.push(`${urlPath}: nav links [${navHrefs.join(', ')}], expected [${wantNav.join(', ')}]`);
+    // Who the contact block addresses first.
+    const at = masked.indexOf('class="contact-path"');
+    const end = (() => {
+      const next = masked.indexOf('class="contact-path"', at + 1);
+      return next > 0 ? next : masked.indexOf('</section>', at);
+    })();
+    const first = at < 0 ? '' : masked.slice(at, end);
+    const wantFirst = spec.contactFirst === 'project' ? CONTACT.calendly : CONTACT.cv;
+    if (!first.includes(wantFirst)) bad.push(`${urlPath}: the first contact path should be the ${spec.contactFirst === 'project' ? 'project (scoping call)' : 'hiring (CV)'} path`);
+    // Home opens on the project path: no CV in the hero.
+    if (spec.key === 'home') {
+      const top = masked.indexOf('id="top"');
+      const topEnd = masked.indexOf('</section>', top);
+      if (top < 0) bad.push(`${urlPath}: no #top hero`);
+      else if (masked.slice(top, topEnd).includes('Ahmed-Farid-CV.pdf')) bad.push(`${urlPath}: the hero links to the CV`);
+    }
+    // Cards to the five project pages.
+    if (spec.work === 'teaser') {
+      const cards = masked.match(/<a [^>]*data-flagship="[^"]*"[^>]*>/g) || [];
+      for (const f of FLAGSHIP) {
+        if (!cards.some((c) => c.includes(`href="${loc.urlPath}work/${f.slug}/"`) && c.includes(`data-flagship="${f.slug}"`)))
+          bad.push(`${urlPath}: no card linking to ${loc.urlPath}work/${f.slug}/`);
+      }
+    }
+    // A project page's one h1 is the case name.
+    if (spec.work === 'single') {
+      const h1 = ((masked.match(/<h1[^>]*>([\s\S]*?)<\/h1>/) || [])[1] || '').replace(/<[^>]+>/g, '').trim();
+      if (h1 !== spec.flagship.name) bad.push(`${urlPath}: h1 is "${h1}", expected "${spec.flagship.name}"`);
+    }
+    // Structured data: the types this page type owns, and no others.
+    const want = new Set(['Person', 'WebSite', ...spec.ld.map((k) => LD_TYPES[k]).filter(Boolean)]);
+    const got = new Set();
+    for (const m of body.matchAll(/<script[^>]*ld\+json[^>]*>([\s\S]*?)<\/script>/gi)) {
+      try { for (const o of [].concat(JSON.parse(m[1]))) got.add(o['@type']); }
+      catch { bad.push(`${urlPath}: a JSON-LD block does not parse`); }
+    }
+    const diff = [...want].filter((t) => !got.has(t)).map((t) => `missing ${t}`)
+      .concat([...got].filter((t) => !want.has(t)).map((t) => `unexpected ${t}`));
+    if (diff.length) bad.push(`${urlPath}: JSON-LD types — ${diff.join(', ')}`);
+  }
+  if (bad.length) {
+    const err = new Error('[build] page roles broken:\n' + bad.map((x) => `   ${x}`).join('\n') +
+      '\n   A page no longer does the job its type is for.');
+    err.fatal = true;
+    throw err;
+  }
+  console.log(`  ✓ page roles: ${pages.length} pages — four-link nav, contact order, project cards, one h1, JSON-LD types`);
+}
+
+// What search engines and share cards read: the title and description of every
+// locale page, and its structured data. Limits are what a result snippet shows
+// before cutting; uniqueness is what keeps 45 pages from competing as one.
+const HEAD_LIMITS = { title: 80, description: 170 };
+async function assertHeadMeta(locales) {
+  const bad = [];
+  const attr = (s) => String(s ?? '').replace(/&lt;/g, '<').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+  const seen = { title: new Map(), description: new Map() };
+  let blocks = 0;
+  for (const { urlPath, rel } of localePages(locales)) {
+    const body = await readFile(path.join(DIST, rel), 'utf8');
+    const head = {
+      title: attr((body.match(/<title>([\s\S]*?)<\/title>/) || [])[1]),
+      description: attr((body.match(/<meta name="description" content="([^"]*)"/) || [])[1]),
+    };
+    for (const k of ['title', 'description']) {
+      if (!head[k]) { bad.push(`${urlPath}: no ${k}`); continue; }
+      if (head[k].length > HEAD_LIMITS[k]) bad.push(`${urlPath}: ${k} is ${head[k].length} chars (max ${HEAD_LIMITS[k]})`);
+      if (seen[k].has(head[k])) bad.push(`${urlPath}: ${k} duplicates ${seen[k].get(head[k])}`);
+      else seen[k].set(head[k], urlPath);
+    }
+    for (const m of body.matchAll(/<script[^>]*ld\+json[^>]*>([\s\S]*?)<\/script>/gi)) {
+      blocks += 1;
+      try { JSON.parse(m[1]); } catch { bad.push(`${urlPath}: a JSON-LD block does not parse`); }
+      // A "<" inside a JSON string can close the <script> early.
+      if (m[1].includes('<')) bad.push(`${urlPath}: a JSON-LD block holds a raw "<" (escape it as \\u003c)`);
+    }
+  }
+  if (bad.length) {
+    const err = new Error('[build] page head or structured data broken:\n' + bad.map((x) => `   ${x}`).join('\n'));
+    err.fatal = true;
+    throw err;
+  }
+  console.log(`  ✓ page heads: ${seen.title.size} unique titles (≤${HEAD_LIMITS.title}) and descriptions (≤${HEAD_LIMITS.description}); ${blocks} JSON-LD blocks parse and are script-safe`);
+}
+
 // Every PDF the site serves (the CV, the checklist) is read the way a visitor
 // sees it — visible text and link targets — because the HTML forbidden-string
 // scan cannot look inside a PDF. The checklist is also re-rendered from its
@@ -673,8 +911,8 @@ async function assertLocaleRouting(locales) {
 // replaced by hand or not rebuilt, and the deploy stops.
 async function assertPublicPdfs() {
   // Any error in here — not just a failed check, but a Chrome launch or a
-  // parse error — must stop the deploy. A plain error would send the build
-  // to the raw-export fallback, which copies the same PDFs unchecked.
+  // parse error — must stop the deploy. Flagged fatal so it is reported by
+  // message, like every other gate.
   try { await checkPublicPdfs(); } catch (e) { e.fatal = true; throw e; }
 }
 async function checkPublicPdfs() {
@@ -871,35 +1109,46 @@ async function extractEnhancementLayer() {
   return null;
 }
 
-// sitemap.xml + robots.txt + a styled 404.html. No browser needed, so this
-// runs in both the optimized build and the raw-export fallback.
-async function writeSeoFiles(locales = [{ urlPath: '/' }]) {
-  const today = new Date().toISOString().slice(0, 10);
-  // Standalone pages that aren't locale builds but should still be discoverable.
-  // The checklist is public on purpose: it's the strongest topical content on
-  // the site, it targets exactly the people who hire for this work, and it ends
-  // in a "Book a call" CTA. Ranking and being cited by AI assistants is worth
-  // more here than gating it behind the capture form (which stays the primary
-  // path from the site and from LinkedIn).
-  // Hand-written pages that live outside the design export. They are copied
-  // into dist/ by copyStaticAssets, but nothing else would put them in the
-  // sitemap. /demo.html gets the higher priority of the two: it is the page a
-  // conversion actually happens on.
-  const EXTRA_PAGES = [
-    { path: '/demo.html', priority: '0.9', changefreq: 'monthly' },
-    { path: '/checklist.html', priority: '0.8', changefreq: 'yearly' },
-  ];
-  // /services exists once per locale (/services/, /ar/services/, …), each with
-  // its own canonical, so each is listed.
-  const servicesPages = locales.map((l) => ({ path: `${l.urlPath}services/`, priority: '0.7', changefreq: 'monthly' }));
+// Hand-written pages that live outside the design export. They are copied
+// into dist/ by copyStaticAssets, but nothing else would put them in the
+// sitemap. /demo.html gets the higher priority of the two: it is the page a
+// conversion actually happens on.
+//
+// The checklist is public on purpose: it's the strongest topical content on
+// the site, it targets exactly the people who hire for this work, and it ends
+// in a "Book a call" CTA. Ranking and being cited by AI assistants is worth
+// more here than gating it behind the capture form (which stays the primary
+// path from the site and from LinkedIn).
+const EXTRA_PAGES = [
+  { path: '/demo.html', priority: '0.9', changefreq: 'monthly' },
+  { path: '/checklist.html', priority: '0.8', changefreq: 'yearly' },
+];
 
-  const urls = locales
-    .map((l, i) =>
-      `  <url><loc>${SITE_URL}${l.urlPath}</loc><lastmod>${today}</lastmod>` +
-      `<changefreq>monthly</changefreq><priority>${i === 0 ? '1.0' : '0.9'}</priority></url>`)
-    .concat([...EXTRA_PAGES, ...servicesPages].map((p) =>
+// Every URL the sitemap lists, in order: the locale homes, the hand-written
+// pages, then every other page type per locale. Each page type exists once per
+// locale with its own canonical, so each is listed. The inventory gate reads
+// the same list.
+function sitemapPages(locales, specs = PAGE_SPECS) {
+  const own = (spec) => locales.map((l, i) => ({
+    path: `${l.urlPath}${spec.suffix}`,
+    priority: i === 0 && spec.primaryPriority ? spec.primaryPriority : spec.priority,
+    changefreq: 'monthly',
+  }));
+  return [
+    ...specs.filter((s) => s.key === 'home').flatMap(own),
+    ...EXTRA_PAGES,
+    ...specs.filter((s) => s.key !== 'home').flatMap(own),
+  ];
+}
+
+// sitemap.xml + robots.txt + a styled 404.html. No browser needed, so this
+// runs in the full build only (there is no raw-export fallback to cover).
+async function writeSeoFiles(locales, specs, projects = null) {
+  const today = new Date().toISOString().slice(0, 10);
+  const urls = sitemapPages(locales, specs)
+    .map((p) =>
       `  <url><loc>${SITE_URL}${p.path}</loc><lastmod>${today}</lastmod>` +
-      `<changefreq>${p.changefreq}</changefreq><priority>${p.priority}</priority></url>`))
+      `<changefreq>${p.changefreq}</changefreq><priority>${p.priority}</priority></url>`)
     .join('\n');
   await writeFile(path.join(DIST, 'sitemap.xml'),
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
@@ -928,14 +1177,25 @@ async function writeSeoFiles(locales = [{ urlPath: '/' }]) {
     aiBots.map((b) => `User-agent: ${b}\nAllow: /`).join('\n\n') + `\n\n` +
     `Sitemap: ${SITE_URL}/sitemap.xml\n`, 'utf8');
 
+  // The page list for llms.txt. The project taglines come from the English render.
+  const pagesBlock = projects
+    ? `## Pages\n\n` + [
+        `- [Work](${SITE_URL}/work/): ${SEO.work.en.description}`,
+        ...FLAGSHIP.filter((f) => projects[f.slug]).map((f) => `- [${f.name}](${SITE_URL}/work/${f.slug}/): ${projects[f.slug].tagline}`),
+        `- [Services](${SITE_URL}/services/): ${SEO.services.en.description}`,
+        `- [About](${SITE_URL}/about/): ${SEO.about.en.description}`,
+      ].join('\n') + `\n\n`
+    : '';
+
   // llms.txt — an emerging convention (llmstxt.org) that gives AI assistants a
   // clean, structured Markdown summary of who this is and how to work with him,
   // so tools like ChatGPT/Claude/Perplexity can recommend him accurately.
   await writeFile(path.join(DIST, 'llms.txt'),
     `# Ahmed Farid — Senior Software Engineer\n\n` +
-    `> Senior Software Engineer based in ${LOCATION_LABEL}. ` +
+    `> Senior Software Engineer based in ${LOCATION_LABEL}, taking on fixed-scope builds, retainers and architecture reviews — ` +
+    `also open to senior roles. ` +
     `${YEARS_PROSE.en[0].toUpperCase()}${YEARS_PROSE.en.slice(1)} building real-time, multi-tenant SaaS, AI tools and mobile ` +
-    `apps shipped to production across the Gulf, US, and UK. Open to senior roles and selected consulting.\n\n` +
+    `apps shipped to production across the Gulf, US, and UK.\n\n` +
     `## About\n\n` +
     `- Name: Ahmed Farid\n` +
     `- Role: Senior Software Engineer\n` +
@@ -949,6 +1209,7 @@ async function writeSeoFiles(locales = [{ urlPath: '/' }]) {
     `- Fixed-scope product build — a defined slice with a clear deliverable (typically 4–8 weeks)\n` +
     `- Ongoing engineering retainer or longer contract\n` +
     `- Technical advisory & architecture review\n\n` +
+    pagesBlock +
     `## Links\n\n` +
     `- Website: ${SITE_URL}\n` +
     `- LinkedIn: ${CONTACT.linkedin}\n` +
@@ -960,8 +1221,8 @@ async function writeSeoFiles(locales = [{ urlPath: '/' }]) {
     `- Behance: https://www.behance.net/ahmedfarid20\n` +
     `- CV (PDF): ${SITE_URL}${CONTACT.cv}\n\n` +
     `## Contact\n\n` +
-    `- Senior roles: email ${CONTACT.email}, or LinkedIn\n` +
-    `- Project work: book a 30-minute scoping call (${CONTACT.calendly}) or WhatsApp Business (${CONTACT.whatsapp})\n`, 'utf8');
+    `- Project work: book a 30-minute scoping call (${CONTACT.calendly}) or WhatsApp Business (${CONTACT.whatsapp})\n` +
+    `- Senior roles: email ${CONTACT.email}, or LinkedIn\n`, 'utf8');
 
   await writeFile(path.join(DIST, '404.html'),
     `<!doctype html><html lang="en"><head><meta charset="utf-8">\n` +
@@ -1027,58 +1288,26 @@ async function generateOgImage(browser) {
   console.log('  generated og.png (1200×630)');
 }
 
-async function fallback(reason) {
-  // Most build failures are worth absorbing: a flaky render or a missing
-  // external asset should not take the site down, and the raw export still
-  // works. A content-correctness failure is the opposite — the raw export is
-  // precisely what carries the retired claim, so deploying it would publish
-  // the thing that just failed the check. Refuse instead.
-  // A ReferenceError or TypeError is a bug in this file, not a flaky render.
-  // Falling back on one ships the raw export — which is exactly where every
-  // retired claim still lives — while the log reads like a graceful recovery.
-  // This happened once, for real: a careless edit deleted the forbidden-string
-  // check and the build "passed" by deploying the unchecked export.
-  const isProgrammerError =
-    reason instanceof ReferenceError || reason instanceof TypeError || reason instanceof SyntaxError;
-  if ((reason && reason.fatal) || isProgrammerError) {
-    console.error('\n✗ Build refused — this failure must not be papered over.');
-    console.error(reason.message);
-    process.exitCode = 1;
-    return;
-  }
-  console.warn('\n⚠️  Optimized build failed — deploying raw export instead.');
-  console.warn('   Reason:', reason && reason.stack ? reason.stack : reason);
-  await rm(DIST, { recursive: true, force: true });
-  await mkdir(DIST, { recursive: true });
-  await copyFile(SRC, path.join(DIST, 'index.html'));
-  await copyStaticAssets();
-  // The fallback still publishes the PDFs; they get the same retired-fact
-  // check (no browser needed), and a failure stops the deploy.
-  const pdfBad = [];
-  for (const f of (await readdir(DIST)).filter((x) => x.toLowerCase().endsWith('.pdf'))) {
-    for (const p of pdfProblems(await inspectPdf(path.join(DIST, f)), { requireUris: PDF_REQUIRED_URIS })) pdfBad.push(`${f}: ${p}`);
-  }
-  if (pdfBad.length) {
-    console.error('\n✗ Fallback refused — a public PDF fails the brand check:\n' + pdfBad.map((x) => `   ${x}`).join('\n'));
-    process.exitCode = 1;
-    return;
-  }
-  await writeSeoFiles();
-  console.log('✓ Raw export copied to dist/ (site stays functional, unoptimized).');
+// Fail closed. Any failure — a gate, a render timeout, a bug in this file — ends
+// the run with exit code 1 and writes nothing new: in particular NOT the raw
+// export, which is exactly where every retired claim still lives and carries
+// none of the checks. The workflow's build step then fails, the Pages artifact
+// is never uploaded and the deploy job (needs: build) is skipped, so the last
+// good deploy stays live. A fatal error is a deliberate gate failure and is
+// reported by message; anything else is reported with its stack. A dist/ left
+// behind by the failed run is incomplete and must not be published.
+function refuseBuild(reason) {
+  console.error('\n✗ Build refused — the full page set could not be produced and verified. Nothing was published; the last deploy stays live.');
+  console.error(reason && reason.fatal ? reason.message : (reason && reason.stack) || reason);
+  console.error('  Any dist/ left by this run is incomplete: do not deploy it.');
+  // Exit now rather than set exitCode: a failure mid-render leaves headless
+  // Chromium running, which keeps the event loop alive, so the process (and the
+  // CI job) would hang instead of failing. puppeteer kills its browser on exit.
+  process.exit(1);
 }
 
-// Build a single locale page end-to-end: render its source export, run the
-// in-page transforms, assemble a clean head/body, externalize data: URLs into
-// the SHARED dist/assets/ folder (root-absolute /assets/ refs), minify, and
-// write to outDir/index.html. Returns per-page stats. Everything that is
-// one-time work (og.png, GitHub fetch, enhancement-layer extraction,
-// sitemap/robots/404, copying static assets) is done by the orchestrator and
-// passed in — buildPage is called once per locale.
-// `variant` decides which half of the rendered page survives the snapshot:
-//   'home'     — everything except the commercial sections
-//   'services' — only the commercial sections
-// Both come from the same render, so the shell, nav, fonts, reveals, texture
-// and footer are identical by construction rather than by reimplementation.
+// A stable fragment of each buyer-side FAQ question, per locale: those items
+// belong on /services, the rest on the pages that serve everyone else.
 const FAQ_BUYER_KEYS = {
   en: ['typical engagement', 'clients based', 'your rate'],
   ar: ['التعاقد النموذجي', 'يقع عملاؤك', 'ما سعرك'],
@@ -1087,10 +1316,34 @@ const FAQ_BUYER_KEYS = {
   fr: ['mission type', 'sont vos clients', 'votre tarif'],
 };
 
-// /services is cut from the home render and has no hero. The export's
-// enhancement layer waits for `.hero-stats` before it starts, so on /services
-// it never started: no language menu, no Arabic numerals, a dead Personalize
-// button. On that page it waits for the nav alone. Its first-visit intro
+// Home's "Four ways to put me to work" cards, client-first: the full-time role
+// is the hiring path and goes last. Each entry is the card heading as the
+// export ships it, per locale; a card is found by its heading, so a re-export
+// that rewords one is warned about at build time rather than silently left in
+// the old order.
+const HOME_SERVICE_ORDER = {
+  en: ['Fixed-scope build', 'Ongoing partner', 'Technical advisory', 'Full-time role'],
+  ar: ['بناء بنطاق محدّد', 'شريك مستمرّ', 'استشارة تقنية', 'دور بدوام كامل'],
+  de: ['Festumfang-Build', 'Laufender Partner', 'Technische Beratung', 'Vollzeitstelle'],
+  es: ['Proyecto de alcance cerrado', 'Socio continuo', 'Asesoría técnica', 'Puesto a jornada completa'],
+  fr: ['Projet à périmètre fixe', 'Partenaire au long cours', 'Conseil technique', 'Poste à temps plein'],
+};
+
+// "Ways to work together" opens with a sentence about the price list above it
+// ("Those are the packaged offers above."). A page without that list drops
+// exactly this sentence, as the export words it in each locale.
+const PACKAGED_ABOVE = {
+  en: 'Those are the packaged offers above.',
+  ar: 'تلك هي الباقات في الأعلى.',
+  de: 'Das sind die Pakete oben.',
+  es: 'Esos son los paquetes de arriba.',
+  fr: 'Ce sont les forfaits ci-dessus.',
+};
+
+// Every page but home is cut from the home render and has no hero. The
+// export's enhancement layer waits for `.hero-stats` before it starts, so on
+// those pages it never started: no language menu, no Arabic numerals, a dead
+// Personalize button. There it waits for the nav alone. Its first-visit intro
 // splash stays home-only, as it was. Every other feature in the layer is
 // null-safe when the hero is missing. A re-export that changes these strings
 // leaves the page as before, and assertLocaleRouting then fails the build
@@ -1099,11 +1352,11 @@ const FAQ_BUYER_KEYS = {
 // tolerant of whitespace and quote style.
 const ENHANCE_READY = /document\.querySelector\((['"])\.hero-stats\1\)\s*&&\s*(document\.querySelector\((['"])\.nav-links a\3\))/;
 const ENHANCE_INTRO_SEEN = /if\s*\(\s*sessionStorage\.getItem\((['"])af_intro_done\1\)\s*\)\s*return/;
-function enhanceForVariant(js, variant) {
-  if (!js || variant !== 'services') return js;
+function enhanceForVariant(js, spec) {
+  if (!js || spec.key === 'home') return js;
   const count = (rx) => (js.match(new RegExp(rx.source, 'g')) || []).length;
   if (count(ENHANCE_READY) !== 1 || count(ENHANCE_INTRO_SEEN) !== 1) {
-    console.warn('  ⚠ enhancement layer changed shape; /services runs without it (routing gate will flag the menu)');
+    console.warn(`  ⚠ enhancement layer changed shape; /${spec.suffix} runs without it (routing gate will flag the menu)`);
     return js;
   }
   return js.replace(ENHANCE_READY, '$2').replace(ENHANCE_INTRO_SEEN, 'return');
@@ -1112,18 +1365,219 @@ function enhanceForVariant(js, variant) {
 // Page-layout data for the in-page pass. Brand names are not translated, and
 // the writing categories render in English on every locale.
 const PAGE_LAYOUT = {
-  flagship: ['Yelo Sale', 'Qoralia', 'KhebraOS', 'Phonic Maps', 'Recovery Advisers'],
+  flagship: FLAGSHIP.map((f) => f.name),
+  flagships: FLAGSHIP,
   expectedCollapsed: 7,
   writingRank: ['Debugging', 'Testing', 'Fundamentals', 'Hiring', 'Career'],
 };
 
-async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enhanceJS, assetSeen, variant = 'home' }) {
-  const isRoot = outDir === DIST;
-  const urlPath = (locales.find((l) => l.lang === lang) || {}).urlPath || '/';
-  const multi = locales.length > 1;
+// ── Page map ────────────────────────────────────────────────────────────────
+// One table drives every page this build writes. Each locale is rendered ONCE
+// (renderLocale) and every row below is a slice of that render (snapshotVariant)
+// written to <locale>/<suffix>index.html (writeVariantPage). The shell, nav,
+// fonts, reveals, texture and footer are identical by construction rather than
+// by reimplementation, and adding a page is adding a row, not another render
+// (a render is ~20s; a timeout in one refuses the whole build).
+//
+//   key          SEO[key] row, log label, and the page-type name
+//   suffix       URL path under the locale ('' = the locale root)
+//   sections     section keys kept (slicing only removes, so DOM order is the
+//                export's own); see SECTION_KEYS / sectionKeyOf
+//   keepUnknown  keep a section whose key is not in SECTION_KEYS (a re-export
+//                added one) rather than dropping content silently
+//   faq          'buyer' | 'other' | null — which FAQ items survive
+//   anchors      'resolve': a #hash link whose id is not on this page points at
+//                the page that owns it (LINK_OWNER); #top goes to the locale home
+//   renumber     renumber the "· 01" eyebrows after the cut
+//   work         how the case studies appear: 'teaser' puts a card per flagship
+//                (linking to its own page) where the long write-ups were;
+//                'single' makes the page ONE flagship's case study (the row's
+//                `flagship`), with its own title and description cut from the
+//                case itself, so no SEO[key] row exists for it
+//   sortWriting  engineering topics before career notes in #writing
+//   foldCases    fold Problem + Approach of the non-flagship cases
+//   contactFirst 'project' puts the project path before the hiring path
+//   promoteH1    promote the first section title to <h1> (no hero on the page)
+//   ld           extra JSON-LD for the page: 'service' (ProfessionalService),
+//                'project' (CreativeWork), 'profile' (ProfilePage),
+//                'collection' (CollectionPage), 'breadcrumb' (BreadcrumbList —
+//                needs a NAV label), 'faq' (FAQPage from the FAQ items kept;
+//                home shows the buyer questions without it, so the same
+//                questions are not marked up twice on the site)
+//   priority     sitemap priority (primaryPriority: the default locale's)
+//   verify       floor for the built-output check: innerText length and
+//                section[id] count, each floor(0.7 × the first green English
+//                measurement). Deliberately resizing a page means re-measuring.
+const SECTION_KEYS = [
+  'top', 'trust', 'position', 'about', 'bynumbers', 'work', 'products', 'builds', 'build',
+  'domains', 'brands', 'regions', 'depth', 'arch', 'github', 'experience', 'process', 'why',
+  'testimonials', 'writing', 'pricing', 'services', 'faq', 'connect', 'contact',
+];
+// Built-output floors for the project pages, floor(0.7 × the first green
+// English measurement) per page. Deliberately resizing a case study means
+// re-measuring.
+const PROJECT_VERIFY = {
+  'yelo-sale': { minText: 3731, minSections: 1 },          // measured 5331 chars, 2 sections
+  'qoralia': { minText: 2058, minSections: 1 },            // 2940
+  'khebraos': { minText: 2058, minSections: 1 },           // 2941
+  'phonic-maps': { minText: 2044, minSections: 1 },        // 2920
+  'recovery-advisers': { minText: 2117, minSections: 1 },  // 3025
+};
+const PAGE_SPECS = [
+  {
+    // The client-facing front door: what I do, proof in numbers, the flagship
+    // work, how I work, the ways to hire me, testimonials, contact. Everything
+    // longer lives on its own page. The FAQ is the one section left off to hold
+    // the page-height budget (desktop 9,000px, mobile 15,192px): its buyer
+    // questions stay on /services/, which owns them (and old #faq links are
+    // forwarded there).
+    key: 'home', suffix: '',
+    sections: ['top', 'trust', 'position', 'bynumbers', 'work', 'process', 'services', 'testimonials', 'contact'],
+    keepUnknown: false, faq: null, anchors: 'resolve', renumber: true, work: 'teaser',
+    sortWriting: false, foldCases: false, contactFirst: 'project', promoteH1: false,
+    ld: ['service'], priority: '0.9', primaryPriority: '1.0',
+    verify: { minText: 4809, minSections: 5 },   // measured 6871 chars, 8 sections (FAQ moved to /services/)
+  },
+  {
+    key: 'services', suffix: 'services/',
+    sections: ['pricing', 'services', 'faq', 'contact'],
+    keepUnknown: false, faq: 'buyer', anchors: 'resolve', renumber: true,
+    sortWriting: false, foldCases: false, contactFirst: 'project', promoteH1: true,
+    ld: ['faq', 'breadcrumb'], priority: '0.8',
+    verify: { minText: 3865, minSections: 2 },     // measured 5522 chars, 4 sections
+  },
+  {
+    key: 'work', suffix: 'work/',
+    sections: ['work', 'products', 'builds', 'build', 'domains', 'brands', 'regions', 'contact'],
+    keepUnknown: false, faq: null, anchors: 'resolve', renumber: true, work: 'teaser',
+    sortWriting: false, foldCases: true, contactFirst: 'project', promoteH1: true,
+    ld: ['collection', 'breadcrumb'], priority: '0.8',
+    verify: { minText: 8198, minSections: 4 },      // measured 11712 chars, 7 sections (flagship write-ups moved to their own pages)
+  },
+  {
+    key: 'about', suffix: 'about/',
+    sections: ['about', 'depth', 'arch', 'github', 'experience', 'why', 'writing', 'faq', 'connect', 'contact'],
+    keepUnknown: true, faq: 'other', anchors: 'resolve', renumber: true,
+    sortWriting: true, foldCases: false, contactFirst: 'hire', promoteH1: true,
+    ld: ['profile', 'faq', 'breadcrumb'], priority: '0.6',
+    verify: { minText: 7350, minSections: 7 },       // measured 10501 chars, 10 sections
+  },
+  // One page per flagship case study, cut from the same #work section.
+  ...FLAGSHIP.map((f) => ({
+    key: `work-${f.slug}`, suffix: `work/${f.slug}/`, work: 'single', flagship: f,
+    sections: ['work', 'contact'],
+    keepUnknown: false, faq: null, anchors: 'resolve', renumber: true,
+    sortWriting: false, foldCases: false, contactFirst: 'project', promoteH1: false,
+    ld: ['project', 'breadcrumb'], priority: '0.7',
+    verify: PROJECT_VERIFY[f.slug],
+  })),
+];
 
-  await mkdir(outDir, { recursive: true });
+// Which page a section lives on, for links to it from a page that does not
+// carry it. `contact` is on every page and `position` has no id, so neither
+// is listed. Each value is a PAGE_SPECS key.
+const LINK_OWNER = {
+  top: 'home', 'what-i-do': 'home', trust: 'home', bynumbers: 'home', process: 'home', testimonials: 'home',
+  about: 'about', depth: 'about', arch: 'about', github: 'about', experience: 'about',
+  why: 'about', writing: 'about', connect: 'about',
+  work: 'work', products: 'work', builds: 'work', build: 'work', domains: 'work',
+  brands: 'work', regions: 'work',
+  pricing: 'services', services: 'services', faq: 'services',
+};
 
+// The single-page site's deep links (/#brands, /#experience …) are still out
+// there: LinkedIn posts, résumés, bookmarks. Home no longer carries those
+// sections, so it forwards each such hash to the page that owns the section.
+// Derived, not typed: an id is forwarded exactly when some other page owns it
+// and home does not carry it, so moving a section needs no second edit here.
+// Sections the export ships without an id (see sectionKeyOf): nothing can link
+// to them, so there is nothing to forward.
+const UNNAMED_SECTIONS = ['trust', 'position', 'domains'];
+const NAV_LABELS = ['work', 'services', 'about', 'contact', 'caseStudy', 'allWork', 'moreWork', 'pricing'];
+const REDIRECTS = (() => {
+  const home = PAGE_SPECS.find((spec) => spec.key === 'home');
+  const out = {};
+  for (const [id, owner] of Object.entries(LINK_OWNER)) {
+    if (owner === 'home' || home.sections.includes(id) || UNNAMED_SECTIONS.includes(id)) continue;
+    out[id] = PAGE_SPECS.find((spec) => spec.key === owner).suffix;
+  }
+  return out;
+})();
+
+// Checked before anything renders: a table that drives every page would
+// otherwise turn a typo (a section key, a missing SEO row for one locale) into a
+// quietly thin page or a silently borrowed English title.
+function assertPageSpecs(locales) {
+  const bad = [];
+  const keys = new Set();
+  const suffixes = new Set();
+  for (const spec of PAGE_SPECS) {
+    if (keys.has(spec.key)) bad.push(`duplicate page key "${spec.key}"`);
+    if (suffixes.has(spec.suffix)) bad.push(`${spec.key}: duplicate suffix "${spec.suffix}"`);
+    keys.add(spec.key);
+    suffixes.add(spec.suffix);
+    if (!/^([a-z0-9]+(-[a-z0-9]+)*\/)*$/.test(spec.suffix))
+      bad.push(`${spec.key}: suffix "${spec.suffix}" must be empty or lowercase path segments each ending in "/"`);
+    for (const k of spec.sections) if (!SECTION_KEYS.includes(k)) bad.push(`${spec.key}: unknown section key "${k}"`);
+    if (spec.ld.includes('faq') && !spec.faq) bad.push(`${spec.key}: ld "faq" but the page keeps no FAQ items`);
+    if (!spec.verify || !(spec.verify.minText > 0) || !(spec.verify.minSections > 0)) bad.push(`${spec.key}: no verify floor`);
+    for (const l of locales) {
+      // A project page's title and description are cut from its case study.
+      if (spec.work !== 'single') {
+        const seo = (SEO[spec.key] || {})[l.lang];
+        if (!seo || !seo.title || !seo.description) bad.push(`SEO.${spec.key}.${l.lang} is missing`);
+        if (spec.ld.includes('breadcrumb') && !(NAV[l.lang] || {})[spec.key]) bad.push(`NAV.${l.lang}.${spec.key} is missing (breadcrumb name)`);
+      }
+    }
+  }
+  // Every page's navigation, breadcrumbs and cards read these labels.
+  for (const l of locales) {
+    for (const k of NAV_LABELS) if (!(NAV[l.lang] || {})[k]) bad.push(`NAV.${l.lang}.${k} is missing`);
+  }
+  // The flagships: a slug becomes a URL segment, so it is validated here, once,
+  // before anything is written; every flagship has exactly one project page.
+  const slugs = new Set();
+  const names = new Set();
+  for (const f of FLAGSHIP) {
+    if (!f.name || typeof f.name !== 'string') bad.push(`FLAGSHIP entry without a name (${JSON.stringify(f)})`);
+    if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(f.slug || '')) bad.push(`FLAGSHIP slug "${f.slug}" must be lowercase words joined by single hyphens`);
+    if (slugs.has(f.slug)) bad.push(`FLAGSHIP slug "${f.slug}" is used twice`);
+    if (names.has(f.name)) bad.push(`FLAGSHIP name "${f.name}" is used twice`);
+    slugs.add(f.slug);
+    names.add(f.name);
+    if (PAGE_SPECS.filter((spec) => spec.work === 'single' && spec.flagship.slug === f.slug).length !== 1)
+      bad.push(`FLAGSHIP "${f.slug}" has no (or more than one) project page in PAGE_SPECS`);
+  }
+  for (const spec of PAGE_SPECS)
+    if (spec.work === 'single' && !FLAGSHIP.some((f) => f.slug === spec.flagship.slug)) bad.push(`${spec.key}: flagship "${spec.flagship.slug}" is not in FLAGSHIP`);
+  for (const [id, owner] of Object.entries(LINK_OWNER)) if (!keys.has(owner)) bad.push(`LINK_OWNER ${id} → unknown page "${owner}"`);
+  if (!PAGE_SPECS.some((spec) => spec.key === 'home' && spec.suffix === '')) bad.push('no home page at the locale root');
+  if (bad.length) {
+    const err = new Error('[build] page map invalid:\n' + bad.map((x) => `   ${x}`).join('\n'));
+    err.fatal = true;
+    throw err;
+  }
+}
+
+// A section's key: its id, or — for the three the export ships without one —
+// the thing that identifies it: the trust marquee (`section.trust`), "What I do"
+// (the one holding `.position-grid`) and "Industries" (the one holding
+// `.industries`). Serialised into the page (renderLocale), so it must stay
+// self-contained.
+function sectionKeyOf(sec) {
+  if (sec.id) return sec.id;
+  if (sec.classList.contains('trust')) return 'trust';
+  if (sec.querySelector('.position-grid')) return 'position';
+  if (sec.querySelector('.industries')) return 'domains';
+  return '';
+}
+
+// Everything that does not depend on which page is being cut happens here,
+// once per locale: render the export, convert image slots, fill the GitHub
+// block, re-embed fonts, capture the head metadata, clean links — then park a
+// pristine copy of the result for snapshotVariant to cut from.
+async function renderLocale({ browser, loc, ghData, enhanceJS, locales }) {
+  const { lang, src } = loc;
   const page = await browser.newPage();
   await page.setViewport({ width: 1440, height: 1200, deviceScaleFactor: 2 });
 
@@ -1140,8 +1594,11 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
   );
   await new Promise((r) => setTimeout(r, 2500));
 
+  // The one definition of "which section is this", shared with the cut below.
+  await page.evaluate(`window.__afSectionKey = ${sectionKeyOf.toString()};`);
+
   console.log(`→ [${lang}] Transforming + extracting static DOM…`);
-  const result = await page.evaluate(async (ghUser, gh, hasEnhance, localeCodes, pageVariant, faqBuyerKeys, localePrefix, layout) => {
+  const shared = await page.evaluate(async (ghUser, gh, hasEnhance, localeCodes) => {
     // ── Convert <image-slot> → <img> (image lives in shadow DOM otherwise) ──
     document.querySelectorAll('image-slot').forEach((slot) => {
       const src = slot.getAttribute('src') || '';
@@ -1423,66 +1880,6 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
     const bodyAttrs = {};
     for (const a of document.body.attributes) if (a.name.startsWith('data-')) bodyAttrs[a.name] = a.value;
 
-    // The export ships its OWN language switcher (`.locale`), but in static
-    // output the snapshot bakes in a DEAD copy — its click handlers don't
-    // survive, and the enhancement JS rebuilds a fresh, live one at runtime
-    // (correct dropdown + deployed-URL routing). So remove every baked copy
-    // here; the runtime build produces exactly one working switcher. (If a
-    // future export ships no such JS, the assembler injects a static fallback.)
-    // ── Slice the page ──────────────────────────────────────────────────
-    // The freelance offer and the hiring pitch are both in this render. Which
-    // one survives depends on the variant; the other is removed from the DOM
-    // before the snapshot is taken.
-    // Only these two move between pages. #faq and #contact appear on both —
-    // a buyer reading prices needs the answers and a way to reach him, and the
-    // FAQ is filtered item by item just below rather than wholesale.
-    // Every <section>, not just section[id] — three of them carry no id at all
-    // (the trust marquee and two unnamed bands), and filtering on `[id]` left
-    // them on /services showing the hiring pitch above the price list.
-    const commercial = ['pricing', 'services'];
-    const sharedOnServices = ['faq', 'contact'];
-    document.querySelectorAll('section').forEach((sec) => {
-      const id = sec.id || '';
-      const isCommercial = commercial.includes(id);
-      if (pageVariant === 'services') {
-        if (!isCommercial && !sharedOnServices.includes(id)) sec.remove();
-      } else if (isCommercial) {
-        sec.remove();
-      }
-    });
-    // The FAQ is split item by item rather than wholesale: three of its
-    // questions belong to a buyer, the rest to anyone.
-    const buyerFaq = faqBuyerKeys;
-    document.querySelectorAll('.faq-item').forEach((item) => {
-      const q = (item.textContent || '').slice(0, 120);
-      const isBuyer = buyerFaq.some((k) => q.includes(k));
-      if (pageVariant === 'services' ? !isBuyer : isBuyer) item.remove();
-    });
-    // Nav links point at sections that may no longer be on this page. On
-    // /services they become absolute links back to the home page, so nothing
-    // resolves to a dead anchor.
-    if (pageVariant === 'services') {
-      const homeHref = localePrefix || '/';
-      document.querySelectorAll('a[href^="#"]').forEach((a) => {
-        const t = a.getAttribute('href');
-        a.setAttribute('href', t === '#top' ? homeHref : homeHref + t);
-      });
-    }
-
-    if (pageVariant === 'services') {
-      // Section numbers are displayed. After the cut they would read 13, 14,
-      // 15 on a page whose first section is the first thing on it.
-      let n = 0;
-      document.querySelectorAll('section .eyebrow').forEach((eb) => {
-        if (!/·\s*[0-9٠-٩]{2}\s*$/.test(eb.textContent || '')) return;
-        n += 1;
-        const ar = /[٠-٩]/.test(eb.textContent);
-        const num = String(n).padStart(2, '0');
-        const shown = ar ? num.replace(/[0-9]/g, (d) => '٠١٢٣٤٥٦٧٨٩'[+d]) : num;
-        eb.textContent = (eb.textContent || '').replace(/·\s*[0-9٠-٩]{2}\s*$/, '· ' + shown);
-      });
-    }
-
     // ── Link hygiene ────────────────────────────────────────────────────
     // Compass Med serves its site over HTTPS (search engines index the https
     // pages); the export still links the http:// form.
@@ -1500,8 +1897,355 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
       } catch { /* not a parseable URL — leave it */ }
     });
 
+    // Footer email: let it break after the "@" rather than mid-domain in a
+    // narrow footer column.
+    document.querySelectorAll('footer a[href^="mailto:"]').forEach((a) => {
+      if (a.children.length || !a.textContent.includes('@')) return;
+      const [local, domain] = a.textContent.split('@');
+      a.textContent = local + '@';
+      a.appendChild(document.createElement('wbr'));
+      a.appendChild(document.createTextNode(domain));
+    });
+
+    // The export ships its OWN language switcher (`.locale`), but in static
+    // output the snapshot bakes in a DEAD copy — its click handlers don't
+    // survive, and the enhancement JS rebuilds a fresh, live one at runtime
+    // (correct dropdown + deployed-URL routing). So remove every baked copy
+    // here; the runtime build produces exactly one working switcher. (If a
+    // future export ships no such JS, the assembler injects a static fallback.)
+    const ownSwitchers = [...document.querySelectorAll('.locale, .lang-switcher, [data-locale-switcher]')];
+    const hasOwnSwitcher = ownSwitchers.length > 0;
+    ownSwitchers.forEach((el) => el.remove());
+    document.querySelectorAll('a[href]').forEach((a) => {
+      const bare = (a.getAttribute('href') || '').replace(/^\.?\//, '');
+      if (bare === 'index.html') a.setAttribute('href', '/');
+      else {
+        const m = /^index\.([a-z]{2})\.html$/.exec(bare);
+        if (m && localeCodes.includes(m[1])) a.setAttribute('href', `/${m[1]}/`);
+      }
+    });
+
+    // ── Inventory + pristine copy ───────────────────────────────────────
+    // What the export holds, so the Node side can prove every section, case
+    // study and FAQ question is published on some page. The pristine copy is
+    // what each page is cut from; it is taken after every transform above and
+    // before any cut.
+    const root = document.getElementById('root');
+    const topSections = [...root.querySelectorAll('section')].filter((s) => !s.parentElement.closest('section'));
+    const pristineKeys = topSections.map((s) => window.__afSectionKey(s));
+    const caseNames = [...root.querySelectorAll('article.case .case-name')].map((e) => (e.textContent || '').trim());
+    const faqQs = [...root.querySelectorAll('.faq-item')]
+      .map((item) => (item.querySelector('.faq-q .text') || item.querySelector('.faq-q'))?.textContent?.trim() || '')
+      .filter(Boolean);
+    window.__afPristine = root.cloneNode(true);
+
+    return {
+      title, lang, meta, css, bodyClass, rootAttrs, bodyAttrs, hasOwnSwitcher,
+      blobCount: blobUrls.length, pristineKeys, caseNames, faqQs,
+    };
+  }, GH_USER, ghData, !!enhanceJS, locales.map((l) => l.lang));
+
+  if (pageErrors.length) {
+    console.log(`  [${lang}] (${pageErrors.length} non-fatal page errors during render — expected for blocked external assets)`);
+  }
+  console.log(`  [${lang}] re-embedded ${shared.blobCount} blob asset(s) as data: URLs`);
+
+  try { assertFlagshipsRendered(lang, shared.caseNames); }
+  catch (e) { await page.close().catch(() => {}); throw e; }
+  return { page, shared };
+}
+
+// The flagships are found in the render by name (FLAGSHIP). A re-export that
+// renames or drops one would otherwise quietly lose its project page and its
+// card: fail the build instead.
+function assertFlagshipsRendered(lang, caseNames) {
+  const missing = FLAGSHIP.filter((f) => !caseNames.includes(f.name)).map((f) => f.name);
+  if (!missing.length) return;
+  throw Object.assign(new Error(
+    `[build] [${lang}] flagship case stud${missing.length > 1 ? 'ies' : 'y'} not found in the export: ${missing.join(', ')}.\n` +
+    `   Found: ${caseNames.join(', ') || '(none)'}. Rename the entry in FLAGSHIP (site-facts.mjs) to match the export.`), { fatal: true });
+}
+
+// An error thrown inside page.evaluate comes back from puppeteer as a plain
+// Error, never a TypeError/ReferenceError, so nothing downstream could tell a
+// bug in a page cut from a flaky render. Every one is tagged fatal: it is
+// reported by message and the build is refused.
+async function fatalIfThrown(label, pending) {
+  try { return await pending; } catch (e) {
+    const err = e instanceof Error ? e : new Error(String(e));
+    err.message = `[build] ${label}: the page cut failed in the browser — ${err.message}`;
+    err.fatal = true;
+    throw err;
+  }
+}
+
+// One cut of the pristine render: restore a fresh copy of the page, remove what
+// this page does not carry, and apply the per-page passes. replaceWith, not
+// innerHTML: the copy keeps the exact nodes and attributes the render produced.
+// The callback is synchronous on purpose — nothing may run between the swap
+// and the read of `body` (the export's own observers would get a turn).
+async function snapshotVariant({ page, spec, lang, locales }) {
+  const prefix = lang === 'en' ? '/' : `/${lang}/`;
+  console.log(`→ [${lang}] Cutting ${spec.key} page…`);
+  const snap = await fatalIfThrown(`[${lang}] ${spec.key}`, page.evaluate((pageSpec, localeCodes, faqBuyerKeys, localePrefix, layout, knownKeys, links, labels, copy) => {
+    document.getElementById('root').replaceWith(window.__afPristine.cloneNode(true));
     const warnings = [];
-    if (pageVariant === 'home') {
+
+    // ── Slice the page ──────────────────────────────────────────────────
+    // The freelance offer and the hiring pitch are both in this render. Which
+    // sections survive depends on the page (PAGE_SPECS); the rest are removed
+    // from the DOM before the snapshot is taken.
+    // Every <section>, not just section[id] — three of them carry no id at all
+    // (the trust marquee and two unnamed bands), and filtering on `[id]` left
+    // them on /services showing the hiring pitch above the price list.
+    const keptKeys = [];
+    document.querySelectorAll('section').forEach((sec) => {
+      if (sec.parentElement.closest('section')) return;   // goes with its parent
+      const key = window.__afSectionKey(sec);
+      const known = knownKeys.includes(key);
+      if (pageSpec.sections.includes(key) || (pageSpec.keepUnknown && !known)) {
+        keptKeys.push(key);
+        // "What I do" ships without an id; the hero's scroll cue points at it.
+        if (key === 'position' && !sec.id) sec.id = 'what-i-do';
+        if (!known) warnings.push(`section "${key || '(unnamed)'}" is not in the page map — kept on ${pageSpec.key}`);
+      } else {
+        sec.remove();
+      }
+    });
+    // The FAQ is split item by item rather than wholesale: three of its
+    // questions belong to a buyer, the rest to anyone.
+    if (pageSpec.faq) {
+      document.querySelectorAll('.faq-item').forEach((item) => {
+        const q = (item.textContent || '').slice(0, 120);
+        const isBuyer = faqBuyerKeys.some((k) => q.includes(k));
+        if (pageSpec.faq === 'buyer' ? !isBuyer : isBuyer) item.remove();
+      });
+    }
+    // ── Case studies: cards and project pages ───────────────────────────
+    // The five flagships are written up in full on a page each. Where the long
+    // write-ups sat, a card per flagship links to its page (home, /work/); on a
+    // project page the section is that one case study. Cards mirror the
+    // export's own product cards (writing-card …), so they need no new styling.
+    // Nothing injected here carries `reveal`: it would wait for a scroll
+    // observer the card does not need.
+    let project = null;
+    if (pageSpec.work) {
+      const workSec = document.getElementById('work');
+      const articles = workSec ? [...workSec.querySelectorAll('article.case')] : [];
+      const nameOf = (c) => (c.querySelector('.case-name')?.textContent || '').trim();
+      const caseFor = (f) => articles.find((c) => nameOf(c) === f.name);
+      const missing = layout.flagships.filter((f) => !caseFor(f));
+      const holder = articles.length ? articles[0].parentElement : null;
+      if (!workSec || missing.length || !holder || !articles.every((c) => c.parentElement === holder)) {
+        warnings.push(`work: flagship cases not found or not in one list (${missing.map((f) => f.name).join(', ') || 'layout'}) — left as exported`);
+      } else {
+        const el = (tag, cls, text) => {
+          const e = document.createElement(tag);
+          if (cls) e.className = cls;
+          if (text != null) e.textContent = text;
+          return e;
+        };
+        const card = (f) => {
+          const art = caseFor(f);
+          const a = el('a', 'writing-card');
+          a.setAttribute('href', `${localePrefix}work/${f.slug}/`);
+          a.setAttribute('data-flagship', f.slug);
+          const head = el('div', 'writing-card-head');
+          head.appendChild(el('span', 'writing-card-cat', (art.querySelector('.case-num')?.textContent || '').trim()));
+          a.append(head, el('h3', 'writing-card-title', f.name),
+            el('p', 'writing-card-desc', (art.querySelector('.case-tagline')?.textContent || '').trim()));
+          const stack = art.querySelector('.case-stack');
+          if (stack) a.appendChild(stack.cloneNode(true));
+          a.appendChild(el('span', 'writing-card-arr', `${labels.caseStudy} →`));
+          return a;
+        };
+        const grid = (list) => {
+          const g = el('div', 'writing-grid');
+          list.forEach((f) => g.appendChild(card(f)));
+          return g;
+        };
+        const allWork = () => {
+          const w = el('div', 'work-more');
+          const a = el('a', 'btn btn-ghost', `${labels.allWork} →`);
+          a.setAttribute('href', `${localePrefix}work/`);
+          w.appendChild(a);
+          return w;
+        };
+        if (pageSpec.work === 'teaser') {
+          const g = grid(layout.flagships);
+          if (pageSpec.key === 'home') {
+            articles.forEach((c) => c.remove());
+            holder.replaceWith(g);
+            g.after(allWork());
+          } else {
+            layout.flagships.forEach((f) => caseFor(f).remove());
+            g.classList.add('work-flagships');
+            holder.before(g);
+          }
+        } else if (pageSpec.work === 'single') {
+          const f = pageSpec.flagship;
+          const art = caseFor(f);
+          const more = grid(layout.flagships.filter((x) => x.slug !== f.slug));
+          project = {
+            name: f.name, slug: f.slug,
+            tagline: (art.querySelector('.case-tagline')?.textContent || '').trim(),
+            chips: [...art.querySelectorAll('.case-stack .chip')].map((c) => (c.textContent || '').trim()).filter(Boolean),
+          };
+          articles.forEach((c) => { if (c !== art) c.remove(); });
+          const wrap = workSec.querySelector(':scope > .wrap');
+          if (!wrap) throw new Error(`${pageSpec.key}: #work has no ":scope > .wrap" column to build the project page in`);
+          const head = wrap.querySelector(':scope > .section-head');
+          if (head) head.remove();
+          workSec.id = 'case';
+          // The case name is the page's heading.
+          const title = art.querySelector('.case-name');
+          if (!title) throw new Error(`${pageSpec.key}: the case has no .case-name to promote to the page heading`);
+          const h1 = document.createElement('h1');
+          for (const attr of title.attributes) h1.setAttribute(attr.name, attr.value);
+          while (title.firstChild) h1.appendChild(title.firstChild);
+          title.replaceWith(h1);
+          // The full write-up, open: it is what the page is for.
+          art.querySelectorAll('.deepdive').forEach((dd) => {
+            dd.classList.add('open');
+            const toggle = dd.querySelector('.deepdive-toggle');
+            if (toggle) toggle.setAttribute('aria-expanded', 'true');
+          });
+          const crumbs = el('nav', 'crumbs');
+          crumbs.setAttribute('aria-label', 'Breadcrumb');
+          const ol = el('ol');
+          [[localePrefix, 'Ahmed Farid'], [`${localePrefix}work/`, labels.work]].forEach(([href, text]) => {
+            const li = el('li');
+            const a = el('a', null, text);
+            a.setAttribute('href', href);
+            li.appendChild(a);
+            ol.appendChild(li);
+          });
+          const here = el('li', null, f.name);
+          here.setAttribute('aria-current', 'page');
+          ol.appendChild(here);
+          crumbs.appendChild(ol);
+          wrap.insertBefore(crumbs, wrap.firstChild);
+          wrap.append(el('h2', 'fineprint', labels.moreWork), more, allWork());
+        }
+      }
+    }
+    // The navigation is the same four links on every page: three pages and the
+    // contact block. The export's six in-page anchors (Work, Brands, Engineering,
+    // Experience, Process, FAQ) described a single long page. Numbers are taken
+    // from the links being replaced, so Arabic keeps its Arabic-Indic digits.
+    {
+      const here = pageSpec.key;
+      const items = [
+        { key: 'work', href: `${localePrefix}work/`, label: labels.work },
+        { key: 'services', href: `${localePrefix}services/`, label: labels.services },
+        { key: 'about', href: `${localePrefix}about/`, label: labels.about },
+        { key: 'contact', href: '#contact', label: labels.contact },
+      ];
+      const fill = (container, existing, anchorBefore) => {
+        const nums = existing.slice(0, items.length).map((a) => (a.querySelector('.idx') || {}).textContent);
+        existing.forEach((a) => a.remove());
+        items.forEach((it, i) => {
+          const a = document.createElement('a');
+          a.setAttribute('href', it.href);
+          if (it.key === here) a.setAttribute('aria-current', 'page');
+          const idx = document.createElement('span');
+          idx.className = 'idx';
+          idx.textContent = nums[i] || String(i + 1).padStart(2, '0');
+          a.append(idx, document.createTextNode(it.label));
+          container.insertBefore(a, anchorBefore);
+        });
+      };
+      const links = document.querySelector('#root > nav .nav-links');
+      const drawer = document.querySelector('#root > nav .nav-mobile');
+      if (links) fill(links, [...links.querySelectorAll(':scope > a')], null);
+      else warnings.push('nav: .nav-links not found — navigation left as exported');
+      if (drawer) {
+        const own = [...drawer.querySelectorAll(':scope > a')].filter((a) => !a.classList.contains('nav-mobile-avail') && !a.classList.contains('nav-mobile-cta'));
+        fill(drawer, own, drawer.querySelector(':scope > .nav-mobile-cta'));
+      } else warnings.push('nav: .nav-mobile not found — drawer left as exported');
+    }
+    // The hero's scroll cue pointed at the Profile section, which now lives on
+    // /about/. "What I do" is what comes next on this page.
+    const scrollCue = document.querySelector('.hero-scroll');
+    if (scrollCue && document.getElementById('what-i-do')) scrollCue.setAttribute('href', '#what-i-do');
+    // Home: the hero's second ghost button was "Download CV" — the hiring path.
+    // A client's next question is what it costs and how it works, so it goes to
+    // Services & pricing. The CV stays in the footer, on /about/ and in the
+    // hiring path of the contact block.
+    if (pageSpec.key === 'home') {
+      const cv = document.querySelector('.hero-meta a[href$="Ahmed-Farid-CV.pdf"]');
+      if (cv) {
+        cv.setAttribute('href', `${localePrefix}services/`);
+        cv.removeAttribute('download');
+        cv.textContent = `${labels.pricing} →`;
+      } else warnings.push('hero: the CV button was not found — left as exported');
+    }
+    // "Ways to work together" opens with "Those are the packaged offers above."
+    // On a page without the price list there is no "above"; drop that sentence.
+    // It is matched as the locale's own sentence, not "everything up to the
+    // first full stop", so a reworded sub-line is warned about, not trimmed.
+    if (!pageSpec.sections.includes('pricing') && pageSpec.sections.includes('services')) {
+      const sub = document.querySelector('#services .section-sub');
+      const text = sub ? sub.textContent.trim() : '';
+      if (sub && !sub.children.length && text.startsWith(copy.packagedAbove)) {
+        sub.textContent = text.slice(copy.packagedAbove.length).trim();
+      } else warnings.push(`services: the "packaged offers above" sentence (${copy.packagedAbove}) was not found at the start of #services .section-sub — left as exported`);
+    }
+    // Home: the four service cards run full-time role first, which is the
+    // hiring path. For a client the fixed-scope build, the retainer and the
+    // advisory call come first and the role last. The cards are found by
+    // heading (HOME_SERVICE_ORDER); their numbers and stagger delays belong to
+    // the position, so they stay put while the cards move. /services/ keeps the
+    // export's order.
+    if (pageSpec.key === 'home') {
+      const grid = document.querySelector('#services .services-grid');
+      const cards = grid ? [...grid.querySelectorAll(':scope > .service-card')] : [];
+      const headingOf = (c) => (c.querySelector('.service-t')?.textContent || '').trim();
+      const ordered = copy.serviceOrder.map((t) => cards.find((c) => headingOf(c) === t));
+      if (grid && cards.length === ordered.length && ordered.every(Boolean)) {
+        const nums = cards.map((c) => c.querySelector('.service-num')?.textContent);
+        const delays = cards.map((c) => c.style.transitionDelay);
+        ordered.forEach((c, i) => {
+          grid.appendChild(c);
+          const num = c.querySelector('.service-num');
+          if (num && nums[i] != null) num.textContent = nums[i];
+          c.style.transitionDelay = delays[i];
+        });
+      } else {
+        warnings.push(`services: the four cards were not found by heading (${copy.serviceOrder.join(' | ')}) — left in the export's order`);
+      }
+    }
+    // Nav and footer links point at sections that may not be on this page.
+    // One that is here stays an in-page link; one that lives on another page
+    // becomes a link to that page, so nothing resolves to a dead anchor. An id
+    // nobody owns is left alone for the dead-anchor gate to fail on.
+    if (pageSpec.anchors === 'resolve') {
+      document.querySelectorAll('a[href^="#"]').forEach((a) => {
+        const id = a.getAttribute('href').slice(1);
+        if (id && document.getElementById(id)) return;
+        if (id === 'top') { a.setAttribute('href', localePrefix); return; }
+        if (!id) return;
+        const owner = Object.prototype.hasOwnProperty.call(links.owner, id) ? links.owner[id] : undefined;
+        const ownerPath = owner ? links.paths[owner] : undefined;
+        if (ownerPath != null) a.setAttribute('href', `${localePrefix}${ownerPath}#${id}`);
+      });
+    }
+
+    if (pageSpec.renumber) {
+      // Section numbers are displayed. After the cut they would read 13, 14,
+      // 15 on a page whose first section is the first thing on it.
+      let n = 0;
+      document.querySelectorAll('section .eyebrow').forEach((eb) => {
+        if (!/·\s*[0-9٠-٩]{2}\s*$/.test(eb.textContent || '')) return;
+        n += 1;
+        const ar = /[٠-٩]/.test(eb.textContent);
+        const num = String(n).padStart(2, '0');
+        const shown = ar ? num.replace(/[0-9]/g, (d) => '٠١٢٣٤٥٦٧٨٩'[+d]) : num;
+        eb.textContent = (eb.textContent || '').replace(/·\s*[0-9٠-٩]{2}\s*$/, '· ' + shown);
+      });
+    }
+
+    if (pageSpec.sortWriting) {
       // ── Writing: engineering topics before career notes ───────────────
       // Stable sort by category rank; unknown categories keep their order at
       // the end. Every card still links to the same LinkedIn activity feed —
@@ -1522,7 +2266,9 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
       } else {
         warnings.push('writing: #writing .writing-grid not found');
       }
+    }
 
+    if (pageSpec.foldCases) {
       // ── Case studies: progressive disclosure ───────────────────────────
       // The five flagship cases stay fully open. The others keep their
       // header, screenshot, Impact and tech notes visible, and fold Problem +
@@ -1571,46 +2317,25 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
       }
     }
 
-    // Footer email: let it break after the "@" rather than mid-domain in a
-    // narrow footer column.
-    document.querySelectorAll('footer a[href^="mailto:"]').forEach((a) => {
-      if (a.children.length || !a.textContent.includes('@')) return;
-      const [local, domain] = a.textContent.split('@');
-      a.textContent = local + '@';
-      a.appendChild(document.createElement('wbr'));
-      a.appendChild(document.createTextNode(domain));
-    });
-
-    // Language links keep the visitor on the page they are reading: on
-    // /services each language goes to that language's /services/. The drawer
-    // links are baked into the snapshot; the runtime menu is fixed up by the
-    // vanilla layer (it is built after the snapshot by the export's script).
-    if (pageVariant === 'services') {
+    // Language links keep the visitor on the page they are reading: on a
+    // page under a suffix (/services/) each language goes to that language's
+    // same page. The drawer links are baked into the snapshot; the runtime
+    // menu is fixed up by the vanilla layer (it is built after the snapshot
+    // by the export's script).
+    if (pageSpec.suffix) {
       document.querySelectorAll('a.dl-lang[hreflang]').forEach((a) => {
         const code = a.getAttribute('hreflang');
-        if (localeCodes.includes(code)) a.setAttribute('href', (code === 'en' ? '/' : `/${code}/`) + 'services/');
+        if (localeCodes.includes(code)) a.setAttribute('href', (code === 'en' ? '/' : `/${code}/`) + pageSpec.suffix);
       });
     }
 
     // On /services the contact block leads with the project path (call,
     // WhatsApp, brief); on home the hiring path stays first.
-    if (pageVariant === 'services') {
+    if (pageSpec.contactFirst === 'project') {
       const paths = document.querySelectorAll('#contact .contact-paths > .contact-path');
       if (paths.length === 2) paths[0].parentNode.insertBefore(paths[1], paths[0]);
-      else warnings.push(`services: expected 2 contact paths, found ${paths.length}`);
+      else warnings.push(`${pageSpec.key}: expected 2 contact paths, found ${paths.length}`);
     }
-
-    const ownSwitchers = [...document.querySelectorAll('.locale, .lang-switcher, [data-locale-switcher]')];
-    const hasOwnSwitcher = ownSwitchers.length > 0;
-    ownSwitchers.forEach((el) => el.remove());
-    document.querySelectorAll('a[href]').forEach((a) => {
-      const bare = (a.getAttribute('href') || '').replace(/^\.?\//, '');
-      if (bare === 'index.html') a.setAttribute('href', '/');
-      else {
-        const m = /^index\.([a-z]{2})\.html$/.exec(bare);
-        if (m && localeCodes.includes(m[1])) a.setAttribute('href', `/${m[1]}/`);
-      }
-    });
 
     // ── Accessibility structure ─────────────────────────────────────────
     // Done here, before the snapshot, so it is in the static HTML rather than
@@ -1631,11 +2356,11 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
       while (main.nextSibling && main.nextSibling !== footEl) main.appendChild(main.nextSibling);
     }
 
-    // /services is a slice of the home render, so its <h1> — the hero — was cut
-    // away with the hero and the page opened on an <h2>. Promote the first
-    // section title. Its look is carried by `.section-title` (and
-    // `.section-title em`), not by the tag, so the swap is invisible.
-    if (pageVariant === 'services' && !document.querySelector('h1')) {
+    // A page cut from the home render has lost the hero — its <h1> — and
+    // would open on an <h2>. Promote the first section title. Its look is
+    // carried by `.section-title` (and `.section-title em`), not by the tag,
+    // so the swap is invisible.
+    if (pageSpec.promoteH1 && !document.querySelector('h1')) {
       const first = document.querySelector('#main h2');
       if (first) {
         const h1 = document.createElement('h1');
@@ -1667,23 +2392,64 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
       .filter((x) => x.q && x.a);
 
     return {
-      title, lang, meta, css, bodyClass, rootAttrs, bodyAttrs, hasOwnSwitcher, faq, warnings,
+      faq, warnings, keptKeys, project,
+      caseNames: [...document.querySelectorAll('article.case .case-name')].map((e) => (e.textContent || '').trim()),
       body: document.getElementById('root').innerHTML,
-      blobCount: blobUrls.length,
     };
-  }, GH_USER, ghData, !!enhanceJS, locales.map((l) => l.lang),
-     variant, FAQ_BUYER_KEYS[lang] || FAQ_BUYER_KEYS.en, lang === 'en' ? '/' : `/${lang}/`, PAGE_LAYOUT);
-
-  await page.close();
+  }, spec, locales.map((l) => l.lang), FAQ_BUYER_KEYS[lang] || FAQ_BUYER_KEYS.en, prefix, PAGE_LAYOUT, SECTION_KEYS,
+    { owner: LINK_OWNER, paths: Object.fromEntries(PAGE_SPECS.map((s) => [s.key, s.suffix])) },
+    NAV[lang],
+    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en }));
 
   // Layout passes are best-effort: a re-export that renames a class leaves the
   // page as the export drew it, which is valid, so warn rather than fail.
-  for (const w of result.warnings || []) console.warn(`  [${lang}/${variant}] ⚠ ${w}`);
+  for (const w of snap.warnings || []) console.warn(`  [${lang}/${spec.key}] ⚠ ${w}`);
+  return snap;
+}
 
-  if (pageErrors.length) {
-    console.log(`  [${lang}] (${pageErrors.length} non-fatal page errors during render — expected for blocked external assets)`);
+// JSON-LD goes inside a <script>, where a "<" in any string (an FAQ answer, a
+// case name) could close the tag early. Every block is serialised through here.
+const ldJson = (obj) => JSON.stringify(obj).replace(/</g, '\\u003c');
+
+// A project page's title and description, from the case study's own text and
+// nothing else. Title: name, the tagline up to its first dash or colon, then
+// the site name — or the generic "Case study" label when that runs past the
+// head limit. Description: the tagline, then as many tech chips as fit.
+const PROJECT_DESCRIPTION_MAX = 165;
+function projectSeo(project, lang) {
+  const { name, tagline, chips } = project;
+  // The tagline is all the page's title and description are made from. Without
+  // one they would be the bare name: refuse rather than publish that.
+  if (!tagline) {
+    throw Object.assign(new Error(`[build] [${lang}] ${name}: the case has no .case-tagline, so its page has no title or description to build.`), { fatal: true });
   }
-  console.log(`  [${lang}] re-embedded ${result.blobCount} blob asset(s) as data: URLs`);
+  const cut = tagline.search(/ — | – |: /);
+  const clause = (cut > 0 ? tagline.slice(0, cut) : tagline).replace(/\.$/, '').trim();
+  let title = `${name} — ${clause} · Ahmed Farid`;
+  if (title.length > HEAD_LIMITS.title) title = `${name} — ${NAV[lang].caseStudy} · Ahmed Farid`;
+  let description;
+  if (tagline.length > PROJECT_DESCRIPTION_MAX) {
+    const head = tagline.slice(0, PROJECT_DESCRIPTION_MAX - 1);
+    description = head.slice(0, head.lastIndexOf(' ')).replace(/[\s,.;:—–-]+$/, '') + '…';
+  } else {
+    const keep = [...chips];
+    const joined = () => (keep.length ? `${tagline} ${keep.join(' · ')}` : tagline);
+    while (keep.length && joined().length > PROJECT_DESCRIPTION_MAX) keep.pop();
+    description = joined();
+  }
+  return { title, description };
+}
+
+// Node-side assembly of one page: head, structured data, document, externalised
+// assets, minify, write. Driven by the page's spec; `shared` is the locale's
+// render result, `snap` this page's cut of it.
+async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, assetSeen }) {
+  const { lang, dir, urlPath } = loc;
+  const multi = locales.length > 1;
+  const outDir = path.join(loc.outDir, spec.suffix);
+  const result = { ...shared, ...snap };
+
+  await mkdir(outDir, { recursive: true });
 
   // ── Assemble the static document ──────────────────────────────────────────
   // Force this locale's lang (and RTL direction for Arabic) onto <html> while
@@ -1786,7 +2552,7 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
         // Facts owned by site-facts.mjs win over whatever the export says, so
         // a stale years/location claim in the export cannot reach JSON-LD.
         for (const k of ['description', 'address', 'homeLocation']) obj[k] = personLd[k];
-        return `${mm[1]}${JSON.stringify(obj)}${mm[3]}`;
+        return `${mm[1]}${ldJson(obj)}${mm[3]}`;
       }
     } catch { /* leave malformed ld+json untouched */ }
     return m;
@@ -1794,9 +2560,14 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
 
   // /services is its own page per locale, with its own canonical: pointing it
   // at the home page told search engines to drop it.
-  const pageSuffix = variant === 'services' ? 'services/' : '';
+  const pageSuffix = spec.suffix;
   const pageUrl = `${SITE_URL}${urlPath}${pageSuffix}`;
-  const seo = (SEO[variant] || SEO.home)[lang] || (SEO[variant] || SEO.home).en;
+  const project = snap.project;      // a project page's case study (spec.work === 'single')
+  if (spec.work === 'single' && !project) {
+    throw Object.assign(new Error(`[build] [${lang}] ${spec.key}: the flagship case study could not be cut from the render.`), { fatal: true });
+  }
+  // SEO[key][lang] is present for every other page × locale: assertPageSpecs
+  const seo = spec.work === 'single' ? projectSeo(project, lang) : SEO[spec.key][lang];
   const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
   // Point og:image / twitter:image at the generated card (drop the export's
@@ -1865,7 +2636,7 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
     about: { '@id': `${SITE_URL}/#person` },
   };
   const faqLd =
-    result.faq && result.faq.length
+    spec.ld.includes('faq') && result.faq && result.faq.length
       ? {
           '@context': 'https://schema.org',
           '@type': 'FAQPage',
@@ -1878,10 +2649,62 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
           })),
         }
       : null;
+  // Per-page types named by the spec (see PAGE_SPECS.ld).
+  const pageNode = {
+    '@context': 'https://schema.org',
+    url: pageUrl,
+    name: seo.title,
+    description: seo.description,
+    inLanguage: lang,
+    isPartOf: { '@id': `${SITE_URL}/#website` },
+  };
+  const pageLd = [
+    spec.ld.includes('profile')
+      ? { ...pageNode, '@type': 'ProfilePage', '@id': `${pageUrl}#profile`, mainEntity: { '@id': `${SITE_URL}/#person` } }
+      : null,
+    spec.ld.includes('collection')
+      ? {
+          ...pageNode, '@type': 'CollectionPage', '@id': `${pageUrl}#page`, about: { '@id': `${SITE_URL}/#person` },
+          mainEntity: {
+            '@type': 'ItemList',
+            itemListElement: FLAGSHIP.map((f, i) => ({ '@type': 'ListItem', position: i + 1, name: f.name, url: `${pageUrl}${f.slug}/` })),
+          },
+        }
+      : null,
+    spec.ld.includes('service')
+      ? {
+          '@context': 'https://schema.org', '@type': 'ProfessionalService', '@id': `${SITE_URL}/#service`,
+          name: 'Ahmed Farid — software engineering and consulting', url: `${SITE_URL}/`, description: seo.description,
+          founder: { '@id': `${SITE_URL}/#person` }, address: personLd.address, email: CONTACT.email,
+          sameAs: [CONTACT.linkedin, CONTACT.github], makesOffer: personLd.makesOffer,
+        }
+      : null,
+    spec.ld.includes('project')
+      ? {
+          '@context': 'https://schema.org', '@type': 'CreativeWork', '@id': `${pageUrl}#work`, url: pageUrl,
+          name: project.name, description: project.tagline, inLanguage: lang,
+          creator: { '@id': `${SITE_URL}/#person` }, keywords: project.chips.join(', '),
+          isPartOf: { '@id': `${SITE_URL}${urlPath}work/#page` },
+        }
+      : null,
+  ].filter(Boolean);
+  const breadcrumbLd = spec.ld.includes('breadcrumb')
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        '@id': `${pageUrl}#breadcrumb`,
+        itemListElement: (spec.work === 'single'
+          ? [['Ahmed Farid', `${SITE_URL}${urlPath}`], [NAV[lang].work, `${SITE_URL}${urlPath}work/`], [project.name, pageUrl]]
+          : [['Ahmed Farid', `${SITE_URL}${urlPath}`], [NAV[lang][spec.key], pageUrl]]
+        ).map(([name, item], i) => ({ '@type': 'ListItem', position: i + 1, name, item })),
+      }
+    : null;
   const jsonLd = [
-    hasLd ? '' : `<script type="application/ld+json">${JSON.stringify(personLd)}</script>`,
-    `<script type="application/ld+json">${JSON.stringify(webSiteLd)}</script>`,
-    faqLd ? `<script type="application/ld+json">${JSON.stringify(faqLd)}</script>` : '',
+    hasLd ? '' : `<script type="application/ld+json">${ldJson(personLd)}</script>`,
+    `<script type="application/ld+json">${ldJson(webSiteLd)}</script>`,
+    ...pageLd.map((o) => `<script type="application/ld+json">${ldJson(o)}</script>`),
+    faqLd ? `<script type="application/ld+json">${ldJson(faqLd)}</script>` : '',
+    breadcrumbLd ? `<script type="application/ld+json">${ldJson(breadcrumbLd)}</script>` : '',
   ].filter(Boolean).join('\n');
 
   // ── Language switcher (only when multiple locales exist) ──────────────────
@@ -2008,11 +2831,20 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
   });
 })();`.trim();
 
+  // Home only: forward the old single-page deep links (see REDIRECTS). The map
+  // is a build constant and is looked up with hasOwnProperty, so a hash such as
+  // "#__proto__" or "#constructor" cannot reach anything.
+  const redirectScript = spec.key === 'home' && Object.keys(REDIRECTS).length
+    ? `<script>(function(){var m=${JSON.stringify(REDIRECTS)},h=location.hash.slice(1);` +
+      `if(h&&Object.prototype.hasOwnProperty.call(m,h))location.replace(${JSON.stringify(urlPath)}+m[h]+'#'+h)})()</script>`
+    : '';
+
   const html = `<!doctype html>
 <html ${htmlAttrs}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+${redirectScript}
 ${PINTEREST_VERIFY_TAG}
 ${adPixel(lang)}
 <title>${esc(seo.title)}</title>
@@ -2078,6 +2910,23 @@ ${jsonLd}
 .case-more-inner{display:grid;gap:32px;padding-top:24px}
 :root[data-corners=sharp] .case-more-summary{border-radius:2px}
 @media print{.case-more-summary{display:none}}
+/* Project pages: breadcrumb trail, the "all work" link under a card grid, the
+   flagship cards above /work/'s folded cases, and the case write-up shown open.
+   Its toggle stays and works: the panel starts open (max-height lifted, as the
+   write-up can outgrow the export's 2400px cap) and collapses to the export's
+   own closed state when it is clicked. Logical properties throughout, so
+   Arabic mirrors without a second rule. */
+.crumbs ol{display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0 0 28px;padding:0;font-family:var(--mono);font-size:12px;color:var(--ink-dim)}
+.crumbs a{color:var(--ink-mute)}
+.crumbs li+li::before{content:"/";margin-inline-end:8px}
+.work-more{margin-top:32px}
+.work-flagships{margin-bottom:56px}
+#case .deepdive.open .deepdive-panel{max-height:none}
+/* The page the visitor is on, in the four-link navigation. Same mark the
+   export's scroll-spy uses for the section in view. */
+.nav-links a[aria-current="page"]{color:var(--ink)}
+.nav-links a[aria-current="page"] span.idx{color:var(--accent)}
+.nav-links a[aria-current="page"]::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:1px;background:var(--accent);box-shadow:0 0 8px var(--accent-glow)}
 ${A11Y_CSS}
 ${switcherCss}
 </style>
@@ -2087,7 +2936,7 @@ ${skipLink(lang)}
 ${switcher}
 <div id="root">${result.body}</div>
 <script src="https://assets.calendly.com/assets/external/widget.js" async></script>
-${enhanceJS ? `<script>${enhanceForVariant(enhanceJS, variant)}</script>` : ''}
+${enhanceJS ? `<script>${enhanceForVariant(enhanceJS, spec)}</script>` : ''}
 <script>${interactivity}</script>
 </body>
 </html>`;
@@ -2155,12 +3004,12 @@ ${enhanceJS ? `<script>${enhanceForVariant(enhanceJS, variant)}</script>` : ''}
 
   await writeFile(path.join(outDir, 'index.html'), out, 'utf8');
 
-  const before = (await import('node:fs')).statSync(src).size;
+  const before = (await import('node:fs')).statSync(loc.src).size;
   const after = Buffer.byteLength(out);
   console.log(`✓ [${lang}] Built ${path.relative(ROOT, path.join(outDir, 'index.html'))}`);
   console.log(`  source export: ${(before / 1e6).toFixed(2)} MB  →  static HTML: ${(after / 1e6).toFixed(3)} MB (+ shared assets, lazy/cacheable)`);
 
-  return { lang, urlPath, htmlPath: path.join(outDir, 'index.html'), pageErrors: pageErrors.length };
+  return { lang, urlPath, htmlPath: path.join(outDir, 'index.html') };
 }
 
 async function build() {
@@ -2168,6 +3017,7 @@ async function build() {
 
   const locales = await discoverLocales();
   console.log(`→ Locales discovered: ${locales.map((l) => `${l.lang}${l.dir === 'rtl' ? '(rtl)' : ''} → ${l.urlPath}`).join(', ')}`);
+  assertPageSpecs(locales);
 
   await rm(DIST, { recursive: true, force: true });
   await mkdir(DIST, { recursive: true });
@@ -2195,22 +3045,29 @@ async function build() {
   }
 
   console.log('→ Generating Open Graph card…');
-  try { await generateOgImage(browser); } catch (e) { console.log('  (og.png generation skipped:', e.message + ')'); }
+  // Every page's og:image and JSON-LD image point at /og.png, so a missing
+  // card is a broken page set: refuse rather than ship without it.
+  try { await generateOgImage(browser); } catch (e) { e.fatal = true; e.message = `og.png could not be generated: ${e.message}`; throw e; }
 
   // ── Per-locale pages (shared assets folder, deduped via assetSeen) ────────
+  // One render per locale; every page in PAGE_SPECS is a cut of it.
   const assetSeen = new Map();
+  const coverage = [];   // per locale: what the render held, and what each cut kept
+  const projects = {};   // slug → { name, tagline, chips } from the English render
   for (const loc of locales) {
-    await buildPage({
-      browser, src: loc.src, outDir: loc.outDir, lang: loc.lang, dir: loc.dir,
-      locales, ghData, enhanceJS, assetSeen, variant: 'home',
-    });
-    // Second cut of the same render: the freelance offer, on its own URL, in
-    // the site's own design rather than a hand-built page beside it.
-    await buildPage({
-      browser, src: loc.src, outDir: path.join(loc.outDir, 'services'),
-      lang: loc.lang, dir: loc.dir,
-      locales, ghData, enhanceJS, assetSeen, variant: 'services',
-    });
+    const { page, shared } = await renderLocale({ browser, loc, ghData, enhanceJS, locales });
+    const snaps = [];
+    coverage.push({ lang: loc.lang, shared, snaps });
+    try {
+      for (const spec of PAGE_SPECS) {
+        const snap = await snapshotVariant({ page, spec, lang: loc.lang, locales });
+        if (loc.lang === 'en' && snap.project) projects[snap.project.slug] = snap.project;
+        snaps.push({ spec, keptKeys: snap.keptKeys, caseNames: snap.caseNames, faq: snap.faq });
+        await writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, assetSeen });
+      }
+    } finally {
+      await page.close().catch(() => {});
+    }
   }
 
   await browser.close();
@@ -2218,16 +3075,17 @@ async function build() {
   // ── One-time SEO + static assets ──────────────────────────────────────────
   await copyStaticAssets();
 
-  await writeSeoFiles(locales);
+  await writeSeoFiles(locales, PAGE_SPECS, projects);
 
   // ── Verify each built page actually renders ───────────────────────────────
   console.log('→ Verifying built output…');
   const vb = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox', '--disable-setuid-sandbox', '--ignore-certificate-errors'] });
-  for (const loc of locales) {
+  for (const { loc, spec } of localePages(locales)) {
+    const label = spec.suffix ? `${loc.lang} /${spec.suffix}` : loc.lang;
     const vp = await vb.newPage();
     const vErrors = [];
     vp.on('pageerror', (e) => vErrors.push(String(e)));
-    await vp.goto(pathToFileURL(path.join(loc.outDir, 'index.html')).href, { waitUntil: 'load', timeout: 60000 });
+    await vp.goto(pathToFileURL(path.join(loc.outDir, spec.suffix, 'index.html')).href, { waitUntil: 'load', timeout: 60000 });
     const check = await vp.evaluate(() => ({
       text: (document.body.innerText || '').length,
       sections: document.querySelectorAll('section[id]').length,
@@ -2236,12 +3094,12 @@ async function build() {
       faq: document.querySelectorAll('.faq-item').length,
     }));
     await vp.close();
-    if (check.text < 5000 || check.sections < 8) {
+    if (check.text < spec.verify.minText || check.sections < spec.verify.minSections) {
       await vb.close();
-      throw new Error(`[${loc.lang}] Verification failed: text=${check.text} sections=${check.sections}`);
+      throw Object.assign(new Error(`[${label}] Verification failed: text=${check.text} (min ${spec.verify.minText}) sections=${check.sections} (min ${spec.verify.minSections})`), { fatal: true });
     }
-    console.log(`  ✓ [${loc.lang}] renders: ${check.text} chars, ${check.sections} sections, ${check.imgs} images, ${check.faq} FAQ items, React shipped=${check.hasReact}`);
-    if (vErrors.length) console.log(`    ([${loc.lang}] ${vErrors.length} non-fatal errors — expected for blocked external assets in CI)`);
+    console.log(`  ✓ [${label}] renders: ${check.text} chars, ${check.sections} sections, ${check.imgs} images, ${check.faq} FAQ items, React shipped=${check.hasReact}`);
+    if (vErrors.length) console.log(`    ([${label}] ${vErrors.length} non-fatal errors — expected for blocked external assets in CI)`);
   }
   await vb.close();
 
@@ -2251,11 +3109,18 @@ async function build() {
   // matched nothing, or a stale string that came back with a re-export.
   await applyShellToStandalonePages();
   const pages = await emittedPages();
+  // Gates, in order (the two transforms in between are not gates). The PDF
+  // check stays last: it is the slowest and the one that needs the checklist
+  // source.
+  await assertPageInventory(locales, coverage);
   await vendorExternalImages(pages);
   await fixHeadingOutlines(pages);
   await assertA11yBaseline(pages);
   await assertNoForbiddenStrings();
   await assertNoDeadAnchors();
+  await assertInternalLinks(pages, locales);
+  await assertHeadMeta(locales);
+  await assertPageRoles(locales);
   await assertLocaleRouting(locales);
   await assertPublicPdfs();
 
@@ -2266,5 +3131,5 @@ try {
   if (!existsSync(SRC)) throw new Error('index.html not found at repo root');
   await build();
 } catch (err) {
-  await fallback(err);
+  refuseBuild(err);
 }

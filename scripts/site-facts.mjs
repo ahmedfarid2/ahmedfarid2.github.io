@@ -58,26 +58,27 @@ export const YEARS_PROSE = {
 // Head metadata the build writes for every page. Descriptions stay under
 // ~165 characters; city, 6+ and stack names are never translated away.
 export const SEO = {
+  // Home speaks to a client first; the CV and the hiring pitch are on /about/.
   home: {
     en: {
-      title: 'Ahmed Farid — Senior Software Engineer in Dubai · Multi-tenant SaaS',
-      description: 'Dubai-based Senior Software Engineer (6+ years): real-time, multi-tenant SaaS, end to end — Laravel, Next.js, Flutter. Open to senior roles and consulting.',
+      title: 'Ahmed Farid — Multi-tenant SaaS Engineer & Consultant in Dubai',
+      description: 'Dubai-based senior software engineer (6+ years) building real-time, multi-tenant SaaS end to end — Laravel, Next.js, Flutter. Fixed-scope builds and consulting.',
     },
     ar: {
-      title: 'Ahmed Farid — مهندس برمجيات أول في دبي · منصّات SaaS متعدّدة المستأجرين',
-      description: 'مهندس برمجيات أول مقيم في دبي (+6 سنوات): منصّات SaaS فورية متعدّدة المستأجرين من البداية إلى النهاية — Laravel وNext.js وFlutter. متاح لأدوار أولى واستشارات.',
+      title: 'Ahmed Farid — مهندس ومستشار منصّات SaaS متعدّدة المستأجرين في دبي',
+      description: 'مهندس برمجيات أول مقيم في دبي (+6 سنوات): منصّات SaaS فورية متعدّدة المستأجرين من البداية إلى النهاية — Laravel وNext.js وFlutter. مشاريع محدّدة النطاق واستشارات.',
     },
     de: {
-      title: 'Ahmed Farid — Senior-Softwareentwickler in Dubai · Multi-Tenant-SaaS',
-      description: 'Senior-Softwareentwickler in Dubai (6+ Jahre): Echtzeit-Multi-Tenant-SaaS, end to end — Laravel, Next.js, Flutter. Offen für Senior-Rollen und Beratung.',
+      title: 'Ahmed Farid — Multi-Tenant-SaaS-Entwickler & Berater in Dubai',
+      description: 'Senior-Softwareentwickler in Dubai (6+ Jahre): Echtzeit-Multi-Tenant-SaaS, end to end — Laravel, Next.js, Flutter. Festpreis-Projekte und Beratung.',
     },
     es: {
-      title: 'Ahmed Farid — Ingeniero de Software Senior en Dubái · SaaS multi-tenant',
-      description: 'Ingeniero de Software Senior en Dubái (6+ años): SaaS multi-tenant en tiempo real, de punta a punta — Laravel, Next.js, Flutter. Roles senior y consultoría.',
+      title: 'Ahmed Farid — Ingeniero y consultor de SaaS multi-tenant en Dubái',
+      description: 'Ingeniero de Software Senior en Dubái (6+ años): SaaS multi-tenant en tiempo real, de punta a punta — Laravel, Next.js, Flutter. Proyectos cerrados y consultoría.',
     },
     fr: {
-      title: 'Ahmed Farid — Ingénieur logiciel senior à Dubaï · SaaS multi-tenant',
-      description: 'Ingénieur logiciel senior à Dubaï (6+ ans) : SaaS multi-tenant temps réel, de bout en bout — Laravel, Next.js, Flutter. Ouvert aux postes senior et au conseil.',
+      title: 'Ahmed Farid — Ingénieur et consultant SaaS multi-tenant à Dubaï',
+      description: 'Ingénieur logiciel senior à Dubaï (6+ ans) : SaaS multi-tenant temps réel, de bout en bout — Laravel, Next.js, Flutter. Projets au forfait et conseil.',
     },
   },
   services: {
@@ -102,7 +103,81 @@ export const SEO = {
       description: 'Projets au forfait, retainers d’ingénierie et revues d’architecture pour SaaS multi-tenant temps réel — tarifs, FAQ et appel de cadrage de 30 min. Basé à Dubaï.',
     },
   },
+  work: {
+    en: {
+      title: 'Work — Case Studies in SaaS, Real-Time & Mobile · Ahmed Farid',
+      description: 'Case studies of production systems: live-bidding auctions, multi-tenant SaaS, AI-assisted tools and Flutter apps shipped across the Gulf, US and UK.',
+    },
+    ar: {
+      title: 'الأعمال — دراسات حالة في SaaS والأنظمة الفورية والموبايل · Ahmed Farid',
+      description: 'دراسات حالة لأنظمة في الإنتاج: مزادات مباشرة، منصّات SaaS متعدّدة المستأجرين، أدوات بالذكاء الاصطناعي وتطبيقات Flutter في الخليج وأمريكا وبريطانيا.',
+    },
+    de: {
+      title: 'Arbeiten — Fallstudien zu SaaS, Echtzeit & Mobile · Ahmed Farid',
+      description: 'Fallstudien produktiver Systeme: Live-Auktionen, Multi-Tenant-SaaS, KI-gestützte Tools und Flutter-Apps für den Golf, die USA und Großbritannien.',
+    },
+    es: {
+      title: 'Proyectos — Casos de estudio de SaaS, tiempo real y móvil · Ahmed Farid',
+      description: 'Casos de estudio de sistemas en producción: subastas en vivo, SaaS multi-tenant, herramientas con IA y apps Flutter en el Golfo, EE. UU. y Reino Unido.',
+    },
+    fr: {
+      title: 'Projets — Études de cas SaaS, temps réel et mobile · Ahmed Farid',
+      description: 'Études de cas de systèmes en production : enchères en direct, SaaS multi-tenant, outils d’IA et apps Flutter livrés dans le Golfe, aux États-Unis et au Royaume-Uni.',
+    },
+  },
+  about: {
+    en: {
+      title: 'About Ahmed Farid — Senior Software Engineer in Dubai',
+      description: 'Experience, engineering depth, architecture principles, open-source work and writing — plus the CV for senior roles. Dubai-based, 6+ years in production.',
+    },
+    ar: {
+      title: 'نبذة عن Ahmed Farid — مهندس برمجيات أول في دبي',
+      description: 'الخبرة والعمق الهندسي ومبادئ البنية المعمارية والأعمال مفتوحة المصدر والكتابة — إضافةً إلى السيرة الذاتية للأدوار الأولى. مقيم في دبي، +6 سنوات في الإنتاج.',
+    },
+    de: {
+      title: 'Über Ahmed Farid — Senior-Softwareentwickler in Dubai',
+      description: 'Erfahrung, technische Tiefe, Architekturprinzipien, Open-Source-Arbeit und Texte — plus der Lebenslauf für Senior-Rollen. In Dubai, 6+ Jahre Praxis in Produktion.',
+    },
+    es: {
+      title: 'Sobre Ahmed Farid — Ingeniero de Software Senior en Dubái',
+      description: 'Experiencia, profundidad técnica, principios de arquitectura, código abierto y escritos — además del CV para roles senior. Desde Dubái, 6+ años en producción.',
+    },
+    fr: {
+      title: 'À propos d’Ahmed Farid — Ingénieur logiciel senior à Dubaï',
+      description: 'Expérience, profondeur technique, principes d’architecture, open source et écrits — plus le CV pour les postes senior. Basé à Dubaï, 6+ ans en production.',
+    },
+  },
 };
+
+// Page names and link labels the build writes into the navigation, breadcrumbs
+// and cards, per locale. `work` is the export's own #work nav label in each
+// locale (read from the built pages, not translated here). Brand and case names
+// are never translated and do not appear here. Arrows are written by the build
+// as "→" in every locale.
+//   work/services/about/contact  the four navigation links
+//   pricing                      the home hero's button to /services/
+//   caseStudy / allWork / moreWork  project cards and the links around them
+export const NAV = {
+  en: { work: 'Work', services: 'Services', about: 'About', contact: 'Contact', caseStudy: 'Case study', allWork: 'All work', moreWork: 'More work', pricing: 'Services & pricing' },
+  ar: { work: 'أعمال', services: 'الخدمات', about: 'نبذة عني', contact: 'تواصل', caseStudy: 'دراسة الحالة', allWork: 'كل الأعمال', moreWork: 'أعمال أخرى', pricing: 'الخدمات والأسعار' },
+  de: { work: 'Arbeiten', services: 'Leistungen', about: 'Über mich', contact: 'Kontakt', caseStudy: 'Fallstudie', allWork: 'Alle Arbeiten', moreWork: 'Weitere Arbeiten', pricing: 'Leistungen & Preise' },
+  es: { work: 'Proyectos', services: 'Servicios', about: 'Sobre mí', contact: 'Contacto', caseStudy: 'Caso de estudio', allWork: 'Todo el trabajo', moreWork: 'Más trabajo', pricing: 'Servicios y precios' },
+  fr: { work: 'Projets', services: 'Services', about: 'À propos', contact: 'Contact', caseStudy: 'Étude de cas', allWork: 'Toutes les réalisations', moreWork: 'Autres réalisations', pricing: 'Services et tarifs' },
+};
+
+// The five flagship case studies, each with a page of its own at
+// /work/<slug>/ in every locale. `name` is the export's case-study name (brand
+// names are never translated, so it is the same in all five locales and is how
+// the build finds the case in the render); `slug` is the URL segment and is the
+// same in every locale. Adding a flagship is adding a row here — and marking
+// the case FLAGSHIP in the export.
+export const FLAGSHIP = [
+  { name: 'Yelo Sale', slug: 'yelo-sale' },
+  { name: 'Qoralia', slug: 'qoralia' },
+  { name: 'KhebraOS', slug: 'khebraos' },
+  { name: 'Phonic Maps', slug: 'phonic-maps' },
+  { name: 'Recovery Advisers', slug: 'recovery-advisers' },
+];
 
 // Strings that mean a fact drifted back to a retired value. Merged into the
 // build's FORBIDDEN scan (entries take `s` for a literal or `re` for a /g

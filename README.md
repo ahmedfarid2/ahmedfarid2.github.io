@@ -56,8 +56,9 @@ across versions. It:
 - **Self-heals** the region count badges from the actual list.
 - **Adds** a tiny vanilla-JS layer for the nav menu, FAQ accordion, scroll
   reveal, and the Calendly popup — no framework.
-- **Falls back** to deploying the raw export if anything goes wrong, so a push
-  never produces a broken site.
+- **Fails closed**: if a page can't be produced or any gate fails, the build
+  exits 1 and nothing is deployed, so the last good deploy stays live. There is
+  no raw-export fallback.
 
 Typical result: a ~2.5 MB self-compiling bundle becomes a **~40 KB gzipped HTML
 document** plus lazy, cacheable assets.
