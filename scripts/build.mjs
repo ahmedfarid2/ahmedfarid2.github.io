@@ -23,7 +23,7 @@ import { mkdir, writeFile, copyFile, rm, readdir, readFile } from 'node:fs/promi
 import { existsSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { SITE_URL, LOCATION, LOCATION_LABEL, CONTACT, YEARS_PROSE, SEO, DRIFT_GUARDS } from './site-facts.mjs';
+import { SITE_URL, LOCATION, LOCATION_LABEL, CONTACT, YEARS_PROSE, SEO, NAV, DRIFT_GUARDS } from './site-facts.mjs';
 import { inspectPdf, pdfProblems, textFingerprint, PDF_REQUIRED_URIS } from './pdf-check.mjs';
 import { renderChecklist, CHECKLIST_PDF, CHECKLIST_REQUIRED_URIS, CHECKLIST_REQUIRED_TEXT } from './build-checklist.mjs';
 
@@ -1293,12 +1293,16 @@ const PAGE_LAYOUT = {
 //   keepUnknown  keep a section whose key is not in SECTION_KEYS (a re-export
 //                added one) rather than dropping content silently
 //   faq          'buyer' | 'other' | null — which FAQ items survive
-//   anchors      'home' rewrites every #hash link to the locale home page
+//   anchors      'resolve': a #hash link whose id is not on this page points at
+//                the page that owns it (LINK_OWNER); #top goes to the locale home
 //   renumber     renumber the "· 01" eyebrows after the cut
 //   sortWriting  engineering topics before career notes in #writing
 //   foldCases    fold Problem + Approach of the non-flagship cases
 //   contactFirst 'project' puts the project path before the hiring path
 //   promoteH1    promote the first section title to <h1> (no hero on the page)
+//   ld           extra JSON-LD for the page: 'profile' (ProfilePage),
+//                'collection' (CollectionPage), 'breadcrumb' (BreadcrumbList —
+//                needs a NAV label); FAQPage follows from the FAQ items kept
 //   priority     sitemap priority (primaryPriority: the default locale's)
 //   verify       floor for the built-output check: innerText length and
 //                section[id] count, each floor(0.7 × the first green English
@@ -1315,18 +1319,47 @@ const PAGE_SPECS = [
     sections: SECTION_KEYS.filter((k) => !COMMERCIAL_SECTIONS.includes(k)),
     keepUnknown: true, faq: 'other', anchors: null, renumber: false,
     sortWriting: true, foldCases: true, contactFirst: 'hire', promoteH1: false,
-    priority: '0.9', primaryPriority: '1.0',
+    ld: [], priority: '0.9', primaryPriority: '1.0',
     verify: { minText: 21730, minSections: 14 },   // measured 31044 chars, 20 sections
   },
   {
     key: 'services', suffix: 'services/',
     sections: ['pricing', 'services', 'faq', 'contact'],
-    keepUnknown: false, faq: 'buyer', anchors: 'home', renumber: true,
+    keepUnknown: false, faq: 'buyer', anchors: 'resolve', renumber: true,
     sortWriting: false, foldCases: false, contactFirst: 'project', promoteH1: true,
-    priority: '0.7',
+    ld: [], priority: '0.7',
     verify: { minText: 3865, minSections: 2 },     // measured 5522 chars, 4 sections
   },
+  {
+    key: 'work', suffix: 'work/',
+    sections: ['work', 'products', 'builds', 'build', 'domains', 'brands', 'regions', 'contact'],
+    keepUnknown: false, faq: null, anchors: 'resolve', renumber: true,
+    sortWriting: false, foldCases: true, contactFirst: 'project', promoteH1: true,
+    // CollectionPage lists no items yet: the per-project pages it would point at do not exist.
+    ld: ['collection', 'breadcrumb'], priority: '0.8',
+    verify: { minText: 12741, minSections: 4 },      // measured 18202 chars, 7 sections
+  },
+  {
+    key: 'about', suffix: 'about/',
+    sections: ['about', 'depth', 'arch', 'github', 'experience', 'why', 'writing', 'faq', 'connect', 'contact'],
+    keepUnknown: true, faq: 'other', anchors: 'resolve', renumber: true,
+    sortWriting: true, foldCases: false, contactFirst: 'hire', promoteH1: true,
+    ld: ['profile', 'breadcrumb'], priority: '0.6',
+    verify: { minText: 7350, minSections: 7 },       // measured 10501 chars, 10 sections
+  },
 ];
+
+// Which page a section lives on, for links to it from a page that does not
+// carry it. `contact` is on every page and `position` has no id, so neither
+// is listed. Each value is a PAGE_SPECS key.
+const LINK_OWNER = {
+  top: 'home', trust: 'home', bynumbers: 'home', process: 'home', testimonials: 'home',
+  about: 'about', depth: 'about', arch: 'about', github: 'about', experience: 'about',
+  why: 'about', writing: 'about', connect: 'about',
+  work: 'work', products: 'work', builds: 'work', build: 'work', domains: 'work',
+  brands: 'work', regions: 'work',
+  pricing: 'services', services: 'services', faq: 'services',
+};
 
 // Checked before anything renders: a table that drives every page would
 // otherwise turn a typo (a section key, a missing SEO row for one locale) into a
@@ -1347,8 +1380,10 @@ function assertPageSpecs(locales) {
     for (const l of locales) {
       const seo = (SEO[spec.key] || {})[l.lang];
       if (!seo || !seo.title || !seo.description) bad.push(`SEO.${spec.key}.${l.lang} is missing`);
+      if (spec.ld.includes('breadcrumb') && !(NAV[l.lang] || {})[spec.key]) bad.push(`NAV.${l.lang}.${spec.key} is missing (breadcrumb name)`);
     }
   }
+  for (const [id, owner] of Object.entries(LINK_OWNER)) if (!keys.has(owner)) bad.push(`LINK_OWNER ${id} → unknown page "${owner}"`);
   if (!PAGE_SPECS.some((spec) => spec.key === 'home' && spec.suffix === '')) bad.push('no home page at the locale root');
   if (bad.length) {
     const err = new Error('[build] page map invalid:\n' + bad.map((x) => `   ${x}`).join('\n'));
@@ -1759,7 +1794,7 @@ async function renderLocale({ browser, loc, ghData, enhanceJS, locales }) {
 async function snapshotVariant({ page, spec, lang, locales }) {
   const prefix = lang === 'en' ? '/' : `/${lang}/`;
   console.log(`→ [${lang}] Cutting ${spec.key} page…`);
-  const snap = await page.evaluate((pageSpec, localeCodes, faqBuyerKeys, localePrefix, layout, knownKeys) => {
+  const snap = await page.evaluate((pageSpec, localeCodes, faqBuyerKeys, localePrefix, layout, knownKeys, links) => {
     document.getElementById('root').replaceWith(window.__afPristine.cloneNode(true));
     const warnings = [];
 
@@ -1791,14 +1826,17 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         if (pageSpec.faq === 'buyer' ? !isBuyer : isBuyer) item.remove();
       });
     }
-    // Nav links point at sections that may no longer be on this page. On
-    // /services they become absolute links back to the home page, so nothing
-    // resolves to a dead anchor.
-    if (pageSpec.anchors === 'home') {
-      const homeHref = localePrefix || '/';
+    // Nav and footer links point at sections that may not be on this page.
+    // One that is here stays an in-page link; one that lives on another page
+    // becomes a link to that page, so nothing resolves to a dead anchor. An id
+    // nobody owns is left alone for the dead-anchor gate to fail on.
+    if (pageSpec.anchors === 'resolve') {
       document.querySelectorAll('a[href^="#"]').forEach((a) => {
-        const t = a.getAttribute('href');
-        a.setAttribute('href', t === '#top' ? homeHref : homeHref + t);
+        const id = a.getAttribute('href').slice(1);
+        if (id === 'top') { a.setAttribute('href', localePrefix); return; }
+        if (!id || document.getElementById(id)) return;
+        const ownerPath = links.owner[id] ? links.paths[links.owner[id]] : undefined;
+        if (ownerPath != null) a.setAttribute('href', `${localePrefix}${ownerPath}#${id}`);
       });
     }
 
@@ -1967,7 +2005,8 @@ async function snapshotVariant({ page, spec, lang, locales }) {
       caseNames: [...document.querySelectorAll('article.case .case-name')].map((e) => (e.textContent || '').trim()),
       body: document.getElementById('root').innerHTML,
     };
-  }, spec, locales.map((l) => l.lang), FAQ_BUYER_KEYS[lang] || FAQ_BUYER_KEYS.en, prefix, PAGE_LAYOUT, SECTION_KEYS);
+  }, spec, locales.map((l) => l.lang), FAQ_BUYER_KEYS[lang] || FAQ_BUYER_KEYS.en, prefix, PAGE_LAYOUT, SECTION_KEYS,
+    { owner: LINK_OWNER, paths: Object.fromEntries(PAGE_SPECS.map((s) => [s.key, s.suffix])) });
 
   // Layout passes are best-effort: a re-export that renames a class leaves the
   // page as the export drew it, which is valid, so warn rather than fail.
@@ -2183,10 +2222,40 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
           })),
         }
       : null;
+  // Per-page types named by the spec (see PAGE_SPECS.ld).
+  const pageNode = {
+    '@context': 'https://schema.org',
+    url: pageUrl,
+    name: seo.title,
+    description: seo.description,
+    inLanguage: lang,
+    isPartOf: { '@id': `${SITE_URL}/#website` },
+  };
+  const pageLd = [
+    spec.ld.includes('profile')
+      ? { ...pageNode, '@type': 'ProfilePage', '@id': `${pageUrl}#profile`, mainEntity: { '@id': `${SITE_URL}/#person` } }
+      : null,
+    spec.ld.includes('collection')
+      ? { ...pageNode, '@type': 'CollectionPage', '@id': `${pageUrl}#page`, about: { '@id': `${SITE_URL}/#person` } }
+      : null,
+  ].filter(Boolean);
+  const breadcrumbLd = spec.ld.includes('breadcrumb')
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        '@id': `${pageUrl}#breadcrumb`,
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Ahmed Farid', item: `${SITE_URL}${urlPath}` },
+          { '@type': 'ListItem', position: 2, name: NAV[lang][spec.key], item: pageUrl },
+        ],
+      }
+    : null;
   const jsonLd = [
     hasLd ? '' : `<script type="application/ld+json">${ldJson(personLd)}</script>`,
     `<script type="application/ld+json">${ldJson(webSiteLd)}</script>`,
+    ...pageLd.map((o) => `<script type="application/ld+json">${ldJson(o)}</script>`),
     faqLd ? `<script type="application/ld+json">${ldJson(faqLd)}</script>` : '',
+    breadcrumbLd ? `<script type="application/ld+json">${ldJson(breadcrumbLd)}</script>` : '',
   ].filter(Boolean).join('\n');
 
   // ── Language switcher (only when multiple locales exist) ──────────────────

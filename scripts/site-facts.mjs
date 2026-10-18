@@ -102,6 +102,61 @@ export const SEO = {
       description: 'Projets au forfait, retainers d’ingénierie et revues d’architecture pour SaaS multi-tenant temps réel — tarifs, FAQ et appel de cadrage de 30 min. Basé à Dubaï.',
     },
   },
+  work: {
+    en: {
+      title: 'Work — Case Studies in SaaS, Real-Time & Mobile · Ahmed Farid',
+      description: 'Case studies of production systems: live-bidding auctions, multi-tenant SaaS, AI-assisted tools and Flutter apps shipped across the Gulf, US and UK.',
+    },
+    ar: {
+      title: 'الأعمال — دراسات حالة في SaaS والأنظمة الفورية والموبايل · Ahmed Farid',
+      description: 'دراسات حالة لأنظمة في الإنتاج: مزادات مباشرة، منصّات SaaS متعدّدة المستأجرين، أدوات بالذكاء الاصطناعي وتطبيقات Flutter في الخليج وأمريكا وبريطانيا.',
+    },
+    de: {
+      title: 'Arbeiten — Fallstudien zu SaaS, Echtzeit & Mobile · Ahmed Farid',
+      description: 'Fallstudien produktiver Systeme: Live-Auktionen, Multi-Tenant-SaaS, KI-gestützte Tools und Flutter-Apps für den Golf, die USA und Großbritannien.',
+    },
+    es: {
+      title: 'Proyectos — Casos de estudio de SaaS, tiempo real y móvil · Ahmed Farid',
+      description: 'Casos de estudio de sistemas en producción: subastas en vivo, SaaS multi-tenant, herramientas con IA y apps Flutter en el Golfo, EE. UU. y Reino Unido.',
+    },
+    fr: {
+      title: 'Projets — Études de cas SaaS, temps réel et mobile · Ahmed Farid',
+      description: 'Études de cas de systèmes en production : enchères en direct, SaaS multi-tenant, outils d’IA et apps Flutter livrés dans le Golfe, aux États-Unis et au Royaume-Uni.',
+    },
+  },
+  about: {
+    en: {
+      title: 'About Ahmed Farid — Senior Software Engineer in Dubai',
+      description: 'Experience, engineering depth, architecture principles, open-source work and writing — plus the CV for senior roles. Dubai-based, 6+ years in production.',
+    },
+    ar: {
+      title: 'نبذة عن Ahmed Farid — مهندس برمجيات أول في دبي',
+      description: 'الخبرة والعمق الهندسي ومبادئ البنية المعمارية والأعمال مفتوحة المصدر والكتابة — إضافةً إلى السيرة الذاتية للأدوار الأولى. مقيم في دبي، +6 سنوات في الإنتاج.',
+    },
+    de: {
+      title: 'Über Ahmed Farid — Senior-Softwareentwickler in Dubai',
+      description: 'Erfahrung, technische Tiefe, Architekturprinzipien, Open-Source-Arbeit und Texte — plus der Lebenslauf für Senior-Rollen. In Dubai, 6+ Jahre Praxis in Produktion.',
+    },
+    es: {
+      title: 'Sobre Ahmed Farid — Ingeniero de Software Senior en Dubái',
+      description: 'Experiencia, profundidad técnica, principios de arquitectura, código abierto y escritos — además del CV para roles senior. Desde Dubái, 6+ años en producción.',
+    },
+    fr: {
+      title: 'À propos d’Ahmed Farid — Ingénieur logiciel senior à Dubaï',
+      description: 'Expérience, profondeur technique, principes d’architecture, open source et écrits — plus le CV pour les postes senior. Basé à Dubaï, 6+ ans en production.',
+    },
+  },
+};
+
+// Page names as the navigation and breadcrumbs say them, per locale. `work` is
+// the export's own #work nav label in each locale (read from the built pages,
+// not translated here); `about` is the label for the /about/ page.
+export const NAV = {
+  en: { work: 'Work', about: 'About' },
+  ar: { work: 'أعمال', about: 'نبذة عني' },
+  de: { work: 'Arbeiten', about: 'Über mich' },
+  es: { work: 'Proyectos', about: 'Sobre mí' },
+  fr: { work: 'Projets', about: 'À propos' },
 };
 
 // Strings that mean a fact drifted back to a retired value. Merged into the
