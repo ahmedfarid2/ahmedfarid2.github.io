@@ -15,10 +15,6 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: indexnow
-  cancel-in-progress: true
-
 jobs:
   submit:
     # Only real deploys: a push to main that succeeded (PR builds never deploy).
@@ -30,6 +26,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-node@v4
         with:
