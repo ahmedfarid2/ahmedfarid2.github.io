@@ -34,7 +34,10 @@ const SRC = path.join(ROOT, 'index.html');
 const DIST = path.join(ROOT, 'dist');
 const GH_USER = 'ahmedfarid2';
 
-// OpenAI / ChatGPT Ads measurement pixel — behind consent.
+// OpenAI / ChatGPT Ads measurement pixel — behind consent, and off unless
+// ANALYTICS.adPixelId is set in site-facts.mjs. Off means no pixel and no
+// banner anywhere, the standalone pages included (applyShellToStandalonePages
+// strips their copy of the loader), and a forbidden-string gate holds it.
 //
 // It has to be injected here, not just in the export, because this build
 // rebuilds the <head> from an explicit allowlist (see `pick(...)` below) —
@@ -55,7 +58,12 @@ const GH_USER = 'ahmedfarid2';
 // allowlist that would drop an unknown <meta>.
 const PINTEREST_VERIFY_TAG = '<meta name="p:domain_verify" content="08bdb959e921275dc5041af6f822622a"/>';
 
-const AD_PIXEL_ID = '9ceAHjhY9TXnV8VVdRpZEx';
+const AD_PIXEL_ID = ANALYTICS.adPixelId || '';
+if (AD_PIXEL_ID && !/^[A-Za-z0-9_-]{8,64}$/.test(AD_PIXEL_ID)) {
+  throw new Error(`[build] ANALYTICS.adPixelId "${AD_PIXEL_ID}" is not a pixel id`);
+}
+// Where the loader comes from; also what the gate looks for when it is off.
+const AD_PIXEL_SRC = 'https://bzrcdn.openai.com/sdk/oaiq.min.js';
 // Banner copy per locale. The page language decides; consent behaviour is the
 // same everywhere (opt-in, nothing loads until "Allow", choice remembered).
 const CONSENT_COPY = {
@@ -66,6 +74,7 @@ const CONSENT_COPY = {
   fr: { label: 'Consentement à la mesure', text: "J'aimerais charger un pixel de mesure publicitaire pour voir quelles sources amènent des visiteurs sur ce site. Rien ne se charge sans votre accord.", no: 'Non merci', yes: 'Autoriser' },
 };
 const adPixel = (lang) => {
+  if (!AD_PIXEL_ID) return '';
   const c = CONSENT_COPY[lang] || CONSENT_COPY.en;
   return `<style>
 .cbar{position:fixed;left:16px;right:16px;bottom:16px;z-index:9999;margin:0 auto;max-width:640px;
@@ -84,7 +93,7 @@ border:1px solid rgba(255,255,255,.18);background:transparent;color:#e7e2d8}
     if(window.oaiq)return;
     !function(w,d,s,u){var q=function(){q.q.push(arguments)};q.q=[];w.oaiq=q;
       var j=d.createElement(s);j.async=1;j.src=u;var f=d.getElementsByTagName(s)[0];
-      f.parentNode.insertBefore(j,f)}(window,document,"script","https://bzrcdn.openai.com/sdk/oaiq.min.js");
+      f.parentNode.insertBefore(j,f)}(window,document,"script","${AD_PIXEL_SRC}");
     oaiq("init",{pixelId:"${AD_PIXEL_ID}"});
   }
   var saved=null;
@@ -325,6 +334,16 @@ async function applyShellToStandalonePages() {
     // and two copyright lines stacked is how the first pass shipped.
     doc = doc.replace(/\s*<footer>[\s\S]*?<\/footer>/, '');
     doc = doc.replace(/\s*<link rel="(?:icon|apple-touch-icon)"[^>]*>/g, '');
+    // These pages carry their own copy of the pixel loader (it only runs for a
+    // visitor who already said yes on the main site). With the pixel off,
+    // nobody can say yes, so the loader goes too.
+    if (!AD_PIXEL_ID) {
+      const stripped = doc.replace(/\s*<!-- OpenAI \/ ChatGPT Ads[\s\S]*?<\/script>/, '');
+      // A re-export that rewords the comment leaves the loader in place; the
+      // forbidden-string gate then fails the build, and this says why.
+      if (stripped === doc && doc.includes(AD_PIXEL_SRC)) console.warn(`  ⚠ ${name}: pixel loader found but not stripped (its comment changed?)`);
+      doc = stripped;
+    }
     doc = doc.replace('</head>', `${ICON_LINKS}<style data-site-shell>${shellCss}</style>${extra}${analyticsTag}</head>`);
     // Skip link first, so it is the first tab stop; its target is each page's
     // own <main class="wrap" id="main">.
@@ -539,6 +558,8 @@ const FORBIDDEN = [
   // Same claim, different verb — the wording the first sweep missed.
   { s: 'Open to relocate', max: 0 },
   { s: 'No tracking', max: 0 },
+  // The ad pixel is off (ANALYTICS.adPixelId empty): no page may load it.
+  ...(AD_PIXEL_ID ? [] : [{ s: AD_PIXEL_SRC, max: 0 }]),
   // Calendly does not redirect a renamed user: the old link is a dead page.
   { s: 'calendly.com/ahmedfareed2025', max: 0 },
   // Guards hero, nav and About against the old bare export CTA. The
@@ -548,7 +569,8 @@ const FORBIDDEN = [
   // The contact block carries it once (every page that has one); a second
   // copy is allowed on the EN services page (its pricing CTA) and on EN home
   // (the hero's primary button, by design). The checklist page's call CTA is
-  // a third file with one.
+  // a third file with one. Each project page is at the ceiling too: its
+  // contact block plus the side-column button (.case-cta).
   { s: 'Book a 30-minute scoping call', maxPerFile: 2 },
   // The pricing ladder and the free demo live on /services/ only (all five
   // locales' copies of that page). Banned on every other page — home, /work/,
@@ -1421,7 +1443,7 @@ const HOME_COPY = {
     tag: { 'tag-full': 'Laravel & Next.js SaaS builds · Dubai, UAE 🇦🇪', 'tag-short': 'SaaS builds · Dubai 🇦🇪', 'tag-tiny': 'SaaS · Dubai 🇦🇪' },
     trust: 'Products<br>I\'ve shipped',
     svcHeading: ['Four ways', 'Three ways'],
-    direct: 'You talk to me directly — no account managers, no middlemen.',
+    direct: 'You talk to me directly. No account managers, no middlemen.',
     notReady: 'Not ready for a call?',
     checklist: 'Get the free multi-tenant SaaS architecture checklist →',
     recommended: 'Recommended',
@@ -1468,6 +1490,94 @@ const HOME_COPY = {
     terms: ['Réponse sous 24 heures', 'NDA avant le premier appel', 'Code et PI à vous après paiement', 'Contrat et facture directement avec moi', 'Peu de projets à la fois'],
   },
 };
+
+// Copy that reads as a person wrote it (Oct 2026 review). The export's section
+// headings all followed one formula ("Plain words, *gold italic words.*"), its
+// prose leaned on em dashes, and the person behind the site first appeared at
+// the bottom of the page. Applied on every page of the locale; a heading or
+// sentence a re-export rewords is reported once per locale, never fatal.
+//   hi        next to a small portrait in the home hero
+//   caseCta   above the call button in a project page's side column
+//   headings  section heading text → plain replacement (en, ar; de/es/fr keep
+//             their wording and only lose the gold-italic styling, in CSS)
+//   text      exact sentence fragments → rewrites without the em dashes (en)
+//   position  the home position statement, rewritten without metaphors
+const HUMAN_COPY = {
+  en: {
+    hi: "Hi, I'm Ahmed. You'll work with me directly, from the first call to launch.",
+    caseCta: 'Need something like this built?',
+    headings: {
+      'Every system, shipped & linked.': "Live products I've built.",
+      'Four steps, then we ship.': 'How a project runs.',
+      'Three ways to put me to work.': 'Three ways to work with me.',
+      'What colleagues actually said.': "What people I've worked with say.",
+      'Ship the system you actually need.': "Tell me what you're building.",
+      'Clear packages, scoped to you.': 'Prices, up front.',
+      'The questions everyone asks.': 'Common questions.',
+      'Six lanes I work in fluently.': 'What I build.',
+      "Domains I've shipped real systems for.": "Industries I've worked in.",
+      "Logos of teams & products I've shipped.": "Teams and products I've shipped for.",
+      'The stack, without the buzzwords.': 'The stack I use.',
+      "Code I'm willing to publish.": 'Open-source code.',
+      'Roles, in order of arrival.': 'Experience.',
+      'What you usually get vs. what I bring.': 'Why clients work with me directly.',
+      'Notes from building in public.': 'Writing.',
+      'Find me where you work.': 'Find me online.',
+    },
+    text: [
+      ['real-time, multi-tenant SaaS — live bidding', 'real-time, multi-tenant SaaS: live bidding'],
+      ['Architecture, backend, web, mobile and infra — one engineer who can hold the whole rope.', 'Architecture, backend, web, mobile and infra, handled by one engineer.'],
+      ['Tenant isolation, role boundaries, billing-aware data — I build platforms', 'Tenant isolation, role boundaries and billing-aware data. I build platforms'],
+      ['The full portfolio — flagship SaaS first, then the rest. Each entry links straight to the live product, store listing, or admin surface, pulled from my GitHub profile.', 'Flagship SaaS first, then the rest. Every entry links to the live product, its store listing or its admin panel.'],
+      ["My process isn't proprietary — it's just disciplined. Same shape whether the engagement is six weeks or six months.", 'Nothing proprietary: the same four steps whether the work takes six weeks or six months.'],
+      ['Docs, runbooks, and a clean README. Whether your team takes it from v2 or I stay on retainer — handoff is part of the work.', 'Docs, runbooks and a clean README. Whether your team takes over or I stay on retainer, handoff is part of the job.'],
+      ["Prefer a custom or longer-term setup? Here's how we can work together — every engagement starts with one 30-minute call.", "Want something custom or longer-term? Here's how we can work together. Every engagement starts with one 30-minute call."],
+      ['Retainer for continuous delivery — new features, maintenance, and scaling — with the docs and runbooks your team can run on.', 'A monthly retainer for new features, maintenance and scaling, with docs and runbooks your team can use.'],
+      ['Senior Software Engineer — real-time, multi-tenant SaaS and end-to-end product engineering. Fixed-scope builds, retainers and architecture consulting.', 'Senior software engineer in Dubai. I build real-time, multi-tenant SaaS end to end, as fixed-scope builds, retainers or architecture reviews.'],
+      ['Every project is quoted after a 30-minute scoping call — no surprises, no hourly drift.', 'Every project is quoted after a 30-minute scoping call, so there are no surprises and no hourly billing.'],
+      ['One real screen of your product, built and deployed — free.', 'One real screen of your product, built and deployed, for free.'],
+      ['One screen or one page, genuinely built — not a mockup', 'One screen or one page, really built, not a mockup'],
+      ['No obligation — stop there and you owe nothing', 'No obligation: stop there and you owe nothing'],
+      ["One clearly defined slice — not 'the whole product'", "One clearly defined slice, not 'the whole product'"],
+      ["No lock-in — 30 days' notice", "No lock-in, 30 days' notice"],
+      ['RAG or LLM features in production — retrieval, evals', 'RAG or LLM features in production: retrieval, evals'],
+      ["we re-scope together — I don't run an hourly meter.", "we re-scope together. I don't run an hourly meter."],
+      ["If yours isn't here, ask it directly — bottom of the page.", "If yours isn't here, ask me directly at the bottom of the page."],
+      ['Most start as a 3-week scoped build — a defined slice', 'Most start as a 3-week scoped build: a defined slice'],
+    ],
+    position: 'I treat a product as one system, not a pile of features. I design how the parts fit together, build every layer, and stay on the hook when it has to scale.',
+  },
+  ar: {
+    hi: 'أهلًا، أنا أحمد. ستعمل معي مباشرةً، من أول مكالمة حتى الإطلاق.',
+    caseCta: 'تحتاج إلى نظام مثل هذا؟',
+    headings: {
+      'كل نظام، سُلّم ورُبط.': 'منتجات بنيتها وتعمل الآن.',
+      'أربع خطوات، ثم نُطلق.': 'كيف يسير المشروع.',
+      'ثلاث طرق لتشغيلي.': 'ثلاث طرق للعمل معي.',
+      'ما قاله الزملاء فعلًا.': 'ماذا يقول من عملوا معي.',
+      'أطلق النظام الذي تحتاجه فعلًا.': 'أخبرني بما تبنيه.',
+      'باقات واضحة، مصمّمة لك.': 'الأسعار بوضوح من البداية.',
+      'الأسئلة التي يطرحها الجميع.': 'أسئلة شائعة.',
+      'ستّة مجالات أعمل فيها بطلاقة.': 'ما أبنيه.',
+      'مجالات سلّمت لها أنظمة حقيقية.': 'قطاعات عملت فيها.',
+      'شعارات فِرَق ومنتجات سلّمتها.': 'فِرَق ومنتجات عملت معها.',
+      'المنظومة التقنية، دون مصطلحات رنّانة.': 'التقنيات التي أستخدمها.',
+      'شيفرة أنا مستعدّ لنشرها.': 'شيفرة مفتوحة المصدر.',
+      'الأدوار، بترتيب وصولها.': 'الخبرة.',
+      'ما تحصل عليه عادةً مقابل ما أقدّمه.': 'لماذا يعمل العملاء معي مباشرةً.',
+      'ملاحظات من البناء في العلن.': 'كتابات.',
+      'اعثر عليّ حيث تعمل.': 'حساباتي على الإنترنت.',
+    },
+    text: [],
+    position: 'أتعامل مع المنتج كنظام واحد، لا كمجموعة مزايا متفرّقة. أصمّم كيف تترابط أجزاؤه، وأبني كل طبقاته، وأبقى مسؤولًا عنه حين يكبر.',
+  },
+  de: { hi: 'Hallo, ich bin Ahmed. Sie arbeiten direkt mit mir, vom ersten Gespräch bis zum Launch.', caseCta: 'Sie brauchen etwas Ähnliches?', headings: {}, text: [], position: '' },
+  es: { hi: 'Hola, soy Ahmed. Trabajarás directamente conmigo, desde la primera llamada hasta el lanzamiento.', caseCta: '¿Necesitas algo parecido?', headings: {}, text: [], position: '' },
+  fr: { hi: 'Bonjour, je suis Ahmed. Vous travaillez directement avec moi, du premier appel au lancement.', caseCta: 'Besoin de quelque chose de similaire ?', headings: {}, text: [], position: '' },
+};
+// Which HUMAN_COPY headings/text a locale's pages actually used; reported after
+// the render so a re-export that rewords one shows up as a warning.
+const HUMAN_HITS = new Map();
 
 // "Ways to work together" opens with a sentence about the price list above it
 // ("Those are the packaged offers above."). A page without that list drops
@@ -2439,6 +2549,105 @@ async function snapshotVariant({ page, spec, lang, locales }) {
     }
     document.querySelectorAll('.is-popular .price-badge').forEach((b) => { b.textContent = copy.home.recommended; });
 
+    // ── Reads as a person, sells to a client (HUMAN_COPY) ───────────────
+    const H2 = copy.human;
+    const humanHits = [];
+    // /services/ is a client page: the full-time role is a hiring path, which
+    // lives on /about/ (its contact block leads with the CV). Same heading swap
+    // as home; the cards keep their positions, renumbered.
+    if (pageSpec.key === 'services') {
+      const grid = document.querySelector('#services .services-grid');
+      const cards = grid ? [...grid.querySelectorAll(':scope > .service-card')] : [];
+      const role = cards.find((c) => (c.querySelector('.service-t')?.textContent || '').trim() === copy.serviceOrder[copy.serviceOrder.length - 1]);
+      const title = document.querySelector('#services .section-title');
+      const first = title && [...title.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
+      const [from, to] = copy.home.svcHeading;
+      if (role && first && first.textContent.trimStart().startsWith(from)) {
+        const nums = cards.map((c) => c.querySelector('.service-num')?.textContent);
+        role.remove();
+        [...grid.querySelectorAll(':scope > .service-card')].forEach((c, i) => {
+          const num = c.querySelector('.service-num');
+          if (num && nums[i] != null) num.textContent = nums[i];
+        });
+        first.textContent = first.textContent.replace(from, to);
+      } else warnings.push('services: full-time card or "ways to work" heading not found — card left in place');
+    }
+    // Section headings: one plain line, no gold-italic second half.
+    const norm = (s) => s.replace(/\s+/g, ' ').trim();
+    document.querySelectorAll('.section-title, #contact.cta h2').forEach((h) => {
+      // A <br> separates words, but contributes nothing to textContent.
+      const key = norm([...h.childNodes].map((n) => (n.nodeName === 'BR' ? ' ' : n.textContent)).join(''));
+      if (Object.prototype.hasOwnProperty.call(H2.headings, key)) {
+        h.textContent = H2.headings[key];
+        humanHits.push(`h:${key}`);
+      }
+    });
+    // Prose: exact fragments, so a reworded export is left alone, not mangled.
+    if (H2.text.length) {
+      const walker = document.createTreeWalker(document.getElementById('root'), NodeFilter.SHOW_TEXT);
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        for (const [from, to] of H2.text) {
+          if (n.nodeValue.includes(from)) { n.nodeValue = n.nodeValue.split(from).join(to); humanHits.push(`t:${from}`); }
+        }
+      }
+    }
+    const statement = document.querySelector('.position-statement');
+    if (statement && H2.position) { statement.textContent = H2.position; humanHits.push('position'); }
+    // Section numbers ("What I do · 01") and the export's build stamp read as a
+    // template; the copyright line keeps the year and the name.
+    document.querySelectorAll('.eyebrow').forEach((e) => {
+      for (const n of e.childNodes) if (n.nodeType === 3) n.nodeValue = n.nodeValue.replace(/\s*·\s*[0-9٠-٩]{1,2}\s*$/, '');
+    });
+    document.querySelectorAll('.foot-bottom > span').forEach((s) => {
+      const t = (s.textContent || '').trim();
+      if (/^v\.\d{4}\.\d{1,2}$/.test(t)) s.remove();
+      else if (t.startsWith('©')) s.textContent = t.split(' · ').slice(0, 2).join(' · ');
+    });
+    // The footer's services link said "Freelance & consulting"; it is the
+    // same page the nav calls Services.
+    document.querySelectorAll(`.foot-col a[href="${localePrefix}services/"]`).forEach((a) => { a.textContent = labels.services; });
+    // Testimonials: the one about working with the business comes first; the
+    // other praises a Flutter developer, which is the secondary lane.
+    const tests = document.querySelector('.tests');
+    if (tests && tests.children.length === 2) tests.prepend(tests.lastElementChild);
+    // Home hero: a face and a first name before the buttons.
+    if (pageSpec.key === 'home') {
+      const sub = document.querySelector('#top .hero-sub');
+      if (sub && portraitImg && H2.hi) {
+        const hi = document.createElement('div');
+        hi.className = 'hero-person';
+        const img = portraitImg.cloneNode(true);
+        img.removeAttribute('style');
+        img.setAttribute('alt', '');
+        img.setAttribute('width', '40');
+        img.setAttribute('height', '40');
+        img.setAttribute('loading', 'eager');   // first screen: never deferred
+        hi.appendChild(img);
+        const span = document.createElement('span');
+        span.textContent = H2.hi;
+        hi.appendChild(span);
+        sub.after(hi);
+      } else warnings.push('hero: .hero-sub or the portrait not found — no hero portrait');
+    }
+    // Project pages: the short "Problem" repeats the write-up's first block,
+    // and "Read the case study" is a toggle for a page that is the case
+    // study. The side column, empty under the links, gets the call button.
+    if (pageSpec.work === 'single') {
+      document.querySelectorAll('#case .case-block.problem').forEach((b) => b.remove());
+      document.querySelectorAll('#case .deepdive-toggle').forEach((b) => b.remove());
+      const meta = document.querySelector('#case .case-meta');
+      const call = document.querySelector('#contact a[href*="calendly.com"]');
+      if (meta && call && H2.caseCta) {
+        const box = document.createElement('div');
+        box.className = 'case-cta';
+        const p = document.createElement('p');
+        p.textContent = H2.caseCta;
+        box.appendChild(p);
+        box.appendChild(call.cloneNode(true));
+        meta.appendChild(box);
+      } else warnings.push('case: .case-meta or the scoping-call link not found — no side-column call button');
+    }
+
     // Nav and footer links point at sections that may not be on this page.
     // One that is here stays an in-page link; one that lives on another page
     // becomes a link to that page, so nothing resolves to a dead anchor. An id
@@ -2625,18 +2834,21 @@ async function snapshotVariant({ page, spec, lang, locales }) {
       .filter((x) => x.q && x.a);
 
     return {
-      faq, warnings, keptKeys, project,
+      faq, warnings, keptKeys, project, humanHits,
       caseNames: [...document.querySelectorAll('article.case .case-name')].map((e) => (e.textContent || '').trim()),
       body: document.getElementById('root').innerHTML,
     };
   }, spec, locales.map((l) => l.lang), FAQ_BUYER_KEYS[lang] || FAQ_BUYER_KEYS.en, prefix, PAGE_LAYOUT, SECTION_KEYS,
     { owner: LINK_OWNER, paths: Object.fromEntries(PAGE_SPECS.map((s) => [s.key, s.suffix])) },
     NAV[lang],
-    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en }));
+    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en }));
 
   // Layout passes are best-effort: a re-export that renames a class leaves the
   // page as the export drew it, which is valid, so warn rather than fail.
   for (const w of snap.warnings || []) console.warn(`  [${lang}/${spec.key}] ⚠ ${w}`);
+  const hits = HUMAN_HITS.get(lang) || new Set();
+  for (const h of snap.humanHits || []) hits.add(h);
+  HUMAN_HITS.set(lang, hits);
   return snap;
 }
 
@@ -3188,10 +3400,21 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 /* Working terms under the project contact path. */
 .contact-terms{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 20px;list-style:none;margin:-10px auto 0;padding:0;max-width:720px;font-size:13px;color:var(--ink-mute)}
 .contact-terms li::before{content:"✓";color:var(--accent);margin-inline-end:6px}
-/* Phones: the floating Personalize (theme) button sits at the bottom-left and,
-   on an 844px-tall screen, lands on the hero's second button at first paint.
-   A theme picker is not worth covering a sales button; tablets and up keep it. */
-@media (max-width:640px){.palette{display:none!important}}
+/* The floating Personalize (theme) button is the design tool's, not the
+   site's: on phones it landed on the hero's second button, and on desktop it
+   was the clearest sign the page came out of a template. Hidden everywhere. */
+.palette{display:none!important}
+/* One gold accent per page, the hero's. A section heading that still carries
+   an <em> (de/es/fr keep their wording) renders it as plain text. */
+.section-title em,.cta h2 em,.position-statement em{font-style:normal;color:inherit;background:none;-webkit-text-fill-color:currentColor;animation:none}
+/* Home hero: a face and a first name before the buttons. */
+.hero-person{display:flex;align-items:center;gap:12px;margin-top:22px;max-width:560px;color:var(--ink-mute);font-size:15px;line-height:1.45}
+.hero-person img{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid var(--line-strong)}
+/* Project pages: the call button in the side column, which stays in view
+   while the write-up scrolls on desktop. */
+.case-cta{display:flex;flex-direction:column;align-items:flex-start;gap:12px;margin-top:6px;padding-top:20px;border-top:1px solid var(--line)}
+.case-cta p{margin:0;color:var(--ink);font-size:16px}
+@media (min-width:901px){#case .case-meta{position:sticky;top:96px}}
 /* Drawn AF badge: the SVG fills the 26px badge; its letters already carry
    their own inset, so the badge's text padding goes. */
 .brand-mark--drawn{padding:0}
@@ -3345,6 +3568,14 @@ async function build() {
   }
 
   await browser.close();
+
+  // HUMAN_COPY entries no page used: the export reworded them. Not fatal (the
+  // export's own wording ships), but worth knowing.
+  for (const [lang, c] of Object.entries(HUMAN_COPY)) {
+    const hits = HUMAN_HITS.get(lang) || new Set();
+    const unused = [...Object.keys(c.headings).map((k) => `h:${k}`), ...c.text.map(([f]) => `t:${f}`)].filter((k) => !hits.has(k));
+    for (const k of unused) console.warn(`  [${lang}] ⚠ human copy not applied (export reworded?): ${k.slice(2)}`);
+  }
 
   // ── One-time SEO + static assets ──────────────────────────────────────────
   await copyStaticAssets();

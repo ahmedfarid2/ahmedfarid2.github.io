@@ -22,7 +22,13 @@ export const INDEXNOW_KEY = '9c4d4d137838a4b86f90f8070f173b53';
 // at cloud.umami.is, add the website iamahmedfarid.com, and paste its Website ID
 // (a UUID) here. Clicks on book-a-call, WhatsApp, email, CV, LinkedIn, services
 // and project cards are already tagged by the build and show up as events.
-export const ANALYTICS = { umamiWebsiteId: '58daf3f0-a2f3-48b7-8bfd-895a96e3607a' };
+//
+// adPixelId: the OpenAI / ChatGPT Ads measurement pixel. Empty = off: no pixel
+// and no consent banner on any page. Off since Oct 2026 — the opt-in banner sat
+// over the hero's buttons on every first visit, with no ad campaign running.
+// To turn it back on (only worth it while a ChatGPT Ads campaign runs), set it
+// to the Ads Manager pixel id, '9ceAHjhY9TXnV8VVdRpZEx'.
+export const ANALYTICS = { umamiWebsiteId: '58daf3f0-a2f3-48b7-8bfd-895a96e3607a', adPixelId: '' };
 
 // Owner-confirmed (Oct 2026): living in Dubai now.
 export const LOCATION = {
