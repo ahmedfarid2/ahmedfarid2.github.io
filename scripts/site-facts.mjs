@@ -164,6 +164,20 @@ export const NAV = {
   fr: { work: 'Projets', services: 'Services', about: 'À propos', contact: 'Contact', caseStudy: 'Étude de cas', allWork: 'Toutes les réalisations', moreWork: 'Autres réalisations', pricing: 'Services et tarifs' },
 };
 
+// The five flagship case studies, each with a page of its own at
+// /work/<slug>/ in every locale. `name` is the export's case-study name (brand
+// names are never translated, so it is the same in all five locales and is how
+// the build finds the case in the render); `slug` is the URL segment and is the
+// same in every locale. Adding a flagship is adding a row here — and marking
+// the case FLAGSHIP in the export.
+export const FLAGSHIP = [
+  { name: 'Yelo Sale', slug: 'yelo-sale' },
+  { name: 'Qoralia', slug: 'qoralia' },
+  { name: 'KhebraOS', slug: 'khebraos' },
+  { name: 'Phonic Maps', slug: 'phonic-maps' },
+  { name: 'Recovery Advisers', slug: 'recovery-advisers' },
+];
+
 // Strings that mean a fact drifted back to a retired value. Merged into the
 // build's FORBIDDEN scan (entries take `s` for a literal or `re` for a /g
 // RegExp; `max` is the allowed count across dist/).

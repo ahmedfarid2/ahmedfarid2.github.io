@@ -23,7 +23,7 @@ import { mkdir, writeFile, copyFile, rm, readdir, readFile } from 'node:fs/promi
 import { existsSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { SITE_URL, LOCATION, LOCATION_LABEL, CONTACT, YEARS_PROSE, SEO, NAV, DRIFT_GUARDS } from './site-facts.mjs';
+import { SITE_URL, LOCATION, LOCATION_LABEL, CONTACT, YEARS_PROSE, SEO, NAV, FLAGSHIP, DRIFT_GUARDS } from './site-facts.mjs';
 import { inspectPdf, pdfProblems, textFingerprint, PDF_REQUIRED_URIS } from './pdf-check.mjs';
 import { renderChecklist, CHECKLIST_PDF, CHECKLIST_REQUIRED_URIS, CHECKLIST_REQUIRED_TEXT } from './build-checklist.mjs';
 
@@ -1074,7 +1074,7 @@ function sitemapPages(locales, specs = PAGE_SPECS) {
 // sitemap.xml + robots.txt + a styled 404.html. No browser needed, so this
 // runs in both the optimized build and the raw-export fallback (which has no
 // page but the root, and passes only the home spec).
-async function writeSeoFiles(locales = [{ urlPath: '/' }], specs = PAGE_SPECS) {
+async function writeSeoFiles(locales = [{ urlPath: '/' }], specs = PAGE_SPECS, projects = null) {
   const today = new Date().toISOString().slice(0, 10);
   const urls = sitemapPages(locales, specs)
     .map((p) =>
@@ -1108,6 +1108,17 @@ async function writeSeoFiles(locales = [{ urlPath: '/' }], specs = PAGE_SPECS) {
     aiBots.map((b) => `User-agent: ${b}\nAllow: /`).join('\n\n') + `\n\n` +
     `Sitemap: ${SITE_URL}/sitemap.xml\n`, 'utf8');
 
+  // The page list for llms.txt. Only a real build knows the project taglines
+  // (they come from the English render); the raw-export fallback has one page.
+  const pagesBlock = projects
+    ? `## Pages\n\n` + [
+        `- [Work](${SITE_URL}/work/): ${SEO.work.en.description}`,
+        ...FLAGSHIP.filter((f) => projects[f.slug]).map((f) => `- [${f.name}](${SITE_URL}/work/${f.slug}/): ${projects[f.slug].tagline}`),
+        `- [Services](${SITE_URL}/services/): ${SEO.services.en.description}`,
+        `- [About](${SITE_URL}/about/): ${SEO.about.en.description}`,
+      ].join('\n') + `\n\n`
+    : '';
+
   // llms.txt — an emerging convention (llmstxt.org) that gives AI assistants a
   // clean, structured Markdown summary of who this is and how to work with him,
   // so tools like ChatGPT/Claude/Perplexity can recommend him accurately.
@@ -1129,6 +1140,7 @@ async function writeSeoFiles(locales = [{ urlPath: '/' }], specs = PAGE_SPECS) {
     `- Fixed-scope product build — a defined slice with a clear deliverable (typically 4–8 weeks)\n` +
     `- Ongoing engineering retainer or longer contract\n` +
     `- Technical advisory & architecture review\n\n` +
+    pagesBlock +
     `## Links\n\n` +
     `- Website: ${SITE_URL}\n` +
     `- LinkedIn: ${CONTACT.linkedin}\n` +
@@ -1282,7 +1294,8 @@ function enhanceForVariant(js, spec) {
 // Page-layout data for the in-page pass. Brand names are not translated, and
 // the writing categories render in English on every locale.
 const PAGE_LAYOUT = {
-  flagship: ['Yelo Sale', 'Qoralia', 'KhebraOS', 'Phonic Maps', 'Recovery Advisers'],
+  flagship: FLAGSHIP.map((f) => f.name),
+  flagships: FLAGSHIP,
   expectedCollapsed: 7,
   writingRank: ['Debugging', 'Testing', 'Fundamentals', 'Hiring', 'Career'],
 };
@@ -1306,6 +1319,11 @@ const PAGE_LAYOUT = {
 //   anchors      'resolve': a #hash link whose id is not on this page points at
 //                the page that owns it (LINK_OWNER); #top goes to the locale home
 //   renumber     renumber the "· 01" eyebrows after the cut
+//   work         how the case studies appear: 'teaser' puts a card per flagship
+//                (linking to its own page) where the long write-ups were;
+//                'single' makes the page ONE flagship's case study (the row's
+//                `flagship`), with its own title and description cut from the
+//                case itself, so no SEO[key] row exists for it
 //   sortWriting  engineering topics before career notes in #writing
 //   foldCases    fold Problem + Approach of the non-flagship cases
 //   contactFirst 'project' puts the project path before the hiring path
@@ -1324,16 +1342,26 @@ const SECTION_KEYS = [
   'domains', 'brands', 'regions', 'depth', 'arch', 'github', 'experience', 'process', 'why',
   'testimonials', 'writing', 'pricing', 'services', 'faq', 'connect', 'contact',
 ];
+// Built-output floors for the project pages, floor(0.7 × the first green
+// English measurement) per page. Deliberately resizing a case study means
+// re-measuring.
+const PROJECT_VERIFY = {
+  'yelo-sale': { minText: 3731, minSections: 1 },          // measured 5331 chars, 2 sections
+  'qoralia': { minText: 2058, minSections: 1 },            // 2940
+  'khebraos': { minText: 2058, minSections: 1 },           // 2941
+  'phonic-maps': { minText: 2044, minSections: 1 },        // 2920
+  'recovery-advisers': { minText: 2117, minSections: 1 },  // 3025
+};
 const PAGE_SPECS = [
   {
     // The client-facing front door: what I do, proof in numbers, how I work, the
     // ways to hire me, buyer FAQ, contact. Everything longer lives on its own page.
     key: 'home', suffix: '',
-    sections: ['top', 'trust', 'position', 'bynumbers', 'process', 'services', 'testimonials', 'faq', 'contact'],
-    keepUnknown: false, faq: 'buyer', anchors: 'resolve', renumber: true,
+    sections: ['top', 'trust', 'position', 'bynumbers', 'work', 'process', 'services', 'testimonials', 'faq', 'contact'],
+    keepUnknown: false, faq: 'buyer', anchors: 'resolve', renumber: true, work: 'teaser',
     sortWriting: false, foldCases: false, contactFirst: 'hire', promoteH1: false,
     ld: [], priority: '0.9', primaryPriority: '1.0',
-    verify: { minText: 4526, minSections: 5 },   // measured 6466 chars, 8 sections
+    verify: { minText: 5308, minSections: 6 },   // measured 7583 chars, 9 sections
   },
   {
     key: 'services', suffix: 'services/',
@@ -1346,11 +1374,10 @@ const PAGE_SPECS = [
   {
     key: 'work', suffix: 'work/',
     sections: ['work', 'products', 'builds', 'build', 'domains', 'brands', 'regions', 'contact'],
-    keepUnknown: false, faq: null, anchors: 'resolve', renumber: true,
+    keepUnknown: false, faq: null, anchors: 'resolve', renumber: true, work: 'teaser',
     sortWriting: false, foldCases: true, contactFirst: 'project', promoteH1: true,
-    // CollectionPage lists no items yet: the per-project pages it would point at do not exist.
     ld: ['collection', 'breadcrumb'], priority: '0.8',
-    verify: { minText: 12741, minSections: 4 },      // measured 18202 chars, 7 sections
+    verify: { minText: 8198, minSections: 4 },      // measured 11712 chars, 7 sections (flagship write-ups moved to their own pages)
   },
   {
     key: 'about', suffix: 'about/',
@@ -1360,6 +1387,15 @@ const PAGE_SPECS = [
     ld: ['profile', 'faq', 'breadcrumb'], priority: '0.6',
     verify: { minText: 7350, minSections: 7 },       // measured 10501 chars, 10 sections
   },
+  // One page per flagship case study, cut from the same #work section.
+  ...FLAGSHIP.map((f) => ({
+    key: `work-${f.slug}`, suffix: `work/${f.slug}/`, work: 'single', flagship: f,
+    sections: ['work', 'contact'],
+    keepUnknown: false, faq: null, anchors: 'resolve', renumber: true,
+    sortWriting: false, foldCases: false, contactFirst: 'project', promoteH1: false,
+    ld: ['project', 'breadcrumb'], priority: '0.7',
+    verify: PROJECT_VERIFY[f.slug],
+  })),
 ];
 
 // Which page a section lives on, for links to it from a page that does not
@@ -1411,15 +1447,34 @@ function assertPageSpecs(locales) {
     if (spec.ld.includes('faq') && !spec.faq) bad.push(`${spec.key}: ld "faq" but the page keeps no FAQ items`);
     if (!spec.verify || !(spec.verify.minText > 0) || !(spec.verify.minSections > 0)) bad.push(`${spec.key}: no verify floor`);
     for (const l of locales) {
-      const seo = (SEO[spec.key] || {})[l.lang];
-      if (!seo || !seo.title || !seo.description) bad.push(`SEO.${spec.key}.${l.lang} is missing`);
-      if (spec.ld.includes('breadcrumb') && !(NAV[l.lang] || {})[spec.key]) bad.push(`NAV.${l.lang}.${spec.key} is missing (breadcrumb name)`);
+      // A project page's title and description are cut from its case study.
+      if (spec.work !== 'single') {
+        const seo = (SEO[spec.key] || {})[l.lang];
+        if (!seo || !seo.title || !seo.description) bad.push(`SEO.${spec.key}.${l.lang} is missing`);
+        if (spec.ld.includes('breadcrumb') && !(NAV[l.lang] || {})[spec.key]) bad.push(`NAV.${l.lang}.${spec.key} is missing (breadcrumb name)`);
+      }
     }
   }
   // Every page's navigation, breadcrumbs and cards read these labels.
   for (const l of locales) {
     for (const k of NAV_LABELS) if (!(NAV[l.lang] || {})[k]) bad.push(`NAV.${l.lang}.${k} is missing`);
   }
+  // The flagships: a slug becomes a URL segment, so it is validated here, once,
+  // before anything is written; every flagship has exactly one project page.
+  const slugs = new Set();
+  const names = new Set();
+  for (const f of FLAGSHIP) {
+    if (!f.name || typeof f.name !== 'string') bad.push(`FLAGSHIP entry without a name (${JSON.stringify(f)})`);
+    if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(f.slug || '')) bad.push(`FLAGSHIP slug "${f.slug}" must be lowercase words joined by single hyphens`);
+    if (slugs.has(f.slug)) bad.push(`FLAGSHIP slug "${f.slug}" is used twice`);
+    if (names.has(f.name)) bad.push(`FLAGSHIP name "${f.name}" is used twice`);
+    slugs.add(f.slug);
+    names.add(f.name);
+    if (PAGE_SPECS.filter((spec) => spec.work === 'single' && spec.flagship.slug === f.slug).length !== 1)
+      bad.push(`FLAGSHIP "${f.slug}" has no (or more than one) project page in PAGE_SPECS`);
+  }
+  for (const spec of PAGE_SPECS)
+    if (spec.work === 'single' && !FLAGSHIP.some((f) => f.slug === spec.flagship.slug)) bad.push(`${spec.key}: flagship "${spec.flagship.slug}" is not in FLAGSHIP`);
   for (const [id, owner] of Object.entries(LINK_OWNER)) if (!keys.has(owner)) bad.push(`LINK_OWNER ${id} → unknown page "${owner}"`);
   if (!PAGE_SPECS.some((spec) => spec.key === 'home' && spec.suffix === '')) bad.push('no home page at the locale root');
   if (bad.length) {
@@ -1820,7 +1875,20 @@ async function renderLocale({ browser, loc, ghData, enhanceJS, locales }) {
   }
   console.log(`  [${lang}] re-embedded ${shared.blobCount} blob asset(s) as data: URLs`);
 
+  try { assertFlagshipsRendered(lang, shared.caseNames); }
+  catch (e) { await page.close().catch(() => {}); throw e; }
   return { page, shared };
+}
+
+// The flagships are found in the render by name (FLAGSHIP). A re-export that
+// renames or drops one would otherwise quietly lose its project page and its
+// card: fail the build instead, and never fall back to the raw export for it.
+function assertFlagshipsRendered(lang, caseNames) {
+  const missing = FLAGSHIP.filter((f) => !caseNames.includes(f.name)).map((f) => f.name);
+  if (!missing.length) return;
+  throw Object.assign(new Error(
+    `[build] [${lang}] flagship case stud${missing.length > 1 ? 'ies' : 'y'} not found in the export: ${missing.join(', ')}.\n` +
+    `   Found: ${caseNames.join(', ') || '(none)'}. Rename the entry in FLAGSHIP (site-facts.mjs) to match the export.`), { fatal: true });
 }
 
 // One cut of the pristine render: restore a fresh copy of the page, remove what
@@ -1864,6 +1932,112 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         const isBuyer = faqBuyerKeys.some((k) => q.includes(k));
         if (pageSpec.faq === 'buyer' ? !isBuyer : isBuyer) item.remove();
       });
+    }
+    // ── Case studies: cards and project pages ───────────────────────────
+    // The five flagships are written up in full on a page each. Where the long
+    // write-ups sat, a card per flagship links to its page (home, /work/); on a
+    // project page the section is that one case study. Cards mirror the
+    // export's own product cards (writing-card …), so they need no new styling.
+    // Nothing injected here carries `reveal`: it would wait for a scroll
+    // observer the card does not need.
+    let project = null;
+    if (pageSpec.work) {
+      const workSec = document.getElementById('work');
+      const articles = workSec ? [...workSec.querySelectorAll('article.case')] : [];
+      const nameOf = (c) => (c.querySelector('.case-name')?.textContent || '').trim();
+      const caseFor = (f) => articles.find((c) => nameOf(c) === f.name);
+      const missing = layout.flagships.filter((f) => !caseFor(f));
+      const holder = articles.length ? articles[0].parentElement : null;
+      if (!workSec || missing.length || !holder || !articles.every((c) => c.parentElement === holder)) {
+        warnings.push(`work: flagship cases not found or not in one list (${missing.map((f) => f.name).join(', ') || 'layout'}) — left as exported`);
+      } else {
+        const el = (tag, cls, text) => {
+          const e = document.createElement(tag);
+          if (cls) e.className = cls;
+          if (text != null) e.textContent = text;
+          return e;
+        };
+        const card = (f) => {
+          const art = caseFor(f);
+          const a = el('a', 'writing-card');
+          a.setAttribute('href', `${localePrefix}work/${f.slug}/`);
+          a.setAttribute('data-flagship', f.slug);
+          const head = el('div', 'writing-card-head');
+          head.appendChild(el('span', 'writing-card-cat', (art.querySelector('.case-num')?.textContent || '').trim()));
+          a.append(head, el('h3', 'writing-card-title', f.name),
+            el('p', 'writing-card-desc', (art.querySelector('.case-tagline')?.textContent || '').trim()));
+          const stack = art.querySelector('.case-stack');
+          if (stack) a.appendChild(stack.cloneNode(true));
+          a.appendChild(el('span', 'writing-card-arr', `${labels.caseStudy} →`));
+          return a;
+        };
+        const grid = (list) => {
+          const g = el('div', 'writing-grid');
+          list.forEach((f) => g.appendChild(card(f)));
+          return g;
+        };
+        const allWork = () => {
+          const w = el('div', 'work-more');
+          const a = el('a', 'btn btn-ghost', `${labels.allWork} →`);
+          a.setAttribute('href', `${localePrefix}work/`);
+          w.appendChild(a);
+          return w;
+        };
+        if (pageSpec.work === 'teaser') {
+          const g = grid(layout.flagships);
+          if (pageSpec.key === 'home') {
+            articles.forEach((c) => c.remove());
+            holder.replaceWith(g);
+            g.after(allWork());
+          } else {
+            layout.flagships.forEach((f) => caseFor(f).remove());
+            g.classList.add('work-flagships');
+            holder.before(g);
+          }
+        } else if (pageSpec.work === 'single') {
+          const f = pageSpec.flagship;
+          const art = caseFor(f);
+          const more = grid(layout.flagships.filter((x) => x.slug !== f.slug));
+          project = {
+            name: f.name, slug: f.slug,
+            tagline: (art.querySelector('.case-tagline')?.textContent || '').trim(),
+            chips: [...art.querySelectorAll('.case-stack .chip')].map((c) => (c.textContent || '').trim()).filter(Boolean),
+          };
+          articles.forEach((c) => { if (c !== art) c.remove(); });
+          const wrap = workSec.querySelector(':scope > .wrap');
+          const head = wrap && wrap.querySelector(':scope > .section-head');
+          if (head) head.remove();
+          workSec.id = 'case';
+          // The case name is the page's heading.
+          const title = art.querySelector('.case-name');
+          const h1 = document.createElement('h1');
+          for (const attr of title.attributes) h1.setAttribute(attr.name, attr.value);
+          while (title.firstChild) h1.appendChild(title.firstChild);
+          title.replaceWith(h1);
+          // The full write-up, open: it is what the page is for.
+          art.querySelectorAll('.deepdive').forEach((dd) => {
+            dd.classList.add('open');
+            const toggle = dd.querySelector('.deepdive-toggle');
+            if (toggle) toggle.setAttribute('aria-expanded', 'true');
+          });
+          const crumbs = el('nav', 'crumbs');
+          crumbs.setAttribute('aria-label', 'Breadcrumb');
+          const ol = el('ol');
+          [[localePrefix, 'Ahmed Farid'], [`${localePrefix}work/`, labels.work]].forEach(([href, text]) => {
+            const li = el('li');
+            const a = el('a', null, text);
+            a.setAttribute('href', href);
+            li.appendChild(a);
+            ol.appendChild(li);
+          });
+          const here = el('li', null, f.name);
+          here.setAttribute('aria-current', 'page');
+          ol.appendChild(here);
+          crumbs.appendChild(ol);
+          wrap.insertBefore(crumbs, wrap.firstChild);
+          wrap.append(el('h2', 'fineprint', labels.moreWork), more, allWork());
+        }
+      }
     }
     // The navigation is the same four links on every page: three pages and the
     // contact block. The export's six in-page anchors (Work, Brands, Engineering,
@@ -2089,7 +2263,7 @@ async function snapshotVariant({ page, spec, lang, locales }) {
       .filter((x) => x.q && x.a);
 
     return {
-      faq, warnings, keptKeys,
+      faq, warnings, keptKeys, project,
       caseNames: [...document.querySelectorAll('article.case .case-name')].map((e) => (e.textContent || '').trim()),
       body: document.getElementById('root').innerHTML,
     };
@@ -2106,6 +2280,30 @@ async function snapshotVariant({ page, spec, lang, locales }) {
 // JSON-LD goes inside a <script>, where a "<" in any string (an FAQ answer, a
 // case name) could close the tag early. Every block is serialised through here.
 const ldJson = (obj) => JSON.stringify(obj).replace(/</g, '\\u003c');
+
+// A project page's title and description, from the case study's own text and
+// nothing else. Title: name, the tagline up to its first dash or colon, then
+// the site name — or the generic "Case study" label when that runs past the
+// head limit. Description: the tagline, then as many tech chips as fit.
+const PROJECT_DESCRIPTION_MAX = 165;
+function projectSeo(project, lang) {
+  const { name, tagline, chips } = project;
+  const cut = tagline.search(/ — | – |: /);
+  const clause = (cut > 0 ? tagline.slice(0, cut) : tagline).replace(/\.$/, '').trim();
+  let title = `${name} — ${clause} · Ahmed Farid`;
+  if (title.length > HEAD_LIMITS.title) title = `${name} — ${NAV[lang].caseStudy} · Ahmed Farid`;
+  let description;
+  if (tagline.length > PROJECT_DESCRIPTION_MAX) {
+    const head = tagline.slice(0, PROJECT_DESCRIPTION_MAX - 1);
+    description = head.slice(0, head.lastIndexOf(' ')).replace(/[\s,.;:—–-]+$/, '') + '…';
+  } else {
+    const keep = [...chips];
+    const joined = () => (keep.length ? `${tagline} ${keep.join(' · ')}` : tagline);
+    while (keep.length && joined().length > PROJECT_DESCRIPTION_MAX) keep.pop();
+    description = joined();
+  }
+  return { title, description };
+}
 
 // Node-side assembly of one page: head, structured data, document, externalised
 // assets, minify, write. Driven by the page's spec; `shared` is the locale's
@@ -2229,7 +2427,12 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
   // at the home page told search engines to drop it.
   const pageSuffix = spec.suffix;
   const pageUrl = `${SITE_URL}${urlPath}${pageSuffix}`;
-  const seo = SEO[spec.key][lang];   // present for every page × locale: assertPageSpecs
+  const project = snap.project;      // a project page's case study (spec.work === 'single')
+  if (spec.work === 'single' && !project) {
+    throw Object.assign(new Error(`[build] [${lang}] ${spec.key}: the flagship case study could not be cut from the render.`), { fatal: true });
+  }
+  // SEO[key][lang] is present for every other page × locale: assertPageSpecs
+  const seo = spec.work === 'single' ? projectSeo(project, lang) : SEO[spec.key][lang];
   const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
   // Point og:image / twitter:image at the generated card (drop the export's
@@ -2325,7 +2528,21 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
       ? { ...pageNode, '@type': 'ProfilePage', '@id': `${pageUrl}#profile`, mainEntity: { '@id': `${SITE_URL}/#person` } }
       : null,
     spec.ld.includes('collection')
-      ? { ...pageNode, '@type': 'CollectionPage', '@id': `${pageUrl}#page`, about: { '@id': `${SITE_URL}/#person` } }
+      ? {
+          ...pageNode, '@type': 'CollectionPage', '@id': `${pageUrl}#page`, about: { '@id': `${SITE_URL}/#person` },
+          mainEntity: {
+            '@type': 'ItemList',
+            itemListElement: FLAGSHIP.map((f, i) => ({ '@type': 'ListItem', position: i + 1, name: f.name, url: `${pageUrl}${f.slug}/` })),
+          },
+        }
+      : null,
+    spec.ld.includes('project')
+      ? {
+          '@context': 'https://schema.org', '@type': 'CreativeWork', '@id': `${pageUrl}#work`, url: pageUrl,
+          name: project.name, description: project.tagline, inLanguage: lang,
+          creator: { '@id': `${SITE_URL}/#person` }, keywords: project.chips.join(', '),
+          isPartOf: { '@id': `${SITE_URL}${urlPath}work/#page` },
+        }
       : null,
   ].filter(Boolean);
   const breadcrumbLd = spec.ld.includes('breadcrumb')
@@ -2333,10 +2550,10 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
         '@context': 'https://schema.org',
         '@type': 'BreadcrumbList',
         '@id': `${pageUrl}#breadcrumb`,
-        itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'Ahmed Farid', item: `${SITE_URL}${urlPath}` },
-          { '@type': 'ListItem', position: 2, name: NAV[lang][spec.key], item: pageUrl },
-        ],
+        itemListElement: (spec.work === 'single'
+          ? [['Ahmed Farid', `${SITE_URL}${urlPath}`], [NAV[lang].work, `${SITE_URL}${urlPath}work/`], [project.name, pageUrl]]
+          : [['Ahmed Farid', `${SITE_URL}${urlPath}`], [NAV[lang][spec.key], pageUrl]]
+        ).map(([name, item], i) => ({ '@type': 'ListItem', position: i + 1, name, item })),
       }
     : null;
   const jsonLd = [
@@ -2550,6 +2767,18 @@ ${jsonLd}
 .case-more-inner{display:grid;gap:32px;padding-top:24px}
 :root[data-corners=sharp] .case-more-summary{border-radius:2px}
 @media print{.case-more-summary{display:none}}
+/* Project pages: breadcrumb trail, the "all work" link under a card grid, the
+   flagship cards above /work/'s folded cases, and the case write-up shown open
+   (its toggle would only close what the page is for). Logical properties
+   throughout, so Arabic mirrors without a second rule. */
+.crumbs ol{display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0 0 28px;padding:0;font-family:var(--mono);font-size:12px;color:var(--ink-dim)}
+.crumbs a{color:var(--ink-mute)}
+.crumbs li+li::before{content:"/";margin-inline-end:8px}
+.work-more{margin-top:32px}
+.work-flagships{margin-bottom:56px}
+#case .deepdive-toggle{display:none}
+#case .deepdive-panel{max-height:none}
+#case .deepdive-inner{padding-top:24px}
 /* The page the visitor is on, in the four-link navigation. Same mark the
    export's scroll-spy uses for the section in view. */
 .nav-links a[aria-current="page"]{color:var(--ink)}
@@ -2679,6 +2908,7 @@ async function build() {
   // One render per locale; every page in PAGE_SPECS is a cut of it.
   const assetSeen = new Map();
   const coverage = [];   // per locale: what the render held, and what each cut kept
+  const projects = {};   // slug → { name, tagline, chips } from the English render
   for (const loc of locales) {
     const { page, shared } = await renderLocale({ browser, loc, ghData, enhanceJS, locales });
     const snaps = [];
@@ -2686,6 +2916,7 @@ async function build() {
     try {
       for (const spec of PAGE_SPECS) {
         const snap = await snapshotVariant({ page, spec, lang: loc.lang, locales });
+        if (loc.lang === 'en' && snap.project) projects[snap.project.slug] = snap.project;
         snaps.push({ spec, keptKeys: snap.keptKeys, caseNames: snap.caseNames, faq: snap.faq });
         await writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, assetSeen });
       }
@@ -2699,7 +2930,7 @@ async function build() {
   // ── One-time SEO + static assets ──────────────────────────────────────────
   await copyStaticAssets();
 
-  await writeSeoFiles(locales, PAGE_SPECS);
+  await writeSeoFiles(locales, PAGE_SPECS, projects);
 
   // ── Verify each built page actually renders ───────────────────────────────
   console.log('→ Verifying built output…');
