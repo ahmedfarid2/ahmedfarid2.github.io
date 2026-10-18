@@ -1067,18 +1067,8 @@ async function fallback(reason) {
   console.log('✓ Raw export copied to dist/ (site stays functional, unoptimized).');
 }
 
-// Build a single locale page end-to-end: render its source export, run the
-// in-page transforms, assemble a clean head/body, externalize data: URLs into
-// the SHARED dist/assets/ folder (root-absolute /assets/ refs), minify, and
-// write to outDir/index.html. Returns per-page stats. Everything that is
-// one-time work (og.png, GitHub fetch, enhancement-layer extraction,
-// sitemap/robots/404, copying static assets) is done by the orchestrator and
-// passed in — buildPage is called once per locale.
-// `variant` decides which half of the rendered page survives the snapshot:
-//   'home'     — everything except the commercial sections
-//   'services' — only the commercial sections
-// Both come from the same render, so the shell, nav, fonts, reveals, texture
-// and footer are identical by construction rather than by reimplementation.
+// A stable fragment of each buyer-side FAQ question, per locale: those items
+// belong on /services, the rest on the pages that serve everyone else.
 const FAQ_BUYER_KEYS = {
   en: ['typical engagement', 'clients based', 'your rate'],
   ar: ['التعاقد النموذجي', 'يقع عملاؤك', 'ما سعرك'],
@@ -1087,10 +1077,10 @@ const FAQ_BUYER_KEYS = {
   fr: ['mission type', 'sont vos clients', 'votre tarif'],
 };
 
-// /services is cut from the home render and has no hero. The export's
-// enhancement layer waits for `.hero-stats` before it starts, so on /services
-// it never started: no language menu, no Arabic numerals, a dead Personalize
-// button. On that page it waits for the nav alone. Its first-visit intro
+// Every page but home is cut from the home render and has no hero. The
+// export's enhancement layer waits for `.hero-stats` before it starts, so on
+// those pages it never started: no language menu, no Arabic numerals, a dead
+// Personalize button. There it waits for the nav alone. Its first-visit intro
 // splash stays home-only, as it was. Every other feature in the layer is
 // null-safe when the hero is missing. A re-export that changes these strings
 // leaves the page as before, and assertLocaleRouting then fails the build
@@ -1099,11 +1089,11 @@ const FAQ_BUYER_KEYS = {
 // tolerant of whitespace and quote style.
 const ENHANCE_READY = /document\.querySelector\((['"])\.hero-stats\1\)\s*&&\s*(document\.querySelector\((['"])\.nav-links a\3\))/;
 const ENHANCE_INTRO_SEEN = /if\s*\(\s*sessionStorage\.getItem\((['"])af_intro_done\1\)\s*\)\s*return/;
-function enhanceForVariant(js, variant) {
-  if (!js || variant !== 'services') return js;
+function enhanceForVariant(js, spec) {
+  if (!js || spec.key === 'home') return js;
   const count = (rx) => (js.match(new RegExp(rx.source, 'g')) || []).length;
   if (count(ENHANCE_READY) !== 1 || count(ENHANCE_INTRO_SEEN) !== 1) {
-    console.warn('  ⚠ enhancement layer changed shape; /services runs without it (routing gate will flag the menu)');
+    console.warn(`  ⚠ enhancement layer changed shape; /${spec.suffix} runs without it (routing gate will flag the menu)`);
     return js;
   }
   return js.replace(ENHANCE_READY, '$2').replace(ENHANCE_INTRO_SEEN, 'return');
@@ -1117,13 +1107,68 @@ const PAGE_LAYOUT = {
   writingRank: ['Debugging', 'Testing', 'Fundamentals', 'Hiring', 'Career'],
 };
 
-async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enhanceJS, assetSeen, variant = 'home' }) {
-  const isRoot = outDir === DIST;
-  const urlPath = (locales.find((l) => l.lang === lang) || {}).urlPath || '/';
-  const multi = locales.length > 1;
+// ── Page map ────────────────────────────────────────────────────────────────
+// One table drives every page this build writes. Each locale is rendered ONCE
+// (renderLocale) and every row below is a slice of that render (snapshotVariant)
+// written to <locale>/<suffix>index.html (writeVariantPage). The shell, nav,
+// fonts, reveals, texture and footer are identical by construction rather than
+// by reimplementation, and adding a page is adding a row, not another render
+// (a render is ~20s; a non-fatal timeout in one drops the whole site to the
+// raw-export fallback).
+//
+//   key          SEO[key] row, log label, and the page-type name
+//   suffix       URL path under the locale ('' = the locale root)
+//   sections     section keys kept (slicing only removes, so DOM order is the
+//                export's own); see SECTION_KEYS / sectionKeyOf
+//   keepUnknown  keep a section whose key is not in SECTION_KEYS (a re-export
+//                added one) rather than dropping content silently
+//   faq          'buyer' | 'other' | null — which FAQ items survive
+//   anchors      'home' rewrites every #hash link to the locale home page
+//   renumber     renumber the "· 01" eyebrows after the cut
+//   sortWriting  engineering topics before career notes in #writing
+//   foldCases    fold Problem + Approach of the non-flagship cases
+//   contactFirst 'project' puts the project path before the hiring path
+//   promoteH1    promote the first section title to <h1> (no hero on the page)
+const SECTION_KEYS = [
+  'top', 'trust', 'position', 'about', 'bynumbers', 'work', 'products', 'builds', 'build',
+  'domains', 'brands', 'regions', 'depth', 'arch', 'github', 'experience', 'process', 'why',
+  'testimonials', 'writing', 'pricing', 'services', 'faq', 'connect', 'contact',
+];
+const COMMERCIAL_SECTIONS = ['pricing', 'services'];
+const PAGE_SPECS = [
+  {
+    key: 'home', suffix: '',
+    sections: SECTION_KEYS.filter((k) => !COMMERCIAL_SECTIONS.includes(k)),
+    keepUnknown: true, faq: 'other', anchors: null, renumber: false,
+    sortWriting: true, foldCases: true, contactFirst: 'hire', promoteH1: false,
+  },
+  {
+    key: 'services', suffix: 'services/',
+    sections: ['pricing', 'services', 'faq', 'contact'],
+    keepUnknown: false, faq: 'buyer', anchors: 'home', renumber: true,
+    sortWriting: false, foldCases: false, contactFirst: 'project', promoteH1: true,
+  },
+];
 
-  await mkdir(outDir, { recursive: true });
+// A section's key: its id, or — for the three the export ships without one —
+// the thing that identifies it: the trust marquee (`section.trust`), "What I do"
+// (the one holding `.position-grid`) and "Industries" (the one holding
+// `.industries`). Serialised into the page (renderLocale), so it must stay
+// self-contained.
+function sectionKeyOf(sec) {
+  if (sec.id) return sec.id;
+  if (sec.classList.contains('trust')) return 'trust';
+  if (sec.querySelector('.position-grid')) return 'position';
+  if (sec.querySelector('.industries')) return 'domains';
+  return '';
+}
 
+// Everything that does not depend on which page is being cut happens here,
+// once per locale: render the export, convert image slots, fill the GitHub
+// block, re-embed fonts, capture the head metadata, clean links — then park a
+// pristine copy of the result for snapshotVariant to cut from.
+async function renderLocale({ browser, loc, ghData, enhanceJS, locales }) {
+  const { lang, src } = loc;
   const page = await browser.newPage();
   await page.setViewport({ width: 1440, height: 1200, deviceScaleFactor: 2 });
 
@@ -1140,8 +1185,11 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
   );
   await new Promise((r) => setTimeout(r, 2500));
 
+  // The one definition of "which section is this", shared with the cut below.
+  await page.evaluate(`window.__afSectionKey = ${sectionKeyOf.toString()};`);
+
   console.log(`→ [${lang}] Transforming + extracting static DOM…`);
-  const result = await page.evaluate(async (ghUser, gh, hasEnhance, localeCodes, pageVariant, faqBuyerKeys, localePrefix, layout) => {
+  const shared = await page.evaluate(async (ghUser, gh, hasEnhance, localeCodes) => {
     // ── Convert <image-slot> → <img> (image lives in shadow DOM otherwise) ──
     document.querySelectorAll('image-slot').forEach((slot) => {
       const src = slot.getAttribute('src') || '';
@@ -1423,66 +1471,6 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
     const bodyAttrs = {};
     for (const a of document.body.attributes) if (a.name.startsWith('data-')) bodyAttrs[a.name] = a.value;
 
-    // The export ships its OWN language switcher (`.locale`), but in static
-    // output the snapshot bakes in a DEAD copy — its click handlers don't
-    // survive, and the enhancement JS rebuilds a fresh, live one at runtime
-    // (correct dropdown + deployed-URL routing). So remove every baked copy
-    // here; the runtime build produces exactly one working switcher. (If a
-    // future export ships no such JS, the assembler injects a static fallback.)
-    // ── Slice the page ──────────────────────────────────────────────────
-    // The freelance offer and the hiring pitch are both in this render. Which
-    // one survives depends on the variant; the other is removed from the DOM
-    // before the snapshot is taken.
-    // Only these two move between pages. #faq and #contact appear on both —
-    // a buyer reading prices needs the answers and a way to reach him, and the
-    // FAQ is filtered item by item just below rather than wholesale.
-    // Every <section>, not just section[id] — three of them carry no id at all
-    // (the trust marquee and two unnamed bands), and filtering on `[id]` left
-    // them on /services showing the hiring pitch above the price list.
-    const commercial = ['pricing', 'services'];
-    const sharedOnServices = ['faq', 'contact'];
-    document.querySelectorAll('section').forEach((sec) => {
-      const id = sec.id || '';
-      const isCommercial = commercial.includes(id);
-      if (pageVariant === 'services') {
-        if (!isCommercial && !sharedOnServices.includes(id)) sec.remove();
-      } else if (isCommercial) {
-        sec.remove();
-      }
-    });
-    // The FAQ is split item by item rather than wholesale: three of its
-    // questions belong to a buyer, the rest to anyone.
-    const buyerFaq = faqBuyerKeys;
-    document.querySelectorAll('.faq-item').forEach((item) => {
-      const q = (item.textContent || '').slice(0, 120);
-      const isBuyer = buyerFaq.some((k) => q.includes(k));
-      if (pageVariant === 'services' ? !isBuyer : isBuyer) item.remove();
-    });
-    // Nav links point at sections that may no longer be on this page. On
-    // /services they become absolute links back to the home page, so nothing
-    // resolves to a dead anchor.
-    if (pageVariant === 'services') {
-      const homeHref = localePrefix || '/';
-      document.querySelectorAll('a[href^="#"]').forEach((a) => {
-        const t = a.getAttribute('href');
-        a.setAttribute('href', t === '#top' ? homeHref : homeHref + t);
-      });
-    }
-
-    if (pageVariant === 'services') {
-      // Section numbers are displayed. After the cut they would read 13, 14,
-      // 15 on a page whose first section is the first thing on it.
-      let n = 0;
-      document.querySelectorAll('section .eyebrow').forEach((eb) => {
-        if (!/·\s*[0-9٠-٩]{2}\s*$/.test(eb.textContent || '')) return;
-        n += 1;
-        const ar = /[٠-٩]/.test(eb.textContent);
-        const num = String(n).padStart(2, '0');
-        const shown = ar ? num.replace(/[0-9]/g, (d) => '٠١٢٣٤٥٦٧٨٩'[+d]) : num;
-        eb.textContent = (eb.textContent || '').replace(/·\s*[0-9٠-٩]{2}\s*$/, '· ' + shown);
-      });
-    }
-
     // ── Link hygiene ────────────────────────────────────────────────────
     // Compass Med serves its site over HTTPS (search engines index the https
     // pages); the export still links the http:// form.
@@ -1500,8 +1488,128 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
       } catch { /* not a parseable URL — leave it */ }
     });
 
+    // Footer email: let it break after the "@" rather than mid-domain in a
+    // narrow footer column.
+    document.querySelectorAll('footer a[href^="mailto:"]').forEach((a) => {
+      if (a.children.length || !a.textContent.includes('@')) return;
+      const [local, domain] = a.textContent.split('@');
+      a.textContent = local + '@';
+      a.appendChild(document.createElement('wbr'));
+      a.appendChild(document.createTextNode(domain));
+    });
+
+    // The export ships its OWN language switcher (`.locale`), but in static
+    // output the snapshot bakes in a DEAD copy — its click handlers don't
+    // survive, and the enhancement JS rebuilds a fresh, live one at runtime
+    // (correct dropdown + deployed-URL routing). So remove every baked copy
+    // here; the runtime build produces exactly one working switcher. (If a
+    // future export ships no such JS, the assembler injects a static fallback.)
+    const ownSwitchers = [...document.querySelectorAll('.locale, .lang-switcher, [data-locale-switcher]')];
+    const hasOwnSwitcher = ownSwitchers.length > 0;
+    ownSwitchers.forEach((el) => el.remove());
+    document.querySelectorAll('a[href]').forEach((a) => {
+      const bare = (a.getAttribute('href') || '').replace(/^\.?\//, '');
+      if (bare === 'index.html') a.setAttribute('href', '/');
+      else {
+        const m = /^index\.([a-z]{2})\.html$/.exec(bare);
+        if (m && localeCodes.includes(m[1])) a.setAttribute('href', `/${m[1]}/`);
+      }
+    });
+
+    // ── Inventory + pristine copy ───────────────────────────────────────
+    // What the export holds, so the Node side can prove every section, case
+    // study and FAQ question is published on some page. The pristine copy is
+    // what each page is cut from; it is taken after every transform above and
+    // before any cut.
+    const root = document.getElementById('root');
+    const topSections = [...root.querySelectorAll('section')].filter((s) => !s.parentElement.closest('section'));
+    const pristineKeys = topSections.map((s) => window.__afSectionKey(s));
+    const caseNames = [...root.querySelectorAll('article.case .case-name')].map((e) => (e.textContent || '').trim());
+    const faqQs = [...root.querySelectorAll('.faq-item')]
+      .map((item) => (item.querySelector('.faq-q .text') || item.querySelector('.faq-q'))?.textContent?.trim() || '')
+      .filter(Boolean);
+    window.__afPristine = root.cloneNode(true);
+
+    return {
+      title, lang, meta, css, bodyClass, rootAttrs, bodyAttrs, hasOwnSwitcher,
+      blobCount: blobUrls.length, pristineKeys, caseNames, faqQs,
+    };
+  }, GH_USER, ghData, !!enhanceJS, locales.map((l) => l.lang));
+
+  if (pageErrors.length) {
+    console.log(`  [${lang}] (${pageErrors.length} non-fatal page errors during render — expected for blocked external assets)`);
+  }
+  console.log(`  [${lang}] re-embedded ${shared.blobCount} blob asset(s) as data: URLs`);
+
+  return { page, shared };
+}
+
+// One cut of the pristine render: restore a fresh copy of the page, remove what
+// this page does not carry, and apply the per-page passes. replaceWith, not
+// innerHTML: the copy keeps the exact nodes and attributes the render produced.
+// The callback is synchronous on purpose — nothing may run between the swap
+// and the read of `body` (the export's own observers would get a turn).
+async function snapshotVariant({ page, spec, lang, locales }) {
+  const prefix = lang === 'en' ? '/' : `/${lang}/`;
+  console.log(`→ [${lang}] Cutting ${spec.key} page…`);
+  const snap = await page.evaluate((pageSpec, localeCodes, faqBuyerKeys, localePrefix, layout, knownKeys) => {
+    document.getElementById('root').replaceWith(window.__afPristine.cloneNode(true));
     const warnings = [];
-    if (pageVariant === 'home') {
+
+    // ── Slice the page ──────────────────────────────────────────────────
+    // The freelance offer and the hiring pitch are both in this render. Which
+    // sections survive depends on the page (PAGE_SPECS); the rest are removed
+    // from the DOM before the snapshot is taken.
+    // Every <section>, not just section[id] — three of them carry no id at all
+    // (the trust marquee and two unnamed bands), and filtering on `[id]` left
+    // them on /services showing the hiring pitch above the price list.
+    const keptKeys = [];
+    document.querySelectorAll('section').forEach((sec) => {
+      if (sec.parentElement.closest('section')) return;   // goes with its parent
+      const key = window.__afSectionKey(sec);
+      const known = knownKeys.includes(key);
+      if (pageSpec.sections.includes(key) || (pageSpec.keepUnknown && !known)) {
+        keptKeys.push(key);
+        if (!known) warnings.push(`section "${key || '(unnamed)'}" is not in the page map — kept on ${pageSpec.key}`);
+      } else {
+        sec.remove();
+      }
+    });
+    // The FAQ is split item by item rather than wholesale: three of its
+    // questions belong to a buyer, the rest to anyone.
+    if (pageSpec.faq) {
+      document.querySelectorAll('.faq-item').forEach((item) => {
+        const q = (item.textContent || '').slice(0, 120);
+        const isBuyer = faqBuyerKeys.some((k) => q.includes(k));
+        if (pageSpec.faq === 'buyer' ? !isBuyer : isBuyer) item.remove();
+      });
+    }
+    // Nav links point at sections that may no longer be on this page. On
+    // /services they become absolute links back to the home page, so nothing
+    // resolves to a dead anchor.
+    if (pageSpec.anchors === 'home') {
+      const homeHref = localePrefix || '/';
+      document.querySelectorAll('a[href^="#"]').forEach((a) => {
+        const t = a.getAttribute('href');
+        a.setAttribute('href', t === '#top' ? homeHref : homeHref + t);
+      });
+    }
+
+    if (pageSpec.renumber) {
+      // Section numbers are displayed. After the cut they would read 13, 14,
+      // 15 on a page whose first section is the first thing on it.
+      let n = 0;
+      document.querySelectorAll('section .eyebrow').forEach((eb) => {
+        if (!/·\s*[0-9٠-٩]{2}\s*$/.test(eb.textContent || '')) return;
+        n += 1;
+        const ar = /[٠-٩]/.test(eb.textContent);
+        const num = String(n).padStart(2, '0');
+        const shown = ar ? num.replace(/[0-9]/g, (d) => '٠١٢٣٤٥٦٧٨٩'[+d]) : num;
+        eb.textContent = (eb.textContent || '').replace(/·\s*[0-9٠-٩]{2}\s*$/, '· ' + shown);
+      });
+    }
+
+    if (pageSpec.sortWriting) {
       // ── Writing: engineering topics before career notes ───────────────
       // Stable sort by category rank; unknown categories keep their order at
       // the end. Every card still links to the same LinkedIn activity feed —
@@ -1522,7 +1630,9 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
       } else {
         warnings.push('writing: #writing .writing-grid not found');
       }
+    }
 
+    if (pageSpec.foldCases) {
       // ── Case studies: progressive disclosure ───────────────────────────
       // The five flagship cases stay fully open. The others keep their
       // header, screenshot, Impact and tech notes visible, and fold Problem +
@@ -1571,46 +1681,25 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
       }
     }
 
-    // Footer email: let it break after the "@" rather than mid-domain in a
-    // narrow footer column.
-    document.querySelectorAll('footer a[href^="mailto:"]').forEach((a) => {
-      if (a.children.length || !a.textContent.includes('@')) return;
-      const [local, domain] = a.textContent.split('@');
-      a.textContent = local + '@';
-      a.appendChild(document.createElement('wbr'));
-      a.appendChild(document.createTextNode(domain));
-    });
-
-    // Language links keep the visitor on the page they are reading: on
-    // /services each language goes to that language's /services/. The drawer
-    // links are baked into the snapshot; the runtime menu is fixed up by the
-    // vanilla layer (it is built after the snapshot by the export's script).
-    if (pageVariant === 'services') {
+    // Language links keep the visitor on the page they are reading: on a
+    // page under a suffix (/services/) each language goes to that language's
+    // same page. The drawer links are baked into the snapshot; the runtime
+    // menu is fixed up by the vanilla layer (it is built after the snapshot
+    // by the export's script).
+    if (pageSpec.suffix) {
       document.querySelectorAll('a.dl-lang[hreflang]').forEach((a) => {
         const code = a.getAttribute('hreflang');
-        if (localeCodes.includes(code)) a.setAttribute('href', (code === 'en' ? '/' : `/${code}/`) + 'services/');
+        if (localeCodes.includes(code)) a.setAttribute('href', (code === 'en' ? '/' : `/${code}/`) + pageSpec.suffix);
       });
     }
 
     // On /services the contact block leads with the project path (call,
     // WhatsApp, brief); on home the hiring path stays first.
-    if (pageVariant === 'services') {
+    if (pageSpec.contactFirst === 'project') {
       const paths = document.querySelectorAll('#contact .contact-paths > .contact-path');
       if (paths.length === 2) paths[0].parentNode.insertBefore(paths[1], paths[0]);
-      else warnings.push(`services: expected 2 contact paths, found ${paths.length}`);
+      else warnings.push(`${pageSpec.key}: expected 2 contact paths, found ${paths.length}`);
     }
-
-    const ownSwitchers = [...document.querySelectorAll('.locale, .lang-switcher, [data-locale-switcher]')];
-    const hasOwnSwitcher = ownSwitchers.length > 0;
-    ownSwitchers.forEach((el) => el.remove());
-    document.querySelectorAll('a[href]').forEach((a) => {
-      const bare = (a.getAttribute('href') || '').replace(/^\.?\//, '');
-      if (bare === 'index.html') a.setAttribute('href', '/');
-      else {
-        const m = /^index\.([a-z]{2})\.html$/.exec(bare);
-        if (m && localeCodes.includes(m[1])) a.setAttribute('href', `/${m[1]}/`);
-      }
-    });
 
     // ── Accessibility structure ─────────────────────────────────────────
     // Done here, before the snapshot, so it is in the static HTML rather than
@@ -1631,11 +1720,11 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
       while (main.nextSibling && main.nextSibling !== footEl) main.appendChild(main.nextSibling);
     }
 
-    // /services is a slice of the home render, so its <h1> — the hero — was cut
-    // away with the hero and the page opened on an <h2>. Promote the first
-    // section title. Its look is carried by `.section-title` (and
-    // `.section-title em`), not by the tag, so the swap is invisible.
-    if (pageVariant === 'services' && !document.querySelector('h1')) {
+    // A page cut from the home render has lost the hero — its <h1> — and
+    // would open on an <h2>. Promote the first section title. Its look is
+    // carried by `.section-title` (and `.section-title em`), not by the tag,
+    // so the swap is invisible.
+    if (pageSpec.promoteH1 && !document.querySelector('h1')) {
       const first = document.querySelector('#main h2');
       if (first) {
         const h1 = document.createElement('h1');
@@ -1667,23 +1756,28 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
       .filter((x) => x.q && x.a);
 
     return {
-      title, lang, meta, css, bodyClass, rootAttrs, bodyAttrs, hasOwnSwitcher, faq, warnings,
+      faq, warnings, keptKeys,
+      caseNames: [...document.querySelectorAll('article.case .case-name')].map((e) => (e.textContent || '').trim()),
       body: document.getElementById('root').innerHTML,
-      blobCount: blobUrls.length,
     };
-  }, GH_USER, ghData, !!enhanceJS, locales.map((l) => l.lang),
-     variant, FAQ_BUYER_KEYS[lang] || FAQ_BUYER_KEYS.en, lang === 'en' ? '/' : `/${lang}/`, PAGE_LAYOUT);
-
-  await page.close();
+  }, spec, locales.map((l) => l.lang), FAQ_BUYER_KEYS[lang] || FAQ_BUYER_KEYS.en, prefix, PAGE_LAYOUT, SECTION_KEYS);
 
   // Layout passes are best-effort: a re-export that renames a class leaves the
   // page as the export drew it, which is valid, so warn rather than fail.
-  for (const w of result.warnings || []) console.warn(`  [${lang}/${variant}] ⚠ ${w}`);
+  for (const w of snap.warnings || []) console.warn(`  [${lang}/${spec.key}] ⚠ ${w}`);
+  return snap;
+}
 
-  if (pageErrors.length) {
-    console.log(`  [${lang}] (${pageErrors.length} non-fatal page errors during render — expected for blocked external assets)`);
-  }
-  console.log(`  [${lang}] re-embedded ${result.blobCount} blob asset(s) as data: URLs`);
+// Node-side assembly of one page: head, structured data, document, externalised
+// assets, minify, write. Driven by the page's spec; `shared` is the locale's
+// render result, `snap` this page's cut of it.
+async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, assetSeen }) {
+  const { lang, dir, urlPath } = loc;
+  const multi = locales.length > 1;
+  const outDir = path.join(loc.outDir, spec.suffix);
+  const result = { ...shared, ...snap };
+
+  await mkdir(outDir, { recursive: true });
 
   // ── Assemble the static document ──────────────────────────────────────────
   // Force this locale's lang (and RTL direction for Arabic) onto <html> while
@@ -1794,9 +1888,9 @@ async function buildPage({ browser, src, outDir, lang, dir, locales, ghData, enh
 
   // /services is its own page per locale, with its own canonical: pointing it
   // at the home page told search engines to drop it.
-  const pageSuffix = variant === 'services' ? 'services/' : '';
+  const pageSuffix = spec.suffix;
   const pageUrl = `${SITE_URL}${urlPath}${pageSuffix}`;
-  const seo = (SEO[variant] || SEO.home)[lang] || (SEO[variant] || SEO.home).en;
+  const seo = (SEO[spec.key] || SEO.home)[lang] || (SEO[spec.key] || SEO.home).en;
   const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
   // Point og:image / twitter:image at the generated card (drop the export's
@@ -2087,7 +2181,7 @@ ${skipLink(lang)}
 ${switcher}
 <div id="root">${result.body}</div>
 <script src="https://assets.calendly.com/assets/external/widget.js" async></script>
-${enhanceJS ? `<script>${enhanceForVariant(enhanceJS, variant)}</script>` : ''}
+${enhanceJS ? `<script>${enhanceForVariant(enhanceJS, spec)}</script>` : ''}
 <script>${interactivity}</script>
 </body>
 </html>`;
@@ -2155,12 +2249,12 @@ ${enhanceJS ? `<script>${enhanceForVariant(enhanceJS, variant)}</script>` : ''}
 
   await writeFile(path.join(outDir, 'index.html'), out, 'utf8');
 
-  const before = (await import('node:fs')).statSync(src).size;
+  const before = (await import('node:fs')).statSync(loc.src).size;
   const after = Buffer.byteLength(out);
   console.log(`✓ [${lang}] Built ${path.relative(ROOT, path.join(outDir, 'index.html'))}`);
   console.log(`  source export: ${(before / 1e6).toFixed(2)} MB  →  static HTML: ${(after / 1e6).toFixed(3)} MB (+ shared assets, lazy/cacheable)`);
 
-  return { lang, urlPath, htmlPath: path.join(outDir, 'index.html'), pageErrors: pageErrors.length };
+  return { lang, urlPath, htmlPath: path.join(outDir, 'index.html') };
 }
 
 async function build() {
@@ -2198,19 +2292,18 @@ async function build() {
   try { await generateOgImage(browser); } catch (e) { console.log('  (og.png generation skipped:', e.message + ')'); }
 
   // ── Per-locale pages (shared assets folder, deduped via assetSeen) ────────
+  // One render per locale; every page in PAGE_SPECS is a cut of it.
   const assetSeen = new Map();
   for (const loc of locales) {
-    await buildPage({
-      browser, src: loc.src, outDir: loc.outDir, lang: loc.lang, dir: loc.dir,
-      locales, ghData, enhanceJS, assetSeen, variant: 'home',
-    });
-    // Second cut of the same render: the freelance offer, on its own URL, in
-    // the site's own design rather than a hand-built page beside it.
-    await buildPage({
-      browser, src: loc.src, outDir: path.join(loc.outDir, 'services'),
-      lang: loc.lang, dir: loc.dir,
-      locales, ghData, enhanceJS, assetSeen, variant: 'services',
-    });
+    const { page, shared } = await renderLocale({ browser, loc, ghData, enhanceJS, locales });
+    try {
+      for (const spec of PAGE_SPECS) {
+        const snap = await snapshotVariant({ page, spec, lang: loc.lang, locales });
+        await writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, assetSeen });
+      }
+    } finally {
+      await page.close().catch(() => {});
+    }
   }
 
   await browser.close();
