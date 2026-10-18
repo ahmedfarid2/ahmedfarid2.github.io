@@ -1,0 +1,14 @@
+week_start,warm_sent,warm_replies,li_requests,li_accepted,li_replies,email_sent,email_replies,upwork_proposals,upwork_replies,posts_published,inbound_dms,calls_booked,calls_held,proposals_sent,won,revenue_usd,site_commits,warm_reply_rate,li_accept_rate,li_reply_rate,email_reply_rate,upwork_reply_rate,close_rate
+TARGET / week,10,3,100,28,3,0,0,10,1,2,,1,1,,,,0,0.30,0.285,0.104,0.04,0.15,0.25
+2026-10-19,,,,,,,,,,,,,,,,,,"=IFERROR(C3/B3,"""")","=IFERROR(E3/D3,"""")","=IFERROR(F3/E3,"""")","=IFERROR(H3/G3,"""")","=IFERROR(J3/I3,"""")","=IFERROR(P3/N3,"""")"
+2026-10-26,,,,,,,,,,,,,,,,,,"=IFERROR(C4/B4,"""")","=IFERROR(E4/D4,"""")","=IFERROR(F4/E4,"""")","=IFERROR(H4/G4,"""")","=IFERROR(J4/I4,"""")","=IFERROR(P4/N4,"""")"
+2026-11-02,,,,,,,,,,,,,,,,,,"=IFERROR(C5/B5,"""")","=IFERROR(E5/D5,"""")","=IFERROR(F5/E5,"""")","=IFERROR(H5/G5,"""")","=IFERROR(J5/I5,"""")","=IFERROR(P5/N5,"""")"
+2026-11-09,,,,,,,,,,,,,,,,,,"=IFERROR(C6/B6,"""")","=IFERROR(E6/D6,"""")","=IFERROR(F6/E6,"""")","=IFERROR(H6/G6,"""")","=IFERROR(J6/I6,"""")","=IFERROR(P6/N6,"""")"
+2026-11-16,,,,,,,,,,,,,,,,,,"=IFERROR(C7/B7,"""")","=IFERROR(E7/D7,"""")","=IFERROR(F7/E7,"""")","=IFERROR(H7/G7,"""")","=IFERROR(J7/I7,"""")","=IFERROR(P7/N7,"""")"
+2026-11-23,,,,,,,,,,,,,,,,,,"=IFERROR(C8/B8,"""")","=IFERROR(E8/D8,"""")","=IFERROR(F8/E8,"""")","=IFERROR(H8/G8,"""")","=IFERROR(J8/I8,"""")","=IFERROR(P8/N8,"""")"
+2026-11-30,,,,,,,,,,,,,,,,,,"=IFERROR(C9/B9,"""")","=IFERROR(E9/D9,"""")","=IFERROR(F9/E9,"""")","=IFERROR(H9/G9,"""")","=IFERROR(J9/I9,"""")","=IFERROR(P9/N9,"""")"
+2026-12-07,,,,,,,,,,,,,,,,,,"=IFERROR(C10/B10,"""")","=IFERROR(E10/D10,"""")","=IFERROR(F10/E10,"""")","=IFERROR(H10/G10,"""")","=IFERROR(J10/I10,"""")","=IFERROR(P10/N10,"""")"
+2026-12-14,,,,,,,,,,,,,,,,,,"=IFERROR(C11/B11,"""")","=IFERROR(E11/D11,"""")","=IFERROR(F11/E11,"""")","=IFERROR(H11/G11,"""")","=IFERROR(J11/I11,"""")","=IFERROR(P11/N11,"""")"
+2026-12-21,,,,,,,,,,,,,,,,,,"=IFERROR(C12/B12,"""")","=IFERROR(E12/D12,"""")","=IFERROR(F12/E12,"""")","=IFERROR(H12/G12,"""")","=IFERROR(J12/I12,"""")","=IFERROR(P12/N12,"""")"
+2026-12-28,,,,,,,,,,,,,,,,,,"=IFERROR(C13/B13,"""")","=IFERROR(E13/D13,"""")","=IFERROR(F13/E13,"""")","=IFERROR(H13/G13,"""")","=IFERROR(J13/I13,"""")","=IFERROR(P13/N13,"""")"
+2027-01-04,,,,,,,,,,,,,,,,,,"=IFERROR(C14/B14,"""")","=IFERROR(E14/D14,"""")","=IFERROR(F14/E14,"""")","=IFERROR(H14/G14,"""")","=IFERROR(J14/I14,"""")","=IFERROR(P14/N14,"""")"
