@@ -58,26 +58,27 @@ export const YEARS_PROSE = {
 // Head metadata the build writes for every page. Descriptions stay under
 // ~165 characters; city, 6+ and stack names are never translated away.
 export const SEO = {
+  // Home speaks to a client first; the CV and the hiring pitch are on /about/.
   home: {
     en: {
-      title: 'Ahmed Farid — Senior Software Engineer in Dubai · Multi-tenant SaaS',
-      description: 'Dubai-based Senior Software Engineer (6+ years): real-time, multi-tenant SaaS, end to end — Laravel, Next.js, Flutter. Open to senior roles and consulting.',
+      title: 'Ahmed Farid — Multi-tenant SaaS Engineer & Consultant in Dubai',
+      description: 'Dubai-based senior software engineer (6+ years) building real-time, multi-tenant SaaS end to end — Laravel, Next.js, Flutter. Fixed-scope builds and consulting.',
     },
     ar: {
-      title: 'Ahmed Farid — مهندس برمجيات أول في دبي · منصّات SaaS متعدّدة المستأجرين',
-      description: 'مهندس برمجيات أول مقيم في دبي (+6 سنوات): منصّات SaaS فورية متعدّدة المستأجرين من البداية إلى النهاية — Laravel وNext.js وFlutter. متاح لأدوار أولى واستشارات.',
+      title: 'Ahmed Farid — مهندس ومستشار منصّات SaaS متعدّدة المستأجرين في دبي',
+      description: 'مهندس برمجيات أول مقيم في دبي (+6 سنوات): منصّات SaaS فورية متعدّدة المستأجرين من البداية إلى النهاية — Laravel وNext.js وFlutter. مشاريع محدّدة النطاق واستشارات.',
     },
     de: {
-      title: 'Ahmed Farid — Senior-Softwareentwickler in Dubai · Multi-Tenant-SaaS',
-      description: 'Senior-Softwareentwickler in Dubai (6+ Jahre): Echtzeit-Multi-Tenant-SaaS, end to end — Laravel, Next.js, Flutter. Offen für Senior-Rollen und Beratung.',
+      title: 'Ahmed Farid — Multi-Tenant-SaaS-Entwickler & Berater in Dubai',
+      description: 'Senior-Softwareentwickler in Dubai (6+ Jahre): Echtzeit-Multi-Tenant-SaaS, end to end — Laravel, Next.js, Flutter. Festpreis-Projekte und Beratung.',
     },
     es: {
-      title: 'Ahmed Farid — Ingeniero de Software Senior en Dubái · SaaS multi-tenant',
-      description: 'Ingeniero de Software Senior en Dubái (6+ años): SaaS multi-tenant en tiempo real, de punta a punta — Laravel, Next.js, Flutter. Roles senior y consultoría.',
+      title: 'Ahmed Farid — Ingeniero y consultor de SaaS multi-tenant en Dubái',
+      description: 'Ingeniero de Software Senior en Dubái (6+ años): SaaS multi-tenant en tiempo real, de punta a punta — Laravel, Next.js, Flutter. Proyectos cerrados y consultoría.',
     },
     fr: {
-      title: 'Ahmed Farid — Ingénieur logiciel senior à Dubaï · SaaS multi-tenant',
-      description: 'Ingénieur logiciel senior à Dubaï (6+ ans) : SaaS multi-tenant temps réel, de bout en bout — Laravel, Next.js, Flutter. Ouvert aux postes senior et au conseil.',
+      title: 'Ahmed Farid — Ingénieur et consultant SaaS multi-tenant à Dubaï',
+      description: 'Ingénieur logiciel senior à Dubaï (6+ ans) : SaaS multi-tenant temps réel, de bout en bout — Laravel, Next.js, Flutter. Projets au forfait et conseil.',
     },
   },
   services: {

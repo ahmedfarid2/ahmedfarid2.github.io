@@ -1811,12 +1811,15 @@ const AVAILABILITY_EDITS = factEdits('hero/nav: open to roles', {
   // dot already says "available", so the label drops "Open to": every locale
   // is now shorter than the roles-only wording, which already wrapped the
   // desktop nav at 1025–1280px. Measure the nav before lengthening these.
-  // Third element = the roles-only wording this edit used to write.
-  en: ['Available now · 2 slots', 'Senior roles and consulting · Dubai', 'Open to senior engineering roles · Dubai'],
-  ar: ['متاح الآن · مقعدان', 'أدوار أولى واستشارات · دبي', 'مفتوح لأدوار هندسية أولى · دبي'],
-  de: ['Jetzt verfügbar · 2 Slots', 'Senior-Rollen und Beratung · Dubai', 'Offen für Senior-Engineering-Rollen · Dubai'],
-  es: ['Disponible ahora · 2 plazas', 'Roles senior y consultoría · Dubái', 'Abierto a roles senior de ingeniería · Dubái'],
-  fr: ['Disponible maintenant · 2 places', 'Postes senior et conseil · Dubaï', 'Ouvert aux postes senior en ingénierie · Dubaï'],
+  // Third element onward = earlier wording this edit used to write.
+  //
+  // Oct 2026 (client-first home): projects lead, consulting second; the senior
+  // role pitch lives on /about/ and in the contact block's hiring path.
+  en: ['Available now · 2 slots', 'Projects & consulting · Dubai', 'Senior roles and consulting · Dubai', 'Open to senior engineering roles · Dubai'],
+  ar: ['متاح الآن · مقعدان', 'مشاريع واستشارات · دبي', 'أدوار أولى واستشارات · دبي', 'مفتوح لأدوار هندسية أولى · دبي'],
+  de: ['Jetzt verfügbar · 2 Slots', 'Projekte & Beratung · Dubai', 'Senior-Rollen und Beratung · Dubai', 'Offen für Senior-Engineering-Rollen · Dubai'],
+  es: ['Disponible ahora · 2 plazas', 'Proyectos y consultoría · Dubái', 'Roles senior y consultoría · Dubái', 'Abierto a roles senior de ingeniería · Dubái'],
+  fr: ['Disponible maintenant · 2 places', 'Projets et conseil · Dubaï', 'Postes senior et conseil · Dubaï', 'Ouvert aux postes senior en ingénierie · Dubaï'],
 });
 
 // Nav and hero only — matched with the arrow so the pricing-section CTA, which
@@ -2159,10 +2162,12 @@ const RENUMBER_EDITS = [
 // should point you somewhere else" is a vendor qualifying a lead. It is the
 // final impression on a page that now opens by asking for a role.
 const CLOSING_EDITS = factEdits('closing CTA speaks to an employer', {
-  // Oct 2026: opens with both audiences (hiring, or a system to build); the
-  // contact block underneath splits into the two matching paths. Third
-  // element = the employer-only wording this edit used to write.
+  // Oct 2026: opens with both audiences, project first (a system to build, or
+  // hiring); the contact block underneath splits into the two matching paths,
+  // in the same order. Third element onward = earlier wording of this edit.
+  // The hiring-first wording is a prior so a committed export migrates.
   en: ["One scoping call. Thirty minutes. We'll know inside that whether I'm the right hands for the job — or whether I should point you somewhere else.",
+       "Need a system built, or hiring a senior engineer? Thirty minutes is usually enough to tell whether I'm the right fit. Bring the problem you have not been able to hand to anyone yet.",
        "Hiring a senior engineer, or need a system built? Thirty minutes is usually enough to tell whether I'm the right fit. Bring the problem you have not been able to hand to anyone yet.",
        "Thirty minutes is usually enough to tell whether I'm the engineer your team is missing. Bring the problem you have not been able to hand to anyone yet."],
   // Translated to carry the same move — from "am I the right vendor for this
@@ -2170,15 +2175,19 @@ const CLOSING_EDITS = factEdits('closing CTA speaks to an employer', {
   // word. "the problem you haven't been able to hand to anyone yet" is the
   // line doing the work, so each language keeps that idea intact.
   ar: ['مكالمة تحديد نطاق. ثلاثون دقيقة. خلالها سنعرف إن كنت الأيدي المناسبة للعمل — أو إن كان عليّ أن أحيلك إلى جهة أخرى.',
+       'تحتاج إلى بناء نظام، أو تبحث عن مهندس أول؟ ثلاثون دقيقة تكفي عادةً لنعرف إن كنتُ الشخص المناسب. احضر ومعك المشكلة التي لم تجد من تسلّمها له حتى الآن.',
        'تبحث عن مهندس أول، أو تحتاج إلى بناء نظام؟ ثلاثون دقيقة تكفي عادةً لنعرف إن كنتُ الشخص المناسب. احضر ومعك المشكلة التي لم تجد من تسلّمها له حتى الآن.',
        'ثلاثون دقيقة تكفي عادةً لتعرف إن كنتُ المهندس الذي ينقص فريقك. احضر ومعك المشكلة التي لم تجد من تسلّمها له حتى الآن.'],
   de: ['Ein Scoping-Call. Dreißig Minuten. Darin wissen wir, ob ich die richtigen Hände für den Job bin — oder ob ich Sie woandershin verweisen sollte.',
+       'Sie brauchen ein System oder suchen einen Senior-Engineer? Dreißig Minuten genügen meist, um zu sehen, ob ich der Richtige bin. Bringen Sie das Problem mit, das Sie bisher niemandem übergeben konnten.',
        'Sie suchen einen Senior-Engineer oder brauchen ein System? Dreißig Minuten genügen meist, um zu sehen, ob ich der Richtige bin. Bringen Sie das Problem mit, das Sie bisher niemandem übergeben konnten.',
        'Dreißig Minuten genügen meist, um zu sehen, ob ich der Entwickler bin, der Ihrem Team fehlt. Bringen Sie das Problem mit, das Sie bisher niemandem übergeben konnten.'],
   es: ['Una llamada de alcance. Treinta minutos. Dentro de ese tiempo sabremos si soy las manos adecuadas para el trabajo — o si debería remitirte a otro sitio.',
+       '¿Necesitas construir un sistema o buscas un ingeniero senior? Treinta minutos suelen bastar para ver si encajo. Trae el problema que todavía no has podido entregarle a nadie.',
        '¿Buscas un ingeniero senior o necesitas construir un sistema? Treinta minutos suelen bastar para ver si encajo. Trae el problema que todavía no has podido entregarle a nadie.',
        'Treinta minutos suelen bastar para ver si soy el ingeniero que le falta a tu equipo. Trae el problema que todavía no has podido entregarle a nadie.'],
   fr: ["Un appel de cadrage. Trente minutes. On saura à l'intérieur si je suis les bonnes mains pour la mission — ou si je dois vous orienter ailleurs.",
+       "Vous avez un système à construire ou recrutez un ingénieur senior ? Trente minutes suffisent en général à savoir si je suis la bonne personne. Venez avec le problème que vous n'avez encore pu confier à personne.",
        "Vous recrutez un ingénieur senior ou avez un système à construire ? Trente minutes suffisent en général à savoir si je suis la bonne personne. Venez avec le problème que vous n'avez encore pu confier à personne.",
        "Trente minutes suffisent en général à savoir si je suis l'ingénieur qui manque à votre équipe. Venez avec le problème que vous n'avez encore pu confier à personne."],
 });

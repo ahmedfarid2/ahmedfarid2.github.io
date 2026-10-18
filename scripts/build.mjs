@@ -490,14 +490,17 @@ const FORBIDDEN = [
   // services page a second time on its pricing CTA; the checklist page's call
   // CTA is a third file with one.
   { s: 'Book a 30-minute scoping call', maxPerFile: 2 },
-  // Pricing moved to /work-with-me.html. Banned on the home page, expected on
-  // the page that now owns the offer — so these skip that one file rather than
-  // being dropped from the list, which would stop guarding the home page too.
+  // The pricing ladder and the free demo live on /services/ only (all five
+  // locales' copies of that page). Banned on every other page — home, /work/,
+  // /about/ and the project pages — and expected on the one that owns the
+  // offer, so these skip that one file rather than being dropped from the list,
+  // which would stop guarding the rest of the site too.
   { s: 'Discuss retainer', max: 0, except: 'services/index.html' },
   { s: 'Scope a build', max: 0, except: 'services/index.html' },
   { s: 'Book a free demo', max: 0, except: 'services/index.html', alsoExcept: ['demo.html'] },
   // /demo.html is the freelance landing page. It stays live and indexable, but
-  // the home pages must not route anyone to it — only /services may.
+  // no page may route anyone to it except /services/ (home included: its hero
+  // sends a buyer to /services/ instead).
   { s: 'demo.html', max: 0, except: 'services/index.html',
     alsoExcept: ['demo.html', 'get-checklist.html', 'checklist.html', 'sitemap.xml', 'llms.txt', '404.html'] },
   { s: 'fast learner', max: 0 },
@@ -796,6 +799,74 @@ async function assertInternalLinks(files, locales = []) {
   }
   console.log(`  ✓ internal links: ${checked} on-site href(s) all resolve — to a file, and to an id where they name one; ` +
     `${Object.keys(REDIRECTS).length} legacy #id redirect(s) land on a page that has the id`);
+}
+
+// Each page type has a job, and the file is where a cut can quietly get it
+// wrong: the order of the contact paths, the four-link navigation, the cards
+// that reach the project pages, the one h1, the structured data. Checked on the
+// written pages, from the same table that drives them.
+const LD_TYPES = {
+  service: 'ProfessionalService', project: 'CreativeWork', profile: 'ProfilePage',
+  collection: 'CollectionPage', breadcrumb: 'BreadcrumbList', faq: 'FAQPage',
+};
+async function assertPageRoles(locales) {
+  const bad = [];
+  const pages = localePages(locales);
+  for (const { loc, spec, urlPath, rel } of pages) {
+    const body = await readFile(path.join(DIST, rel), 'utf8');
+    const { masked } = maskCode(body);
+    // The navigation: exactly these four links, in this order.
+    const navBlock = (masked.match(/<div class="nav-links">([\s\S]*?)<\/div>/) || [])[1] || '';
+    const navHrefs = [...navBlock.matchAll(/<a href="([^"]*)"/g)].map((m) => m[1]);
+    const wantNav = [`${loc.urlPath}work/`, `${loc.urlPath}services/`, `${loc.urlPath}about/`, '#contact'];
+    if (navHrefs.join(' ') !== wantNav.join(' ')) bad.push(`${urlPath}: nav links [${navHrefs.join(', ')}], expected [${wantNav.join(', ')}]`);
+    // Who the contact block addresses first.
+    const at = masked.indexOf('class="contact-path"');
+    const end = (() => {
+      const next = masked.indexOf('class="contact-path"', at + 1);
+      return next > 0 ? next : masked.indexOf('</section>', at);
+    })();
+    const first = at < 0 ? '' : masked.slice(at, end);
+    const wantFirst = spec.contactFirst === 'project' ? CONTACT.calendly : CONTACT.cv;
+    if (!first.includes(wantFirst)) bad.push(`${urlPath}: the first contact path should be the ${spec.contactFirst === 'project' ? 'project (scoping call)' : 'hiring (CV)'} path`);
+    // Home opens on the project path: no CV in the hero.
+    if (spec.key === 'home') {
+      const top = masked.indexOf('id="top"');
+      const topEnd = masked.indexOf('</section>', top);
+      if (top < 0) bad.push(`${urlPath}: no #top hero`);
+      else if (masked.slice(top, topEnd).includes('Ahmed-Farid-CV.pdf')) bad.push(`${urlPath}: the hero links to the CV`);
+    }
+    // Cards to the five project pages.
+    if (spec.work === 'teaser') {
+      const cards = masked.match(/<a [^>]*data-flagship="[^"]*"[^>]*>/g) || [];
+      for (const f of FLAGSHIP) {
+        if (!cards.some((c) => c.includes(`href="${loc.urlPath}work/${f.slug}/"`) && c.includes(`data-flagship="${f.slug}"`)))
+          bad.push(`${urlPath}: no card linking to ${loc.urlPath}work/${f.slug}/`);
+      }
+    }
+    // A project page's one h1 is the case name.
+    if (spec.work === 'single') {
+      const h1 = ((masked.match(/<h1[^>]*>([\s\S]*?)<\/h1>/) || [])[1] || '').replace(/<[^>]+>/g, '').trim();
+      if (h1 !== spec.flagship.name) bad.push(`${urlPath}: h1 is "${h1}", expected "${spec.flagship.name}"`);
+    }
+    // Structured data: the types this page type owns, and no others.
+    const want = new Set(['Person', 'WebSite', ...spec.ld.map((k) => LD_TYPES[k]).filter(Boolean)]);
+    const got = new Set();
+    for (const m of body.matchAll(/<script[^>]*ld\+json[^>]*>([\s\S]*?)<\/script>/gi)) {
+      try { for (const o of [].concat(JSON.parse(m[1]))) got.add(o['@type']); }
+      catch { bad.push(`${urlPath}: a JSON-LD block does not parse`); }
+    }
+    const diff = [...want].filter((t) => !got.has(t)).map((t) => `missing ${t}`)
+      .concat([...got].filter((t) => !want.has(t)).map((t) => `unexpected ${t}`));
+    if (diff.length) bad.push(`${urlPath}: JSON-LD types — ${diff.join(', ')}`);
+  }
+  if (bad.length) {
+    const err = new Error('[build] page roles broken:\n' + bad.map((x) => `   ${x}`).join('\n') +
+      '\n   A page no longer does the job its type is for.');
+    err.fatal = true;
+    throw err;
+  }
+  console.log(`  ✓ page roles: ${pages.length} pages — four-link nav, contact order, project cards, one h1, JSON-LD types`);
 }
 
 // What search engines and share cards read: the title and description of every
@@ -1124,9 +1195,10 @@ async function writeSeoFiles(locales = [{ urlPath: '/' }], specs = PAGE_SPECS, p
   // so tools like ChatGPT/Claude/Perplexity can recommend him accurately.
   await writeFile(path.join(DIST, 'llms.txt'),
     `# Ahmed Farid — Senior Software Engineer\n\n` +
-    `> Senior Software Engineer based in ${LOCATION_LABEL}. ` +
+    `> Senior Software Engineer based in ${LOCATION_LABEL}, taking on fixed-scope builds, retainers and architecture reviews — ` +
+    `also open to senior roles. ` +
     `${YEARS_PROSE.en[0].toUpperCase()}${YEARS_PROSE.en.slice(1)} building real-time, multi-tenant SaaS, AI tools and mobile ` +
-    `apps shipped to production across the Gulf, US, and UK. Open to senior roles and selected consulting.\n\n` +
+    `apps shipped to production across the Gulf, US, and UK.\n\n` +
     `## About\n\n` +
     `- Name: Ahmed Farid\n` +
     `- Role: Senior Software Engineer\n` +
@@ -1152,8 +1224,8 @@ async function writeSeoFiles(locales = [{ urlPath: '/' }], specs = PAGE_SPECS, p
     `- Behance: https://www.behance.net/ahmedfarid20\n` +
     `- CV (PDF): ${SITE_URL}${CONTACT.cv}\n\n` +
     `## Contact\n\n` +
-    `- Senior roles: email ${CONTACT.email}, or LinkedIn\n` +
-    `- Project work: book a 30-minute scoping call (${CONTACT.calendly}) or WhatsApp Business (${CONTACT.whatsapp})\n`, 'utf8');
+    `- Project work: book a 30-minute scoping call (${CONTACT.calendly}) or WhatsApp Business (${CONTACT.whatsapp})\n` +
+    `- Senior roles: email ${CONTACT.email}, or LinkedIn\n`, 'utf8');
 
   await writeFile(path.join(DIST, '404.html'),
     `<!doctype html><html lang="en"><head><meta charset="utf-8">\n` +
@@ -1328,7 +1400,8 @@ const PAGE_LAYOUT = {
 //   foldCases    fold Problem + Approach of the non-flagship cases
 //   contactFirst 'project' puts the project path before the hiring path
 //   promoteH1    promote the first section title to <h1> (no hero on the page)
-//   ld           extra JSON-LD for the page: 'profile' (ProfilePage),
+//   ld           extra JSON-LD for the page: 'service' (ProfessionalService),
+//                'project' (CreativeWork), 'profile' (ProfilePage),
 //                'collection' (CollectionPage), 'breadcrumb' (BreadcrumbList —
 //                needs a NAV label), 'faq' (FAQPage from the FAQ items kept;
 //                home shows the buyer questions without it, so the same
@@ -1354,14 +1427,18 @@ const PROJECT_VERIFY = {
 };
 const PAGE_SPECS = [
   {
-    // The client-facing front door: what I do, proof in numbers, how I work, the
-    // ways to hire me, buyer FAQ, contact. Everything longer lives on its own page.
+    // The client-facing front door: what I do, proof in numbers, the flagship
+    // work, how I work, the ways to hire me, testimonials, contact. Everything
+    // longer lives on its own page. The FAQ is the one section left off to hold
+    // the page-height budget (desktop 9,000px, mobile 15,192px): its buyer
+    // questions stay on /services/, which owns them (and old #faq links are
+    // forwarded there).
     key: 'home', suffix: '',
-    sections: ['top', 'trust', 'position', 'bynumbers', 'work', 'process', 'services', 'testimonials', 'faq', 'contact'],
-    keepUnknown: false, faq: 'buyer', anchors: 'resolve', renumber: true, work: 'teaser',
-    sortWriting: false, foldCases: false, contactFirst: 'hire', promoteH1: false,
-    ld: [], priority: '0.9', primaryPriority: '1.0',
-    verify: { minText: 5308, minSections: 6 },   // measured 7583 chars, 9 sections
+    sections: ['top', 'trust', 'position', 'bynumbers', 'work', 'process', 'services', 'testimonials', 'contact'],
+    keepUnknown: false, faq: null, anchors: 'resolve', renumber: true, work: 'teaser',
+    sortWriting: false, foldCases: false, contactFirst: 'project', promoteH1: false,
+    ld: ['service'], priority: '0.9', primaryPriority: '1.0',
+    verify: { minText: 4809, minSections: 5 },   // measured 6871 chars, 8 sections (FAQ moved to /services/)
   },
   {
     key: 'services', suffix: 'services/',
@@ -2078,6 +2155,18 @@ async function snapshotVariant({ page, spec, lang, locales }) {
     // /about/. "What I do" is what comes next on this page.
     const scrollCue = document.querySelector('.hero-scroll');
     if (scrollCue && document.getElementById('what-i-do')) scrollCue.setAttribute('href', '#what-i-do');
+    // Home: the hero's second ghost button was "Download CV" — the hiring path.
+    // A client's next question is what it costs and how it works, so it goes to
+    // Services & pricing. The CV stays in the footer, on /about/ and in the
+    // hiring path of the contact block.
+    if (pageSpec.key === 'home') {
+      const cv = document.querySelector('.hero-meta a[href$="Ahmed-Farid-CV.pdf"]');
+      if (cv) {
+        cv.setAttribute('href', `${localePrefix}services/`);
+        cv.removeAttribute('download');
+        cv.textContent = `${labels.pricing} →`;
+      } else warnings.push('hero: the CV button was not found — left as exported');
+    }
     // "Ways to work together" opens with "Those are the packaged offers above."
     // On a page without the price list there is no "above"; drop that sentence.
     if (!pageSpec.sections.includes('pricing') && pageSpec.sections.includes('services')) {
@@ -2536,6 +2625,14 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
           },
         }
       : null,
+    spec.ld.includes('service')
+      ? {
+          '@context': 'https://schema.org', '@type': 'ProfessionalService', '@id': `${SITE_URL}/#service`,
+          name: 'Ahmed Farid — software engineering and consulting', url: `${SITE_URL}/`, description: seo.description,
+          founder: { '@id': `${SITE_URL}/#person` }, address: personLd.address, email: CONTACT.email,
+          sameAs: [CONTACT.linkedin, CONTACT.github], makesOffer: personLd.makesOffer,
+        }
+      : null,
     spec.ld.includes('project')
       ? {
           '@context': 'https://schema.org', '@type': 'CreativeWork', '@id': `${pageUrl}#work`, url: pageUrl,
@@ -2975,6 +3072,7 @@ async function build() {
   await assertNoDeadAnchors();
   await assertInternalLinks(pages, locales);
   await assertHeadMeta(locales);
+  await assertPageRoles(locales);
   await assertLocaleRouting(locales);
   await assertPublicPdfs();
 
