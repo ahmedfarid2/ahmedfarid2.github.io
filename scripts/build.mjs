@@ -16,8 +16,9 @@
 //   • adds a tiny vanilla-JS layer for the nav menu, FAQ accordion, scroll
 //     reveal and the Calendly popup (no framework)
 //
-// If anything goes wrong it falls back to copying the raw export so a push never
-// produces a broken deploy.
+// The build fails closed: if it cannot produce the full page set and pass every
+// gate it exits 1 and writes nothing deployable, so the workflow skips the Pages
+// deploy and the last good deploy stays live. There is no raw-export fallback.
 
 import { mkdir, writeFile, copyFile, rm, readdir, readFile } from 'node:fs/promises';
 import { existsSync, statSync } from 'node:fs';
@@ -569,9 +570,7 @@ async function assertNoForbiddenStrings() {
       }).join('\n') +
       '\n   A correction was dropped, or a retired claim came back. Not deploying.'
     );
-    // The raw-export fallback is the wrong answer here: the raw export is
-    // exactly where these strings come from, so falling back would ship the
-    // thing the scan just refused. Flagged fatal so `fallback()` rethrows.
+    // Flagged fatal: a deliberate gate failure, reported by message (no stack).
     err.fatal = true;
     throw err;
   }
@@ -912,8 +911,8 @@ async function assertHeadMeta(locales) {
 // replaced by hand or not rebuilt, and the deploy stops.
 async function assertPublicPdfs() {
   // Any error in here — not just a failed check, but a Chrome launch or a
-  // parse error — must stop the deploy. A plain error would send the build
-  // to the raw-export fallback, which copies the same PDFs unchecked.
+  // parse error — must stop the deploy. Flagged fatal so it is reported by
+  // message, like every other gate.
   try { await checkPublicPdfs(); } catch (e) { e.fatal = true; throw e; }
 }
 async function checkPublicPdfs() {
@@ -1143,9 +1142,8 @@ function sitemapPages(locales, specs = PAGE_SPECS) {
 }
 
 // sitemap.xml + robots.txt + a styled 404.html. No browser needed, so this
-// runs in both the optimized build and the raw-export fallback (which has no
-// page but the root, and passes only the home spec).
-async function writeSeoFiles(locales = [{ urlPath: '/' }], specs = PAGE_SPECS, projects = null) {
+// runs in the full build only (there is no raw-export fallback to cover).
+async function writeSeoFiles(locales, specs, projects = null) {
   const today = new Date().toISOString().slice(0, 10);
   const urls = sitemapPages(locales, specs)
     .map((p) =>
@@ -1179,8 +1177,7 @@ async function writeSeoFiles(locales = [{ urlPath: '/' }], specs = PAGE_SPECS, p
     aiBots.map((b) => `User-agent: ${b}\nAllow: /`).join('\n\n') + `\n\n` +
     `Sitemap: ${SITE_URL}/sitemap.xml\n`, 'utf8');
 
-  // The page list for llms.txt. Only a real build knows the project taglines
-  // (they come from the English render); the raw-export fallback has one page.
+  // The page list for llms.txt. The project taglines come from the English render.
   const pagesBlock = projects
     ? `## Pages\n\n` + [
         `- [Work](${SITE_URL}/work/): ${SEO.work.en.description}`,
@@ -1291,44 +1288,22 @@ async function generateOgImage(browser) {
   console.log('  generated og.png (1200×630)');
 }
 
-async function fallback(reason) {
-  // Most build failures are worth absorbing: a flaky render or a missing
-  // external asset should not take the site down, and the raw export still
-  // works. A content-correctness failure is the opposite — the raw export is
-  // precisely what carries the retired claim, so deploying it would publish
-  // the thing that just failed the check. Refuse instead.
-  // A ReferenceError or TypeError is a bug in this file, not a flaky render.
-  // Falling back on one ships the raw export — which is exactly where every
-  // retired claim still lives — while the log reads like a graceful recovery.
-  // This happened once, for real: a careless edit deleted the forbidden-string
-  // check and the build "passed" by deploying the unchecked export.
-  const isProgrammerError =
-    reason instanceof ReferenceError || reason instanceof TypeError || reason instanceof SyntaxError;
-  if ((reason && reason.fatal) || isProgrammerError) {
-    console.error('\n✗ Build refused — this failure must not be papered over.');
-    console.error(reason.message);
-    process.exitCode = 1;
-    return;
-  }
-  console.warn('\n⚠️  Optimized build failed — deploying raw export instead.');
-  console.warn('   Reason:', reason && reason.stack ? reason.stack : reason);
-  await rm(DIST, { recursive: true, force: true });
-  await mkdir(DIST, { recursive: true });
-  await copyFile(SRC, path.join(DIST, 'index.html'));
-  await copyStaticAssets();
-  // The fallback still publishes the PDFs; they get the same retired-fact
-  // check (no browser needed), and a failure stops the deploy.
-  const pdfBad = [];
-  for (const f of (await readdir(DIST)).filter((x) => x.toLowerCase().endsWith('.pdf'))) {
-    for (const p of pdfProblems(await inspectPdf(path.join(DIST, f)), { requireUris: PDF_REQUIRED_URIS })) pdfBad.push(`${f}: ${p}`);
-  }
-  if (pdfBad.length) {
-    console.error('\n✗ Fallback refused — a public PDF fails the brand check:\n' + pdfBad.map((x) => `   ${x}`).join('\n'));
-    process.exitCode = 1;
-    return;
-  }
-  await writeSeoFiles(undefined, PAGE_SPECS.filter((spec) => spec.key === 'home'));
-  console.log('✓ Raw export copied to dist/ (site stays functional, unoptimized).');
+// Fail closed. Any failure — a gate, a render timeout, a bug in this file — ends
+// the run with exit code 1 and writes nothing new: in particular NOT the raw
+// export, which is exactly where every retired claim still lives and carries
+// none of the checks. The workflow's build step then fails, the Pages artifact
+// is never uploaded and the deploy job (needs: build) is skipped, so the last
+// good deploy stays live. A fatal error is a deliberate gate failure and is
+// reported by message; anything else is reported with its stack. A dist/ left
+// behind by the failed run is incomplete and must not be published.
+function refuseBuild(reason) {
+  console.error('\n✗ Build refused — the full page set could not be produced and verified. Nothing was published; the last deploy stays live.');
+  console.error(reason && reason.fatal ? reason.message : (reason && reason.stack) || reason);
+  console.error('  Any dist/ left by this run is incomplete: do not deploy it.');
+  // Exit now rather than set exitCode: a failure mid-render leaves headless
+  // Chromium running, which keeps the event loop alive, so the process (and the
+  // CI job) would hang instead of failing. puppeteer kills its browser on exit.
+  process.exit(1);
 }
 
 // A stable fragment of each buyer-side FAQ question, per locale: those items
@@ -1378,8 +1353,7 @@ const PAGE_LAYOUT = {
 // written to <locale>/<suffix>index.html (writeVariantPage). The shell, nav,
 // fonts, reveals, texture and footer are identical by construction rather than
 // by reimplementation, and adding a page is adding a row, not another render
-// (a render is ~20s; a non-fatal timeout in one drops the whole site to the
-// raw-export fallback).
+// (a render is ~20s; a timeout in one refuses the whole build).
 //
 //   key          SEO[key] row, log label, and the page-type name
 //   suffix       URL path under the locale ('' = the locale root)
@@ -1959,13 +1933,26 @@ async function renderLocale({ browser, loc, ghData, enhanceJS, locales }) {
 
 // The flagships are found in the render by name (FLAGSHIP). A re-export that
 // renames or drops one would otherwise quietly lose its project page and its
-// card: fail the build instead, and never fall back to the raw export for it.
+// card: fail the build instead.
 function assertFlagshipsRendered(lang, caseNames) {
   const missing = FLAGSHIP.filter((f) => !caseNames.includes(f.name)).map((f) => f.name);
   if (!missing.length) return;
   throw Object.assign(new Error(
     `[build] [${lang}] flagship case stud${missing.length > 1 ? 'ies' : 'y'} not found in the export: ${missing.join(', ')}.\n` +
     `   Found: ${caseNames.join(', ') || '(none)'}. Rename the entry in FLAGSHIP (site-facts.mjs) to match the export.`), { fatal: true });
+}
+
+// An error thrown inside page.evaluate comes back from puppeteer as a plain
+// Error, never a TypeError/ReferenceError, so nothing downstream could tell a
+// bug in a page cut from a flaky render. Every one is tagged fatal: it is
+// reported by message and the build is refused.
+async function fatalIfThrown(label, pending) {
+  try { return await pending; } catch (e) {
+    const err = e instanceof Error ? e : new Error(String(e));
+    err.message = `[build] ${label}: the page cut failed in the browser — ${err.message}`;
+    err.fatal = true;
+    throw err;
+  }
 }
 
 // One cut of the pristine render: restore a fresh copy of the page, remove what
@@ -1976,7 +1963,7 @@ function assertFlagshipsRendered(lang, caseNames) {
 async function snapshotVariant({ page, spec, lang, locales }) {
   const prefix = lang === 'en' ? '/' : `/${lang}/`;
   console.log(`→ [${lang}] Cutting ${spec.key} page…`);
-  const snap = await page.evaluate((pageSpec, localeCodes, faqBuyerKeys, localePrefix, layout, knownKeys, links, labels) => {
+  const snap = await fatalIfThrown(`[${lang}] ${spec.key}`, page.evaluate((pageSpec, localeCodes, faqBuyerKeys, localePrefix, layout, knownKeys, links, labels) => {
     document.getElementById('root').replaceWith(window.__afPristine.cloneNode(true));
     const warnings = [];
 
@@ -2082,11 +2069,13 @@ async function snapshotVariant({ page, spec, lang, locales }) {
           };
           articles.forEach((c) => { if (c !== art) c.remove(); });
           const wrap = workSec.querySelector(':scope > .wrap');
-          const head = wrap && wrap.querySelector(':scope > .section-head');
+          if (!wrap) throw new Error(`${pageSpec.key}: #work has no ":scope > .wrap" column to build the project page in`);
+          const head = wrap.querySelector(':scope > .section-head');
           if (head) head.remove();
           workSec.id = 'case';
           // The case name is the page's heading.
           const title = art.querySelector('.case-name');
+          if (!title) throw new Error(`${pageSpec.key}: the case has no .case-name to promote to the page heading`);
           const h1 = document.createElement('h1');
           for (const attr of title.attributes) h1.setAttribute(attr.name, attr.value);
           while (title.firstChild) h1.appendChild(title.firstChild);
@@ -2358,7 +2347,7 @@ async function snapshotVariant({ page, spec, lang, locales }) {
     };
   }, spec, locales.map((l) => l.lang), FAQ_BUYER_KEYS[lang] || FAQ_BUYER_KEYS.en, prefix, PAGE_LAYOUT, SECTION_KEYS,
     { owner: LINK_OWNER, paths: Object.fromEntries(PAGE_SPECS.map((s) => [s.key, s.suffix])) },
-    NAV[lang]);
+    NAV[lang]));
 
   // Layout passes are best-effort: a re-export that renames a class leaves the
   // page as the export drew it, which is valid, so warn rather than fail.
@@ -2377,6 +2366,11 @@ const ldJson = (obj) => JSON.stringify(obj).replace(/</g, '\\u003c');
 const PROJECT_DESCRIPTION_MAX = 165;
 function projectSeo(project, lang) {
   const { name, tagline, chips } = project;
+  // The tagline is all the page's title and description are made from. Without
+  // one they would be the bare name: refuse rather than publish that.
+  if (!tagline) {
+    throw Object.assign(new Error(`[build] [${lang}] ${name}: the case has no .case-tagline, so its page has no title or description to build.`), { fatal: true });
+  }
   const cut = tagline.search(/ — | – |: /);
   const clause = (cut > 0 ? tagline.slice(0, cut) : tagline).replace(/\.$/, '').trim();
   let title = `${name} — ${clause} · Ahmed Farid`;
@@ -3048,7 +3042,7 @@ async function build() {
     await vp.close();
     if (check.text < spec.verify.minText || check.sections < spec.verify.minSections) {
       await vb.close();
-      throw new Error(`[${label}] Verification failed: text=${check.text} (min ${spec.verify.minText}) sections=${check.sections} (min ${spec.verify.minSections})`);
+      throw Object.assign(new Error(`[${label}] Verification failed: text=${check.text} (min ${spec.verify.minText}) sections=${check.sections} (min ${spec.verify.minSections})`), { fatal: true });
     }
     console.log(`  ✓ [${label}] renders: ${check.text} chars, ${check.sections} sections, ${check.imgs} images, ${check.faq} FAQ items, React shipped=${check.hasReact}`);
     if (vErrors.length) console.log(`    ([${label}] ${vErrors.length} non-fatal errors — expected for blocked external assets in CI)`);
@@ -3083,5 +3077,5 @@ try {
   if (!existsSync(SRC)) throw new Error('index.html not found at repo root');
   await build();
 } catch (err) {
-  await fallback(err);
+  refuseBuild(err);
 }
