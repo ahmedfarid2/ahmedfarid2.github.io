@@ -543,9 +543,10 @@ const FORBIDDEN = [
   // owner-approved client-path CTA is the 30-minute variant below, which does
   // not contain this string; it belongs only in the EN contact block.
   { s: 'Book a scoping call', max: 0 },
-  // The contact block carries it once (every page that has one), and the EN
-  // services page a second time on its pricing CTA; the checklist page's call
-  // CTA is a third file with one.
+  // The contact block carries it once (every page that has one); a second
+  // copy is allowed on the EN services page (its pricing CTA) and on EN home
+  // (the hero's primary button, by design). The checklist page's call CTA is
+  // a third file with one.
   { s: 'Book a 30-minute scoping call', maxPerFile: 2 },
   // The pricing ladder and the free demo live on /services/ only (all five
   // locales' copies of that page). Banned on every other page — home, /work/,
@@ -557,7 +558,7 @@ const FORBIDDEN = [
   { s: 'Book a free demo', max: 0, except: 'services/index.html', alsoExcept: ['demo.html'] },
   // /demo.html is the freelance landing page. It stays live and indexable, but
   // no page may route anyone to it except /services/ (home included: its hero
-  // sends a buyer to /services/ instead).
+  // books the scoping call and links to /services/ instead).
   { s: 'demo.html', max: 0, except: 'services/index.html',
     alsoExcept: ['demo.html', 'get-checklist.html', 'checklist.html', 'sitemap.xml', 'llms.txt', '404.html'] },
   { s: 'fast learner', max: 0 },
@@ -1411,33 +1412,38 @@ const HOME_SERVICE_ORDER = {
 //   notReady / checklist  a low-commitment step for visitors not ready to call
 //   recommended  replaces the "Most popular" pricing badge, which had no
 //                numbers behind it
+//   terms        owner-confirmed working terms (Oct 2026), shown under the
+//                project contact path on every page that leads with it
 const HOME_COPY = {
   en: {
     tag: { 'tag-full': 'Laravel & Next.js SaaS builds · Dubai, UAE 🇦🇪', 'tag-short': 'SaaS builds · Dubai 🇦🇪', 'tag-tiny': 'SaaS · Dubai 🇦🇪' },
     trust: 'Products<br>I\'ve shipped',
     svcHeading: ['Four ways', 'Three ways'],
-    direct: 'You talk to me directly — no account managers, no hand-offs.',
+    direct: 'You talk to me directly — no account managers, no middlemen.',
     notReady: 'Not ready for a call?',
     checklist: 'Get the free multi-tenant SaaS architecture checklist →',
     recommended: 'Recommended',
+    terms: ['Reply within 24 hours', 'NDA before the first call', 'You own all code & IP once paid', 'Contract & invoice directly with me', 'A few projects at a time'],
   },
   ar: {
     tag: { 'tag-full': 'بناء منصّات SaaS بـ Laravel وNext.js · دبي، الإمارات 🇦🇪', 'tag-short': 'بناء منصّات SaaS · دبي 🇦🇪', 'tag-tiny': 'SaaS · دبي 🇦🇪' },
     trust: 'منتجات<br>أطلقتُها',
     svcHeading: ['أربع طرق', 'ثلاث طرق'],
-    direct: 'ستتحدث معي مباشرةً — بلا وسطاء ولا تسليم لفريق آخر.',
-    notReady: 'لست مستعدًا لمكالمة بعد؟',
+    direct: 'ستتحدث معي مباشرةً — بلا وسطاء.',
+    notReady: 'هل الوقت مبكر لمكالمة؟',
     checklist: 'حمّل قائمة التحقق المجانية لمعمارية SaaS متعدّدة المستأجرين (بالإنجليزية) →',
     recommended: 'موصى به',
+    terms: ['ردّ خلال ٢٤ ساعة', 'اتفاقية سرّية قبل أول مكالمة', 'الكود والملكية الفكرية لك بعد السداد', 'العقد والفاتورة معي مباشرةً', 'عدد محدود من المشاريع في الوقت نفسه'],
   },
   de: {
     tag: { 'tag-full': 'SaaS-Entwicklung mit Laravel & Next.js · Dubai, VAE 🇦🇪', 'tag-short': 'SaaS-Entwicklung · Dubai 🇦🇪', 'tag-tiny': 'SaaS · Dubai 🇦🇪' },
     trust: 'Produkte, die<br>ich gebaut habe',
     svcHeading: ['Vier Wege', 'Drei Wege'],
-    direct: 'Sie sprechen direkt mit mir — keine Account-Manager, keine Übergaben.',
+    direct: 'Sie sprechen direkt mit mir — ohne Account-Manager, ohne Zwischenstellen.',
     notReady: 'Noch nicht bereit für ein Gespräch?',
     checklist: 'Kostenlose Checkliste zur Multi-Tenant-SaaS-Architektur (Englisch) →',
     recommended: 'Empfohlen',
+    terms: ['Antwort innerhalb von 24 Stunden', 'NDA vor dem ersten Gespräch', 'Code und IP gehören Ihnen nach Zahlung', 'Vertrag und Rechnung direkt mit mir', 'Nur wenige Projekte gleichzeitig'],
   },
   es: {
     tag: { 'tag-full': 'Desarrollo SaaS con Laravel y Next.js · Dubái, EAU 🇦🇪', 'tag-short': 'Desarrollo SaaS · Dubái 🇦🇪', 'tag-tiny': 'SaaS · Dubái 🇦🇪' },
@@ -1447,15 +1453,17 @@ const HOME_COPY = {
     notReady: '¿Aún no estás listo para una llamada?',
     checklist: 'Descarga gratis la checklist de arquitectura SaaS multi-tenant (en inglés) →',
     recommended: 'Recomendado',
+    terms: ['Respuesta en menos de 24 horas', 'NDA antes de la primera llamada', 'Código y PI son tuyos tras el pago', 'Contrato y factura directamente conmigo', 'Pocos proyectos a la vez'],
   },
   fr: {
     tag: { 'tag-full': 'Développement SaaS Laravel & Next.js · Dubaï, EAU 🇦🇪', 'tag-short': 'Développement SaaS · Dubaï 🇦🇪', 'tag-tiny': 'SaaS · Dubaï 🇦🇪' },
-    trust: 'Produits que<br>j\'ai livrés',
+    trust: 'Produits que<br>j’ai livrés',
     svcHeading: ['Quatre façons', 'Trois façons'],
     direct: 'Vous parlez directement avec moi — sans chef de projet ni intermédiaire.',
     notReady: 'Pas encore prêt pour un appel ?',
     checklist: 'Téléchargez la checklist gratuite d’architecture SaaS multi-tenant (en anglais) →',
     recommended: 'Recommandé',
+    terms: ['Réponse sous 24 heures', 'NDA avant le premier appel', 'Code et PI à vous après paiement', 'Contrat et facture directement avec moi', 'Peu de projets à la fois'],
   },
 };
 
@@ -2549,6 +2557,15 @@ async function snapshotVariant({ page, spec, lang, locales }) {
       const paths = document.querySelectorAll('#contact .contact-paths > .contact-path');
       if (paths.length === 2) paths[0].parentNode.insertBefore(paths[1], paths[0]);
       else warnings.push(`${pageSpec.key}: expected 2 contact paths, found ${paths.length}`);
+      // The questions a buyer asks before booking — response time, NDA, IP,
+      // who invoices, capacity — answered under the project path.
+      const projectPath = [...document.querySelectorAll('#contact .contact-path')].find((p) => p.querySelector('a[href*="calendly.com"]'));
+      if (projectPath) {
+        const ul = document.createElement('ul');
+        ul.className = 'contact-terms';
+        copy.home.terms.forEach((t) => { const li = document.createElement('li'); li.textContent = t; ul.appendChild(li); });
+        projectPath.after(ul);
+      } else warnings.push(`${pageSpec.key}: no scoping-call path found for the terms row`);
     }
 
     // ── Accessibility structure ─────────────────────────────────────────
@@ -3147,8 +3164,10 @@ ${jsonLd}
 .nav-links a[aria-current="page"]{color:var(--ink)}
 .nav-links a[aria-current="page"] span.idx{color:var(--accent)}
 .nav-links a[aria-current="page"]::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:1px;background:var(--accent);box-shadow:0 0 8px var(--accent-glow)}
-/* Hero: keep "depend on." together so "on." never ends up alone on a line. */
-.hero-h1 .it{white-space:nowrap}
+/* Hero: keep "depend on." together so "on." never ends up alone on a line.
+   Not in Arabic: its two-word phrase is wider than a 320px phone and has no
+   one-word widow to prevent. */
+html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 /* Product strip: the letter placeholders read as stand-in client logos. */
 .trust .trust-mark{display:none}
 /* Project cards: screenshot on top, one highlight under the description. */
@@ -3160,7 +3179,13 @@ ${jsonLd}
 .cta-person{display:flex;align-items:center;justify-content:center;gap:12px;margin:22px auto 6px;color:var(--ink-mute);font-size:14px;max-width:560px}
 .cta-person img{width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid var(--line-strong)}
 .contact-alt{margin:22px 0 0;text-align:center;font-size:14px;color:var(--ink-dim)}
-.contact-alt a{color:var(--accent)}
+.contact-alt a{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+/* Home shows three service cards in what the export draws as a 2-up grid,
+   which would leave an empty fourth cell; three across on desktop instead. */
+@media (min-width:761px){#services .services-grid:has(> .service-card:nth-child(3):last-child){grid-template-columns:repeat(3,1fr)}}
+/* Working terms under the project contact path. */
+.contact-terms{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 20px;list-style:none;margin:-10px auto 0;padding:0;max-width:720px;font-size:13px;color:var(--ink-mute)}
+.contact-terms li::before{content:"✓";color:var(--accent);margin-inline-end:6px}
 /* Phones: the floating Personalize (theme) button sits at the bottom-left and,
    on an 844px-tall screen, lands on the hero's second button at first paint.
    A theme picker is not worth covering a sales button; tablets and up keep it. */
