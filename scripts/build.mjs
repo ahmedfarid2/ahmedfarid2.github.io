@@ -2926,6 +2926,7 @@ ${jsonLd}
    export's scroll-spy uses for the section in view. */
 .nav-links a[aria-current="page"]{color:var(--ink)}
 .nav-links a[aria-current="page"] span.idx{color:var(--accent)}
+.service-tags .chip{font-family:var(--mono);font-size:10.5px;padding:4px 9px;border:1px solid var(--line-strong);border-radius:99px;color:var(--ink-mute)}
 .nav-links a[aria-current="page"]::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:1px;background:var(--accent);box-shadow:0 0 8px var(--accent-glow)}
 ${A11Y_CSS}
 ${switcherCss}
