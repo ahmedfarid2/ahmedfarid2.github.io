@@ -22,7 +22,7 @@ export const INDEXNOW_KEY = '9c4d4d137838a4b86f90f8070f173b53';
 // at cloud.umami.is, add the website iamahmedfarid.com, and paste its Website ID
 // (a UUID) here. Clicks on book-a-call, WhatsApp, email, CV, LinkedIn, services
 // and project cards are already tagged by the build and show up as events.
-export const ANALYTICS = { umamiWebsiteId: '' };
+export const ANALYTICS = { umamiWebsiteId: '58daf3f0-a2f3-48b7-8bfd-895a96e3607a' };
 
 // Owner-confirmed (Oct 2026): living in Dubai now.
 export const LOCATION = {
