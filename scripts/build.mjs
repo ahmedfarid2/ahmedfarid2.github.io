@@ -2412,9 +2412,11 @@ async function snapshotVariant({ page, spec, lang, locales }) {
 const ldJson = (obj) => JSON.stringify(obj).replace(/</g, '\\u003c');
 
 // A project page's title and description, from the case study's own text and
-// nothing else. Title: name, the tagline up to its first dash or colon, then
-// the site name — or the generic "Case study" label when that runs past the
-// head limit. Description: the tagline, then as many tech chips as fit.
+// nothing else. Title leads with what was built (the tagline up to its first
+// dash or colon), because that is what a buyer searches; when that runs past
+// the head limit it falls back to the name and the first two stack chips.
+// Google appends the site name itself. Description: the tagline, then as many
+// tech chips as fit.
 const PROJECT_DESCRIPTION_MAX = 165;
 function projectSeo(project, lang) {
   const { name, tagline, chips } = project;
@@ -2425,8 +2427,9 @@ function projectSeo(project, lang) {
   }
   const cut = tagline.search(/ — | – |: /);
   const clause = (cut > 0 ? tagline.slice(0, cut) : tagline).replace(/\.$/, '').trim();
-  let title = `${name} — ${clause} · Ahmed Farid`;
-  if (title.length > HEAD_LIMITS.title) title = `${name} — ${NAV[lang].caseStudy} · Ahmed Farid`;
+  const label = NAV[lang].caseStudy;
+  let title = `${clause} — ${label}: ${name}`;
+  if (title.length > HEAD_LIMITS.title) title = [`${label}: ${name}`, chips.slice(0, 2).join(', ')].filter(Boolean).join(' — ');
   let description;
   if (tagline.length > PROJECT_DESCRIPTION_MAX) {
     const head = tagline.slice(0, PROJECT_DESCRIPTION_MAX - 1);
