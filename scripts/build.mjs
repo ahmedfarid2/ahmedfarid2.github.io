@@ -116,7 +116,7 @@ if (UMAMI_ID && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
   throw new Error(`[build] ANALYTICS.umamiWebsiteId "${UMAMI_ID}" is not an Umami website id (a UUID)`);
 }
 const analyticsTag = UMAMI_ID
-  ? `<script defer src="https://cloud.umami.is/script.js" data-website-id="${UMAMI_ID}"></script>`
+  ? `<script defer src="https://cloud.umami.is/script.js" data-website-id="${UMAMI_ID}" data-domains="${new URL(SITE_URL).hostname}"></script>`
   : '';
 
 // Names the clicks that matter, so analytics can count them: every way to
@@ -2971,8 +2971,10 @@ ${jsonLd}
    export's scroll-spy uses for the section in view. */
 .nav-links a[aria-current="page"]{color:var(--ink)}
 .nav-links a[aria-current="page"] span.idx{color:var(--accent)}
-.service-tags .chip{font-family:var(--mono);font-size:10.5px;padding:4px 9px;border:1px solid var(--line-strong);border-radius:99px;color:var(--ink-mute)}
 .nav-links a[aria-current="page"]::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:1px;background:var(--accent);box-shadow:0 0 8px var(--accent-glow)}
+/* Service-card tags: the export styles .chip only inside project and build
+   cards, so these rendered as plain run-together text. */
+.service-tags .chip{font-family:var(--mono);font-size:10.5px;padding:4px 9px;border:1px solid var(--line-strong);border-radius:99px;color:var(--ink-mute)}
 ${A11Y_CSS}
 ${switcherCss}
 </style>

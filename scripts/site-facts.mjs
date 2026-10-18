@@ -86,11 +86,11 @@ export const SEO = {
       description: 'Senior-Softwareentwickler in Dubai (6+ Jahre): Echtzeit-Multi-Tenant-SaaS, end to end — Laravel, Next.js, Flutter. Festpreis-Projekte und Beratung.',
     },
     es: {
-      title: 'Ahmed Farid — Desarrollador Laravel y Next.js en Dubái · SaaS',
+      title: 'Ahmed Farid — Desarrollador Laravel y Next.js en Dubái · Ingeniero SaaS',
       description: 'Ingeniero de Software Senior en Dubái (6+ años): SaaS multi-tenant en tiempo real, de punta a punta — Laravel, Next.js, Flutter. Proyectos cerrados y consultoría.',
     },
     fr: {
-      title: 'Ahmed Farid — Développeur Laravel & Next.js à Dubaï · SaaS',
+      title: 'Ahmed Farid — Développeur Laravel & Next.js à Dubaï · Ingénieur SaaS',
       description: 'Ingénieur logiciel senior à Dubaï (6+ ans) : SaaS multi-tenant temps réel, de bout en bout — Laravel, Next.js, Flutter. Projets au forfait et conseil.',
     },
   },
@@ -108,11 +108,11 @@ export const SEO = {
       description: 'Festpreis-Projekte, Engineering-Retainer und Architektur-Reviews für Echtzeit-Multi-Tenant-SaaS — mit Preisen, FAQ und 30-minütigem Scoping-Call. Aus Dubai.',
     },
     es: {
-      title: 'Contrata a un desarrollador Laravel y Next.js en Dubái — Precios',
+      title: 'Contrata a un desarrollador Laravel y Next.js en Dubái — Precios · Ahmed Farid',
       description: 'Proyectos cerrados, retainers y revisiones de arquitectura para SaaS multi-tenant en tiempo real — precios, FAQ y llamada de alcance de 30 min. Desde Dubái.',
     },
     fr: {
-      title: 'Engager un développeur Laravel & Next.js à Dubaï — Tarifs',
+      title: 'Engager un développeur Laravel & Next.js à Dubaï — Tarifs · Ahmed Farid',
       description: 'Projets au forfait, retainers d’ingénierie et revues d’architecture pour SaaS multi-tenant temps réel — tarifs, FAQ et appel de cadrage de 30 min. Basé à Dubaï.',
     },
   },
