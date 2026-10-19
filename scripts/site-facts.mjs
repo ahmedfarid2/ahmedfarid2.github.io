@@ -223,7 +223,7 @@ export const CLIENT_QUOTES = [
   },
   {
     name: 'Bandar', initials: 'B',
-    role: { en: 'Ibdaa Course', ar: 'Ibdaa Course', de: 'Ibdaa Course', es: 'Ibdaa Course', fr: 'Ibdaa Course' },
+    role: { en: 'Founder, Ibdaa Course & Applyni', ar: 'مؤسس Ibdaa Course وApplyni', de: 'Gründer, Ibdaa Course & Applyni', es: 'Fundador, Ibdaa Course y Applyni', fr: 'Fondateur, Ibdaa Course et Applyni' },
     quote: {
       en: "I'm not technical, and Ahmed never made me feel it. He built the whole platform and explained every decision in words I could follow. When he handed it over, we actually knew how to run it.",
       ar: 'لست تقنيًا، ولم يُشعرني أحمد بذلك يومًا. بنى المنصّة كاملة وشرح كل قرار بكلام أفهمه. وحين سلّمها، كنا نعرف فعلًا كيف نديرها.',
