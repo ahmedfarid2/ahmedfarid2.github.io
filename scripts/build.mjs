@@ -196,13 +196,7 @@ const A11Y_CSS = SKIP_CSS +
   // language links were 38px and the wordmark 26px.
   '.nav-burger{min-width:44px;min-height:44px}' +
   '.dl-lang{min-height:44px}' +
-  '.brand{min-height:44px}' +
-  // The intro faded its name out *together* with the curtain behind it, so for
-  // ~0.6s the name sat at half opacity on top of the hero headline — two
-  // headlines, neither readable, as the first thing anyone sees. Take the name
-  // away first, then lift the curtain. Same total length.
-  '.intro-ov.intro-hide .intro-inner{opacity:0;transition:opacity .2s ease}' +
-  '.intro-ov.intro-hide{transition:opacity .45s ease .2s,visibility 0s linear .65s}';
+  '.brand{min-height:44px}';
 
 // ── Give the standalone pages the site's shell ──────────────────────────────
 // demo.html, checklist.html and get-checklist.html carry forms and long-form
@@ -1504,10 +1498,29 @@ const HOME_COPY = {
 //   position  the home position statement, rewritten without metaphors
 //   navCta    the nav pill, which now books the call
 //   caseCount the label of /about/'s first number (METRICS.caseStudies)
+//   recs      the testimonials eyebrow (the export says "Trust signals")
+//   hireAsk   the closing block's opening question, which also pitches a
+//             hire; dropped on every page but /about/ (the hiring page)
+//   rateQ     the services FAQ question about price; its answer is rebuilt
+//             from the price cards on the same page (rateIntro … rateOutro)
+//   outcomes  one plain line per flagship card (slug → text): what it changed
+//             for the people using it, in place of an engineering metric
 const HUMAN_COPY = {
   en: {
     navCta: 'Book a call',
     caseCount: 'Case studies, each linked to the live product',
+    recs: 'Recommendations',
+    hireAsk: 'Need a system built, or hiring a senior engineer?',
+    rateQ: "What's your rate?",
+    rateIntro: 'Starting points:',
+    rateOutro: 'After a 30-minute scoping call you get one flat quote for your scope, never an hourly bill.',
+    outcomes: {
+      'yelo-sale': 'Fleet owners sell cars in live online auctions instead of closed deals',
+      'qoralia': 'Cities see which climate projects are feasible, and which grants fit them',
+      'khebraos': 'A teacher launches a branded Arabic academy, with course drafts written by AI',
+      'phonic-maps': "Every location's reviews and replies in one place",
+      'recovery-advisers': 'Clients follow their case live in their own portal',
+    },
     hi: "Hi, I'm Ahmed. You'll work with me directly, from the first call to launch.",
     caseCta: 'Need something like this built?',
     headings: {
@@ -1525,7 +1538,6 @@ const HUMAN_COPY = {
       "Code I'm willing to publish.": 'Open-source code.',
       'Roles, in order of arrival.': 'Experience.',
       'What you usually get vs. what I bring.': 'Why clients work with me directly.',
-      'Notes from building in public.': 'Writing.',
       'Find me where you work.': 'Find me online.',
     },
     text: [
@@ -1554,15 +1566,28 @@ const HUMAN_COPY = {
       ["Not a brag list — a spec. If any of these feel like they're missing on your current project, that's where I help.", "What you can expect when we work together."],
       ["Backend, web, mobile, infra — held together by one person.", "Backend, web, mobile and infra, handled by one person."],
       ["Quotes business outcomes — and the trade-offs to get there.", "Talks in business outcomes, and the trade-offs behind them."],
-      ["Engineering breakdowns, architecture decisions, and lessons from shipping — posted on LinkedIn.", "Short notes on engineering and shipping, posted on LinkedIn."],
       ["Every mark is a real product I built or contributed to — from Gulf SaaS platforms to a fleet of US & UK pharmacy brands. Hover to pause; click any logo to open its live site.", "Every name here is a real product I built or contributed to, from Gulf SaaS platforms to US and UK pharmacy brands. Each one opens its live site."],
       ["A senior engineer's range, narrowed to what I actually ship — not what's on the résumé. Most projects sit across two or three of these at once.", "What I build most often. Most projects combine two or three of these."],
+      ["I'm open to full-time senior engineering roles in Dubai — that's what I'm looking for now. I'm currently full-time at Recovery Advisers (remote) and take a small number of freelance engagements alongside it; those are on the services page.", "Both. I'm full-time at Recovery Advisers (remote), and I take on a few client projects at a time alongside it, so each one gets proper attention. Packages and prices are on the services page."],
+      ['UAE, Saudi Arabia, the United States, and Egypt.', 'UAE, Saudi Arabia, the United States, the UK, Spain and Egypt.'],
     ],
     position: 'I treat a product as one system, not a pile of features. I design how the parts fit together, build every layer, and stay on the hook when it has to scale.',
   },
   ar: {
     navCta: 'احجز مكالمة',
     caseCount: 'دراسة حالة، كلٌّ منها مرتبط بالمنتج الحيّ',
+    recs: 'توصيات',
+    hireAsk: 'تحتاج إلى بناء نظام، أو تبحث عن مهندس أول؟',
+    rateQ: 'ما سعرك؟',
+    rateIntro: 'نقاط البداية:',
+    rateOutro: 'بعد مكالمة تحديد نطاق مدتها ٣٠ دقيقة تحصل على عرض سعر ثابت لنطاقك، لا فاتورة بالساعة.',
+    outcomes: {
+      'yelo-sale': 'يبيع أصحاب الأساطيل سياراتهم في مزادات مباشرة على الإنترنت بدل الصفقات المغلقة',
+      'qoralia': 'ترى المدن أي مشاريع المناخ ممكنة، وأي المنح تناسبها',
+      'khebraos': 'يطلق المعلّم أكاديمية عربية باسمه، ويكتب الذكاء الاصطناعي مسودّات دوراته',
+      'phonic-maps': 'تقييمات كل الفروع والردود عليها في مكان واحد',
+      'recovery-advisers': 'يتابع العملاء قضاياهم مباشرةً من بوابتهم الخاصة',
+    },
     hi: 'أهلًا، أنا أحمد. ستعمل معي مباشرةً، من أول مكالمة حتى الإطلاق.',
     caseCta: 'تحتاج إلى نظام مثل هذا؟',
     headings: {
@@ -1580,44 +1605,88 @@ const HUMAN_COPY = {
       'شيفرة أنا مستعدّ لنشرها.': 'شيفرة مفتوحة المصدر.',
       'الأدوار، بترتيب وصولها.': 'الخبرة.',
       'ما تحصل عليه عادةً مقابل ما أقدّمه.': 'لماذا يعمل العملاء معي مباشرةً.',
-      'ملاحظات من البناء في العلن.': 'كتابات.',
       'اعثر عليّ حيث تعمل.': 'حساباتي على الإنترنت.',
     },
     text: [
       ["مرّر للإيقاف المؤقّت؛ انقر أي شعار لفتح موقعه الحيّ.", "كل اسم يفتح موقعه الحيّ."],
+      ['أبحث عن أدوار هندسية أولى بدوام كامل في دبي — هذا ما أسعى إليه الآن. أعمل حاليًا بدوام كامل لدى Recovery Advisers (عن بُعد) وآخذ إلى جانبها عددًا محدودًا من التعاقدات الحرّة، وهي معروضة في صفحة الخدمات.', 'كلاهما. أعمل بدوام كامل لدى Recovery Advisers (عن بُعد)، وآخذ إلى جانبها عددًا محدودًا من مشاريع العملاء في الوقت نفسه حتى ينال كلٌّ منها حقه من الاهتمام. الباقات والأسعار في صفحة الخدمات.'],
+      ['الإمارات والسعودية والولايات المتحدة ومصر.', 'الإمارات والسعودية والولايات المتحدة والمملكة المتحدة وإسبانيا ومصر.'],
+      ['احجز مكالمة تحديد نطاق مدتها ٣٠ دقيقة', 'احجز مكالمة مدتها ٣٠ دقيقة'],
     ],
     position: 'أتعامل مع المنتج كنظام واحد، لا كمجموعة مزايا متفرّقة. أصمّم كيف تترابط أجزاؤه، وأبني كل طبقاته، وأبقى مسؤولًا عنه حين يكبر.',
   },
   de: {
     navCta: 'Gespräch buchen',
     caseCount: 'Fallstudien, jede mit dem Live-Produkt verlinkt',
+    recs: 'Empfehlungen',
+    hireAsk: 'Sie brauchen ein System oder suchen einen Senior-Engineer?',
+    rateQ: 'Wie hoch ist Ihr Satz?',
+    rateIntro: 'Einstiegspreise:',
+    rateOutro: 'Nach einem 30-minütigen Scoping-Call bekommen Sie ein Festpreisangebot für Ihren Umfang, keine Stundenrechnung.',
+    outcomes: {
+      'yelo-sale': 'Flottenbesitzer verkaufen Fahrzeuge in Live-Online-Auktionen statt in geschlossenen Deals',
+      'qoralia': 'Städte sehen, welche Klimaprojekte machbar sind und welche Fördermittel passen',
+      'khebraos': 'Lehrende starten eine eigene arabische Akademie, die Kursentwürfe schreibt die KI',
+      'phonic-maps': 'Bewertungen und Antworten aller Standorte an einem Ort',
+      'recovery-advisers': 'Mandanten verfolgen ihren Fall live im eigenen Portal',
+    },
     hi: 'Hallo, ich bin Ahmed. Sie arbeiten direkt mit mir, vom ersten Gespräch bis zum Launch.',
     caseCta: 'Sie brauchen etwas Ähnliches?',
     headings: {},
     text: [
       ["Every mark is a real product I built or contributed to — from Gulf SaaS platforms to a fleet of US & UK pharmacy brands. Hover to pause; click any logo to open its live site.", "Jeder Name ist ein echtes Produkt, das ich gebaut oder mitentwickelt habe, von SaaS-Plattformen am Golf bis zu Apothekenmarken in den USA und Großbritannien. Jeder Link öffnet die Live-Website."],
+      ['Ich suche eine Senior-Engineering-Festanstellung in Dubai — das ist mein Ziel. Derzeit bin ich Vollzeit bei Recovery Advisers (remote) und nehme daneben einige wenige freiberufliche Projekte an; die stehen auf der Services-Seite.', 'Beides. Ich bin Vollzeit bei Recovery Advisers (remote) und übernehme daneben nur wenige Kundenprojekte gleichzeitig, damit jedes die nötige Aufmerksamkeit bekommt. Pakete und Preise stehen auf der Services-Seite.'],
+      ['VAE, Saudi-Arabien, die Vereinigten Staaten und Ägypten.', 'VAE, Saudi-Arabien, die USA, Großbritannien, Spanien und Ägypten.'],
     ],
     position: '',
   },
   es: {
     navCta: 'Reservar una llamada',
     caseCount: 'Casos de estudio, cada uno enlazado al producto en vivo',
+    recs: 'Recomendaciones',
+    hireAsk: '¿Necesitas construir un sistema o buscas un ingeniero senior?',
+    rateQ: '¿Cuál es tu tarifa?',
+    rateIntro: 'Precios de partida:',
+    rateOutro: 'Tras una llamada de 30 minutos recibes un precio cerrado para tu alcance, nunca una factura por horas.',
+    outcomes: {
+      'yelo-sale': 'Los propietarios de flotas venden vehículos en subastas en vivo, no en tratos cerrados',
+      'qoralia': 'Las ciudades ven qué proyectos climáticos son viables y qué subvenciones encajan',
+      'khebraos': 'Un docente lanza su propia academia en árabe, con borradores de cursos escritos por IA',
+      'phonic-maps': 'Las reseñas y respuestas de todas las sedes en un solo lugar',
+      'recovery-advisers': 'Los clientes siguen su caso en vivo desde su propio portal',
+    },
     hi: 'Hola, soy Ahmed. Trabajarás directamente conmigo, desde la primera llamada hasta el lanzamiento.',
     caseCta: '¿Necesitas algo parecido?',
     headings: {},
     text: [
       ["Pasa el cursor para pausar; haz clic en cualquier logo para abrir su sitio en vivo.", "Cada nombre abre su sitio en vivo."],
+      ['Busco un puesto senior de ingeniería a jornada completa en Dubái — es lo que quiero ahora. Actualmente estoy a jornada completa en Recovery Advisers (remoto) y acepto algunos encargos freelance en paralelo; están en la página de servicios.', 'Ambos. Estoy a jornada completa en Recovery Advisers (remoto) y acepto pocos proyectos de clientes a la vez, para que cada uno reciba la atención que merece. Los paquetes y precios están en la página de servicios.'],
+      ['EAU, Arabia Saudí, Estados Unidos y Egipto.', 'EAU, Arabia Saudí, Estados Unidos, Reino Unido, España y Egipto.'],
     ],
     position: '',
   },
   fr: {
     navCta: 'Réserver un appel',
     caseCount: 'Études de cas, chacune liée au produit en ligne',
+    recs: 'Recommandations',
+    hireAsk: 'Vous avez un système à construire ou recrutez un ingénieur senior ?',
+    rateQ: 'Quel est votre tarif ?',
+    rateIntro: 'Tarifs de départ :',
+    rateOutro: 'Après un appel de 30 minutes, vous recevez un devis forfaitaire pour votre périmètre, jamais une facture horaire.',
+    outcomes: {
+      'yelo-sale': 'Les propriétaires de flottes vendent leurs véhicules aux enchères en direct, plus en circuit fermé',
+      'qoralia': 'Les villes voient quels projets climatiques sont faisables et quelles subventions conviennent',
+      'khebraos': 'Un formateur lance sa propre académie en arabe, avec des brouillons de cours rédigés par l’IA',
+      'phonic-maps': 'Les avis et réponses de tous les établissements au même endroit',
+      'recovery-advisers': 'Les clients suivent leur dossier en direct dans leur propre portail',
+    },
     hi: 'Bonjour, je suis Ahmed. Vous travaillez directement avec moi, du premier appel au lancement.',
     caseCta: 'Besoin de quelque chose de similaire ?',
     headings: {},
     text: [
       ["Every mark is a real product I built or contributed to — from Gulf SaaS platforms to a fleet of US & UK pharmacy brands. Hover to pause; click any logo to open its live site.", "Chaque nom est un vrai produit que j’ai construit ou auquel j’ai contribué, des plateformes SaaS du Golfe aux marques de pharmacies aux États-Unis et au Royaume-Uni. Chaque lien ouvre le site en ligne."],
+      ["Je cherche un poste senior en ingénierie à temps plein à Dubaï — c'est mon objectif aujourd'hui. Je suis actuellement à temps plein chez Recovery Advisers (à distance) et je prends quelques missions freelance en parallèle ; elles sont sur la page services.", 'Les deux. Je suis à temps plein chez Recovery Advisers (à distance) et je ne prends que quelques projets clients à la fois, pour que chacun reçoive l’attention qu’il mérite. Les forfaits et les tarifs sont sur la page services.'],
+      ['EAU, Arabie saoudite, États-Unis et Égypte.', 'EAU, Arabie saoudite, États-Unis, Royaume-Uni, Espagne et Égypte.'],
     ],
     position: '',
   },
@@ -1640,18 +1709,25 @@ const PACKAGED_ABOVE = {
 // Every page but home is cut from the home render and has no hero. The
 // export's enhancement layer waits for `.hero-stats` before it starts, so on
 // those pages it never started: no language menu, no Arabic numerals, a dead
-// Personalize button. There it waits for the nav alone. Its first-visit intro
-// splash stays home-only, as it was. Every other feature in the layer is
+// Personalize button. There it waits for the nav alone. Every other feature in the layer is
 // null-safe when the hero is missing. A re-export that changes these strings
 // leaves the page as before, and assertLocaleRouting then fails the build
 // because the language menu is missing.
+// The first-visit splash (the name on a black screen for 1.5s) is off on home
+// too since the Oct 2026 review: it held back the first screen for exactly
+// the visitor who has never seen the site.
 // Matched on the extracted layer as the export ships it (already minified),
 // tolerant of whitespace and quote style.
 const ENHANCE_READY = /document\.querySelector\((['"])\.hero-stats\1\)\s*&&\s*(document\.querySelector\((['"])\.nav-links a\3\))/;
 const ENHANCE_INTRO_SEEN = /if\s*\(\s*sessionStorage\.getItem\((['"])af_intro_done\1\)\s*\)\s*return/;
 function enhanceForVariant(js, spec) {
-  if (!js || spec.key === 'home') return js;
+  if (!js) return js;
   const count = (rx) => (js.match(new RegExp(rx.source, 'g')) || []).length;
+  if (spec.key === 'home') {
+    if (count(ENHANCE_INTRO_SEEN) === 1) return js.replace(ENHANCE_INTRO_SEEN, 'return');
+    console.warn('  ⚠ enhancement layer changed shape; the intro splash may still run on home');
+    return js;
+  }
   if (count(ENHANCE_READY) !== 1 || count(ENHANCE_INTRO_SEEN) !== 1) {
     console.warn(`  ⚠ enhancement layer changed shape; /${spec.suffix} runs without it (routing gate will flag the menu)`);
     return js;
@@ -1705,6 +1781,11 @@ const PAGE_LAYOUT = {
 //   verify       floor for the built-output check: innerText length and
 //                section[id] count, each floor(0.7 × the first green English
 //                measurement). Deliberately resizing a page means re-measuring.
+// Sections the export ships that no page publishes, on purpose. Removed from
+// the render before the page inventory, so the inventory gate still proves
+// everything else is published. "writing": six one-line teasers that all
+// linked to the same LinkedIn feed, not to any post (Oct 2026 review).
+const RETIRED_SECTIONS = ['writing'];
 const SECTION_KEYS = [
   'top', 'trust', 'position', 'about', 'bynumbers', 'work', 'products', 'builds', 'build',
   'domains', 'brands', 'regions', 'depth', 'arch', 'github', 'experience', 'process', 'why',
@@ -1737,7 +1818,9 @@ const PAGE_SPECS = [
   },
   {
     key: 'services', suffix: 'services/',
-    sections: ['pricing', 'services', 'build', 'domains', 'faq', 'contact'],
+    // No "ways to work together": it named the three price cards above it a
+    // second time, differently. It stays on home, which has no price list.
+    sections: ['pricing', 'build', 'domains', 'faq', 'contact'],
     keepUnknown: false, faq: 'buyer', anchors: 'resolve', renumber: true,
     sortWriting: false, foldCases: false, contactFirst: 'project', promoteH1: true,
     ld: ['faq', 'breadcrumb'], priority: '0.8',
@@ -1753,9 +1836,9 @@ const PAGE_SPECS = [
   },
   {
     key: 'about', suffix: 'about/',
-    sections: ['about', 'bynumbers', 'depth', 'arch', 'github', 'experience', 'why', 'writing', 'faq', 'connect', 'contact'],
+    sections: ['about', 'bynumbers', 'depth', 'arch', 'github', 'experience', 'why', 'faq', 'connect', 'contact'],
     keepUnknown: true, faq: 'other', anchors: 'resolve', renumber: true,
-    sortWriting: true, foldCases: false, contactFirst: 'hire', promoteH1: true,
+    sortWriting: false, foldCases: false, contactFirst: 'hire', promoteH1: true,
     ld: ['profile', 'faq', 'breadcrumb'], priority: '0.6',
     verify: { minText: 7350, minSections: 7 },       // measured 10501 chars, 10 sections
   },
@@ -1776,10 +1859,10 @@ const PAGE_SPECS = [
 const LINK_OWNER = {
   top: 'home', 'what-i-do': 'home', trust: 'home', process: 'home', testimonials: 'home', bynumbers: 'about',
   about: 'about', depth: 'about', arch: 'about', github: 'about', experience: 'about',
-  why: 'about', writing: 'about', connect: 'about',
+  why: 'about', connect: 'about',   // no writing: retired (RETIRED_SECTIONS)
   work: 'work', products: 'work', builds: 'work', build: 'services', domains: 'services',
   brands: 'work', regions: 'work',
-  pricing: 'services', services: 'services', faq: 'services',
+  pricing: 'services', services: 'home', faq: 'services',
 };
 
 // The single-page site's deep links (/#brands, /#experience …) are still out
@@ -1895,7 +1978,7 @@ async function renderLocale({ browser, loc, ghData, enhanceJS, locales }) {
   await page.evaluate(`window.__afSectionKey = ${sectionKeyOf.toString()};`);
 
   console.log(`→ [${lang}] Transforming + extracting static DOM…`);
-  const shared = await page.evaluate(async (ghUser, gh, hasEnhance, localeCodes) => {
+  const shared = await page.evaluate(async (ghUser, gh, hasEnhance, localeCodes, retired) => {
     // ── Convert <image-slot> → <img> (image lives in shadow DOM otherwise) ──
     document.querySelectorAll('image-slot').forEach((slot) => {
       const src = slot.getAttribute('src') || '';
@@ -2222,6 +2305,10 @@ async function renderLocale({ browser, loc, ghData, enhanceJS, locales }) {
       }
     });
 
+    // Sections taken off the site on purpose (RETIRED_SECTIONS), before the
+    // inventory: what is not published is then not counted as lost.
+    retired.forEach((id) => document.getElementById(id)?.closest('section')?.remove());
+
     // ── Inventory + pristine copy ───────────────────────────────────────
     // What the export holds, so the Node side can prove every section, case
     // study and FAQ question is published on some page. The pristine copy is
@@ -2240,7 +2327,7 @@ async function renderLocale({ browser, loc, ghData, enhanceJS, locales }) {
       title, lang, meta, css, bodyClass, rootAttrs, bodyAttrs, hasOwnSwitcher,
       blobCount: blobUrls.length, pristineKeys, caseNames, faqQs,
     };
-  }, GH_USER, ghData, !!enhanceJS, locales.map((l) => l.lang));
+  }, GH_USER, ghData, !!enhanceJS, locales.map((l) => l.lang), RETIRED_SECTIONS);
 
   if (pageErrors.length) {
     console.log(`  [${lang}] (${pageErrors.length} non-fatal page errors during render — expected for blocked external assets)`);
@@ -2298,6 +2385,13 @@ async function snapshotVariant({ page, spec, lang, locales }) {
     // Every <section>, not just section[id] — three of them carry no id at all
     // (the trust marquee and two unnamed bands), and filtering on `[id]` left
     // them on /services showing the hiring pitch above the price list.
+    // The three price cards, read before the cut: home names each way to work
+    // by its package and starting price, as /services/ shows them.
+    const priceCards = [...document.querySelectorAll('#pricing .price-grid > .price-card')].map((c) => ({
+      name: (c.querySelector('.price-name')?.textContent || '').trim(),
+      amount: [...(c.querySelector('.price-amount')?.childNodes || [])].map((n) => (n.textContent || '').trim()).filter(Boolean).join(' '),
+      note: ((c.querySelector('.price-note')?.textContent || '').split(' · ')[0] || '').trim(),
+    }));
     const keptKeys = [];
     document.querySelectorAll('section').forEach((sec) => {
       if (sec.parentElement.closest('section')) return;   // goes with its parent
@@ -2364,13 +2458,18 @@ async function snapshotVariant({ page, spec, lang, locales }) {
           head.appendChild(el('span', 'writing-card-cat', (art.querySelector('.case-num')?.textContent || '').trim()));
           a.append(head, el('h3', 'writing-card-title', f.name),
             el('p', 'writing-card-desc', (art.querySelector('.case-tagline')?.textContent || '').trim()));
-          // One highlight from the case study's impact cells — the first with a
-          // number in it, else the first — verbatim, so nothing is invented.
+          // What it changed for the people using it, in plain words
+          // (HUMAN_COPY outcomes). Without one, a highlight from the case
+          // study's impact cells — the first with a number in it, else the
+          // first — verbatim, so nothing is invented.
+          const outcome = (copy.human.outcomes || {})[f.slug];
           const cells = [...art.querySelectorAll('.case-impact-cell')]
             .map((c) => ({ v: (c.querySelector('.v')?.textContent || '').trim(), l: (c.querySelector('.l')?.textContent || '').trim() }))
             .filter((c) => c.v);
           const pick = cells.find((c) => /[0-9\u0660-\u0669]/.test(c.v)) || cells[0];
-          if (pick) {
+          if (outcome) {
+            a.appendChild(el('p', 'wc-impact wc-outcome', outcome));
+          } else if (pick) {
             const hl = el('p', 'wc-impact');
             hl.append(el('strong', null, pick.v), document.createTextNode(pick.l ? ` · ${pick.l}` : ''));
             a.appendChild(hl);
@@ -2599,26 +2698,6 @@ async function snapshotVariant({ page, spec, lang, locales }) {
     // ── Reads as a person, sells to a client (HUMAN_COPY) ───────────────
     const H2 = copy.human;
     const humanHits = [];
-    // /services/ is a client page: the full-time role is a hiring path, which
-    // lives on /about/ (its contact block leads with the CV). Same heading swap
-    // as home; the cards keep their positions, renumbered.
-    if (pageSpec.key === 'services') {
-      const grid = document.querySelector('#services .services-grid');
-      const cards = grid ? [...grid.querySelectorAll(':scope > .service-card')] : [];
-      const role = cards.find((c) => (c.querySelector('.service-t')?.textContent || '').trim() === copy.serviceOrder[copy.serviceOrder.length - 1]);
-      const title = document.querySelector('#services .section-title');
-      const first = title && [...title.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
-      const [from, to] = copy.home.svcHeading;
-      if (role && first && first.textContent.trimStart().startsWith(from)) {
-        const nums = cards.map((c) => c.querySelector('.service-num')?.textContent);
-        role.remove();
-        [...grid.querySelectorAll(':scope > .service-card')].forEach((c, i) => {
-          const num = c.querySelector('.service-num');
-          if (num && nums[i] != null) num.textContent = nums[i];
-        });
-        first.textContent = first.textContent.replace(from, to);
-      } else warnings.push('services: full-time card or "ways to work" heading not found — card left in place');
-    }
     // Section headings: one plain line, no gold-italic second half.
     const norm = (s) => s.replace(/\s+/g, ' ').trim();
     document.querySelectorAll('.section-title, #contact.cta h2').forEach((h) => {
@@ -2763,14 +2842,58 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         wall.replaceWith(wrap);
       } else warnings.push('brands: .logo-wall not found — left as exported');
     }
-    // /services/: what I build and the industries sit after the ways to work
-    // together (the export orders them before the price list).
+    // /services/: what I build and the industries sit after the price list
+    // (the export orders them before it).
     if (pageSpec.key === 'services') {
-      const svc = document.getElementById('services');
+      const pricing = document.getElementById('pricing');
       const build = document.getElementById('build');
       const domains = document.querySelector('.industries')?.closest('section');
-      if (svc && build && domains) { svc.after(build); build.after(domains); }
-      else warnings.push('services: #services, #build or the industries section not found — left in export order');
+      if (pricing && build && domains) { pricing.after(build); build.after(domains); }
+      else warnings.push('services: #pricing, #build or the industries section not found — left in export order');
+    }
+    // The testimonials are recommendations; "Trust signals" was the marketer
+    // talking to himself.
+    const recsEyebrow = document.querySelector('.tests')?.closest('section')?.querySelector('.eyebrow');
+    if (recsEyebrow && H2.recs) {
+      const t = [...recsEyebrow.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
+      if (t) { t.textContent = H2.recs; humanHits.push('k:recs'); }
+    }
+    // Numbered lists read as a template: "What I do" /01–/04 and the ways to
+    // work 01–03. The process steps keep theirs; they are a sequence.
+    document.querySelectorAll('.position-list .num, .service-card .service-num').forEach((e) => e.remove());
+    // Home: each way to work carries its package name and starting price from
+    // /services/ (the cards there were named differently and showed no price).
+    // Matched by position: build → the middle card, retainer → the last,
+    // advisory → the first, as the export orders the price list.
+    if (pageSpec.key === 'home') {
+      const cards = [...document.querySelectorAll('#services .services-grid > .service-card')];
+      const titleOf = (c) => (c.querySelector('.service-t')?.textContent || '').trim();
+      const toPrice = [1, 2, 0];
+      if (priceCards.length === 3 && priceCards.every((p) => p.name && p.amount) && cards.length === 3 &&
+          cards.every((c, i) => titleOf(c) === copy.serviceOrder[i])) {
+        cards.forEach((c, i) => {
+          const p = priceCards[toPrice[i]];
+          const line = document.createElement('p');
+          line.className = 'service-pkg';
+          line.textContent = [p.name, p.amount, p.note].filter(Boolean).join(' · ');
+          c.querySelector('.service-t').after(line);
+        });
+      } else warnings.push('services: price cards or the three home cards not found as expected — no package line');
+    }
+    // /services/: "What's your rate?" answered "it depends" under the prices.
+    // The answer now repeats them, read from the cards on the same page.
+    if (pageSpec.key === 'services' && H2.rateQ) {
+      const item = [...document.querySelectorAll('.faq-item')].find((i) => norm(i.querySelector('.faq-q .text')?.textContent || '') === norm(H2.rateQ));
+      const answer = item && item.querySelector('.faq-a');
+      if (answer && priceCards.length && priceCards.every((p) => p.name && p.amount)) {
+        // French sets a space before the colon and the semicolon; Arabic has
+        // its own semicolon.
+        const fr = localePrefix === '/fr/';
+        const sep = localePrefix === '/ar/' ? '؛ ' : fr ? ' ; ' : '; ';
+        const list = priceCards.map((p) => `${p.name}${fr ? ' :' : ':'} ${p.amount}${p.note ? ` (${p.note})` : ''}`).join(sep);
+        answer.textContent = `${H2.rateIntro} ${list}. ${H2.rateOutro}`;
+        humanHits.push('k:rateQ');
+      } else warnings.push(`services: the rate question (${H2.rateQ}) or the price cards not found — answer left as exported`);
     }
 
     // Nav and footer links point at sections that may not be on this page.
@@ -2912,6 +3035,33 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         copy.home.terms.forEach((t) => { const li = document.createElement('li'); li.textContent = t; ul.appendChild(li); });
         projectPath.after(ul);
       } else warnings.push(`${pageSpec.key}: no scoping-call path found for the terms row`);
+    }
+
+    // The hiring path (CV, "contact me about a senior role") belongs to
+    // /about/. Every other page is a client page: its closing block keeps the
+    // project path only, and drops the opening question's "or hiring a senior
+    // engineer?" half by dropping that question.
+    if (pageSpec.contactFirst !== 'hire') {
+      const paths = [...document.querySelectorAll('#contact .contact-paths > .contact-path')];
+      const hire = paths.filter((p) => !p.querySelector('a[href*="calendly.com"]'));
+      if (paths.length === 2 && hire.length === 1) hire[0].remove();
+      else warnings.push(`${pageSpec.key}: expected one project and one hiring path in #contact, found ${paths.length} — left as exported`);
+      const sub = document.querySelector('#contact .cta-inner > div > p');
+      const text = sub ? norm(sub.textContent || '') : '';
+      if (sub && H2.hireAsk && text.startsWith(norm(H2.hireAsk))) {
+        sub.textContent = text.slice(norm(H2.hireAsk).length).trim();
+        humanHits.push('k:hireAsk');
+      } else warnings.push(`${pageSpec.key}: the closing question (${H2.hireAsk}) was not found at the start of #contact's line — left as exported`);
+    }
+
+    // Right-to-left pages read arrows the other way: "→" after an Arabic label
+    // points back at the text. Only text with Arabic in it is turned, so a
+    // Latin run inside an Arabic page keeps its own direction.
+    if (localePrefix === '/ar/') {
+      const walker = document.createTreeWalker(document.getElementById('root'), NodeFilter.SHOW_TEXT);
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        if (n.nodeValue.includes('→') && /[\u0600-\u06FF]/.test(n.nodeValue)) n.nodeValue = n.nodeValue.replace(/→/g, '←');
+      }
     }
 
     // ── Accessibility structure ─────────────────────────────────────────
@@ -3586,6 +3736,16 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 /* Service-card tags: the export styles .chip only inside project and build
    cards, so these rendered as plain run-together text. */
 .service-tags .chip{font-family:var(--mono);font-size:10.5px;padding:4px 9px;border:1px solid var(--line-strong);border-radius:99px;color:var(--ink-mute)}
+/* Home: each way to work names its package and starting price. */
+.service-pkg{margin:-4px 0 12px;font-family:var(--mono);font-size:12px;color:var(--accent)}
+/* Flagship cards: the outcome line is a sentence, not a metric. */
+.writing-card .wc-outcome{color:var(--ink-dim);font-size:14px;line-height:1.5}
+/* Arabic is a joined script: letter-spacing pulls its letters apart (the
+   export tracks labels at 1–2px and the hero at −6px). None in Arabic. */
+[dir=rtl] body,[dir=rtl] body *{letter-spacing:0!important}
+/* Arrow icons point the way the text reads. */
+[dir=rtl] .arr{transform:scaleX(-1)}
+[dir=rtl] .btn:hover .arr{transform:scaleX(-1) translateX(3px)}
 ${A11Y_CSS}
 ${switcherCss}
 </style>
@@ -3737,7 +3897,8 @@ async function build() {
   // export's own wording ships), but worth knowing.
   for (const [lang, c] of Object.entries(HUMAN_COPY)) {
     const hits = HUMAN_HITS.get(lang) || new Set();
-    const unused = [...Object.keys(c.headings).map((k) => `h:${k}`), ...c.text.map(([f]) => `t:${f}`)].filter((k) => !hits.has(k));
+    const unused = [...Object.keys(c.headings).map((k) => `h:${k}`), ...c.text.map(([f]) => `t:${f}`),
+      ...['recs', 'hireAsk', 'rateQ'].filter((k) => c[k]).map((k) => `k:${k}`)].filter((k) => !hits.has(k));
     for (const k of unused) console.warn(`  [${lang}] ⚠ human copy not applied (export reworded?): ${k.slice(2)}`);
   }
 
