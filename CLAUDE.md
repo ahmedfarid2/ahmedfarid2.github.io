@@ -25,6 +25,7 @@ Personal portfolio site deployed to GitHub Pages. Claude Design exports (`index*
 - To add or move a page or section, change `PAGE_SPECS` (plus `SEO`/`NAV` in `site-facts.mjs`); the build refuses a spec missing any of them. Never relax a build gate to get green.
 - Old `/#<id>` links to sections that left home are redirected by the build (`REDIRECTS`); keep section ids stable.
 - CSS written inside `build.mjs` goes through the minifier (clean-css), which **silently drops every rule after** a custom property with no trailing semicolon followed by a comment, or an unmatched straight quote in a comment. End custom properties with `;`, write `’` in comments, and confirm a new rule is present in `dist/` after building.
+- The locale pages' CSS ships as one shared, content-hashed `dist/assets/site-<hash>.css` (`externalizeCss`), not inline. A build step that reads CSS back out of a built page must go through `withLinkedCss`.
 
 **Sensitive areas (treat changes as higher blast radius).**
 - `scripts/build.mjs`

@@ -88,7 +88,7 @@ export const SEO = {
     },
     ar: {
       title: 'Ahmed Farid — مطوّر Laravel وNext.js في دبي · مهندس منصّات SaaS',
-      description: 'مهندس برمجيات أول مقيم في دبي (+6 سنوات): منصّات SaaS فورية متعدّدة المستأجرين من البداية إلى النهاية — Laravel وNext.js وFlutter. مشاريع محدّدة النطاق واستشارات.',
+      description: 'مهندس برمجيات أول مقيم في دبي (أكثر من ٦ سنوات): منصّات SaaS فورية متعدّدة المستأجرين من البداية إلى النهاية — Laravel وNext.js وFlutter. مشاريع محدّدة النطاق واستشارات.',
     },
     de: {
       title: 'Ahmed Farid — Laravel- & Next.js-Entwickler in Dubai · SaaS-Engineer',
@@ -154,7 +154,7 @@ export const SEO = {
     },
     ar: {
       title: 'نبذة عن Ahmed Farid — مهندس برمجيات أول في دبي',
-      description: 'مع من ستعمل: +6 سنوات في بناء منصّات SaaS للإنتاج من دبي، والتقنيات والمبادئ وراءها، والأدوار السابقة، والشيفرة المفتوحة المصدر، والسيرة الذاتية.',
+      description: 'مع من ستعمل: أكثر من ٦ سنوات في بناء منصّات SaaS للإنتاج من دبي، والتقنيات والمبادئ وراءها، والأدوار السابقة، والشيفرة المفتوحة المصدر، والسيرة الذاتية.',
     },
     de: {
       title: 'Über Ahmed Farid — Senior-Softwareentwickler in Dubai',

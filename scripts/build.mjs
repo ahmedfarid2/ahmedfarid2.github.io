@@ -263,7 +263,7 @@ function scopeCss(css, scope, keep) {
 }
 
 async function applyShellToStandalonePages() {
-  const home = await readFile(path.join(DIST, 'index.html'), 'utf8');
+  const home = await withLinkedCss(await readFile(path.join(DIST, 'index.html'), 'utf8'));
 
   const grab = (tag) => {
     const m = home.match(new RegExp(`<${tag}\\b[\\s\\S]*?</${tag}>`));
@@ -611,7 +611,8 @@ const countForbidden = (body, f) =>
   f.re ? (body.match(f.re) || []).length : body.split(f.s).length - 1;
 
 async function assertNoForbiddenStrings() {
-  const exts = new Set(['.html', '.txt', '.xml', '.json', '.svg']);
+  // .css: the pages’ shared stylesheet lives in /assets/ (externalizeCss).
+  const exts = new Set(['.html', '.txt', '.xml', '.json', '.svg', '.css']);
   const counts = new Map(FORBIDDEN.map((f) => [forbiddenKey(f), 0]));
   const where = new Map();
   const perFile = new Map();   // key → [{ rel, n }]
@@ -1262,7 +1263,8 @@ async function writeSeoFiles(locales, specs, projects = null, prices = null) {
   const pagesBlock = projects
     ? `## Pages\n\n` + [
         `- [Work](${SITE_URL}/work/): ${SEO.work.en.description}`,
-        ...FLAGSHIP.filter((f) => projects[f.slug]).map((f) => `- [${f.name}](${SITE_URL}/work/${f.slug}/): ${projects[f.slug].tagline}`),
+        ...FLAGSHIP.filter((f) => projects[f.slug]).map((f) => `- [${f.name}](${SITE_URL}/work/${f.slug}/): ${projects[f.slug].tagline}` +
+          (projects[f.slug].hard ? ` The hard part: ${projects[f.slug].hard}` : '')),
         `- [Services](${SITE_URL}/services/): ${SEO.services.en.description}`,
         `- [About](${SITE_URL}/about/): ${SEO.about.en.description}`,
       ].join('\n') + `\n\n`
@@ -1294,7 +1296,7 @@ async function writeSeoFiles(locales, specs, projects = null, prices = null) {
     `- Role: Senior Software Engineer\n` +
     `- Location: ${LOCATION_LABEL} — remote and on-site\n` +
     `- Currently: full-time at Recovery Advisers (Dubai)\n` +
-    `- Availability: a few client projects at a time, alongside the full-time role\n\n` +
+    `- Availability: client projects of any size alongside the full-time role; larger builds run with a vetted team of engineers, with Ahmed as the single point of contact\n\n` +
     `## Core skills\n\n` +
     `Laravel, PHP, Next.js, React, React Native, TypeScript, FastAPI, Python, Flutter, AWS, ` +
     `PostgreSQL, multi-tenant SaaS architecture, real-time systems, AI integration.\n\n` +
@@ -1362,7 +1364,7 @@ async function generateIcons(browser) {
 // ships, read from dist/ (so this runs after the pages are written) and inlined,
 // since a card is rendered from a string with no base URL.
 async function ogFontCss() {
-  const home = await readFile(path.join(DIST, 'index.html'), 'utf8');
+  const home = await withLinkedCss(await readFile(path.join(DIST, 'index.html'), 'utf8'));
   const faces = [...home.matchAll(/@font-face\{font-family:Geist;[^}]*\}/g)].map((m) => m[0])
     .filter((f) => /unicode-range:[^;}]*U\+0000-00FF/.test(f));
   const out = [];
@@ -1535,7 +1537,7 @@ const HOME_COPY = {
     notReady: 'Not ready for a call?',
     checklist: 'Get the free multi-tenant SaaS architecture checklist →',
     recommended: 'Recommended',
-    terms: ['Reply within 24 hours', 'NDA before the first call', 'You own all code & IP once paid', 'Contract & invoice directly with me', 'A few projects at a time'],
+    terms: ['Reply within 24 hours', 'NDA before the first call', 'You own all code & IP once paid', 'Contract & invoice directly with me', 'Any size of project, with a vetted team'],
   },
   ar: {
     tag: { 'tag-full': 'بناء منصّات SaaS بـ Laravel وNext.js · دبي، الإمارات 🇦🇪', 'tag-short': 'بناء منصّات SaaS · دبي 🇦🇪', 'tag-tiny': 'SaaS · دبي 🇦🇪' },
@@ -1545,7 +1547,7 @@ const HOME_COPY = {
     notReady: 'هل الوقت مبكر لمكالمة؟',
     checklist: 'حمّل قائمة التحقق المجانية لمعمارية SaaS متعدّدة المستأجرين (بالإنجليزية) →',
     recommended: 'موصى به',
-    terms: ['ردّ خلال ٢٤ ساعة', 'اتفاقية سرّية قبل أول مكالمة', 'الكود والملكية الفكرية لك بعد السداد', 'العقد والفاتورة معي مباشرةً', 'عدد محدود من المشاريع في الوقت نفسه'],
+    terms: ['ردّ خلال ٢٤ ساعة', 'اتفاقية سرّية قبل أول مكالمة', 'الكود والملكية الفكرية لك بعد السداد', 'العقد والفاتورة معي مباشرةً', 'مشاريع بأي حجم، مع فريق مؤهّل'],
   },
   de: {
     tag: { 'tag-full': 'SaaS-Entwicklung mit Laravel & Next.js · Dubai, VAE 🇦🇪', 'tag-short': 'SaaS-Entwicklung · Dubai 🇦🇪', 'tag-tiny': 'SaaS · Dubai 🇦🇪' },
@@ -1555,7 +1557,7 @@ const HOME_COPY = {
     notReady: 'Noch nicht bereit für ein Gespräch?',
     checklist: 'Kostenlose Checkliste zur Multi-Tenant-SaaS-Architektur (Englisch) →',
     recommended: 'Empfohlen',
-    terms: ['Antwort innerhalb von 24 Stunden', 'NDA vor dem ersten Gespräch', 'Code und IP gehören Ihnen nach Zahlung', 'Vertrag und Rechnung direkt mit mir', 'Nur wenige Projekte gleichzeitig'],
+    terms: ['Antwort innerhalb von 24 Stunden', 'NDA vor dem ersten Gespräch', 'Code und IP gehören Ihnen nach Zahlung', 'Vertrag und Rechnung direkt mit mir', 'Projekte jeder Größe, mit erprobtem Team'],
   },
   es: {
     tag: { 'tag-full': 'Desarrollo SaaS con Laravel y Next.js · Dubái, EAU 🇦🇪', 'tag-short': 'Desarrollo SaaS · Dubái 🇦🇪', 'tag-tiny': 'SaaS · Dubái 🇦🇪' },
@@ -1565,7 +1567,7 @@ const HOME_COPY = {
     notReady: '¿Aún no estás listo para una llamada?',
     checklist: 'Descarga gratis la checklist de arquitectura SaaS multi-tenant (en inglés) →',
     recommended: 'Recomendado',
-    terms: ['Respuesta en menos de 24 horas', 'NDA antes de la primera llamada', 'Código y PI son tuyos tras el pago', 'Contrato y factura directamente conmigo', 'Pocos proyectos a la vez'],
+    terms: ['Respuesta en menos de 24 horas', 'NDA antes de la primera llamada', 'Código y PI son tuyos tras el pago', 'Contrato y factura directamente conmigo', 'Proyectos de cualquier tamaño, con un equipo probado'],
   },
   fr: {
     tag: { 'tag-full': 'Développement SaaS Laravel & Next.js · Dubaï, EAU 🇦🇪', 'tag-short': 'Développement SaaS · Dubaï 🇦🇪', 'tag-tiny': 'SaaS · Dubaï 🇦🇪' },
@@ -1575,7 +1577,7 @@ const HOME_COPY = {
     notReady: 'Pas encore prêt pour un appel ?',
     checklist: 'Téléchargez la checklist gratuite d’architecture SaaS multi-tenant (en anglais) →',
     recommended: 'Recommandé',
-    terms: ['Réponse sous 24 heures', 'NDA avant le premier appel', 'Code et PI à vous après paiement', 'Contrat et facture directement avec moi', 'Peu de projets à la fois'],
+    terms: ['Réponse sous 24 heures', 'NDA avant le premier appel', 'Code et PI à vous après paiement', 'Contrat et facture directement avec moi', 'Projets de toute taille, avec une équipe éprouvée'],
   },
 };
 
@@ -1586,8 +1588,7 @@ const HOME_COPY = {
 // sentence a re-export rewords is reported once per locale, never fatal.
 //   hi        next to a small portrait in the home hero
 //   caseCta   above the call button in a project page's side column
-//   headings  section heading text → plain replacement (en, ar; de/es/fr keep
-//             their wording and only lose the gold-italic styling, in CSS)
+//   headings  section heading text → plain replacement (every locale)
 //   text      exact sentence fragments → rewrites without the em dashes (en)
 //   position  the home position statement, rewritten without metaphors
 //   navCta    the nav pill, which now books the call
@@ -1664,7 +1665,7 @@ const HUMAN_COPY = {
       ["Quotes business outcomes — and the trade-offs to get there.", "Talks in business outcomes, and the trade-offs behind them."],
       ["Every mark is a real product I built or contributed to — from Gulf SaaS platforms to a fleet of US & UK pharmacy brands. Hover to pause; click any logo to open its live site.", "Every name here is a real product I built or contributed to, from Gulf SaaS platforms to US and UK pharmacy brands. Each one opens its live site."],
       ["A senior engineer's range, narrowed to what I actually ship — not what's on the résumé. Most projects sit across two or three of these at once.", "What I build most often. Most projects combine two or three of these."],
-      ["I'm open to full-time senior engineering roles in Dubai — that's what I'm looking for now. I'm currently full-time at Recovery Advisers (remote) and take a small number of freelance engagements alongside it; those are on the services page.", "Both. I'm full-time at Recovery Advisers (remote), and I take on a few client projects at a time alongside it, so each one gets proper attention. Packages and prices are on the services page."],
+      ["I'm open to full-time senior engineering roles in Dubai — that's what I'm looking for now. I'm currently full-time at Recovery Advisers (remote) and take a small number of freelance engagements alongside it; those are on the services page.", "Both. I'm full-time at Recovery Advisers (remote), and I take on client projects of any size alongside it: larger builds run with a vetted team of engineers I work with, and you deal with me throughout. Packages and prices are on the services page."],
       ['UAE, Saudi Arabia, the United States, and Egypt.', 'UAE, Saudi Arabia, the United States, the UK, Spain and Egypt.'],
       ['Design concepts, client demos and smaller builds — all live on my own domain, so you can click through them instead of taking my word for it. Each one is labelled for what it actually is.', 'Client work and client demos, live on my own domain so you can click through them. Each one is labelled for what it is.'],
       ['Concepts & builds', 'Client builds'],
@@ -1719,7 +1720,7 @@ const HUMAN_COPY = {
     },
     text: [
       ["مرّر للإيقاف المؤقّت؛ انقر أي شعار لفتح موقعه الحيّ.", "كل اسم يفتح موقعه الحيّ."],
-      ['أبحث عن أدوار هندسية أولى بدوام كامل في دبي — هذا ما أسعى إليه الآن. أعمل حاليًا بدوام كامل لدى Recovery Advisers (عن بُعد) وآخذ إلى جانبها عددًا محدودًا من التعاقدات الحرّة، وهي معروضة في صفحة الخدمات.', 'كلاهما. أعمل بدوام كامل لدى Recovery Advisers (عن بُعد)، وآخذ إلى جانبها عددًا محدودًا من مشاريع العملاء في الوقت نفسه حتى ينال كلٌّ منها حقه من الاهتمام. الباقات والأسعار في صفحة الخدمات.'],
+      ['أبحث عن أدوار هندسية أولى بدوام كامل في دبي — هذا ما أسعى إليه الآن. أعمل حاليًا بدوام كامل لدى Recovery Advisers (عن بُعد) وآخذ إلى جانبها عددًا محدودًا من التعاقدات الحرّة، وهي معروضة في صفحة الخدمات.', 'كلاهما. أعمل بدوام كامل لدى Recovery Advisers (عن بُعد)، وأتولّى إلى جانبها مشاريع العملاء بأي حجم: المشاريع الأكبر تُنفَّذ مع فريق مؤهّل من المهندسين أعمل معهم، وتبقى أنت تتعامل معي مباشرةً طوال الوقت. الباقات والأسعار في صفحة الخدمات.'],
       ['الإمارات والسعودية والولايات المتحدة ومصر.', 'الإمارات والسعودية والولايات المتحدة والمملكة المتحدة وإسبانيا ومصر.'],
       ['مفاهيم تصميمية وعروض تجريبية لعملاء وأعمال أصغر — جميعها منشورة على نطاقي الخاص، لتتصفّحها بنفسك بدل أن تأخذ كلامي. وكلٌّ منها موسوم بما هو عليه فعلًا.', 'أعمال وعروض تجريبية لعملاء، منشورة على نطاقي الخاص لتتصفّحها بنفسك. وكلٌّ منها موسوم بما هو عليه.'],
       ['مفاهيم وأعمال', 'أعمال لعملاء'],
@@ -1757,12 +1758,27 @@ const HUMAN_COPY = {
     hi: 'Hallo, ich bin Ahmed. Sie arbeiten direkt mit mir, vom ersten Gespräch bis zum Launch.',
     caseCta: 'Sie brauchen etwas Ähnliches?',
     headings: {
+      "Jedes System, geliefert & verlinkt.": "Live-Produkte, die ich gebaut habe.",
+      "Vier Schritte, dann liefern wir.": "So läuft ein Projekt ab.",
+      "Drei Wege, mich einzusetzen.": "Drei Wege der Zusammenarbeit.",
+      "Was Kollegen tatsächlich gesagt haben.": "Was Kunden und Kollegen sagen.",
+      "Liefern Sie das System, das Sie wirklich brauchen.": "Erzählen Sie mir, was Sie bauen.",
+      "Klare Pakete, auf Sie zugeschnitten.": "Preise, offen vorab.",
+      "Die Fragen, die alle stellen.": "Häufige Fragen.",
+      "Sechs Bereiche, in denen ich fließend arbeite.": "Was ich baue.",
+      "Domänen, für die ich echte Systeme geliefert habe.": "Branchen, in denen ich gearbeitet habe.",
+      "Logos of teams & products I've shipped.": "Teams und Produkte, für die ich geliefert habe.",
+      "Der Stack, ohne die Buzzwords.": "Mein Tech-Stack.",
+      "Code, den ich zu veröffentlichen bereit bin.": "Open-Source-Code.",
+      "Rollen, in der Reihenfolge ihres Eintreffens.": "Berufserfahrung.",
+      "Was Sie üblicherweise bekommen vs. was ich mitbringe.": "Warum Kunden direkt mit mir arbeiten.",
+      "Finden Sie mich, wo Sie arbeiten.": "Hier finden Sie mich online.",
       'Konzepte, Demos und neuere Arbeiten.': 'Kleinere Kundenprojekte.',
       'Geliefert für Teams in 17+ Ländern.': 'Kunden und Produkte in 17+ Ländern.',
     },
     text: [
       ["Every mark is a real product I built or contributed to — from Gulf SaaS platforms to a fleet of US & UK pharmacy brands. Hover to pause; click any logo to open its live site.", "Jeder Name ist ein echtes Produkt, das ich gebaut oder mitentwickelt habe, von SaaS-Plattformen am Golf bis zu Apothekenmarken in den USA und Großbritannien. Jeder Link öffnet die Live-Website."],
-      ['Ich suche eine Senior-Engineering-Festanstellung in Dubai — das ist mein Ziel. Derzeit bin ich Vollzeit bei Recovery Advisers (remote) und nehme daneben einige wenige freiberufliche Projekte an; die stehen auf der Services-Seite.', 'Beides. Ich bin Vollzeit bei Recovery Advisers (remote) und übernehme daneben nur wenige Kundenprojekte gleichzeitig, damit jedes die nötige Aufmerksamkeit bekommt. Pakete und Preise stehen auf der Services-Seite.'],
+      ['Ich suche eine Senior-Engineering-Festanstellung in Dubai — das ist mein Ziel. Derzeit bin ich Vollzeit bei Recovery Advisers (remote) und nehme daneben einige wenige freiberufliche Projekte an; die stehen auf der Services-Seite.', 'Beides. Ich bin Vollzeit bei Recovery Advisers (remote) und übernehme daneben Kundenprojekte jeder Größe: Größere Projekte setze ich mit einem erprobten Team von Entwicklern um, mit denen ich arbeite, und Ihr Ansprechpartner bleibe durchgehend ich. Pakete und Preise stehen auf der Services-Seite.'],
       ['VAE, Saudi-Arabien, die Vereinigten Staaten und Ägypten.', 'VAE, Saudi-Arabien, die USA, Großbritannien, Spanien und Ägypten.'],
       ['Designkonzepte, Kunden-Demos und kleinere Builds — alle live auf meiner eigenen Domain, damit Sie durchklicken können, statt mir zu glauben. Jedes ist als das gekennzeichnet, was es wirklich ist.', 'Kundenarbeiten und Kunden-Demos, live auf meiner eigenen Domain zum Durchklicken. Jede ist als das gekennzeichnet, was sie ist.'],
       ['Konzepte & Builds', 'Kundenprojekte'],
@@ -1772,8 +1788,18 @@ const HUMAN_COPY = {
       [" öffentliche Repos über TypeScript-Tooling, PHP und ML-Notebooks. Die meiste Kundenarbeit liegt hinter NDAs.", " öffentliche Repos. Der Großteil meiner Kundenarbeit ist privat und unter NDA."],
       ["Quellcode, angepinnte Projekte & ML-Notebooks.", "Mein öffentlicher Code. Kundenarbeit bleibt privat."],
       ["ElastiCache, PayFort.", "ElastiCache."],
+      ["Das vollständige Portfolio — zuerst die Flaggschiff-SaaS, dann der Rest. Jeder Eintrag verlinkt direkt zum Live-Produkt, zum Store-Eintrag oder zur Admin-Oberfläche, gezogen aus meinem GitHub-Profil.", "Zuerst die Flaggschiff-SaaS, dann der Rest. Jeder Eintrag verlinkt auf das Live-Produkt, den Store-Eintrag oder das Admin-Panel."],
+      ["Mein Prozess ist nicht proprietär — er ist einfach diszipliniert. Dieselbe Form, ob das Engagement sechs Wochen oder sechs Monate dauert.", "Nichts Geheimes: dieselben vier Schritte, ob die Arbeit sechs Wochen oder sechs Monate dauert."],
+      ["Lieber ein individuelles oder längerfristiges Setup? So können wir zusammenarbeiten — jedes Engagement beginnt mit einem 30-minütigen Call.", "Etwas Individuelles oder Längerfristiges? So können wir zusammenarbeiten. Jede Zusammenarbeit beginnt mit einem 30-minütigen Gespräch."],
+      ["Jedes Projekt wird nach einem 30-minütigen Call kalkuliert — keine Überraschungen, kein Stunden-Drift.", "Jedes Projekt wird nach einem 30-minütigen Gespräch kalkuliert, ohne Überraschungen und ohne Stundenabrechnung."],
+      ["Die Bandbreite eines Senior-Entwicklers, eingegrenzt auf das, was ich tatsächlich liefere — nicht auf das, was im Lebenslauf steht. Die meisten Projekte liegen gleichzeitig über zwei oder drei davon.", "Was ich am häufigsten baue. Die meisten Projekte verbinden zwei oder drei davon."],
+      ["Wenn Ihre nicht dabei ist, stellen Sie sie direkt — am Ende der Seite.", "Wenn Ihre Frage fehlt, stellen Sie sie mir direkt unten auf der Seite."],
+      ["Wofür ich tatsächlich greife, und warum. Keine Frameworks-des-Monats — nur die langweiligen Werkzeuge, die den Kontakt mit der Produktion überleben.", "Was ich einsetze, und warum. Vor allem bewährte Werkzeuge, die im Produktivbetrieb halten."],
+      ["Fünf Prinzipien, die ich auf jedes Projekt anwende. Es sind keine Gesetze — es sind Annahmen, die ich bei Belegen zu brechen bereit bin.", "Fünf Prinzipien, die ich in jedem Projekt anwende und aufgebe, wenn die Belege dagegen sprechen."],
+      ["Vollzeit und freiberuflich, vor Ort und remote. Der rote Faden ist nicht der Titel — es ist die gelieferte Arbeit.", "Festanstellungen und freiberufliche Projekte, vor Ort und remote."],
+      ["Keine Angeberliste — eine Spezifikation. Wenn sich etwas davon in Ihrem aktuellen Projekt vermisst anfühlt, dort helfe ich.", "Was Sie von der Zusammenarbeit erwarten können."],
     ],
-    position: '',
+    position: "Ich behandle ein Produkt als ein System, nicht als Sammlung von Features. Ich entwerfe, wie die Teile zusammenspielen, baue jede Schicht und bleibe verantwortlich, wenn es wachsen muss.",
     pinnedStat: 'Angepinnte Projekte',
     footBuild: 'Was ich baue',
     footStack: 'Tech-Stack',
@@ -1797,12 +1823,27 @@ const HUMAN_COPY = {
     hi: 'Hola, soy Ahmed. Trabajarás directamente conmigo, desde la primera llamada hasta el lanzamiento.',
     caseCta: '¿Necesitas algo parecido?',
     headings: {
+      "Cada sistema, entregado y enlazado.": "Productos en vivo que he construido.",
+      "Cuatro pasos, y entregamos.": "Cómo funciona un proyecto.",
+      "Tres formas de ponerme a trabajar.": "Tres formas de trabajar conmigo.",
+      "Lo que de verdad dijeron los colegas.": "Lo que dicen clientes y colegas.",
+      "Construye el sistema que de verdad necesitas.": "Cuéntame qué estás construyendo.",
+      "Paquetes claros, a tu medida.": "Precios claros desde el principio.",
+      "Las preguntas que todos hacen.": "Preguntas frecuentes.",
+      "Seis áreas en las que trabajo con fluidez.": "Lo que construyo.",
+      "Dominios para los que he entregado sistemas reales.": "Sectores en los que he trabajado.",
+      "Logos de equipos y productos que he entregado.": "Equipos y productos para los que he trabajado.",
+      "El stack, sin palabras de moda.": "Mi stack técnico.",
+      "Código que estoy dispuesto a publicar.": "Código abierto.",
+      "Roles, por orden de llegada.": "Experiencia.",
+      "Lo que sueles obtener vs. lo que yo aporto.": "Por qué los clientes trabajan conmigo directamente.",
+      "Encuéntrame donde tú trabajas.": "Dónde encontrarme.",
       'Conceptos, demos y trabajos recientes.': 'Proyectos más pequeños para clientes.',
       'Entregado para equipos en 17+ países.': 'Clientes y productos en 17+ países.',
     },
     text: [
       ["Pasa el cursor para pausar; haz clic en cualquier logo para abrir su sitio en vivo.", "Cada nombre abre su sitio en vivo."],
-      ['Busco un puesto senior de ingeniería a jornada completa en Dubái — es lo que quiero ahora. Actualmente estoy a jornada completa en Recovery Advisers (remoto) y acepto algunos encargos freelance en paralelo; están en la página de servicios.', 'Ambos. Estoy a jornada completa en Recovery Advisers (remoto) y acepto pocos proyectos de clientes a la vez, para que cada uno reciba la atención que merece. Los paquetes y precios están en la página de servicios.'],
+      ['Busco un puesto senior de ingeniería a jornada completa en Dubái — es lo que quiero ahora. Actualmente estoy a jornada completa en Recovery Advisers (remoto) y acepto algunos encargos freelance en paralelo; están en la página de servicios.', 'Ambos. Estoy a jornada completa en Recovery Advisers (remoto) y acepto proyectos de clientes de cualquier tamaño: los más grandes se hacen con un equipo probado de ingenieros con el que trabajo, y tu interlocutor sigo siendo yo de principio a fin. Los paquetes y precios están en la página de servicios.'],
       ['EAU, Arabia Saudí, Estados Unidos y Egipto.', 'EAU, Arabia Saudí, Estados Unidos, Reino Unido, España y Egipto.'],
       ['Conceptos de diseño, demos para clientes y trabajos más pequeños — todos publicados en mi propio dominio, para que los recorras en vez de creerme. Cada uno está etiquetado por lo que realmente es.', 'Trabajos y demos para clientes, publicados en mi propio dominio para que los recorras. Cada uno está etiquetado por lo que es.'],
       ['Conceptos y builds', 'Proyectos de clientes'],
@@ -1812,8 +1853,19 @@ const HUMAN_COPY = {
       [" repos públicos entre herramientas en TypeScript, PHP y notebooks de ML. La mayoría del trabajo con clientes está bajo NDA.", " repos públicos. La mayor parte de mi trabajo con clientes es privado y está bajo NDA."],
       ["Código, proyectos fijados y notebooks de ML.", "Mi código público. El trabajo con clientes es privado."],
       ["ElastiCache, PayFort.", "ElastiCache."],
+      ["El portafolio completo — primero los SaaS insignia, luego el resto. Cada entrada enlaza directamente al producto en vivo, la ficha de la tienda o el panel de administración, extraído de mi perfil de GitHub.", "Primero los SaaS insignia, luego el resto. Cada entrada enlaza al producto en vivo, su ficha en la tienda o su panel de administración."],
+      ["Mi proceso no es secreto — solo es disciplinado. La misma forma tanto si el encargo dura seis semanas como seis meses.", "Nada secreto: los mismos cuatro pasos, dure el trabajo seis semanas o seis meses."],
+      ["¿Prefieres algo a medida o a más largo plazo? Así podemos trabajar juntos — cada colaboración empieza con una llamada de 30 minutos.", "¿Algo a medida o a más largo plazo? Así podemos trabajar juntos. Cada colaboración empieza con una llamada de 30 minutos."],
+      ["Cada proyecto se presupuesta tras una llamada de 30 minutos — sin sorpresas, sin desvíos por hora.", "Cada proyecto se presupuesta tras una llamada de 30 minutos, sin sorpresas y sin facturación por horas."],
+      ["El alcance de un ingeniero senior, reducido a lo que realmente entrego — no a lo que figura en el CV. La mayoría de proyectos abarcan dos o tres de estas a la vez.", "Lo que construyo con más frecuencia. La mayoría de proyectos combinan dos o tres de estas áreas."],
+      ["Si la tuya no está aquí, pregúntala directamente — al final de la página.", "Si la tuya no está, pregúntame directamente al final de la página."],
+      ["Lo que de verdad uso, y por qué. Nada de frameworks del mes — solo las herramientas aburridas que sobreviven al contacto con producción.", "Lo que uso, y por qué. Sobre todo herramientas probadas que aguantan en producción."],
+      ["Cinco principios que aplico en cada proyecto. No son leyes — son criterios que estoy dispuesto a romper con evidencia.", "Cinco principios que aplico en cada proyecto, y que dejo de lado cuando la evidencia dice otra cosa."],
+      ["Jornada completa y freelance, presencial y remoto. El hilo conductor no es el título — es el trabajo entregado.", "Puestos a jornada completa y freelance, presenciales y en remoto."],
+      ["No es una lista para presumir — es una especificación. Si sientes que falta alguno de estos en tu proyecto actual, ahí es donde ayudo.", "Lo que puedes esperar cuando trabajamos juntos."],
+      ["Cada marca es un producto real que construí o en el que contribuí — desde plataformas SaaS del Golfo hasta una flota de marcas de farmacia de EE. UU. y Reino Unido. Cada nombre abre su sitio en vivo.", "Cada nombre es un producto real que construí o en el que contribuí, desde plataformas SaaS del Golfo hasta marcas de farmacia de EE. UU. y Reino Unido. Cada uno abre su sitio en vivo."],
     ],
-    position: '',
+    position: "Trato un producto como un solo sistema, no como un montón de funciones. Diseño cómo encajan las piezas, construyo cada capa y sigo respondiendo cuando tiene que escalar.",
     pinnedStat: 'Proyectos fijados',
     footBuild: 'Qué construyo',
     footStack: 'Tecnologías',
@@ -1837,12 +1889,27 @@ const HUMAN_COPY = {
     hi: 'Bonjour, je suis Ahmed. Vous travaillez directement avec moi, du premier appel au lancement.',
     caseCta: 'Besoin de quelque chose de similaire ?',
     headings: {
+      "Chaque système, livré et lié.": "Des produits en ligne que j’ai construits.",
+      "Quatre étapes, puis on livre.": "Comment se déroule un projet.",
+      "Trois façons de me mettre au travail.": "Trois façons de travailler ensemble.",
+      "Ce que mes collègues ont vraiment dit.": "Ce que disent clients et collègues.",
+      "Livrez le système dont vous avez vraiment besoin.": "Parlez-moi de ce que vous construisez.",
+      "Des forfaits clairs, adaptés à vous.": "Des prix clairs, dès le départ.",
+      "Les questions que tout le monde pose.": "Questions fréquentes.",
+      "Six domaines que je maîtrise couramment.": "Ce que je construis.",
+      "Domaines pour lesquels j'ai livré de vrais systèmes.": "Secteurs dans lesquels j’ai travaillé.",
+      "Logos of teams & products I've shipped.": "Équipes et produits pour lesquels j’ai livré.",
+      "Le stack, sans les mots à la mode.": "Ma stack technique.",
+      "Du code que je suis prêt à publier.": "Code open source.",
+      "Rôles, par ordre d'arrivée.": "Expérience.",
+      "Ce que vous obtenez d'habitude vs. ce que j'apporte.": "Pourquoi les clients travaillent directement avec moi.",
+      "Retrouvez-moi là où vous travaillez.": "Où me trouver.",
       'Concepts, démos et travaux récents.': 'Projets clients plus courts.',
       'Livré pour des équipes dans 17+ pays.': 'Clients et produits dans 17+ pays.',
     },
     text: [
       ["Every mark is a real product I built or contributed to — from Gulf SaaS platforms to a fleet of US & UK pharmacy brands. Hover to pause; click any logo to open its live site.", "Chaque nom est un vrai produit que j’ai construit ou auquel j’ai contribué, des plateformes SaaS du Golfe aux marques de pharmacies aux États-Unis et au Royaume-Uni. Chaque lien ouvre le site en ligne."],
-      ["Je cherche un poste senior en ingénierie à temps plein à Dubaï — c'est mon objectif aujourd'hui. Je suis actuellement à temps plein chez Recovery Advisers (à distance) et je prends quelques missions freelance en parallèle ; elles sont sur la page services.", 'Les deux. Je suis à temps plein chez Recovery Advisers (à distance) et je ne prends que quelques projets clients à la fois, pour que chacun reçoive l’attention qu’il mérite. Les forfaits et les tarifs sont sur la page services.'],
+      ["Je cherche un poste senior en ingénierie à temps plein à Dubaï — c'est mon objectif aujourd'hui. Je suis actuellement à temps plein chez Recovery Advisers (à distance) et je prends quelques missions freelance en parallèle ; elles sont sur la page services.", 'Les deux. Je suis à temps plein chez Recovery Advisers (à distance) et je prends des projets clients de toute taille : les plus importants sont menés avec une équipe éprouvée d’ingénieurs avec qui je travaille, et votre interlocuteur reste moi du début à la fin. Les forfaits et les tarifs sont sur la page services.'],
       ['EAU, Arabie saoudite, États-Unis et Égypte.', 'EAU, Arabie saoudite, États-Unis, Royaume-Uni, Espagne et Égypte.'],
       ['Concepts de design, démos client et réalisations plus courtes — tous en ligne sur mon propre domaine, pour que vous cliquiez plutôt que de me croire sur parole. Chacun est étiqueté pour ce qu’il est vraiment.', 'Réalisations et démos client, en ligne sur mon propre domaine pour que vous cliquiez dessus. Chacune est étiquetée pour ce qu’elle est.'],
       ['Concepts & réalisations', 'Projets clients'],
@@ -1852,8 +1919,18 @@ const HUMAN_COPY = {
       [" dépôts publics couvrant outils TypeScript, PHP et notebooks ML. La majorité du travail client est sous NDA.", " dépôts publics. L’essentiel de mon travail client est privé, sous NDA."],
       ["Code source, projets épinglés et notebooks ML.", "Mon code public. Le travail client reste privé."],
       ["ElastiCache, PayFort.", "ElastiCache."],
+      ["Le portfolio complet — d'abord les SaaS phares, puis le reste. Chaque entrée renvoie directement au produit en ligne, à la fiche du store ou au panneau admin, extrait de mon profil GitHub.", "D’abord les SaaS phares, puis le reste. Chaque entrée renvoie au produit en ligne, à sa fiche sur les stores ou à son panneau d’administration."],
+      ["Mon processus n'a rien de secret — il est juste discipliné. Même forme que la mission dure six semaines ou six mois.", "Rien de secret : les mêmes quatre étapes, que le travail dure six semaines ou six mois."],
+      ["Vous préférez du sur-mesure ou du plus long terme ? Voici comment nous pouvons collaborer — chaque mission commence par un appel de 30 minutes.", "Du sur-mesure ou du plus long terme ? Voici comment nous pouvons collaborer. Chaque mission commence par un appel de 30 minutes."],
+      ["Chaque projet est chiffré après un appel de 30 minutes — sans surprises, sans dérive horaire.", "Chaque projet est chiffré après un appel de 30 minutes, sans surprise et sans facturation à l’heure."],
+      ["L'étendue d'un ingénieur senior, réduite à ce que je livre réellement — pas à ce qui figure sur le CV. La plupart des projets en couvrent deux ou trois à la fois.", "Ce que je construis le plus souvent. La plupart des projets en combinent deux ou trois."],
+      ["Si la vôtre n'y est pas, posez-la directement — en bas de la page.", "Si la vôtre n’y est pas, posez-la-moi directement en bas de la page."],
+      ["Ce que j'utilise vraiment, et pourquoi. Pas de framework du mois — juste les outils ennuyeux qui survivent au contact de la production.", "Ce que j’utilise, et pourquoi. Surtout des outils éprouvés qui tiennent en production."],
+      ["Cinq principes que j'applique à chaque projet. Ce ne sont pas des lois — ce sont des a priori que je suis prêt à briser sur preuves.", "Cinq principes que j’applique à chaque projet, et que j’abandonne quand les faits disent le contraire."],
+      ["Temps plein et freelance, sur site et à distance. Le fil conducteur n'est pas le titre — c'est le travail livré.", "Postes à temps plein et missions freelance, sur site et à distance."],
+      ["Pas une liste pour se vanter — un cahier des charges. Si l'un de ces points manque sur votre projet actuel, c'est là que j'interviens.", "Ce à quoi vous pouvez vous attendre en travaillant avec moi."],
     ],
-    position: '',
+    position: "Je traite un produit comme un seul système, pas comme un empilement de fonctionnalités. Je conçois la façon dont les pièces s’assemblent, je construis chaque couche et je reste responsable quand il faut passer à l’échelle.",
     pinnedStat: 'Projets épinglés',
     footBuild: 'Ce que je construis',
     footStack: 'Technologies',
@@ -2744,6 +2821,8 @@ async function snapshotVariant({ page, spec, lang, locales }) {
             tagline: (art.querySelector('.case-tagline')?.textContent || '').trim(),
             chips: [...art.querySelectorAll('.case-stack .chip')].map((c) => (c.textContent || '').trim()).filter(Boolean),
             shot: ([...art.querySelectorAll('img')].find((i) => !i.closest('.case-links') && !i.classList.contains('chip-fav'))?.getAttribute('src')) || '',
+            // The deep dive’s second block (the hard part), for llms.txt.
+            hard: ([...art.querySelectorAll('.dd-block')][1]?.querySelector('p')?.textContent || '').trim(),
           };
           articles.forEach((c) => { if (c !== art) c.remove(); });
           const wrap = workSec.querySelector(':scope > .wrap');
@@ -3183,6 +3262,22 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         col.remove();
         document.querySelector('#github .gh').classList.add('gh-solo');
       } else warnings.push('about: GitHub repo list or profile card not found — left as exported');
+      // Experience: Ibdaa Course and Applyni are case studies with their
+      // founder’s recommendation on home, so they belong in the freelance
+      // client list too (cloned from its last chip, same markup and icon).
+      const lastChip = [...document.querySelectorAll('.co-chip')].find((c) => c.textContent.trim() === 'Alnaimi Studios');
+      if (lastChip) {
+        const have = new Set([...lastChip.parentElement.querySelectorAll('.co-chip')].map((c) => c.textContent.trim()));
+        let at = lastChip;
+        for (const [name, href] of [['Ibdaa Course', 'https://ibdaacourse.com/'], ['Applyni', 'https://applyni.com/']]) {
+          if (have.has(name)) continue;
+          const chip = lastChip.cloneNode(true);
+          chip.href = href;
+          chip.firstChild.nodeValue = name;
+          at.after(chip);
+          at = chip;
+        }
+      } else warnings.push('about: freelance client chips not found — Ibdaa Course and Applyni not added');
       // The pinned list is gone, so its count goes too.
       const pinned = [...document.querySelectorAll('#github .gh-stat')]
         .find((st) => (st.querySelector('.l')?.textContent || '').trim() === copy.human.pinnedStat);
@@ -3562,6 +3657,42 @@ function projectSeo(project, lang) {
     description = joined();
   }
   return { title, description };
+}
+
+// ── One shared stylesheet ──────────────────────────────────────────────────
+// Every page carried the same ~117 KB of CSS inline, so each page view
+// downloaded it again. The page’s own style blocks (everything but the small
+// <noscript> fallback) move to one content-hashed file in /assets/, written
+// once and cached across pages and locales. The blocks sit next to each other
+// in the head, so joining them keeps the cascade order.
+const SITE_CSS_MIN = 4096;
+async function externalizeCss(html) {
+  const { createHash } = await import('node:crypto');
+  const blocks = [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].filter((m) => m[1].length >= SITE_CSS_MIN);
+  if (!blocks.length) throw Object.assign(new Error('[build] no page stylesheet found to move to /assets/'), { fatal: true });
+  const css = blocks.map((m) => m[1]).join('');
+  const file = `/assets/site-${createHash('sha1').update(css).digest('hex').slice(0, 12)}.css`;
+  const disk = path.join(DIST, file.slice(1));
+  if (!existsSync(disk)) await writeFile(disk, css, 'utf8');
+  let first = true;
+  return html.replace(/<style>([\s\S]*?)<\/style>/g, (m, body) => {
+    if (body.length < SITE_CSS_MIN) return m;
+    if (!first) return '';
+    first = false;
+    return `<link rel="stylesheet" href="${file}">`;
+  });
+}
+
+// Steps that read CSS back out of a built page (the standalone shell, the
+// share-card fonts) get the shared stylesheet inlined again, in place.
+async function withLinkedCss(html) {
+  for (const m of [...html.matchAll(/<link rel="stylesheet" href="(\/assets\/site-[0-9a-f]{12}\.css)">/g)]) {
+    const css = await readFile(path.join(DIST, m[1].slice(1)), 'utf8');
+    // A function, not a string: CSS like [href$='x'] holds "$'", which a
+    // replacement string would expand.
+    html = html.replace(m[0], () => `<style>${css}</style>`);
+  }
+  return html;
 }
 
 // Node-side assembly of one page: head, structured data, document, externalised
@@ -4141,6 +4272,18 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 /* /about/: the GitHub card on its own, with the link to the live profile. */
 #github .gh.gh-solo{grid-template-columns:minmax(0,640px)}
 #github .gh-profile-link{display:inline-block;margin-top:18px}
+/* Nav: the underline marks the page you are on (aria-current) and nothing
+   else. The export’s scroll-spy also lit Contact once the form scrolled into
+   view, so home looked like Contact was selected and inner pages showed two
+   selected items at once. */
+.nav-links a.active:not([aria-current=page]){color:var(--ink-mute)}
+.nav-links a.active:not([aria-current=page]):hover{color:var(--ink)}
+.nav-links a.active:not([aria-current=page])::after{content:none}
+/* The product strip under the hero: the site’s sans, like every other name. */
+.trust-name{font-family:var(--sans);font-style:normal;font-weight:500;font-size:18px;letter-spacing:-.02em}
+/* Home on a phone: flagship cards keep the screenshot, name and outcome; the
+   tagline and stack chips stay on /work/ and the case study. */
+@media (max-width:760px){#main > #work:not(:first-child) .writing-card .writing-card-desc,#main > #work:not(:first-child) .writing-card .case-stack{display:none}}
 /* /services/ and /work/ open on a section head, with no eyebrow or crumbs
    above it, so the fixed nav sat almost on the headline. */
 #main > #pricing:first-child,#main > #work:first-child{padding-top:150px}
@@ -4253,6 +4396,7 @@ ${enhanceJS ? `<script>${enhanceForVariant(enhanceJS, spec)}</script>` : ''}
     console.log('  (html-minifier-terser not present — writing unminified)');
   }
 
+  out = await externalizeCss(out);
   await writeFile(path.join(outDir, 'index.html'), out, 'utf8');
 
   const before = (await import('node:fs')).statSync(loc.src).size;
@@ -4365,6 +4509,9 @@ async function build() {
     const vp = await vb.newPage();
     const vErrors = [];
     vp.on('pageerror', (e) => vErrors.push(String(e)));
+    // Loaded from file://, so root-absolute /assets/ links (the shared
+    // stylesheet, fonts, images) do not resolve here: this checks content,
+    // not styling. The internal-links gate proves every /assets/ target exists.
     await vp.goto(pathToFileURL(path.join(loc.outDir, spec.suffix, 'index.html')).href, { waitUntil: 'load', timeout: 60000 });
     const check = await vp.evaluate(() => ({
       text: (document.body.innerText || '').length,
