@@ -24,7 +24,7 @@ import { mkdir, writeFile, copyFile, rm, readdir, readFile } from 'node:fs/promi
 import { existsSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { SITE_URL, LOCATION, LOCATION_LABEL, CONTACT, YEARS_PROSE, SEO, NAV, FLAGSHIP, DRIFT_GUARDS, ANALYTICS, METRICS } from './site-facts.mjs';
+import { SITE_URL, LOCATION, LOCATION_LABEL, CONTACT, YEARS_PROSE, SEO, NAV, FLAGSHIP, DRIFT_GUARDS, ANALYTICS, METRICS, CLIENT_QUOTES } from './site-facts.mjs';
 import { inspectPdf, pdfProblems, textFingerprint, PDF_REQUIRED_URIS } from './pdf-check.mjs';
 import { faviconSvg, appleIconSvg, badgeSvg, ICON_LINKS } from './brand-mark.mjs';
 import { renderChecklist, CHECKLIST_PDF, CHECKLIST_REQUIRED_URIS, CHECKLIST_REQUIRED_TEXT } from './build-checklist.mjs';
@@ -1589,6 +1589,7 @@ const HUMAN_COPY = {
       ['UAE, Saudi Arabia, the United States, and Egypt.', 'UAE, Saudi Arabia, the United States, the UK, Spain and Egypt.'],
       ['Design concepts, client demos and smaller builds — all live on my own domain, so you can click through them instead of taking my word for it. Each one is labelled for what it actually is.', 'Client work and client demos, live on my own domain so you can click through them. Each one is labelled for what it is.'],
       ['Concepts & builds', 'Client builds'],
+      ['Recommendations from people who managed me directly, verified on LinkedIn.', 'Clients and the people who managed me, in their own words. The LinkedIn-verified one is marked.'],
     ],
     position: 'I treat a product as one system, not a pile of features. I design how the parts fit together, build every layer, and stay on the hook when it has to scale.',
   },
@@ -1633,6 +1634,7 @@ const HUMAN_COPY = {
       ['الإمارات والسعودية والولايات المتحدة ومصر.', 'الإمارات والسعودية والولايات المتحدة والمملكة المتحدة وإسبانيا ومصر.'],
       ['مفاهيم تصميمية وعروض تجريبية لعملاء وأعمال أصغر — جميعها منشورة على نطاقي الخاص، لتتصفّحها بنفسك بدل أن تأخذ كلامي. وكلٌّ منها موسوم بما هو عليه فعلًا.', 'أعمال وعروض تجريبية لعملاء، منشورة على نطاقي الخاص لتتصفّحها بنفسك. وكلٌّ منها موسوم بما هو عليه.'],
       ['مفاهيم وأعمال', 'أعمال لعملاء'],
+      ['توصيات من أشخاص أداروني مباشرةً، موثّقة على LinkedIn.', 'عملاء وأشخاص أداروني، بكلماتهم. والتوصية الموثّقة على LinkedIn عليها علامة.'],
       ['احجز مكالمة تحديد نطاق مدتها ٣٠ دقيقة', 'احجز مكالمة مدتها ٣٠ دقيقة'],
     ],
     position: 'أتعامل مع المنتج كنظام واحد، لا كمجموعة مزايا متفرّقة. أصمّم كيف تترابط أجزاؤه، وأبني كل طبقاته، وأبقى مسؤولًا عنه حين يكبر.',
@@ -1663,6 +1665,7 @@ const HUMAN_COPY = {
       ['VAE, Saudi-Arabien, die Vereinigten Staaten und Ägypten.', 'VAE, Saudi-Arabien, die USA, Großbritannien, Spanien und Ägypten.'],
       ['Designkonzepte, Kunden-Demos und kleinere Builds — alle live auf meiner eigenen Domain, damit Sie durchklicken können, statt mir zu glauben. Jedes ist als das gekennzeichnet, was es wirklich ist.', 'Kundenarbeiten und Kunden-Demos, live auf meiner eigenen Domain zum Durchklicken. Jede ist als das gekennzeichnet, was sie ist.'],
       ['Konzepte & Builds', 'Kundenprojekte'],
+      ['Empfehlungen von Personen, die mich direkt geführt haben, verifiziert auf LinkedIn.', 'Kunden und Vorgesetzte, in ihren eigenen Worten. Die auf LinkedIn verifizierte Empfehlung ist markiert.'],
     ],
     position: '',
   },
@@ -1692,6 +1695,7 @@ const HUMAN_COPY = {
       ['EAU, Arabia Saudí, Estados Unidos y Egipto.', 'EAU, Arabia Saudí, Estados Unidos, Reino Unido, España y Egipto.'],
       ['Conceptos de diseño, demos para clientes y trabajos más pequeños — todos publicados en mi propio dominio, para que los recorras en vez de creerme. Cada uno está etiquetado por lo que realmente es.', 'Trabajos y demos para clientes, publicados en mi propio dominio para que los recorras. Cada uno está etiquetado por lo que es.'],
       ['Conceptos y builds', 'Proyectos de clientes'],
+      ['Recomendaciones de personas que me supervisaron directamente, verificadas en LinkedIn.', 'Clientes y personas que me supervisaron, con sus propias palabras. La recomendación verificada en LinkedIn está marcada.'],
     ],
     position: '',
   },
@@ -1721,6 +1725,7 @@ const HUMAN_COPY = {
       ['EAU, Arabie saoudite, États-Unis et Égypte.', 'EAU, Arabie saoudite, États-Unis, Royaume-Uni, Espagne et Égypte.'],
       ['Concepts de design, démos client et réalisations plus courtes — tous en ligne sur mon propre domaine, pour que vous cliquiez plutôt que de me croire sur parole. Chacun est étiqueté pour ce qu’il est vraiment.', 'Réalisations et démos client, en ligne sur mon propre domaine pour que vous cliquiez dessus. Chacune est étiquetée pour ce qu’elle est.'],
       ['Concepts & réalisations', 'Projets clients'],
+      ["Recommandations de personnes qui m'ont encadré directement, vérifiées sur LinkedIn.", 'Des clients et des personnes qui m’ont encadré, avec leurs propres mots. La recommandation vérifiée sur LinkedIn est signalée.'],
     ],
     position: '',
   },
@@ -2924,6 +2929,32 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         tagline.after(p);
       } else warnings.push('case: no outcome line or .case-tagline — none added');
     }
+    // Client testimonials (CLIENT_QUOTES) first, cut from the export's own card
+    // so they look the same, without the LinkedIn badge and link: those mark
+    // recommendations that are on LinkedIn. The Flutter-developer
+    // recommendation goes; it pitched the secondary lane.
+    const testsGrid = document.querySelector('.tests');
+    if (testsGrid && copy.clientQuotes.length) {
+      const cards = [...testsGrid.querySelectorAll(':scope > .test')];
+      const whoOf = (c) => (c.querySelector('.who')?.textContent || '').trim();
+      const template = cards.find((c) => whoOf(c) !== 'Abdullah Mohamed');
+      if (template && template.querySelector('.test-quote') && template.querySelector('.av') && template.querySelector('.role')) {
+        cards.filter((c) => whoOf(c) === 'Abdullah Mohamed').forEach((c) => c.remove());
+        const first = testsGrid.querySelector(':scope > .test');
+        copy.clientQuotes.forEach((q) => {
+          const card = template.cloneNode(true);
+          card.querySelectorAll('.test-verified, .test-link').forEach((e) => e.remove());
+          card.querySelector('.test-quote').textContent = `"${q.quote}"`;
+          const av = card.querySelector('.av');
+          av.textContent = q.initials;
+          av.setAttribute('aria-hidden', 'true');
+          card.querySelector('.who').textContent = q.name;
+          card.querySelector('.role').textContent = q.role;
+          testsGrid.insertBefore(card, first);
+        });
+        testsGrid.classList.add('tests-many');
+      } else warnings.push('testimonials: no card to copy the client quotes from — left as exported');
+    }
     // Numbered lists read as a template: "What I do" /01–/04 and the ways to
     // work 01–03. The process steps keep theirs; they are a sequence.
     document.querySelectorAll('.position-list .num, .service-card .service-num').forEach((e) => e.remove());
@@ -3197,7 +3228,8 @@ async function snapshotVariant({ page, spec, lang, locales }) {
   }, spec, locales.map((l) => l.lang), FAQ_BUYER_KEYS[lang] || FAQ_BUYER_KEYS.en, prefix, PAGE_LAYOUT, SECTION_KEYS,
     { owner: LINK_OWNER, paths: Object.fromEntries(PAGE_SPECS.map((s) => [s.key, s.suffix])) },
     NAV[lang],
-    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en, caseStudies: METRICS.caseStudies.display, conceptHosts: CONCEPT_HOSTS }));
+    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en, caseStudies: METRICS.caseStudies.display, conceptHosts: CONCEPT_HOSTS,
+      clientQuotes: CLIENT_QUOTES.map((q) => ({ name: q.name, initials: q.initials, role: q.role[lang] || q.role.en, quote: q.quote[lang] || q.quote.en })) }));
 
   // Layout passes are best-effort: a re-export that renames a class leaves the
   // page as the export drew it, which is valid, so warn rather than fail.
@@ -3811,6 +3843,8 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 .position-list li{grid-template-columns:1fr}
 /* Home: each way to work names its package and starting price. */
 .service-pkg{margin:-4px 0 12px;font-family:var(--mono);font-size:12px;color:var(--accent)}
+/* Testimonials: six cards read better three across on a wide screen. */
+@media (min-width:1101px){.tests.tests-many{grid-template-columns:repeat(3,1fr)}}
 /* Project pages: the outcome, under the tagline. */
 .case-outcome{margin:10px 0 0;color:var(--ink);font-size:17px;line-height:1.5}
 /* Flagship cards: the outcome line is a sentence, not a metric. */
