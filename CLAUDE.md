@@ -24,6 +24,7 @@ Personal portfolio site deployed to GitHub Pages. Claude Design exports (`index*
 - Changes to `deploy.yml` affect production deploys; treat as infrastructure.
 - To add or move a page or section, change `PAGE_SPECS` (plus `SEO`/`NAV` in `site-facts.mjs`); the build refuses a spec missing any of them. Never relax a build gate to get green.
 - Old `/#<id>` links to sections that left home are redirected by the build (`REDIRECTS`); keep section ids stable.
+- CSS written inside `build.mjs` goes through the minifier (clean-css), which **silently drops every rule after** a custom property with no trailing semicolon followed by a comment, or an unmatched straight quote in a comment. End custom properties with `;`, write `’` in comments, and confirm a new rule is present in `dist/` after building.
 
 **Sensitive areas (treat changes as higher blast radius).**
 - `scripts/build.mjs`

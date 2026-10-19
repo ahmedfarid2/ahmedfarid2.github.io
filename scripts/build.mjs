@@ -24,7 +24,7 @@ import { mkdir, writeFile, copyFile, rm, readdir, readFile } from 'node:fs/promi
 import { existsSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { SITE_URL, LOCATION, LOCATION_LABEL, CONTACT, YEARS_PROSE, SEO, NAV, FLAGSHIP, DRIFT_GUARDS, ANALYTICS } from './site-facts.mjs';
+import { SITE_URL, LOCATION, LOCATION_LABEL, CONTACT, YEARS_PROSE, SEO, NAV, FLAGSHIP, DRIFT_GUARDS, ANALYTICS, METRICS } from './site-facts.mjs';
 import { inspectPdf, pdfProblems, textFingerprint, PDF_REQUIRED_URIS } from './pdf-check.mjs';
 import { faviconSvg, appleIconSvg, badgeSvg, ICON_LINKS } from './brand-mark.mjs';
 import { renderChecklist, CHECKLIST_PDF, CHECKLIST_REQUIRED_URIS, CHECKLIST_REQUIRED_TEXT } from './build-checklist.mjs';
@@ -1502,8 +1502,12 @@ const HOME_COPY = {
 //             their wording and only lose the gold-italic styling, in CSS)
 //   text      exact sentence fragments → rewrites without the em dashes (en)
 //   position  the home position statement, rewritten without metaphors
+//   navCta    the nav pill, which now books the call
+//   caseCount the label of /about/'s first number (METRICS.caseStudies)
 const HUMAN_COPY = {
   en: {
+    navCta: 'Book a call',
+    caseCount: 'Case studies, each linked to the live product',
     hi: "Hi, I'm Ahmed. You'll work with me directly, from the first call to launch.",
     caseCta: 'Need something like this built?',
     headings: {
@@ -1544,10 +1548,21 @@ const HUMAN_COPY = {
       ["we re-scope together — I don't run an hourly meter.", "we re-scope together. I don't run an hourly meter."],
       ["If yours isn't here, ask it directly — bottom of the page.", "If yours isn't here, ask me directly at the bottom of the page."],
       ['Most start as a 3-week scoped build — a defined slice', 'Most start as a 3-week scoped build: a defined slice'],
+      ["What I actually reach for, and why. No frameworks-of-the-month — just the boring tools that survive contact with production.", "What I use, and why. Mostly proven tools that hold up in production."],
+      ["Five principles I apply across every project. They're not laws — they're priors I'm willing to break with evidence.", "Five principles I apply on every project, and drop when the evidence says otherwise."],
+      ["Full-time and freelance, on-site and remote. The throughline isn't the title — it's the work shipped.", "Full-time and freelance roles, on-site and remote."],
+      ["Not a brag list — a spec. If any of these feel like they're missing on your current project, that's where I help.", "What you can expect when we work together."],
+      ["Backend, web, mobile, infra — held together by one person.", "Backend, web, mobile and infra, handled by one person."],
+      ["Quotes business outcomes — and the trade-offs to get there.", "Talks in business outcomes, and the trade-offs behind them."],
+      ["Engineering breakdowns, architecture decisions, and lessons from shipping — posted on LinkedIn.", "Short notes on engineering and shipping, posted on LinkedIn."],
+      ["Every mark is a real product I built or contributed to — from Gulf SaaS platforms to a fleet of US & UK pharmacy brands. Hover to pause; click any logo to open its live site.", "Every name here is a real product I built or contributed to, from Gulf SaaS platforms to US and UK pharmacy brands. Each one opens its live site."],
+      ["A senior engineer's range, narrowed to what I actually ship — not what's on the résumé. Most projects sit across two or three of these at once.", "What I build most often. Most projects combine two or three of these."],
     ],
     position: 'I treat a product as one system, not a pile of features. I design how the parts fit together, build every layer, and stay on the hook when it has to scale.',
   },
   ar: {
+    navCta: 'احجز مكالمة',
+    caseCount: 'دراسة حالة، كلٌّ منها مرتبط بالمنتج الحيّ',
     hi: 'أهلًا، أنا أحمد. ستعمل معي مباشرةً، من أول مكالمة حتى الإطلاق.',
     caseCta: 'تحتاج إلى نظام مثل هذا؟',
     headings: {
@@ -1568,12 +1583,44 @@ const HUMAN_COPY = {
       'ملاحظات من البناء في العلن.': 'كتابات.',
       'اعثر عليّ حيث تعمل.': 'حساباتي على الإنترنت.',
     },
-    text: [],
+    text: [
+      ["مرّر للإيقاف المؤقّت؛ انقر أي شعار لفتح موقعه الحيّ.", "كل اسم يفتح موقعه الحيّ."],
+    ],
     position: 'أتعامل مع المنتج كنظام واحد، لا كمجموعة مزايا متفرّقة. أصمّم كيف تترابط أجزاؤه، وأبني كل طبقاته، وأبقى مسؤولًا عنه حين يكبر.',
   },
-  de: { hi: 'Hallo, ich bin Ahmed. Sie arbeiten direkt mit mir, vom ersten Gespräch bis zum Launch.', caseCta: 'Sie brauchen etwas Ähnliches?', headings: {}, text: [], position: '' },
-  es: { hi: 'Hola, soy Ahmed. Trabajarás directamente conmigo, desde la primera llamada hasta el lanzamiento.', caseCta: '¿Necesitas algo parecido?', headings: {}, text: [], position: '' },
-  fr: { hi: 'Bonjour, je suis Ahmed. Vous travaillez directement avec moi, du premier appel au lancement.', caseCta: 'Besoin de quelque chose de similaire ?', headings: {}, text: [], position: '' },
+  de: {
+    navCta: 'Gespräch buchen',
+    caseCount: 'Fallstudien, jede mit dem Live-Produkt verlinkt',
+    hi: 'Hallo, ich bin Ahmed. Sie arbeiten direkt mit mir, vom ersten Gespräch bis zum Launch.',
+    caseCta: 'Sie brauchen etwas Ähnliches?',
+    headings: {},
+    text: [
+      ["Every mark is a real product I built or contributed to — from Gulf SaaS platforms to a fleet of US & UK pharmacy brands. Hover to pause; click any logo to open its live site.", "Jeder Name ist ein echtes Produkt, das ich gebaut oder mitentwickelt habe, von SaaS-Plattformen am Golf bis zu Apothekenmarken in den USA und Großbritannien. Jeder Link öffnet die Live-Website."],
+    ],
+    position: '',
+  },
+  es: {
+    navCta: 'Reservar una llamada',
+    caseCount: 'Casos de estudio, cada uno enlazado al producto en vivo',
+    hi: 'Hola, soy Ahmed. Trabajarás directamente conmigo, desde la primera llamada hasta el lanzamiento.',
+    caseCta: '¿Necesitas algo parecido?',
+    headings: {},
+    text: [
+      ["Pasa el cursor para pausar; haz clic en cualquier logo para abrir su sitio en vivo.", "Cada nombre abre su sitio en vivo."],
+    ],
+    position: '',
+  },
+  fr: {
+    navCta: 'Réserver un appel',
+    caseCount: 'Études de cas, chacune liée au produit en ligne',
+    hi: 'Bonjour, je suis Ahmed. Vous travaillez directement avec moi, du premier appel au lancement.',
+    caseCta: 'Besoin de quelque chose de similaire ?',
+    headings: {},
+    text: [
+      ["Every mark is a real product I built or contributed to — from Gulf SaaS platforms to a fleet of US & UK pharmacy brands. Hover to pause; click any logo to open its live site.", "Chaque nom est un vrai produit que j’ai construit ou auquel j’ai contribué, des plateformes SaaS du Golfe aux marques de pharmacies aux États-Unis et au Royaume-Uni. Chaque lien ouvre le site en ligne."],
+    ],
+    position: '',
+  },
 };
 // Which HUMAN_COPY headings/text a locale's pages actually used; reported after
 // the render so a re-export that rewords one shows up as a warning.
@@ -1690,7 +1737,7 @@ const PAGE_SPECS = [
   },
   {
     key: 'services', suffix: 'services/',
-    sections: ['pricing', 'services', 'faq', 'contact'],
+    sections: ['pricing', 'services', 'build', 'domains', 'faq', 'contact'],
     keepUnknown: false, faq: 'buyer', anchors: 'resolve', renumber: true,
     sortWriting: false, foldCases: false, contactFirst: 'project', promoteH1: true,
     ld: ['faq', 'breadcrumb'], priority: '0.8',
@@ -1698,11 +1745,11 @@ const PAGE_SPECS = [
   },
   {
     key: 'work', suffix: 'work/',
-    sections: ['work', 'products', 'builds', 'build', 'domains', 'brands', 'regions', 'contact'],
+    sections: ['work', 'products', 'builds', 'brands', 'regions', 'contact'],
     keepUnknown: false, faq: null, anchors: 'resolve', renumber: true, work: 'teaser',
     sortWriting: false, foldCases: true, contactFirst: 'project', promoteH1: true,
     ld: ['collection', 'breadcrumb'], priority: '0.8',
-    verify: { minText: 8198, minSections: 4 },      // measured 11712 chars, 7 sections (flagship write-ups moved to their own pages)
+    verify: { minText: 5642, minSections: 4 },      // measured 8060 chars, 6 sections (Oct 2026: "What I build" and Industries moved to /services/, the further case studies became compact cards)
   },
   {
     key: 'about', suffix: 'about/',
@@ -1730,7 +1777,7 @@ const LINK_OWNER = {
   top: 'home', 'what-i-do': 'home', trust: 'home', process: 'home', testimonials: 'home', bynumbers: 'about',
   about: 'about', depth: 'about', arch: 'about', github: 'about', experience: 'about',
   why: 'about', writing: 'about', connect: 'about',
-  work: 'work', products: 'work', builds: 'work', build: 'work', domains: 'work',
+  work: 'work', products: 'work', builds: 'work', build: 'services', domains: 'services',
   brands: 'work', regions: 'work',
   pricing: 'services', services: 'services', faq: 'services',
 };
@@ -2647,6 +2694,80 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         meta.appendChild(box);
       } else warnings.push('case: .case-meta or the scoping-call link not found — no side-column call button');
     }
+    // About: the portrait badge said "Open to work · Now", which on a client
+    // site reads as job hunting.
+    document.querySelectorAll('.about-portrait-badge').forEach((b) => b.remove());
+    // By the numbers: "9+ flagship platforms" contradicted the five flagships
+    // the site shows; the first tile counts the case studies instead.
+    const firstNum = document.querySelector('#bynumbers .bynum');
+    if (firstNum && H2.caseCount) {
+      const v = firstNum.querySelector('.bynum-v');
+      const l = firstNum.querySelector('.bynum-l');
+      const digits = localePrefix === '/ar/' ? copy.caseStudies.replace(/[0-9]/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]) : copy.caseStudies;
+      if (v && l) { v.textContent = digits; l.textContent = H2.caseCount; humanHits.push('caseCount'); }
+    }
+    // Ibdaa Course left alpha: production is ibdaacourse.com, and the
+    // "working title, pending the client's brand" note is out of date.
+    document.querySelectorAll('a[href^="https://alpha.ibdaacourse.com"]').forEach((a) => {
+      a.setAttribute('href', a.getAttribute('href').replace('https://alpha.ibdaacourse.com', 'https://ibdaacourse.com'));
+    });
+    document.querySelectorAll('.shot-url').forEach((u) => {
+      for (const n of u.childNodes) if (n.nodeType === 3 && n.nodeValue.trim() === 'alpha.ibdaacourse.com') n.nodeValue = 'ibdaacourse.com';
+    });
+    document.querySelectorAll('article.case').forEach((art) => {
+      if ((art.querySelector('.case-name')?.textContent || '').trim() !== 'Ibdaa Course') return;
+      art.querySelectorAll('.case-meta > .fineprint').forEach((f, i) => { if (i > 0) f.remove(); });
+    });
+    // Nav: no "01 02 03" index numbers, and the pill beside the links books
+    // the call instead of repeating the Contact link.
+    document.querySelectorAll('.nav .idx').forEach((e) => e.remove());
+    const navCall = document.querySelector('#contact a[href*="calendly.com"]');
+    if (navCall && H2.navCta) {
+      document.querySelectorAll('a.nav-cta, a.nav-mobile-avail').forEach((a) => {
+        a.setAttribute('href', navCall.getAttribute('href'));
+        a.setAttribute('target', '_blank');
+        a.setAttribute('rel', 'noreferrer');
+        for (const n of [...a.childNodes]) if (n.nodeType === 3) n.remove();
+        a.appendChild(document.createTextNode(H2.navCta));
+      });
+    } else warnings.push('nav: scoping-call link not found — nav pill left as exported');
+    // /work/: the logo wall loaded each mark from the product's site or from
+    // Google's favicon service, so most rendered as blank tiles. Plain linked
+    // names instead, once each (the marquee repeats every tile).
+    if (pageSpec.key === 'work') {
+      const wall = document.querySelector('#brands .logo-wall');
+      if (wall) {
+        const wrap = document.createElement('div');
+        wrap.className = 'wrap';
+        const list = document.createElement('div');
+        list.className = 'brand-list';
+        const seen = new Set();
+        wall.querySelectorAll('a.logo-tile').forEach((t) => {
+          const href = t.getAttribute('href');
+          const name = (t.querySelector('.logo-tile-cap')?.textContent || t.getAttribute('title') || '').trim();
+          if (!href || !name || seen.has(href)) return;
+          seen.add(href);
+          const a = document.createElement('a');
+          a.className = 'chip';
+          a.setAttribute('href', href);
+          a.setAttribute('target', '_blank');
+          a.setAttribute('rel', 'noreferrer');
+          a.textContent = name;
+          list.appendChild(a);
+        });
+        wrap.appendChild(list);
+        wall.replaceWith(wrap);
+      } else warnings.push('brands: .logo-wall not found — left as exported');
+    }
+    // /services/: what I build and the industries sit after the ways to work
+    // together (the export orders them before the price list).
+    if (pageSpec.key === 'services') {
+      const svc = document.getElementById('services');
+      const build = document.getElementById('build');
+      const domains = document.querySelector('.industries')?.closest('section');
+      if (svc && build && domains) { svc.after(build); build.after(domains); }
+      else warnings.push('services: #services, #build or the industries section not found — left in export order');
+    }
 
     // Nav and footer links point at sections that may not be on this page.
     // One that is here stays an in-page link; one that lives on another page
@@ -2746,6 +2867,16 @@ async function snapshotVariant({ page, spec, lang, locales }) {
             inner.appendChild(n);
           });
           details.append(summary, inner);
+          // A long list after the impact strip (the RevealSite pharmacy
+          // fleet, each app with its store links) folds in too: /work/ shows
+          // these cases as compact cards.
+          body.querySelectorAll(':scope > .case-block').forEach((b) => {
+            if (b.querySelector('[class^="fleet-"]')) {
+              if (b.classList.contains('reveal')) b.classList.add('in');
+              b.classList.remove('reveal');
+              inner.appendChild(b);
+            }
+          });
         });
       }
     }
@@ -2841,7 +2972,7 @@ async function snapshotVariant({ page, spec, lang, locales }) {
   }, spec, locales.map((l) => l.lang), FAQ_BUYER_KEYS[lang] || FAQ_BUYER_KEYS.en, prefix, PAGE_LAYOUT, SECTION_KEYS,
     { owner: LINK_OWNER, paths: Object.fromEntries(PAGE_SPECS.map((s) => [s.key, s.suffix])) },
     NAV[lang],
-    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en }));
+    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en, caseStudies: METRICS.caseStudies.display }));
 
   // Layout passes are best-effort: a re-export that renames a class leaves the
   // page as the export drew it, which is valid, so warn rather than fail.
@@ -3307,8 +3438,12 @@ ${ICON_LINKS}
 ${jsonLd}
 <style>${result.css}</style>
 <style>
-/* Build fix: the Personalize widget's closed popup keeps its layout space
-   (opacity:0, not display:none), so the container's box was intercepting
+/* Two minifier (clean-css) traps that silently drop every rule after them:
+   a custom property with no trailing semicolon followed by a comment, so
+   end each one with a semicolon; and an unmatched straight quote in a
+   comment, so comments here use ’ (U+2019) instead. */
+/* Build fix: the Personalize widget’s closed popup keeps its layout space
+   (opacity:0, not display:none), so the container’s box was intercepting
    clicks/hover over the bottom-left — buttons there only worked after
    scrolling them out of that zone. Make the container click-through except
    its toggle and the open panel. */
@@ -3338,12 +3473,12 @@ ${jsonLd}
 @media (max-width:420px){.gh-card{padding:24px 20px}.gh-stat{padding:0 10px}.gh-stat .l{letter-spacing:.06em}
   .gh-heat-foot{gap:10px}.gh-heat-foot>:nth-child(2){text-align:center}}
 /* Italic gradient text (background-clip:text) is painted only inside the
-   element's box, so the last letter's italic overhang was cut off. Widen
+   element’s box, so the last letter’s italic overhang was cut off. Widen
    the box without moving the text; clone repeats that on every line the
    phrase wraps onto. */
 .cta h2 em,.hero-h1 .it{padding-inline-end:.12em;margin-inline-end:-.12em;
   -webkit-box-decoration-break:clone;box-decoration-break:clone}
-/* .cta-inner's own padding shorthand zeroed the .wrap gutter, so the closing
+/* .cta-inner’s own padding shorthand zeroed the .wrap gutter, so the closing
    copy touched the screen edge on phones. On phones the gutter now lives
    here and the contact rows drop the inline padding that compensated for
    it; wider layouts are unchanged. */
@@ -3362,9 +3497,9 @@ ${jsonLd}
 :root[data-corners=sharp] .case-more-summary{border-radius:2px}
 @media print{.case-more-summary{display:none}}
 /* Project pages: breadcrumb trail, the "all work" link under a card grid, the
-   flagship cards above /work/'s folded cases, and the case write-up shown open.
+   flagship cards above /work/’s folded cases, and the case write-up shown open.
    Its toggle stays and works: the panel starts open (max-height lifted, as the
-   write-up can outgrow the export's 2400px cap) and collapses to the export's
+   write-up can outgrow the export’s 2400px cap) and collapses to the export’s
    own closed state when it is clicked. Logical properties throughout, so
    Arabic mirrors without a second rule. */
 .crumbs ol{display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0 0 28px;padding:0;font-family:var(--mono);font-size:12px;color:var(--ink-dim)}
@@ -3374,7 +3509,7 @@ ${jsonLd}
 .work-flagships{margin-bottom:56px}
 #case .deepdive.open .deepdive-panel{max-height:none}
 /* The page the visitor is on, in the four-link navigation. Same mark the
-   export's scroll-spy uses for the section in view. */
+   export’s scroll-spy uses for the section in view. */
 .nav-links a[aria-current="page"]{color:var(--ink)}
 .nav-links a[aria-current="page"] span.idx{color:var(--accent)}
 .nav-links a[aria-current="page"]::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:1px;background:var(--accent);box-shadow:0 0 8px var(--accent-glow)}
@@ -3400,13 +3535,38 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 /* Working terms under the project contact path. */
 .contact-terms{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 20px;list-style:none;margin:-10px auto 0;padding:0;max-width:720px;font-size:13px;color:var(--ink-mute)}
 .contact-terms li::before{content:"✓";color:var(--accent);margin-inline-end:6px}
-/* The floating Personalize (theme) button is the design tool's, not the
-   site's: on phones it landed on the hero's second button, and on desktop it
+/* The floating Personalize (theme) button is the design tool, not the
+   site: on phones it landed on the second hero button, and on desktop it
    was the clearest sign the page came out of a template. Hidden everywhere. */
 .palette{display:none!important}
-/* One gold accent per page, the hero's. A section heading that still carries
-   an <em> (de/es/fr keep their wording) renders it as plain text. */
-.section-title em,.cta h2 em,.position-statement em{font-style:normal;color:inherit;background:none;-webkit-text-fill-color:currentColor;animation:none}
+/* One gold accent per page, the hero. Headings, the position statement,
+   the hero stats and the impact numbers render their <em> as plain text
+   (#root outranks the export [data-headline] variants). */
+#root .section-title em,#root .cta h2 em,#root .position-statement em,#root .hero-stat .num em,#root .case-impact-cell .v em{font-style:normal;color:inherit;background:none;-webkit-text-fill-color:currentColor;animation:none}
+/* Small mono labels: the export --ink-dim measured 4.4:1 on the page
+   background, under the 4.5:1 WCAG AA floor for text this small. */
+:root:not([data-theme=light]){--ink-dim:#908C82;}
+:root[data-theme=light]{--ink-dim:#6E6A61;}
+/* /work/: the seven further case studies as compact cards, two across. The
+   write-up (and the RevealSite fleet list) stays behind "Problem · Approach";
+   the impact strip and the code panel are flagship-page detail, not a card. */
+@media (min-width:901px){#work .cases{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:20px}}
+#work .cases>article.case{grid-template-columns:1fr;gap:18px;margin-bottom:20px;padding:28px;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg-elev)}
+#work .cases>article.case .case-name{font-size:28px}
+#work .cases>article.case .case-mock,#work .cases>article.case .case-block:has(.case-impact){display:none}
+#work .cases>article.case .case-meta{gap:10px}
+#work .cases>article.case .case-shot>div:last-child{height:170px!important}
+@media (max-width:900px){#work .cases>article.case .case-shot>div:last-child{height:150px!important}}
+/* /work/: products shipped, as plain linked names. */
+.brand-list{display:flex;flex-wrap:wrap;gap:10px}
+.brand-list .chip{padding:7px 14px;border:1px solid var(--line);border-radius:99px;font-size:14px;text-decoration:none;color:var(--ink-mute)}
+.brand-list .chip:hover{color:var(--ink);border-color:var(--line-strong)}
+/* /about/ "Why clients work with me directly": what you get, as a list —
+   not a struck-through "most engineers" column beside it. */
+#why .why-cell{grid-template-columns:1fr;min-height:0}
+#why .why-cell>div:first-child,#why .why-cell .l.me{display:none}
+#why .why-cell .v{margin-top:0!important}
+#why .why-cell .v::before{content:"✓";color:var(--accent);margin-inline-end:10px}
 /* Home hero: a face and a first name before the buttons. */
 .hero-person{display:flex;align-items:center;gap:12px;margin-top:22px;max-width:560px;color:var(--ink-mute);font-size:15px;line-height:1.45}
 .hero-person img{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid var(--line-strong)}
@@ -3416,7 +3576,7 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 .case-cta p{margin:0;color:var(--ink);font-size:16px}
 @media (min-width:901px){#case .case-meta{position:sticky;top:96px}}
 /* Drawn AF badge: the SVG fills the 26px badge; its letters already carry
-   their own inset, so the badge's text padding goes. */
+   their own inset, so the badge’s text padding goes. */
 .brand-mark--drawn{padding:0}
 .brand-mark--drawn svg{width:100%;height:100%;display:block}
 /* Service-card tags: the export styles .chip only inside project and build
@@ -3575,6 +3735,16 @@ async function build() {
     const hits = HUMAN_HITS.get(lang) || new Set();
     const unused = [...Object.keys(c.headings).map((k) => `h:${k}`), ...c.text.map(([f]) => `t:${f}`)].filter((k) => !hits.has(k));
     for (const k of unused) console.warn(`  [${lang}] ⚠ human copy not applied (export reworded?): ${k.slice(2)}`);
+  }
+
+  // /about/'s first number is METRICS.caseStudies: it must still be what
+  // /work/ carries (the flagship pages plus the further case studies).
+  for (const { lang, snaps } of coverage) {
+    const work = snaps.find((x) => x.spec.key === 'work');
+    const more = work ? work.caseNames.length : 0;
+    if (String(FLAGSHIP.length + more) !== METRICS.caseStudies.display) {
+      throw Object.assign(new Error(`[build] /about/ says ${METRICS.caseStudies.display} case studies, but [${lang}] /work/ carries ${FLAGSHIP.length + more} (${FLAGSHIP.length} flagship + ${more}) — update METRICS.caseStudies in site-facts.mjs`), { fatal: true });
+    }
   }
 
   // ── One-time SEO + static assets ──────────────────────────────────────────
