@@ -1372,7 +1372,8 @@ async function ogFontCss() {
     const data = (await readFile(path.join(DIST, m[1]))).toString('base64');
     out.push(f.replace(m[0], `url(data:font/woff2;base64,${data})`));
   }
-  if (!out.length) console.warn('  ⚠ og cards: no Latin Geist faces found in dist/index.html — they fall back to the system sans');
+  // Fail closed: cards in a fallback face would ship silently off-brand.
+  if (!out.length) throw new Error('no Latin Geist @font-face with an /assets/ woff2 found in dist/index.html');
   return out.join('');
 }
 
@@ -1437,7 +1438,9 @@ async function generateCaseOgImages(browser, fontCss, projects) {
     let shot = pr && pr.shot;
     if (shot && !shot.startsWith('data:')) {
       const file = [path.join(DIST, shot), path.join(ROOT, shot)].find((x) => existsSync(x));
-      const mime = /\.png$/i.test(shot) ? 'image/png' : /\.webp$/i.test(shot) ? 'image/webp' : 'image/jpeg';
+      const ext = (/\.([a-z0-9]+)$/i.exec(shot) || [])[1]?.toLowerCase();
+      const mime = { png: 'image/png', webp: 'image/webp', jpg: 'image/jpeg', jpeg: 'image/jpeg' }[ext];
+      if (!mime) throw new Error(`${f.slug}: screenshot ${shot} is not a png, webp or jpeg`);
       shot = file ? `data:${mime};base64,${(await readFile(file)).toString('base64')}` : '';
     }
     if (!shot) { missing.push(f.slug); continue; }
@@ -1867,7 +1870,10 @@ const IMPACT_PLAIN = {
 const AED_PER_USD = 3.6725;
 const PRICE_LOCALE = { en: 'en-AE', ar: 'ar-AE-u-nu-arab', de: 'de-DE', es: 'es-ES', fr: 'fr-FR' };
 // Home on a phone: three recommendations, the rest behind this button.
-const MORE_RECS = { en: 'More recommendations', ar: 'توصيات أخرى', de: 'Weitere Empfehlungen', es: 'Más recomendaciones', fr: 'Autres recommandations' };
+const MORE_RECS = {
+  en: ['More recommendations', 'Show fewer'], ar: ['توصيات أخرى', 'عرض أقل'], de: ['Weitere Empfehlungen', 'Weniger anzeigen'],
+  es: ['Más recomendaciones', 'Mostrar menos'], fr: ['Autres recommandations', 'Afficher moins'],
+};
 // Unrequested concept sites (dental clinics no one commissioned). They stay
 // live and linked from /demo.html as samples of the free demo; /work/ shows
 // client work only, so they leave its "smaller builds" list.
@@ -3153,7 +3159,16 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         const label = document.createElement('label');
         label.setAttribute('for', 'tests-more');
         label.className = 'tests-more btn btn-ghost';
-        label.textContent = copy.moreRecs;
+        // Both texts are in the label; CSS shows the one that fits the state,
+        // so the focused control never disappears from under the keyboard.
+        const [more, fewer] = copy.moreRecs;
+        const sMore = document.createElement('span');
+        sMore.className = 'tests-more-show';
+        sMore.textContent = more;
+        const sFewer = document.createElement('span');
+        sFewer.className = 'tests-more-hide';
+        sFewer.textContent = fewer;
+        label.append(sMore, sFewer);
         grid.before(cb);
         grid.after(label);
       }
@@ -3649,7 +3664,7 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
     `<meta property="og:image:width" content="1200">`,
     `<meta property="og:image:height" content="630">`,
     `<meta property="og:image:type" content="image/png">`,
-    `<meta property="og:image:alt" content="${ogAlt}">`,
+    `<meta property="og:image:alt" content="${esc(ogAlt)}">`,
     `<meta name="twitter:image" content="${ogImg}">`,
   ].join('\n');
 
@@ -4059,11 +4074,13 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 /* Home on a phone: three recommendations; the label shows the rest. The
    checkbox stays focusable (visually hidden, not display:none). */
 .tests-more-cb{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
-.tests-more{display:none}
+.tests-more,.tests-more-hide{display:none}
+@media (min-width:761px){.tests-more-cb{display:none}}
 @media (max-width:760px){
   .tests-more{display:inline-flex;margin-top:20px;cursor:pointer}
   .tests-more-cb:not(:checked) ~ .tests .test-extra{display:none}
-  .tests-more-cb:checked ~ .tests-more{display:none}
+  .tests-more-cb:checked ~ .tests-more .tests-more-show{display:none}
+  .tests-more-cb:checked ~ .tests-more .tests-more-hide{display:inline}
   .tests-more-cb:focus-visible ~ .tests-more{outline:2px solid var(--accent);outline-offset:3px}
 }
 /* Project pages: the outcome, under the tagline. */
@@ -4195,7 +4212,6 @@ async function build() {
 
   // Same reasoning as the share cards (generated after the pages, below):
   // every page links to the icons, so a missing one is a broken page set.
-  // Same reasoning as og.png: every page links to these, so a missing one is a broken page set.
   try { await generateIcons(browser); } catch (e) { e.fatal = true; e.message = `site icons could not be generated: ${e.message}`; throw e; }
 
   // ── Per-locale pages (shared assets folder, deduped via assetSeen) ────────
