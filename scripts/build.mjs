@@ -2704,7 +2704,11 @@ async function snapshotVariant({ page, spec, lang, locales }) {
       const v = firstNum.querySelector('.bynum-v');
       const l = firstNum.querySelector('.bynum-l');
       const digits = localePrefix === '/ar/' ? copy.caseStudies.replace(/[0-9]/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]) : copy.caseStudies;
-      if (v && l) { v.textContent = digits; l.textContent = H2.caseCount; humanHits.push('caseCount'); }
+      // Only the tile that still says 9+ (any digits, either side of the
+      // plus): a re-export that reorders the tiles must not lose a stat.
+      if (v && l && /^\+?[9٩]\+?$/.test((v.textContent || '').trim())) {
+        v.textContent = digits; l.textContent = H2.caseCount; humanHits.push('caseCount');
+      } else warnings.push('about: the first number tile no longer reads 9+ — left as exported');
     }
     // Ibdaa Course left alpha: production is ibdaacourse.com, and the
     // "working title, pending the client's brand" note is out of date.
