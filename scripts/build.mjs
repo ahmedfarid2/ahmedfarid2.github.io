@@ -1144,13 +1144,13 @@ async function fetchGitHub() {
           });
         }
       } else {
-        console.log(`  (GitHub GraphQL returned ${r.status} — keeping placeholder heatmap)`);
+        console.log(`  (GitHub GraphQL returned ${r.status} — no heatmap on /about/)`);
       }
     } catch (e) {
-      console.log('  (GitHub GraphQL unreachable — keeping placeholder heatmap)');
+      console.log('  (GitHub GraphQL unreachable — no heatmap on /about/)');
     }
   } else {
-    console.log('  (no GITHUB_TOKEN — heatmap stays as-is; set in CI for real data)');
+    console.log('  (no GITHUB_TOKEN — no heatmap on /about/; CI sets one for real data)');
   }
 
   return out;
@@ -2951,6 +2951,11 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         }
       }
     }
+    // An avatar's alt is the person's name: when a pair renames them, the alt
+    // follows, so a screen reader hears what the page shows.
+    document.querySelectorAll('#root img[alt]').forEach((img) => {
+      for (const [from, to] of H2.text) if (img.alt === from) img.alt = to;
+    });
     const statement = document.querySelector('.position-statement');
     if (statement && H2.position) { statement.textContent = H2.position; humanHits.push('position'); }
     // Section numbers ("What I do · 01") and the export's build stamp read as a
@@ -4136,8 +4141,6 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 /* /about/: the GitHub card on its own, with the link to the live profile. */
 #github .gh.gh-solo{grid-template-columns:minmax(0,640px)}
 #github .gh-profile-link{display:inline-block;margin-top:18px}
-/* Home on a phone: three recommendations; the label shows the rest. The
-   checkbox stays focusable (visually hidden, not display:none). */
 /* /services/ and /work/ open on a section head, with no eyebrow or crumbs
    above it, so the fixed nav sat almost on the headline. */
 #main > #pricing:first-child,#main > #work:first-child{padding-top:150px}
@@ -4153,6 +4156,8 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 .tb-more-cb:checked ~ .tb-more .tb-more-show{display:none}
 .tb-more-cb:checked ~ .tb-more .tb-more-hide{display:inline}
 .tb-more-cb:focus-visible ~ .tb-more{outline:2px solid var(--accent);outline-offset:3px}
+/* Home on a phone: three recommendations; the label shows the rest. The
+   checkbox stays focusable (visually hidden, not display:none). */
 .tests-more-cb{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 .tests-more,.tests-more-hide{display:none}
 @media (min-width:761px){.tests-more-cb{display:none}}
