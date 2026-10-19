@@ -1742,8 +1742,9 @@ const HUMAN_COPY = {
 };
 // Case screenshots that replace the export's own (case name → root file,
 // deployed by copyStaticAssets). Recovery Advisers: the export showed an empty
-// dashboard; this is a live one with the client table cropped off and every
-// figure blurred (client data stays private).
+// dashboard; this is a live one with every figure and every client detail in
+// the cases table (IDs, names, amounts, dates) blurred (client data stays
+// private).
 const CASE_SHOTS = { 'Recovery Advisers': '/recovery-advisers.jpg' };
 // Unrequested concept sites (dental clinics no one commissioned). They stay
 // live and linked from /demo.html as samples of the free demo; /work/ shows
