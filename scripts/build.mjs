@@ -1670,8 +1670,16 @@ const HUMAN_COPY = {
       ['Concepts & builds', 'Client builds'],
       ['Customer · Employee · Manager apps — App Store & Play coming soon', 'Customer · Employee · Manager apps for iOS and Android'],
       ['Recommendations from people who managed me directly, verified on LinkedIn.', 'Clients and the people who managed me, in their own words. The LinkedIn-verified one is marked.'],
+      ["Architecture reviews, system design, schema and code audits. The 30-minute call that saves you from a six-month rewrite.", "A written review of your architecture, schema and code in five business days, before a decision you can’t cheaply undo."],
+      [" public repos spanning TypeScript tooling, PHP, and ML notebooks. Most client work lives behind NDAs.", " public repos. Most of my client work is private, under NDA."],
+      ["Source, pinned projects & ML notebooks.", "My public code. Client work stays private."],
+      ["ElastiCache, PayFort.", "ElastiCache."],
     ],
     position: 'I treat a product as one system, not a pile of features. I design how the parts fit together, build every layer, and stay on the hook when it has to scale.',
+    pinnedStat: 'Pinned projects',
+    footBuild: 'What I build',
+    footStack: 'Tech stack',
+    toolbeltMore: ['Show all 60+ tools', 'Show fewer'],
   },
   ar: {
     navCta: 'احجز مكالمة',
@@ -1718,8 +1726,18 @@ const HUMAN_COPY = {
       ['تطبيقات العميل · الموظّف · المدير — App Store وPlay قريبًا', 'تطبيقات العميل · الموظّف · المدير لنظامي iOS وAndroid'],
       ['توصيات من أشخاص أداروني مباشرةً، موثّقة على LinkedIn.', 'عملاء وأشخاص أداروني، بكلماتهم. والتوصية الموثّقة على LinkedIn عليها علامة.'],
       ['احجز مكالمة تحديد نطاق مدتها ٣٠ دقيقة', 'احجز مكالمة مدتها ٣٠ دقيقة'],
+      ["مراجعات معمارية، تصميم أنظمة، تدقيق مخطّطات وشيفرة. مكالمة الـ ٣٠ دقيقة التي تنقذك من إعادة كتابة تستغرق ستّة أشهر.", "مراجعة مكتوبة لمعمارية نظامك ومخطّط بياناته وشيفرته خلال خمسة أيام عمل، قبل قرار يصعب التراجع عنه لاحقًا."],
+      [" مستودعًا عامًّا تمتدّ عبر أدوات TypeScript وPHP ودفاتر ML. معظم أعمال العملاء خلف اتفاقيات سرّية.", " مستودعًا عامًّا. معظم أعمالي للعملاء خاصة، بموجب اتفاقيات سرّية."],
+      ["المصدر والمشاريع المثبّتة ودفاتر ML.", "شيفرتي العامة. أعمال العملاء تبقى خاصة."],
+      ["ElastiCache، PayFort.", "ElastiCache."],
+      ["عمليتي ليست حِكرًا — إنها منضبطة فحسب. الشكل ذاته سواء استمرّ التعاقد ستّة أسابيع أو ستّة أشهر.", "لا أسرار في طريقتي: الخطوات الأربع نفسها، سواء استمرّ العمل ستّة أسابيع أو ستّة أشهر."],
+      ["Saeed Al-Badry, MBA", "سعيد البدري، MBA"],
     ],
     position: 'أتعامل مع المنتج كنظام واحد، لا كمجموعة مزايا متفرّقة. أصمّم كيف تترابط أجزاؤه، وأبني كل طبقاته، وأبقى مسؤولًا عنه حين يكبر.',
+    pinnedStat: 'مشاريع مثبّتة',
+    footBuild: 'ما أبنيه',
+    footStack: 'التقنيات',
+    toolbeltMore: ['عرض كل الأدوات (٦٠+)', 'عرض أقل'],
   },
   de: {
     navCta: 'Gespräch buchen',
@@ -1750,8 +1768,16 @@ const HUMAN_COPY = {
       ['Konzepte & Builds', 'Kundenprojekte'],
       ['Kunden- · Mitarbeiter- · Manager-Apps — App Store & Play demnächst', 'Kunden- · Mitarbeiter- · Manager-Apps für iOS und Android'],
       ['Empfehlungen von Personen, die mich direkt geführt haben, verifiziert auf LinkedIn.', 'Kunden und Vorgesetzte, in ihren eigenen Worten. Die auf LinkedIn verifizierte Empfehlung ist markiert.'],
+      ["Architektur-Reviews, Systemdesign, Schema- und Code-Audits. Der 30-minütige Call, der Ihnen eine sechsmonatige Neuschreibung erspart.", "Ein schriftliches Review Ihrer Architektur, Ihres Schemas und Ihres Codes in fünf Werktagen, bevor Sie etwas entscheiden, das sich nur teuer rückgängig machen lässt."],
+      [" öffentliche Repos über TypeScript-Tooling, PHP und ML-Notebooks. Die meiste Kundenarbeit liegt hinter NDAs.", " öffentliche Repos. Der Großteil meiner Kundenarbeit ist privat und unter NDA."],
+      ["Quellcode, angepinnte Projekte & ML-Notebooks.", "Mein öffentlicher Code. Kundenarbeit bleibt privat."],
+      ["ElastiCache, PayFort.", "ElastiCache."],
     ],
     position: '',
+    pinnedStat: 'Angepinnte Projekte',
+    footBuild: 'Was ich baue',
+    footStack: 'Tech-Stack',
+    toolbeltMore: ['Alle 60+ Tools zeigen', 'Weniger anzeigen'],
   },
   es: {
     navCta: 'Reservar una llamada',
@@ -1782,8 +1808,16 @@ const HUMAN_COPY = {
       ['Conceptos y builds', 'Proyectos de clientes'],
       ['Apps de Cliente · Empleado · Gerente — App Store y Play próximamente', 'Apps de Cliente · Empleado · Gerente para iOS y Android'],
       ['Recomendaciones de personas que me supervisaron directamente, verificadas en LinkedIn.', 'Clientes y personas que me supervisaron, con sus propias palabras. La recomendación verificada en LinkedIn está marcada.'],
+      ["Revisiones de arquitectura, diseño de sistemas, auditorías de esquema y código. La llamada de 30 minutos que te ahorra una reescritura de seis meses.", "Una revisión por escrito de tu arquitectura, esquema y código en cinco días hábiles, antes de una decisión que luego cueste deshacer."],
+      [" repos públicos entre herramientas en TypeScript, PHP y notebooks de ML. La mayoría del trabajo con clientes está bajo NDA.", " repos públicos. La mayor parte de mi trabajo con clientes es privado y está bajo NDA."],
+      ["Código, proyectos fijados y notebooks de ML.", "Mi código público. El trabajo con clientes es privado."],
+      ["ElastiCache, PayFort.", "ElastiCache."],
     ],
     position: '',
+    pinnedStat: 'Proyectos fijados',
+    footBuild: 'Qué construyo',
+    footStack: 'Tecnologías',
+    toolbeltMore: ['Ver las 60+ herramientas', 'Ver menos'],
   },
   fr: {
     navCta: 'Réserver un appel',
@@ -1814,8 +1848,16 @@ const HUMAN_COPY = {
       ['Concepts & réalisations', 'Projets clients'],
       ['Apps Client · Employé · Manager — App Store et Play bientôt disponibles', 'Apps Client · Employé · Manager pour iOS et Android'],
       ["Recommandations de personnes qui m'ont encadré directement, vérifiées sur LinkedIn.", 'Des clients et des personnes qui m’ont encadré, avec leurs propres mots. La recommandation vérifiée sur LinkedIn est signalée.'],
+      ["Revues d'architecture, conception système, audits de schéma et de code. L'appel de 30 minutes qui vous épargne une réécriture de six mois.", "Une revue écrite de votre architecture, de votre schéma et de votre code en cinq jours ouvrés, avant une décision difficile à défaire."],
+      [" dépôts publics couvrant outils TypeScript, PHP et notebooks ML. La majorité du travail client est sous NDA.", " dépôts publics. L’essentiel de mon travail client est privé, sous NDA."],
+      ["Code source, projets épinglés et notebooks ML.", "Mon code public. Le travail client reste privé."],
+      ["ElastiCache, PayFort.", "ElastiCache."],
     ],
     position: '',
+    pinnedStat: 'Projets épinglés',
+    footBuild: 'Ce que je construis',
+    footStack: 'Technologies',
+    toolbeltMore: ['Voir les 60+ outils', 'Voir moins'],
   },
 };
 // Case screenshots that replace the export's own (case name → root file,
@@ -2243,9 +2285,9 @@ async function renderLocale({ browser, loc, ghData, enhanceJS, locales }) {
     // Restores the original hand-designed card/heatmap/repo cards. The React
     // build animated the heatmap in (and set its levels) via JS that no longer
     // runs in static output — the snapshot catches every cell hidden
-    // (.cell-pre) at level 0. So we always make the cells visible and assign
-    // levels: real contributions when fetched, otherwise a deterministic
-    // pattern so the grid never looks empty.
+    // (.cell-pre) at level 0. So we make the cells visible and assign real
+    // contribution levels when they were fetched; without them the heatmap is
+    // removed, never drawn from a made-up pattern.
     if (gh) {
       // Public-repos count appears TWICE: the stat card and the section intro
       // prose ("… — 16 public repos spanning TypeScript tooling …"). Only the
@@ -2296,30 +2338,18 @@ async function renderLocale({ browser, loc, ghData, enhanceJS, locales }) {
       const cells = [...document.querySelectorAll('#github .gh-heat .cell')];
       if (cells.length) {
         const real = gh.calendar && gh.calendar.length ? gh.calendar : null;
-        let levels;
         if (real) {
-          levels = cells.map((_, i) => {
+          const levels = cells.map((_, i) => {
             const idx = real.length - cells.length + i;
             return idx >= 0 ? real[idx] : 0;
           });
+          cells.forEach((c, i) => c.setAttribute('data-l', String(levels[i])));
         } else {
-          // Mirror the export's original generator so a tokenless build still
-          // shows a lively (clearly illustrative) heatmap.
-          let seed = 7;
-          const rand = () => ((seed = (seed * 9301 + 49297) % 233280), seed / 233280);
-          levels = cells.map((_, i) => {
-            const w = Math.floor(i / 7);
-            const r = rand();
-            let l = 0;
-            if (r > 0.4) l = 1;
-            if (r > 0.62) l = 2;
-            if (r > 0.82) l = 3;
-            if (r > 0.94) l = 4;
-            if (w < 3 && r < 0.7) l = Math.max(0, l - 2);
-            return l;
-          });
+          // No real calendar (no token, API down): drop the heatmap rather
+          // than draw a made-up pattern under a "last 12 months" caption. The
+          // card keeps its link to the live graph on GitHub.
+          document.querySelectorAll('#github .gh-heat, #github .gh-heat-foot').forEach((el) => el.remove());
         }
-        cells.forEach((c, i) => c.setAttribute('data-l', String(levels[i])));
         // If the enhancement layer is included it owns the ripple-in animation
         // (cell-pre → cell-in on scroll). Without it, reveal the cells now so
         // the heatmap isn't stuck hidden.
@@ -2936,6 +2966,10 @@ async function snapshotVariant({ page, spec, lang, locales }) {
     // The footer's services link said "Freelance & consulting"; it is the
     // same page the nav calls Services.
     document.querySelectorAll(`.foot-col a[href="${localePrefix}services/"]`).forEach((a) => { a.textContent = labels.services; });
+    // "Capabilities" and "Engineering" opened sections titled "What I build"
+    // and "The stack I use"; name the links after what they open.
+    if (H2.footBuild) document.querySelectorAll('.foot-col a[href$="#build"]').forEach((a) => { a.textContent = H2.footBuild; });
+    if (H2.footStack) document.querySelectorAll('.foot-col a[href$="#depth"]').forEach((a) => { a.textContent = H2.footStack; });
     // Testimonials: the one about working with the business comes first; the
     // other praises a Flutter developer, which is the secondary lane.
     const tests = document.querySelector('.tests');
@@ -3144,6 +3178,37 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         col.remove();
         document.querySelector('#github .gh').classList.add('gh-solo');
       } else warnings.push('about: GitHub repo list or profile card not found — left as exported');
+      // The pinned list is gone, so its count goes too.
+      const pinned = [...document.querySelectorAll('#github .gh-stat')]
+        .find((st) => (st.querySelector('.l')?.textContent || '').trim() === copy.human.pinnedStat);
+      if (pinned) pinned.remove();
+      else warnings.push('about: "pinned projects" stat not found — left as exported');
+      // Toolbelt: the core stack stays visible; the long tail (60+ items) sits
+      // behind a native checkbox + label, so it works without the enhancement
+      // script. The label stays visible in both states, so keyboard focus
+      // never lands on something hidden.
+      const grid = document.querySelector('.toolbelt .toolbelt-grid');
+      const groups = grid ? [...grid.children] : [];
+      if (groups.length > 1 && copy.human.toolbeltMore) {
+        groups.slice(1).forEach((g) => g.classList.add('tb-extra'));
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.id = 'tb-more';
+        cb.className = 'tb-more-cb';
+        const label = document.createElement('label');
+        label.htmlFor = 'tb-more';
+        label.className = 'tb-more btn btn-ghost';
+        const [more, fewer] = copy.human.toolbeltMore;
+        const sMore = document.createElement('span');
+        sMore.className = 'tb-more-show';
+        sMore.textContent = more;
+        const sFewer = document.createElement('span');
+        sFewer.className = 'tb-more-hide';
+        sFewer.textContent = fewer;
+        label.append(sMore, sFewer);
+        grid.before(cb);
+        grid.after(label);
+      } else warnings.push('about: toolbelt groups not found — left fully expanded');
     }
     // Home on a phone: three recommendations, the rest behind a button. A
     // native checkbox + label, so it works without the enhancement script.
@@ -3447,7 +3512,7 @@ async function snapshotVariant({ page, spec, lang, locales }) {
     { owner: LINK_OWNER, paths: Object.fromEntries(PAGE_SPECS.map((s) => [s.key, s.suffix])) },
     NAV[lang],
     { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en, caseStudies: METRICS.caseStudies.display, conceptHosts: CONCEPT_HOSTS, caseShots: CASE_SHOTS, impact: IMPACT_PLAIN[lang] || IMPACT_PLAIN.en, aedRate: AED_PER_USD, priceLocale: PRICE_LOCALE[lang] || 'en-AE', moreRecs: MORE_RECS[lang] || MORE_RECS.en,
-      clientQuotes: CLIENT_QUOTES.map((q) => ({ name: q.name, initials: q.initials, role: q.role[lang] || q.role.en, quote: q.quote[lang] || q.quote.en })) }));
+      clientQuotes: CLIENT_QUOTES.map((q) => ({ name: q.name[lang] || q.name.en, initials: q.initials[lang] || q.initials.en, role: q.role[lang] || q.role.en, quote: q.quote[lang] || q.quote.en })) }));
 
   // Layout passes are best-effort: a re-export that renames a class leaves the
   // page as the export drew it, which is valid, so warn rather than fail.
@@ -4073,6 +4138,21 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 #github .gh-profile-link{display:inline-block;margin-top:18px}
 /* Home on a phone: three recommendations; the label shows the rest. The
    checkbox stays focusable (visually hidden, not display:none). */
+/* /services/ and /work/ open on a section head, with no eyebrow or crumbs
+   above it, so the fixed nav sat almost on the headline. */
+#main > #pricing:first-child,#main > #work:first-child{padding-top:150px}
+@media (max-width:760px){#main > #pricing:first-child,#main > #work:first-child{padding-top:128px}}
+/* /about/: two GitHub stats once the pinned count is gone. */
+#github .gh-stats{grid-template-columns:repeat(2,1fr)}
+/* /about/ toolbelt: core stack shown, the rest behind a native toggle. */
+.tb-more-cb{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.tb-more-cb:not(:checked) ~ .toolbelt-grid .tb-extra{display:none}
+.tb-more-cb:not(:checked) ~ .toolbelt-grid{grid-template-columns:1fr}
+.tb-more{display:inline-flex;margin-top:20px;cursor:pointer}
+.tb-more-hide{display:none}
+.tb-more-cb:checked ~ .tb-more .tb-more-show{display:none}
+.tb-more-cb:checked ~ .tb-more .tb-more-hide{display:inline}
+.tb-more-cb:focus-visible ~ .tb-more{outline:2px solid var(--accent);outline-offset:3px}
 .tests-more-cb{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 .tests-more,.tests-more-hide{display:none}
 @media (min-width:761px){.tests-more-cb{display:none}}

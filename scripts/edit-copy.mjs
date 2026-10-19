@@ -27,6 +27,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import zlib from 'node:zlib';
 import { CONTACT } from './site-facts.mjs';
+import { CASE_DEEP_DIVES } from './case-deep-dives.mjs';
 
 const CHECK = process.argv.includes('--check');
 const SOFT = process.argv.includes('--soft');
@@ -496,7 +497,7 @@ const CASES_COPY = {
       ],
     },
     applyni: {
-      role: 'Solo — product, engineering and operations',
+      role: 'Engineering and operations, built for its founder',
       tag: 'Saudi-first AI career agent — reads your CV, finds companies where you actually fit, and sends from your own Gmail.',
       labels: ['Website'],
       problem: 'Job seekers in the Gulf blast the same CV at every opening and hear nothing back. The tools that promise to fix it mostly automate the spraying, then dress it up with invented ATS scores and match percentages that explain nothing.',
@@ -550,7 +551,7 @@ const CASES_COPY = {
       ],
     },
     applyni: {
-      role: 'منفردًا — المنتج والهندسة والتشغيل',
+      role: 'الهندسة والتشغيل، بُني لمؤسّسه',
       tag: 'وكيل مهني بالذكاء الاصطناعي، سعودي أولًا — يقرأ سيرتك، ويجد الشركات التي تناسبك فعلًا، ويرسل من بريدك أنت.',
       labels: ['الموقع'],
       problem: 'الباحثون عن عمل في الخليج يرسلون السيرة نفسها إلى كل إعلان ولا يصلهم ردّ. والأدوات التي تَعِد بحلّ ذلك تُؤتمت الرشّ العشوائي في معظمها، ثم تُلبسه درجات توافق ونِسَب مُختلَقة لا تفسّر شيئًا.',
@@ -604,7 +605,7 @@ const CASES_COPY = {
       ],
     },
     applyni: {
-      role: 'Allein — Produkt, Engineering und Betrieb',
+      role: 'Engineering und Betrieb, für den Gründer gebaut',
       tag: 'KI-Karriereagent, Saudi-first — liest Ihren Lebenslauf, findet Unternehmen, zu denen Sie wirklich passen, und versendet aus Ihrem eigenen Gmail.',
       labels: ['Website'],
       problem: 'Bewerber am Golf schicken denselben Lebenslauf an jede Ausschreibung und hören nichts zurück. Die Tools, die das beheben wollen, automatisieren meist genau dieses Gießkannenprinzip — verkleidet mit erfundenen ATS-Scores und Match-Prozenten, die nichts erklären.',
@@ -658,7 +659,7 @@ const CASES_COPY = {
       ],
     },
     applyni: {
-      role: 'En solitario — producto, ingeniería y operación',
+      role: 'Ingeniería y operación, construido para su fundador',
       tag: 'Agente de carrera con IA, pensado primero para Arabia Saudí — lee tu CV, encuentra empresas donde realmente encajas y envía desde tu propio Gmail.',
       labels: ['Sitio web'],
       problem: 'Quien busca trabajo en el Golfo manda el mismo CV a todas las ofertas y no recibe respuesta. Las herramientas que prometen arreglarlo automatizan sobre todo ese envío indiscriminado, y lo disfrazan con puntuaciones ATS inventadas y porcentajes de coincidencia que no explican nada.',
@@ -712,7 +713,7 @@ const CASES_COPY = {
       ],
     },
     applyni: {
-      role: 'En solo — produit, ingénierie et exploitation',
+      role: 'Ingénierie et exploitation, construit pour son fondateur',
       tag: 'Agent de carrière IA pensé d’abord pour l’Arabie saoudite — il lit votre CV, trouve les entreprises où vous correspondez vraiment, et envoie depuis votre propre Gmail.',
       labels: ['Site web'],
       problem: 'Les candidats du Golfe envoient le même CV à toutes les offres et n’obtiennent aucune réponse. Les outils censés régler cela automatisent surtout cet arrosage, puis l’habillent de scores ATS inventés et de pourcentages de correspondance qui n’expliquent rien.',
@@ -774,6 +775,31 @@ function caseObject(key, loc) {
   );
 }
 
+// A flagship's full case study (CASE_DEEP_DIVES), written into the case
+// object in the export's own deepDive shape so its CaseDeepDive renders it.
+// `problem` is the case object's own problem literal, reused verbatim: one
+// sentence, one source, never two versions that drift apart.
+const DEEP_DIVE_AT = '\n    deepDive: {';
+const PROBLEM_LINE = /\n    problem: ("(?:[^"\\]|\\.)*"),\n/;
+
+function deepDiveBlock(entry, d) {
+  const m = PROBLEM_LINE.exec(entry);
+  if (!m) return null;
+  return (
+    DEEP_DIVE_AT + '\n' +
+    `      problem: ${m[1]},\n` +
+    `      hard: ${q(d.hard)},\n` +
+    '      arch: [\n' +
+    d.arch.map(([h, p]) => `        [${q(h)}, ${q(p)}],\n`).join('') +
+    '      ],\n' +
+    '      outcome: [\n' +
+    d.outcome.map((o) => `        ${q(o)},\n`).join('') +
+    '      ],\n' +
+    `      role: ${q(d.role)},\n` +
+    '    },'
+  );
+}
+
 // The array is delimited by literals that are identical in all five exports
 // (verified): it opens with `const cases = [\n  {\n` and closes with
 // `\n  },\n];`, and top-level entries are separated by `\n  },\n  {\n`. Nested
@@ -814,6 +840,23 @@ function rewriteCases(loc) {
       const at = entries.findIndex((e) => e.includes(marker));
       if (at < 0) entries.push(caseObject(key, loc));
       else entries[at] = caseObject(key, loc);
+    }
+
+    // 1b. Flagship deep dives: drop any earlier copy, then write the current
+    //     one after the highlights, so an edit to CASE_DEEP_DIVES always lands
+    //     (same reasoning as step 1). A flagship that cannot be found, or has
+    //     no problem line to reuse, fails the edit rather than ship a stub.
+    for (const [name, byLoc] of Object.entries(CASE_DEEP_DIVES)) {
+      const d = byLoc[loc];
+      if (!d) return null;
+      const marker = `\n    name: ${q(name)},\n`;
+      const at = entries.findIndex((e) => e.includes(marker));
+      if (at < 0) return null;
+      const cut = entries[at].indexOf(DEEP_DIVE_AT);
+      const bare = cut < 0 ? entries[at] : entries[at].slice(0, cut);
+      const block = deepDiveBlock(bare, d);
+      if (!block) return null;
+      entries[at] = bare + block;
     }
 
     // 2. Ezhal last — it is the only case with nothing shipped to the stores
@@ -1068,7 +1111,7 @@ const DEMO_COPY = {
       'No obligation — stop there and you owe nothing',
     ],
     cta: 'Book a free demo',
-    note: 'The concepts above were built before anyone asked. This just books it first.',
+    note: 'Built the same way as a paid project, just one screen of it.',
   },
   ar: {
     badge: 'ابدأ مجانًا',
@@ -1081,7 +1124,7 @@ const DEMO_COPY = {
       'بلا التزام — إن توقّفت هنا فلا شيء عليك',
     ],
     cta: 'احجز عرضًا مجانيًا',
-    note: 'المفاهيم أعلاه بُنيت قبل أن يطلبها أحد. هذا فقط يحجزها أولًا.',
+    note: 'يُبنى بالطريقة نفسها التي يُبنى بها مشروع مدفوع، لكن لشاشة واحدة فقط.',
   },
   de: {
     badge: 'Kostenlos starten',
@@ -1094,7 +1137,7 @@ const DEMO_COPY = {
       'Unverbindlich — wer hier aufhört, schuldet nichts',
     ],
     cta: 'Kostenlose Demo buchen',
-    note: 'Die Konzepte oben entstanden, bevor jemand danach fragte. Das hier bucht es nur vorher.',
+    note: 'Gebaut wie ein bezahltes Projekt, nur eben ein Bildschirm davon.',
   },
   es: {
     badge: 'Empieza gratis',
@@ -1107,7 +1150,7 @@ const DEMO_COPY = {
       'Sin compromiso — si lo dejas ahí, no debes nada',
     ],
     cta: 'Reservar una demo gratis',
-    note: 'Los conceptos de arriba se construyeron antes de que nadie los pidiera. Esto solo lo reserva primero.',
+    note: 'Se construye igual que un proyecto de pago, solo que una pantalla.',
   },
   fr: {
     badge: 'Commencer gratuitement',
@@ -1120,7 +1163,7 @@ const DEMO_COPY = {
       'Sans engagement — si vous vous arrêtez là, vous ne devez rien',
     ],
     cta: 'Réserver une démo gratuite',
-    note: 'Les concepts ci-dessus ont été construits avant que quiconque ne les demande. Ceci ne fait que les réserver d’abord.',
+    note: 'Construit comme un projet payant, mais sur un seul écran.',
   },
 };
 
@@ -1619,10 +1662,25 @@ const FOLLOWER_EDITS = [
 // figure, so it stays true as the number grows.
 const PRODUCT_COUNT_EDITS = factEdits('products shipped: 27', {
   en: ['v: "23+", l: "Products built or shipped"', 'v: "27+", l: "Products built or shipped"'],
-  ar: ['v: "+٢٣", l: "منتجًا تم بناؤه أو تسليمه"', 'v: "+٢٧", l: "منتجًا تم بناؤه أو تسليمه"'],
+  // Arabic: "٢٧+" like every other stat on the row (it read "+٢٧", so the
+  // plus sat on the other side of the number); the third entry migrates it.
+  ar: ['v: "+٢٣", l: "منتجًا تم بناؤه أو تسليمه"', 'v: "٢٧+", l: "منتجًا تم بناؤه أو تسليمه"', 'v: "+٢٧", l: "منتجًا تم بناؤه أو تسليمه"'],
   de: ['v: "23+", l: "Produkte gebaut oder geliefert"', 'v: "27+", l: "Produkte gebaut oder geliefert"'],
   es: ['v: "23+", l: "Productos creados o entregados"', 'v: "27+", l: "Productos creados o entregados"'],
   fr: ['v: "23+", l: "Produits créés ou livrés"', 'v: "27+", l: "Produits créés ou livrés"'],
+});
+
+// ── Companies & clients: 12+, not 8+ ──────────────────────────────────────
+// /about/ said 8+ beside "17+ countries", while its own Experience section
+// names 13 companies, so the tile undersold the record and made the country
+// figure look padded. 12+ is a floor of what the page itself lists
+// (METRICS.companies).
+const COMPANY_COUNT_EDITS = factEdits('companies & clients: 12+', {
+  en: ['v: "8+", l: "Companies & clients partnered with"', 'v: "12+", l: "Companies & clients partnered with"'],
+  ar: ['v: "+٨", l: "شركات وعملاء تعاونتُ معهم"', 'v: "١٢+", l: "شركات وعملاء تعاونتُ معهم"'],
+  de: ['v: "8+", l: "Unternehmen & Kunden, mit denen ich zusammengearbeitet habe"', 'v: "12+", l: "Unternehmen & Kunden, mit denen ich zusammengearbeitet habe"'],
+  es: ['v: "8+", l: "Empresas y clientes con los que he colaborado"', 'v: "12+", l: "Empresas y clientes con los que he colaborado"'],
+  fr: ['v: "8+", l: "Entreprises et clients partenaires"', 'v: "12+", l: "Entreprises et clients partenaires"'],
 });
 
 // ── Hero stats ──────────────────────────────────────────────────────────────
@@ -1643,6 +1701,7 @@ const HERO_STAT_EDITS = [
     en: ['<div className="num">23+</div>\n              <div className="lbl">Products shipped & linked',
          '<div className="num">27+</div>\n              <div className="lbl">Products shipped & linked'],
     ar: ['<div className="num">+٢٣</div>\n              <div className="lbl">منتجًا تم تسليمه وربطه',
+         '<div className="num">٢٧+</div>\n              <div className="lbl">منتجًا تم تسليمه وربطه',
          '<div className="num">+٢٧</div>\n              <div className="lbl">منتجًا تم تسليمه وربطه'],
     de: ['<div className="num">23+</div>\n              <div className="lbl">Produkte geliefert & verlinkt',
          '<div className="num">27+</div>\n              <div className="lbl">Produkte geliefert & verlinkt'],
@@ -3044,6 +3103,7 @@ const EDITS = [
   ...PIXEL_EDITS,
   ...YEARS_EDITS,
   ...PRODUCT_COUNT_EDITS,
+  ...COMPANY_COUNT_EDITS,
   ...HERO_STAT_EDITS,
   ...YELO_TITLE_EDITS,
   ...AVAILABILITY_EDITS,

@@ -63,7 +63,7 @@ export const METRICS = {
   // five flagships the site shows. The build fails if /work/ stops carrying this many.
   caseStudies: { display: '12', evidence: '5 flagship pages + 7 further case studies on /work/, each linked to its live product' },
   whiteLabelBrands: { display: '13+', evidence: 'RevealSite fleet: 13 pharmacies + Almani institute (14 products & storefronts)' },
-  companies: { display: '8+', evidence: '12+ companies named in Experience; 8+ is a conservative floor' },
+  companies: { display: '12+', evidence: '13 companies named in Experience on /about/ (full-time, freelance clients, teaching); 12+ is a floor' },
   tools: { display: '60+', evidence: '~93 items in the toolbelt' },
 };
 
@@ -198,9 +198,11 @@ export const NAV = {
 // approved the final wording and the use of their name before it shipped.
 // Changing a quote means getting that approval again. No LinkedIn badge: that
 // mark stays on recommendations that are actually on LinkedIn.
+// `name` and `initials` are per locale only where the script changes (Arabic);
+// every other locale falls back to `en`.
 export const CLIENT_QUOTES = [
   {
-    name: 'Remon Adel', initials: 'RA',
+    name: { en: 'Remon Adel', ar: 'ريمون عادل' }, initials: { en: 'RA', ar: 'ر' },
     role: { en: 'CTO, Recovery Advisers', ar: 'المدير التقني، Recovery Advisers', de: 'CTO, Recovery Advisers', es: 'CTO, Recovery Advisers', fr: 'CTO, Recovery Advisers' },
     quote: {
       en: "He rebuilt our case system while the team kept using it every day, which I honestly didn't think was possible. Our clients now check their own case status instead of emailing us.",
@@ -211,7 +213,7 @@ export const CLIENT_QUOTES = [
     },
   },
   {
-    name: 'Mohamed Atef', initials: 'MA',
+    name: { en: 'Mohamed Atef', ar: 'محمد عاطف' }, initials: { en: 'MA', ar: 'م' },
     role: { en: 'Tech Lead, Yelo Sale', ar: 'قائد الفريق التقني، Yelo Sale', de: 'Tech Lead, Yelo Sale', es: 'Líder técnico, Yelo Sale', fr: 'Responsable technique, Yelo Sale' },
     quote: {
       en: "Live auctions don't forgive mistakes. One bid in the wrong order and you lose a buyer's trust. Ahmed owned that part, web and mobile, Arabic and English, and it held up when real traffic hit it.",
@@ -222,7 +224,7 @@ export const CLIENT_QUOTES = [
     },
   },
   {
-    name: 'Bandar', initials: 'B',
+    name: { en: 'Bandar', ar: 'بندر' }, initials: { en: 'B', ar: 'ب' },
     role: { en: 'Founder, Ibdaa Course & Applyni', ar: 'مؤسس Ibdaa Course وApplyni', de: 'Gründer, Ibdaa Course & Applyni', es: 'Fundador, Ibdaa Course y Applyni', fr: 'Fondateur, Ibdaa Course et Applyni' },
     quote: {
       en: "I'm not technical, and Ahmed never made me feel it. He built the whole platform and explained every decision in words I could follow. When he handed it over, we actually knew how to run it.",
@@ -233,7 +235,7 @@ export const CLIENT_QUOTES = [
     },
   },
   {
-    name: 'Amr Khalaf', initials: 'AK',
+    name: { en: 'Amr Khalaf', ar: 'عمرو خلف' }, initials: { en: 'AK', ar: 'ع' },
     role: { en: 'CEO, Compass Med', ar: 'الرئيس التنفيذي، Compass Med', de: 'CEO, Compass Med', es: 'CEO, Compass Med', fr: 'PDG, Compass Med' },
     quote: {
       en: "Ahmed handled the engineering and a lot of the design for our store and internal tools. For a company our size, that meant one person who understood both the product and the business, instead of two who didn't talk.",
@@ -244,7 +246,7 @@ export const CLIENT_QUOTES = [
     },
   },
   {
-    name: 'Amar Khalil', initials: 'AK',
+    name: { en: 'Amar Khalil', ar: 'عمار خليل' }, initials: { en: 'AK', ar: 'ع' },
     role: { en: 'Project Manager, Phonic Maps', ar: 'مدير المشروع، Phonic Maps', de: 'Projektmanager, Phonic Maps', es: 'Jefe de proyecto, Phonic Maps', fr: 'Chef de projet, Phonic Maps' },
     quote: {
       en: "We manage reviews for a lot of locations, and before this it was tab after tab. Now it's one screen, with replies drafted for us. He also flagged problems before we ran into them, which doesn't happen often.",
