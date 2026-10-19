@@ -1325,8 +1325,8 @@ async function writeSeoFiles(locales, specs, projects = null, prices = null) {
     `font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;position:relative;overflow:hidden}` +
     `body::before{content:"";position:absolute;top:-30%;left:50%;transform:translateX(-50%);width:700px;height:700px;` +
     `border-radius:50%;background:radial-gradient(circle,rgba(230,200,160,.14),transparent 60%);pointer-events:none}` +
-    `.code{font-family:Georgia,serif;font-size:clamp(72px,18vw,160px);line-height:1;letter-spacing:-.03em;position:relative}` +
-    `.code em{font-style:italic;color:#E6C8A0}` +
+    `.code{font-size:clamp(72px,18vw,160px);line-height:1;letter-spacing:-.05em;font-weight:500;position:relative}` +
+    `.code em{font-style:normal;color:#E6C8A0}` +
     `h1{font-size:clamp(20px,4vw,28px);font-weight:500;letter-spacing:-.01em}` +
     `p{color:#a8a297;max-width:440px;line-height:1.5}` +
     `a{margin-top:8px;display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:99px;` +
@@ -1358,39 +1358,114 @@ async function generateIcons(browser) {
   }
 }
 
-async function generateOgImage(browser) {
-  const card = `<!doctype html><html><head><meta charset="utf-8"><style>
-    *{margin:0;box-sizing:border-box}html,body{width:1200px;height:630px}
-    body{background:#0B0D10;color:#F4F1EA;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-      position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:center;padding:92px 90px}
-    .grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),
-      linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:46px 46px;
-      -webkit-mask-image:linear-gradient(180deg,#000,transparent 75%)}
-    .glow{position:absolute;top:-220px;right:-160px;width:760px;height:760px;border-radius:50%;
-      background:radial-gradient(circle,rgba(230,200,160,.20),transparent 60%)}
-    .eyebrow{font-size:21px;letter-spacing:.26em;text-transform:uppercase;color:#9a948a;margin-bottom:30px;position:relative}
-    .dot{display:inline-block;width:11px;height:11px;border-radius:50%;background:#E6C8A0;margin-right:14px;vertical-align:middle}
-    h1{font-family:Georgia,'Times New Roman',serif;font-size:100px;line-height:1.03;letter-spacing:-.02em;font-weight:600;position:relative}
-    h1 em{font-style:italic;color:#E6C8A0}
-    .sub{margin-top:32px;font-size:28px;color:#c9c3b8;max-width:940px;line-height:1.45;position:relative}
-    .foot{position:absolute;left:90px;bottom:64px;font-size:22px;color:#8b857b;letter-spacing:.02em}
-    .foot b{color:#F4F1EA;font-weight:600}
-    .tags{position:absolute;right:90px;bottom:64px;font-size:19px;color:#8b857b;letter-spacing:.05em}
+// The site's own face for the share cards: the Latin Geist faces the home page
+// ships, read from dist/ (so this runs after the pages are written) and inlined,
+// since a card is rendered from a string with no base URL.
+async function ogFontCss() {
+  const home = await readFile(path.join(DIST, 'index.html'), 'utf8');
+  const faces = [...home.matchAll(/@font-face\{font-family:Geist;[^}]*\}/g)].map((m) => m[0])
+    .filter((f) => /unicode-range:[^;}]*U\+0000-00FF/.test(f));
+  const out = [];
+  for (const f of faces) {
+    const m = /url\("?(\/assets\/[^")]+\.woff2)"?\)/.exec(f);
+    if (!m || !existsSync(path.join(DIST, m[1]))) continue;
+    const data = (await readFile(path.join(DIST, m[1]))).toString('base64');
+    out.push(f.replace(m[0], `url(data:font/woff2;base64,${data})`));
+  }
+  if (!out.length) console.warn('  ⚠ og cards: no Latin Geist faces found in dist/index.html — they fall back to the system sans');
+  return out.join('');
+}
+
+const OG_BASE_CSS =
+  '*{margin:0;box-sizing:border-box}html,body{width:1200px;height:630px}' +
+  'body{background:#0B0D10;color:#F4F1EA;font-family:Geist,ui-sans-serif,system-ui,sans-serif;position:relative;overflow:hidden}' +
+  '.grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),' +
+  'linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:46px 46px;' +
+  '-webkit-mask-image:linear-gradient(180deg,#000,transparent 75%)}' +
+  '.glow{position:absolute;top:-220px;right:-160px;width:760px;height:760px;border-radius:50%;' +
+  'background:radial-gradient(circle,rgba(230,200,160,.18),transparent 60%)}' +
+  '.eyebrow{font-size:19px;letter-spacing:.2em;text-transform:uppercase;color:#9a948a;white-space:nowrap;position:relative}' +
+  '.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:#E6C8A0;margin-right:14px;vertical-align:middle}' +
+  '.brand{position:absolute;left:90px;bottom:60px;display:flex;align-items:center;gap:14px;font-size:22px;color:#8b857b}' +
+  '.brand b{color:#F4F1EA;font-weight:500}' +
+  '.mark{width:34px;height:34px;border-radius:8px;background:#E6C8A0;color:#0B0D10;display:grid;place-items:center;font-size:15px;font-weight:600;letter-spacing:-.02em}';
+
+async function renderOgCard(browser, html, file) {
+  const p = await browser.newPage();
+  try {
+    await p.setViewport({ width: 1200, height: 630, deviceScaleFactor: 1 });
+    await p.setContent(html, { waitUntil: 'load', timeout: 30000 });
+    await p.evaluate(() => document.fonts.ready);
+    await p.screenshot({ path: path.join(DIST, file), type: 'png' });
+  } finally {
+    await p.close();
+  }
+}
+
+const ogEscape = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+// The 1200×630 card every page but the project pages shares (LinkedIn, X,
+// WhatsApp, Slack previews). Same type as the site: Geist, the gold accent
+// on "depend on." without the old serif italic.
+async function generateOgImage(browser, fontCss = '') {
+  const card = `<!doctype html><html><head><meta charset="utf-8"><style>${fontCss}${OG_BASE_CSS}
+    .main{position:absolute;left:90px;right:90px;top:92px}
+    h1{margin-top:34px;font-size:94px;line-height:1.02;letter-spacing:-.045em;font-weight:500}
+    h1 span{color:#E6C8A0}
+    .sub{margin-top:30px;font-size:27px;color:#c9c3b8;max-width:900px;line-height:1.42}
+    .tags{position:absolute;right:90px;bottom:66px;font-size:19px;color:#8b857b;letter-spacing:.04em}
   </style></head><body>
     <div class="grid"></div><div class="glow"></div>
-    <div class="eyebrow"><span class="dot"></span>Senior Software Engineer · ${LOCATION.city} · Multi-tenant SaaS \u0026 real-time</div>
-    <h1>I build the systems<br>other teams <em>depend on.</em></h1>
-    <div class="sub">Multi-tenant SaaS · real-time platforms · AI tools · mobile apps shipped across the Gulf, US &amp; UK.</div>
-    <div class="foot"><b>Ahmed Farid</b> &nbsp;·&nbsp; iamahmedfarid.com</div>
+    <div class="main">
+      <div class="eyebrow"><span class="dot"></span>Senior software engineer · ${ogEscape(LOCATION.city)}</div>
+      <h1>I build the systems<br>other teams <span>depend on.</span></h1>
+      <div class="sub">Real-time, multi-tenant SaaS, AI tools and mobile apps, shipped across the Gulf, the US and the UK.</div>
+    </div>
+    <div class="brand"><span class="mark">AF</span><span><b>Ahmed Farid</b> · iamahmedfarid.com</span></div>
     <div class="tags">Laravel · Next.js · FastAPI · Flutter</div>
   </body></html>`;
-  const p = await browser.newPage();
-  await p.setViewport({ width: 1200, height: 630, deviceScaleFactor: 1 });
-  await p.setContent(card, { waitUntil: 'load', timeout: 30000 });
-  await new Promise((r) => setTimeout(r, 300));
-  await p.screenshot({ path: path.join(DIST, 'og.png'), type: 'png' });
-  await p.close();
-  console.log('  generated og.png (1200×630)');
+  await renderOgCard(browser, card, 'og.png');
+}
+
+// One card per flagship (og-<slug>.png): the project name, its plain outcome
+// line and its screenshot. English on every locale: the name and the product
+// are what the preview is for.
+async function generateCaseOgImages(browser, fontCss, projects) {
+  const missing = [];
+  for (const f of FLAGSHIP) {
+    const pr = projects[f.slug];
+    let shot = pr && pr.shot;
+    if (shot && !shot.startsWith('data:')) {
+      const file = [path.join(DIST, shot), path.join(ROOT, shot)].find((x) => existsSync(x));
+      const mime = /\.png$/i.test(shot) ? 'image/png' : /\.webp$/i.test(shot) ? 'image/webp' : 'image/jpeg';
+      shot = file ? `data:${mime};base64,${(await readFile(file)).toString('base64')}` : '';
+    }
+    if (!shot) { missing.push(f.slug); continue; }
+    const outcome = (HUMAN_COPY.en.outcomes || {})[f.slug] || (pr && pr.tagline) || '';
+    const card = `<!doctype html><html><head><meta charset="utf-8"><style>${fontCss}${OG_BASE_CSS}
+      .meta{position:absolute;left:90px;top:96px;width:470px}
+      h1{margin-top:26px;font-size:66px;line-height:1.02;letter-spacing:-.04em;font-weight:500}
+      .out{margin-top:24px;font-size:26px;line-height:1.4;color:#c9c3b8}
+      .frame{position:absolute;left:610px;top:92px;width:660px;height:446px;border-radius:16px;overflow:hidden;
+        border:1px solid rgba(255,255,255,.14);background:#15181d;box-shadow:0 30px 80px rgba(0,0,0,.55)}
+      .bar{height:34px;display:flex;align-items:center;gap:8px;padding:0 14px;background:#15181d;border-bottom:1px solid rgba(255,255,255,.08)}
+      .bar i{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.18)}
+      .frame img{display:block;width:100%;height:412px;object-fit:cover;object-position:0 0}
+    </style></head><body>
+      <div class="grid"></div><div class="glow"></div>
+      <div class="meta">
+        <div class="eyebrow"><span class="dot"></span>Case study</div>
+        <h1>${ogEscape(f.name)}</h1>
+        <div class="out">${ogEscape(outcome)}</div>
+      </div>
+      <div class="frame"><div class="bar"><i></i><i></i><i></i></div><img src="${shot}" alt=""></div>
+      <div class="brand"><span class="mark">AF</span><span><b>Ahmed Farid</b> · iamahmedfarid.com</span></div>
+    </body></html>`;
+    await renderOgCard(browser, card, `og-${f.slug}.png`);
+  }
+  // Every project page links its card: a missing one is a broken preview.
+  if (missing.length) throw Object.assign(new Error(`[build] no screenshot for the share card of: ${missing.join(', ')}`), { fatal: true });
+  console.log(`  generated og.png + ${FLAGSHIP.length} project cards (1200×630)`);
 }
 
 // Fail closed. Any failure — a gate, a render timeout, a bug in this file — ends
@@ -1746,6 +1821,53 @@ const HUMAN_COPY = {
 // the cases table (IDs, names, amounts, dates) blurred (client data stays
 // private).
 const CASE_SHOTS = { 'Recovery Advisers': '/recovery-advisers.jpg' };
+// The three highlight boxes on each project page, in plain words (slug →
+// [value, label] × 3, per locale). The export's said "Webhook push", "HR
+// layer", "GMB OAuth": true, but meaningless to the person paying. Facts
+// only, from the case studies; no invented numbers.
+const IMPACT_PLAIN = {
+  en: {
+    'yelo-sale': [['Live auctions', 'Bid from web or phone, in real time'], ['<200ms', 'From a bid to every screen'], ['ERP-synced', 'Invoices flow to Microsoft Dynamics']],
+    'qoralia': [['Feasibility', 'Which climate projects can work'], ['AI answers', 'Grounded in climate research'], ['A space per city', 'Each team sees only its own']],
+    'khebraos': [['Script to video', 'AI drafts the whole course'], ['6 steps', 'From idea to published course'], ['Arabic-first', 'Right-to-left, English too']],
+    'phonic-maps': [['Google reviews', 'Every location synced automatically'], ['Bulk replies', 'One rule answers many locations'], ['Agency-ready', 'Resellers manage their own clients']],
+    'recovery-advisers': [['Live portal', 'Clients see case updates as they happen'], ['6 stages', 'From first lead to final invoice'], ['HR built in', 'Contracts and goals in one place']],
+  },
+  ar: {
+    'yelo-sale': [['مزادات حيّة', 'زايِد من الويب أو الجوال فورًا'], ['<٢٠٠ms', 'من المزايدة إلى كل شاشة'], ['مرتبط بـ ERP', 'الفواتير تصل إلى Microsoft Dynamics']],
+    'qoralia': [['الجدوى', 'أي مشاريع المناخ ممكنة'], ['إجابات ذكية', 'مبنية على أبحاث المناخ'], ['مساحة لكل مدينة', 'كل فريق يرى بياناته فقط']],
+    'khebraos': [['من النص إلى الفيديو', 'الذكاء الاصطناعي يصوغ الدورة كاملة'], ['٦ خطوات', 'من الفكرة إلى دورة منشورة'], ['عربي أولًا', 'من اليمين لليسار، والإنجليزية أيضًا']],
+    'phonic-maps': [['تقييمات Google', 'كل الفروع تُزامَن تلقائيًا'], ['ردود جماعية', 'قاعدة واحدة تردّ على فروع كثيرة'], ['جاهز للوكالات', 'الموزّعون يديرون عملاءهم']],
+    'recovery-advisers': [['بوابة حيّة', 'العملاء يرون تحديثات قضاياهم فورًا'], ['٦ مراحل', 'من أول عميل محتمل إلى الفاتورة'], ['الموارد البشرية مدمجة', 'العقود والأهداف في مكان واحد']],
+  },
+  de: {
+    'yelo-sale': [['Live-Auktionen', 'Bieten per Web oder Handy, in Echtzeit'], ['<200ms', 'Vom Gebot auf jeden Bildschirm'], ['ERP-verbunden', 'Rechnungen fließen nach Microsoft Dynamics']],
+    'qoralia': [['Machbarkeit', 'Welche Klimaprojekte funktionieren'], ['KI-Antworten', 'Gestützt auf Klimaforschung'], ['Je Stadt ein Bereich', 'Jedes Team sieht nur seine Daten']],
+    'khebraos': [['Skript bis Video', 'Die KI entwirft den ganzen Kurs'], ['6 Schritte', 'Von der Idee zum veröffentlichten Kurs'], ['Arabisch zuerst', 'Von rechts nach links, auch Englisch']],
+    'phonic-maps': [['Google-Bewertungen', 'Alle Standorte automatisch synchron'], ['Sammelantworten', 'Eine Regel für viele Standorte'], ['Agenturfähig', 'Wiederverkäufer betreuen eigene Kunden']],
+    'recovery-advisers': [['Live-Portal', 'Mandanten sehen Updates sofort'], ['6 Stufen', 'Vom ersten Lead bis zur Rechnung'], ['HR integriert', 'Verträge und Ziele an einem Ort']],
+  },
+  es: {
+    'yelo-sale': [['Subastas en vivo', 'Puja desde la web o el móvil, al instante'], ['<200ms', 'De la puja a cada pantalla'], ['Conectado al ERP', 'Las facturas llegan a Microsoft Dynamics']],
+    'qoralia': [['Viabilidad', 'Qué proyectos climáticos funcionan'], ['Respuestas con IA', 'Basadas en investigación climática'], ['Un espacio por ciudad', 'Cada equipo ve solo lo suyo']],
+    'khebraos': [['Del guion al vídeo', 'La IA redacta el curso entero'], ['6 pasos', 'De la idea al curso publicado'], ['Árabe primero', 'De derecha a izquierda, también en inglés']],
+    'phonic-maps': [['Reseñas de Google', 'Todas las sedes sincronizadas'], ['Respuestas en bloque', 'Una regla responde a muchas sedes'], ['Listo para agencias', 'Los revendedores gestionan sus clientes']],
+    'recovery-advisers': [['Portal en vivo', 'Los clientes ven cada avance al momento'], ['6 etapas', 'Del primer contacto a la factura'], ['RR. HH. integrado', 'Contratos y objetivos en un solo lugar']],
+  },
+  fr: {
+    'yelo-sale': [['Enchères en direct', 'Enchérir sur le web ou mobile, en temps réel'], ['<200ms', 'De l’enchère à chaque écran'], ['Relié à l’ERP', 'Les factures partent vers Microsoft Dynamics']],
+    'qoralia': [['Faisabilité', 'Quels projets climat peuvent aboutir'], ['Réponses IA', 'Fondées sur la recherche climat'], ['Un espace par ville', 'Chaque équipe ne voit que le sien']],
+    'khebraos': [['Du script à la vidéo', 'L’IA rédige tout le cours'], ['6 étapes', 'De l’idée au cours publié'], ['Arabe d’abord', 'De droite à gauche, anglais aussi']],
+    'phonic-maps': [['Avis Google', 'Tous les établissements synchronisés'], ['Réponses groupées', 'Une règle pour de nombreux sites'], ['Prêt pour les agences', 'Les revendeurs gèrent leurs clients']],
+    'recovery-advisers': [['Portail en direct', 'Les clients voient chaque avancée'], ['6 étapes', 'Du premier contact à la facture'], ['RH intégrées', 'Contrats et objectifs au même endroit']],
+  },
+};
+// /services/: each starting price also in dirhams (AED is pegged at 3.6725 to
+// the dollar, so this cannot drift), rounded to the nearest 50.
+const AED_PER_USD = 3.6725;
+const PRICE_LOCALE = { en: 'en-AE', ar: 'ar-AE-u-nu-arab', de: 'de-DE', es: 'es-ES', fr: 'fr-FR' };
+// Home on a phone: three recommendations, the rest behind this button.
+const MORE_RECS = { en: 'More recommendations', ar: 'توصيات أخرى', de: 'Weitere Empfehlungen', es: 'Más recomendaciones', fr: 'Autres recommandations' };
 // Unrequested concept sites (dental clinics no one commissioned). They stay
 // live and linked from /demo.html as samples of the free demo; /work/ shows
 // client work only, so they leave its "smaller builds" list.
@@ -2585,6 +2707,7 @@ async function snapshotVariant({ page, spec, lang, locales }) {
             name: f.name, slug: f.slug,
             tagline: (art.querySelector('.case-tagline')?.textContent || '').trim(),
             chips: [...art.querySelectorAll('.case-stack .chip')].map((c) => (c.textContent || '').trim()).filter(Boolean),
+            shot: ([...art.querySelectorAll('img')].find((i) => !i.closest('.case-links') && !i.classList.contains('chip-fav'))?.getAttribute('src')) || '',
           };
           articles.forEach((c) => { if (c !== art) c.remove(); });
           const wrap = workSec.querySelector(':scope > .wrap');
@@ -2979,6 +3102,62 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         testsGrid.classList.add('tests-many');
       } else warnings.push('testimonials: no card to copy the client quotes from — left as exported');
     }
+    // Project pages: the highlight boxes in plain words (IMPACT_PLAIN).
+    if (pageSpec.work === 'single') {
+      const plain = copy.impact[pageSpec.flagship.slug];
+      const cells = [...document.querySelectorAll('#case .case-impact-cell')];
+      if (plain && cells.length === plain.length && cells.every((c) => c.querySelector('.v') && c.querySelector('.l'))) {
+        cells.forEach((c, i) => { c.querySelector('.v').textContent = plain[i][0]; c.querySelector('.l').textContent = plain[i][1]; });
+      } else warnings.push(`case: ${cells.length} highlight boxes, expected ${plain ? plain.length : 'a plain set'} — left as exported`);
+    }
+    // /services/: the starting price in dirhams too, under each dollar price.
+    if (pageSpec.key === 'services') {
+      const fmt = new Intl.NumberFormat(copy.priceLocale, { style: 'currency', currency: 'AED', currencyDisplay: 'code', maximumFractionDigits: 0 });
+      const amounts = [...document.querySelectorAll('#pricing .price-grid > .price-card .price-amount')];
+      amounts.forEach((a) => {
+        const digits = (a.textContent || '').replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[^0-9]/g, '');
+        const usd = Number(digits);
+        if (!usd) { warnings.push('services: a price card amount has no number — no AED line'); return; }
+        const line = document.createElement('div');
+        line.className = 'price-aed';
+        line.textContent = `≈ ${fmt.format(Math.round(usd * copy.aedRate / 50) * 50)}`;
+        a.after(line);
+      });
+      if (amounts.length !== 3) warnings.push(`services: expected 3 price cards for the AED line, found ${amounts.length}`);
+    }
+    // /about/: the pinned-repo list (student projects and notebooks) goes; the
+    // profile card stays and takes the link to the live profile.
+    if (pageSpec.key === 'about') {
+      const repos = document.querySelector('#github .gh-repos');
+      const link = repos && repos.querySelector(':scope > a');
+      const card = document.querySelector('#github .gh-card');
+      const col = repos && repos.closest('.gh > *');
+      if (repos && link && card && col) {
+        link.classList.add('gh-profile-link');
+        card.appendChild(link);
+        col.remove();
+        document.querySelector('#github .gh').classList.add('gh-solo');
+      } else warnings.push('about: GitHub repo list or profile card not found — left as exported');
+    }
+    // Home on a phone: three recommendations, the rest behind a button. A
+    // native checkbox + label, so it works without the enhancement script.
+    {
+      const grid = document.querySelector('.tests.tests-many');
+      const cards = grid ? [...grid.querySelectorAll(':scope > .test')] : [];
+      if (grid && cards.length > 3) {
+        cards.slice(3).forEach((c) => c.classList.add('test-extra'));
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.id = 'tests-more';
+        cb.className = 'tests-more-cb';
+        const label = document.createElement('label');
+        label.setAttribute('for', 'tests-more');
+        label.className = 'tests-more btn btn-ghost';
+        label.textContent = copy.moreRecs;
+        grid.before(cb);
+        grid.after(label);
+      }
+    }
     // Numbered lists read as a template: "What I do" /01–/04 and the ways to
     // work 01–03. The process steps keep theirs; they are a sequence.
     document.querySelectorAll('.position-list .num, .service-card .service-num').forEach((e) => e.remove());
@@ -3252,7 +3431,7 @@ async function snapshotVariant({ page, spec, lang, locales }) {
   }, spec, locales.map((l) => l.lang), FAQ_BUYER_KEYS[lang] || FAQ_BUYER_KEYS.en, prefix, PAGE_LAYOUT, SECTION_KEYS,
     { owner: LINK_OWNER, paths: Object.fromEntries(PAGE_SPECS.map((s) => [s.key, s.suffix])) },
     NAV[lang],
-    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en, caseStudies: METRICS.caseStudies.display, conceptHosts: CONCEPT_HOSTS, caseShots: CASE_SHOTS,
+    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en, caseStudies: METRICS.caseStudies.display, conceptHosts: CONCEPT_HOSTS, caseShots: CASE_SHOTS, impact: IMPACT_PLAIN[lang] || IMPACT_PLAIN.en, aedRate: AED_PER_USD, priceLocale: PRICE_LOCALE[lang] || 'en-AE', moreRecs: MORE_RECS[lang] || MORE_RECS.en,
       clientQuotes: CLIENT_QUOTES.map((q) => ({ name: q.name, initials: q.initials, role: q.role[lang] || q.role.en, quote: q.quote[lang] || q.quote.en })) }));
 
   // Layout passes are best-effort: a re-export that renames a class leaves the
@@ -3332,7 +3511,10 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
 
   // Point og:image / twitter:image at the generated 1200×630 card (drop the
   // square-avatar one from the export) and ensure og:url is present.
-  const ogImg = `${SITE_URL}/og.png`;
+  // A project page shares its own card (generateCaseOgImages): the project's
+  // name and screenshot, which is what a case-study link on LinkedIn should show.
+  const ogImg = spec.flagship ? `${SITE_URL}/og-${spec.flagship.slug}.png` : `${SITE_URL}/og.png`;
+  const ogAlt = spec.flagship ? `${spec.flagship.name} — case study by Ahmed Farid` : 'Ahmed Farid — Senior Software Engineer';
 
   // Canonical Person structured data — used to inject a block if the export has
   // none, and to enrich an existing export block with fields it may lack.
@@ -3467,7 +3649,7 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
     `<meta property="og:image:width" content="1200">`,
     `<meta property="og:image:height" content="630">`,
     `<meta property="og:image:type" content="image/png">`,
-    `<meta property="og:image:alt" content="Ahmed Farid — Senior Software Engineer">`,
+    `<meta property="og:image:alt" content="${ogAlt}">`,
     `<meta name="twitter:image" content="${ogImg}">`,
   ].join('\n');
 
@@ -3869,6 +4051,21 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 .service-pkg{margin:-4px 0 12px;font-family:var(--mono);font-size:12px;color:var(--accent)}
 /* Testimonials: six cards read better three across on a wide screen. */
 @media (min-width:1101px){.tests.tests-many{grid-template-columns:repeat(3,1fr)}}
+/* /services/: the price in dirhams, under the dollar price. */
+.price-aed{margin-top:4px;font-family:var(--mono);font-size:12px;color:var(--ink-mute)}
+/* /about/: the GitHub card on its own, with the link to the live profile. */
+#github .gh.gh-solo{grid-template-columns:minmax(0,640px)}
+#github .gh-profile-link{display:inline-block;margin-top:18px}
+/* Home on a phone: three recommendations; the label shows the rest. The
+   checkbox stays focusable (visually hidden, not display:none). */
+.tests-more-cb{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.tests-more{display:none}
+@media (max-width:760px){
+  .tests-more{display:inline-flex;margin-top:20px;cursor:pointer}
+  .tests-more-cb:not(:checked) ~ .tests .test-extra{display:none}
+  .tests-more-cb:checked ~ .tests-more{display:none}
+  .tests-more-cb:focus-visible ~ .tests-more{outline:2px solid var(--accent);outline-offset:3px}
+}
 /* Project pages: the outcome, under the tagline. */
 .case-outcome{margin:10px 0 0;color:var(--ink);font-size:17px;line-height:1.5}
 /* Flagship cards: the outcome line is a sentence, not a metric. */
@@ -3996,10 +4193,8 @@ async function build() {
     );
   }
 
-  console.log('→ Generating Open Graph card…');
-  // Every page's og:image and JSON-LD image point at /og.png, so a missing
-  // card is a broken page set: refuse rather than ship without it.
-  try { await generateOgImage(browser); } catch (e) { e.fatal = true; e.message = `og.png could not be generated: ${e.message}`; throw e; }
+  // Same reasoning as the share cards (generated after the pages, below):
+  // every page links to the icons, so a missing one is a broken page set.
   // Same reasoning as og.png: every page links to these, so a missing one is a broken page set.
   try { await generateIcons(browser); } catch (e) { e.fatal = true; e.message = `site icons could not be generated: ${e.message}`; throw e; }
 
@@ -4026,8 +4221,6 @@ async function build() {
     }
   }
 
-  await browser.close();
-
   // HUMAN_COPY entries no page used: the export reworded them. Not fatal (the
   // export's own wording ships), but worth knowing.
   for (const [lang, c] of Object.entries(HUMAN_COPY)) {
@@ -4049,6 +4242,17 @@ async function build() {
 
   // ── One-time SEO + static assets ──────────────────────────────────────────
   await copyStaticAssets();
+
+  // Share cards, now that the fonts and screenshots are in dist/. Every page's
+  // og:image points at one of them, so a missing card is a broken page set:
+  // refuse rather than ship without it.
+  console.log('→ Generating share cards…');
+  try {
+    const fontCss = await ogFontCss();
+    await generateOgImage(browser, fontCss);
+    await generateCaseOgImages(browser, fontCss, projects);
+  } catch (e) { e.fatal = true; e.message = `share cards could not be generated: ${e.message}`; throw e; }
+  await browser.close();
 
   await writeSeoFiles(locales, PAGE_SPECS, projects, prices);
 
