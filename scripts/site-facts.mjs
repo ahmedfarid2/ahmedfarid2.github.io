@@ -193,6 +193,69 @@ export const NAV = {
 // the build finds the case in the render); `slug` is the URL segment and is the
 // same in every locale. Adding a flagship is adding a row here — and marking
 // the case FLAGSHIP in the export.
+// Client testimonials on home, client first, before the LinkedIn-verified
+// recommendation. Ahmed drafted these at the clients' request; each person
+// approved the final wording and the use of their name before it shipped.
+// Changing a quote means getting that approval again. No LinkedIn badge: that
+// mark stays on recommendations that are actually on LinkedIn.
+export const CLIENT_QUOTES = [
+  {
+    name: 'Remon Adel', initials: 'RA',
+    role: { en: 'CTO, Recovery Advisers', ar: 'المدير التقني، Recovery Advisers', de: 'CTO, Recovery Advisers', es: 'CTO, Recovery Advisers', fr: 'CTO, Recovery Advisers' },
+    quote: {
+      en: "He rebuilt our case system while the team kept using it every day, which I honestly didn't think was possible. Our clients now check their own case status instead of emailing us.",
+      ar: 'أعاد بناء نظام القضايا لدينا بينما كان الفريق يستخدمه كل يوم، وبصراحة لم أكن أظن ذلك ممكنًا. عملاؤنا الآن يتابعون حالة قضاياهم بأنفسهم بدل مراسلتنا.',
+      de: 'Er hat unser Fallsystem neu gebaut, während das Team es jeden Tag benutzt hat. Ehrlich gesagt hätte ich das nicht für möglich gehalten. Unsere Mandanten sehen ihren Fallstatus jetzt selbst, statt uns zu mailen.',
+      es: 'Reconstruyó nuestro sistema de casos mientras el equipo lo usaba cada día, algo que sinceramente no creía posible. Ahora nuestros clientes consultan el estado de su caso ellos mismos en lugar de escribirnos.',
+      fr: 'Il a reconstruit notre système de dossiers pendant que l’équipe l’utilisait tous les jours, ce que je ne pensais honnêtement pas possible. Nos clients consultent maintenant eux-mêmes l’état de leur dossier au lieu de nous écrire.',
+    },
+  },
+  {
+    name: 'Mohamed Atef', initials: 'MA',
+    role: { en: 'Tech Lead, Yelo Sale', ar: 'قائد الفريق التقني، Yelo Sale', de: 'Tech Lead, Yelo Sale', es: 'Líder técnico, Yelo Sale', fr: 'Responsable technique, Yelo Sale' },
+    quote: {
+      en: "Live auctions don't forgive mistakes. One bid in the wrong order and you lose a buyer's trust. Ahmed owned that part, web and mobile, Arabic and English, and it held up when real traffic hit it.",
+      ar: 'المزادات المباشرة لا تغفر الأخطاء. مزايدة واحدة بترتيب خاطئ وتخسر ثقة المشتري. تولّى أحمد هذا الجزء على الويب والجوال، بالعربية والإنجليزية، وصمد النظام حين جاءت الحركة الحقيقية.',
+      de: 'Live-Auktionen verzeihen keine Fehler. Ein Gebot in der falschen Reihenfolge, und das Vertrauen des Käufers ist weg. Ahmed hat diesen Teil verantwortet, Web und Mobile, Arabisch und Englisch, und es hat gehalten, als echter Traffic kam.',
+      es: 'Las subastas en vivo no perdonan errores. Una puja en el orden equivocado y pierdes la confianza del comprador. Ahmed se encargó de esa parte, web y móvil, árabe e inglés, y aguantó cuando llegó el tráfico real.',
+      fr: 'Les enchères en direct ne pardonnent pas. Une offre dans le mauvais ordre et vous perdez la confiance de l’acheteur. Ahmed a pris cette partie en charge, web et mobile, arabe et anglais, et tout a tenu quand le vrai trafic est arrivé.',
+    },
+  },
+  {
+    name: 'Bandar', initials: 'B',
+    role: { en: 'Ibdaa Course', ar: 'Ibdaa Course', de: 'Ibdaa Course', es: 'Ibdaa Course', fr: 'Ibdaa Course' },
+    quote: {
+      en: "I'm not technical, and Ahmed never made me feel it. He built the whole platform and explained every decision in words I could follow. When he handed it over, we actually knew how to run it.",
+      ar: 'لست تقنيًا، ولم يُشعرني أحمد بذلك يومًا. بنى المنصّة كاملة وشرح كل قرار بكلام أفهمه. وحين سلّمها، كنا نعرف فعلًا كيف نديرها.',
+      de: 'Ich bin kein Techniker, und Ahmed hat mich das nie spüren lassen. Er hat die ganze Plattform gebaut und jede Entscheidung so erklärt, dass ich sie verstanden habe. Bei der Übergabe wussten wir wirklich, wie wir sie betreiben.',
+      es: 'No soy técnico, y Ahmed nunca me lo hizo sentir. Construyó toda la plataforma y explicó cada decisión con palabras que yo entendía. Cuando nos la entregó, sabíamos de verdad cómo llevarla.',
+      fr: 'Je ne suis pas technique, et Ahmed ne me l’a jamais fait sentir. Il a construit toute la plateforme et expliqué chaque décision avec des mots que je comprenais. À la livraison, nous savions vraiment la faire tourner.',
+    },
+  },
+  {
+    name: 'Amr Khalaf', initials: 'AK',
+    role: { en: 'CEO, Compass Med', ar: 'الرئيس التنفيذي، Compass Med', de: 'CEO, Compass Med', es: 'CEO, Compass Med', fr: 'PDG, Compass Med' },
+    quote: {
+      en: "Ahmed handled the engineering and a lot of the design for our store and internal tools. For a company our size, that meant one person who understood both the product and the business, instead of two who didn't talk.",
+      ar: 'تولّى أحمد الجانب الهندسي وجزءًا كبيرًا من التصميم لمتجرنا وأدواتنا الداخلية. لشركة بحجمنا، كان ذلك يعني شخصًا واحدًا يفهم المنتج والعمل معًا، بدل شخصين لا يتحدثان مع بعضهما.',
+      de: 'Ahmed hat die Technik und einen großen Teil des Designs für unseren Shop und unsere internen Tools übernommen. Für ein Unternehmen unserer Größe hieß das: eine Person, die Produkt und Geschäft versteht, statt zwei, die nicht miteinander reden.',
+      es: 'Ahmed se ocupó de la ingeniería y de buena parte del diseño de nuestra tienda y nuestras herramientas internas. Para una empresa de nuestro tamaño, eso significó una sola persona que entendía el producto y el negocio, en vez de dos que no se hablaban.',
+      fr: 'Ahmed s’est occupé de l’ingénierie et d’une bonne partie du design de notre boutique et de nos outils internes. Pour une entreprise de notre taille, cela voulait dire une seule personne qui comprenait le produit et le métier, au lieu de deux qui ne se parlaient pas.',
+    },
+  },
+  {
+    name: 'Amar Khalil', initials: 'AK',
+    role: { en: 'Project Manager, Phonic Maps', ar: 'مدير المشروع، Phonic Maps', de: 'Projektmanager, Phonic Maps', es: 'Jefe de proyecto, Phonic Maps', fr: 'Chef de projet, Phonic Maps' },
+    quote: {
+      en: "We manage reviews for a lot of locations, and before this it was tab after tab. Now it's one screen, with replies drafted for us. He also flagged problems before we ran into them, which doesn't happen often.",
+      ar: 'ندير التقييمات لعدد كبير من الفروع، وكان الأمر قبل ذلك تبويبًا بعد تبويب. الآن أصبح شاشة واحدة، والردود تُصاغ لنا. وكان ينبّهنا إلى المشكلات قبل أن نقع فيها، وهذا نادر.',
+      de: 'Wir verwalten Bewertungen für viele Standorte, und vorher war das Tab um Tab. Jetzt ist es ein Bildschirm, die Antworten werden für uns vorformuliert. Und er hat uns auf Probleme hingewiesen, bevor wir hineingelaufen sind. Das erlebt man selten.',
+      es: 'Gestionamos reseñas de muchas sedes, y antes era pestaña tras pestaña. Ahora es una sola pantalla, con las respuestas redactadas para nosotros. Además nos avisaba de los problemas antes de que llegáramos a ellos, y eso no pasa a menudo.',
+      fr: 'Nous gérons les avis de nombreux établissements, et avant c’était onglet après onglet. Maintenant tout tient sur un écran, avec des réponses rédigées pour nous. Et il nous prévenait des problèmes avant qu’on tombe dessus, ce qui est rare.',
+    },
+  },
+];
+
 export const FLAGSHIP = [
   { name: 'Yelo Sale', slug: 'yelo-sale' },
   { name: 'Qoralia', slug: 'qoralia' },
