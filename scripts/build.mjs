@@ -3675,12 +3675,22 @@ async function externalizeCss(html) {
   const file = `/assets/site-${createHash('sha1').update(css).digest('hex').slice(0, 12)}.css`;
   const disk = path.join(DIST, file.slice(1));
   if (!existsSync(disk)) await writeFile(disk, css, 'utf8');
+  // The fonts are declared inside that file, so the browser would find them
+  // only after downloading it. Preload the two used above the fold on every
+  // page: the Latin subsets of Geist (text) and JetBrains Mono (nav, labels).
+  const preload = [...css.matchAll(/@font-face\{([^}]*)\}/g)]
+    .map((m) => m[1])
+    .filter((f) => /font-family:\s*['"]?(Geist|JetBrains Mono)['"]?;/.test(f) && /unicode-range:\s*U\+0000-00FF/.test(f))
+    .map((f) => (/url\("?(\/assets\/[0-9a-f]+\.woff2)"?\)/.exec(f) || [])[1])
+    .filter(Boolean);
+  const preloadTags = [...new Set(preload)]
+    .map((href) => `<link rel="preload" href="${href}" as="font" type="font/woff2" crossorigin>`).join('');
   let first = true;
   return html.replace(/<style>([\s\S]*?)<\/style>/g, (m, body) => {
     if (body.length < SITE_CSS_MIN) return m;
     if (!first) return '';
     first = false;
-    return `<link rel="stylesheet" href="${file}">`;
+    return `${preloadTags}<link rel="stylesheet" href="${file}">`;
   });
 }
 
@@ -3699,7 +3709,28 @@ async function withLinkedCss(html) {
 // Node-side assembly of one page: head, structured data, document, externalised
 // assets, minify, write. Driven by the page's spec; `shared` is the locale's
 // render result, `snap` this page's cut of it.
-async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, assetSeen }) {
+// The export embeds its case screenshots as JPEG data URLs. Chromium (already
+// running for the render) re-encodes each one as WebP once; the smaller of the
+// two is written. Keyed by content in assetSeen like every other asset.
+let webpTab = null;
+async function toWebp(browser, buf) {
+  if (!browser) return null;
+  if (!webpTab) webpTab = await browser.newPage();
+  const b64 = await webpTab.evaluate(async (src) => {
+    const img = new Image();
+    img.src = src;
+    await img.decode();
+    const c = document.createElement('canvas');
+    c.width = img.naturalWidth;
+    c.height = img.naturalHeight;
+    c.getContext('2d').drawImage(img, 0, 0);
+    const out = c.toDataURL('image/webp', 0.82);
+    return out.startsWith('data:image/webp') ? out.slice(out.indexOf(',') + 1) : null;
+  }, `data:image/jpeg;base64,${buf.toString('base64')}`);
+  return b64 ? Buffer.from(b64, 'base64') : null;
+}
+
+async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, assetSeen, browser }) {
   const { lang, dir, urlPath } = loc;
   const multi = locales.length > 1;
   const outDir = path.join(loc.outDir, spec.suffix);
@@ -4083,10 +4114,32 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
   addEventListener('afterprint',function(){
     document.querySelectorAll('details.case-more[data-print-opened]').forEach(function(d){d.open=false;d.removeAttribute('data-print-opened');});
   });
-  // Calendly popup for any calendly link (keeps the in-page popup behaviour).
+  // Calendly popup for any calendly link. The widget (a third-party stylesheet
+  // and script) used to load on every page; it now loads when someone heads
+  // for a booking link (hover, focus, touch), so the popup is usually ready
+  // by the click. A click before it is ready waits up to 4s for it, then
+  // falls back to the link itself (a new tab on calendly.com).
+  var calendly=null;
+  function loadCalendly(){
+    if(calendly)return calendly;
+    calendly=new Promise(function(res,rej){
+      var css=document.createElement('link');css.rel='stylesheet';css.href='https://assets.calendly.com/assets/external/widget.css';document.head.appendChild(css);
+      var js=document.createElement('script');js.src='https://assets.calendly.com/assets/external/widget.js';js.async=true;
+      js.onload=function(){window.Calendly?res():rej();};js.onerror=rej;document.head.appendChild(js);
+    });
+    calendly.catch(function(){});
+    return calendly;
+  }
   document.querySelectorAll('a[href*="calendly.com"]').forEach(function(a){
+    ['pointerenter','focus','touchstart'].forEach(function(ev){a.addEventListener(ev,loadCalendly,{once:true,passive:true});});
     a.addEventListener('click',function(e){
-      if(window.Calendly){e.preventDefault();window.Calendly.initPopupWidget({url:a.getAttribute('href')});}
+      var url=a.getAttribute('href');
+      if(window.Calendly){e.preventDefault();window.Calendly.initPopupWidget({url:url});return;}
+      e.preventDefault();
+      var done=false;
+      var fallback=setTimeout(function(){if(!done){done=true;window.open(url,'_blank','noopener');}},4000);
+      loadCalendly().then(function(){if(!done){done=true;clearTimeout(fallback);window.Calendly.initPopupWidget({url:url});}},
+        function(){if(!done){done=true;clearTimeout(fallback);window.open(url,'_blank','noopener');}});
     });
   });
 })();`.trim();
@@ -4111,9 +4164,6 @@ ${analyticsTag}
 <title>${esc(seo.title)}</title>
 ${headMeta}
 ${ICON_LINKS}
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://assets.calendly.com/assets/external/widget.css">
 <noscript><style>.reveal,.cell-pre{opacity:1!important;transform:none!important}</style></noscript>
 ${jsonLd}
 <style>${result.css}</style>
@@ -4273,6 +4323,23 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 /* /about/: the GitHub card on its own, with the link to the live profile. */
 #github .gh.gh-solo{grid-template-columns:minmax(0,640px)}
 #github .gh-profile-link{display:inline-block;margin-top:18px}
+/* Arabic (RTL): these components were written with left-side spacing, so
+   in Arabic the text ran flush to the right edge and the accent line sat on
+   the wrong side. Mirrored here. */
+[dir=rtl] .dd-arch li{padding-left:0;border-left:0;padding-right:16px;border-right:2px solid var(--line-strong)}
+[dir=rtl] .dd-outcome{padding-left:0;padding-right:20px}
+[dir=rtl] .exp-row{transition:background .2s ease,padding-right .3s cubic-bezier(.2,.7,.2,1)}
+[dir=rtl] .exp-row:hover{padding-left:0;padding-right:18px}
+[dir=rtl] .exp-row .loc{text-align:left}
+@media (max-width:900px){[dir=rtl] .exp-row .loc{text-align:right}}
+[dir=rtl] .test-link{margin-left:0;margin-right:auto}
+[dir=rtl] .bynum{border-left:0;border-right:1px solid var(--line)}
+[dir=rtl] .bynum:first-child{border-right:0}
+@media (max-width:760px){[dir=rtl] .bynum:nth-child(odd){border-right:0}}
+/* The last serif italic outside the footer wordmark: company names and
+   their initial badges, region counts, logo marks. The site’s sans. */
+.co-name,.co-logo-mono,.trust-mark-mono,.region-n,.disc-name,.logo-mono{font-family:var(--sans);font-style:normal}
+.co-name{font-weight:500;letter-spacing:-.015em}
 /* Nav: the underline marks the page you are on (aria-current) and nothing
    else. The export’s scroll-spy also lit Contact once the form scrolled into
    view, so home looked like Contact was selected and inner pages showed two
@@ -4330,7 +4397,6 @@ ${switcherCss}
 ${skipLink(lang)}
 ${switcher}
 <div id="root">${tagClicks(drawBrandMark(result.body, lang, spec.key))}</div>
-<script src="https://assets.calendly.com/assets/external/widget.js" async></script>
 ${enhanceJS ? `<script>${enhanceForVariant(enhanceJS, spec)}</script>` : ''}
 <script>${interactivity}</script>
 </body>
@@ -4359,11 +4425,16 @@ ${enhanceJS ? `<script>${enhanceForVariant(enhanceJS, spec)}</script>` : ''}
     if (buf.length < INLINE_LIMIT) continue;
     let file = assetSeen.get(full);
     if (!file) {
-      const hash = createHash('sha1').update(buf).digest('hex').slice(0, 12);
-      file = `/assets/${hash}.${ext}`; // root-absolute
+      let data = buf, outExt = ext;
+      if (ext === 'jpg') {
+        const webp = await toWebp(browser, buf);
+        if (webp && webp.length < buf.length) { data = webp; outExt = 'webp'; }
+      }
+      const hash = createHash('sha1').update(data).digest('hex').slice(0, 12);
+      file = `/assets/${hash}.${outExt}`; // root-absolute
       if (!existsSync(path.join(DIST, file.slice(1)))) {
-        await writeFile(path.join(DIST, file.slice(1)), buf);
-        assetCount++; assetBytes += buf.length;
+        await writeFile(path.join(DIST, file.slice(1)), data);
+        assetCount++; assetBytes += data.length;
       }
       assetSeen.set(full, file);
     }
@@ -4460,7 +4531,7 @@ async function build() {
         if (loc.lang === 'en' && snap.project) projects[snap.project.slug] = snap.project;
         if (loc.lang === 'en' && snap.priceCards) prices = snap.priceCards;
         snaps.push({ spec, keptKeys: snap.keptKeys, caseNames: snap.caseNames, faq: snap.faq });
-        await writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, assetSeen });
+        await writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, assetSeen, browser });
       }
     } finally {
       await page.close().catch(() => {});
