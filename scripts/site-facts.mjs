@@ -59,6 +59,9 @@ export const METRICS = {
   products: { display: '27+', evidence: 'case studies + RevealSite fleet + own products + builds, all linked' },
   countries: { display: '17+', evidence: '17 country flags listed in the Reach section' },
   flagship: { display: '9+', evidence: '12 linked case studies (5 marked FLAGSHIP); 9+ is a floor, not the flagship count' },
+  // Replaces the export's "9+ flagship platforms" on /about/, which contradicted the
+  // five flagships the site shows. The build fails if /work/ stops carrying this many.
+  caseStudies: { display: '12', evidence: '5 flagship pages + 7 further case studies on /work/, each linked to its live product' },
   whiteLabelBrands: { display: '13+', evidence: 'RevealSite fleet: 13 pharmacies + Almani institute (14 products & storefronts)' },
   companies: { display: '8+', evidence: '12+ companies named in Experience; 8+ is a conservative floor' },
   tools: { display: '60+', evidence: '~93 items in the toolbelt' },
