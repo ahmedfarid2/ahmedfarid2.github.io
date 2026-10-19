@@ -3659,9 +3659,6 @@ function projectSeo(project, lang) {
   return { title, description };
 }
 
-// Node-side assembly of one page: head, structured data, document, externalised
-// assets, minify, write. Driven by the page's spec; `shared` is the locale's
-// render result, `snap` this page's cut of it.
 // ── One shared stylesheet ──────────────────────────────────────────────────
 // Every page carried the same ~117 KB of CSS inline, so each page view
 // downloaded it again. The page’s own style blocks (everything but the small
@@ -3690,11 +3687,17 @@ async function externalizeCss(html) {
 // share-card fonts) get the shared stylesheet inlined again, in place.
 async function withLinkedCss(html) {
   for (const m of [...html.matchAll(/<link rel="stylesheet" href="(\/assets\/site-[0-9a-f]{12}\.css)">/g)]) {
-    html = html.replace(m[0], `<style>${await readFile(path.join(DIST, m[1].slice(1)), 'utf8')}</style>`);
+    const css = await readFile(path.join(DIST, m[1].slice(1)), 'utf8');
+    // A function, not a string: CSS like [href$='x'] holds "$'", which a
+    // replacement string would expand.
+    html = html.replace(m[0], () => `<style>${css}</style>`);
   }
   return html;
 }
 
+// Node-side assembly of one page: head, structured data, document, externalised
+// assets, minify, write. Driven by the page's spec; `shared` is the locale's
+// render result, `snap` this page's cut of it.
 async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, assetSeen }) {
   const { lang, dir, urlPath } = loc;
   const multi = locales.length > 1;
@@ -4506,6 +4509,9 @@ async function build() {
     const vp = await vb.newPage();
     const vErrors = [];
     vp.on('pageerror', (e) => vErrors.push(String(e)));
+    // Loaded from file://, so root-absolute /assets/ links (the shared
+    // stylesheet, fonts, images) do not resolve here: this checks content,
+    // not styling. The internal-links gate proves every /assets/ target exists.
     await vp.goto(pathToFileURL(path.join(loc.outDir, spec.suffix, 'index.html')).href, { waitUntil: 'load', timeout: 60000 });
     const check = await vp.evaluate(() => ({
       text: (document.body.innerText || '').length,
