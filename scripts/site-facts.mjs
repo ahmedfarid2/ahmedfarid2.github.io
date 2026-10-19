@@ -246,7 +246,7 @@ export const CLIENT_QUOTES = [
     },
   },
   {
-    name: { en: 'Amar Khalil', ar: 'عمار خليل' }, initials: { en: 'AK', ar: 'ع' },
+    name: { en: 'Amr Khalil', ar: 'عمرو خليل' }, initials: { en: 'AK', ar: 'ع' },
     role: { en: 'Project Manager, Phonic Maps', ar: 'مدير المشروع، Phonic Maps', de: 'Projektmanager, Phonic Maps', es: 'Jefe de proyecto, Phonic Maps', fr: 'Chef de projet, Phonic Maps' },
     quote: {
       en: "We manage reviews for a lot of locations, and before this it was tab after tab. Now it's one screen, with replies drafted for us. He also flagged problems before we ran into them, which doesn't happen often.",

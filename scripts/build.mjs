@@ -1941,8 +1941,9 @@ const HUMAN_COPY = {
 // deployed by copyStaticAssets). Recovery Advisers: the export showed an empty
 // dashboard; this is a live one with every figure and every client detail in
 // the cases table (IDs, names, amounts, dates) blurred (client data stays
-// private).
-const CASE_SHOTS = { 'Recovery Advisers': '/recovery-advisers.jpg' };
+// private). Qoralia: the export showed the Spanish interface in every
+// locale; this is the English one.
+const CASE_SHOTS = { 'Recovery Advisers': '/recovery-advisers.jpg', 'Qoralia': '/qoralia.jpg' };
 // The three highlight boxes on each project page, in plain words (slug →
 // [value, label] × 3, per locale). The export's said "Webhook push", "HR
 // layer", "GMB OAuth": true, but meaningless to the person paying. Facts
