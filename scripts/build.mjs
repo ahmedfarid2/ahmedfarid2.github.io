@@ -1730,6 +1730,11 @@ const HUMAN_COPY = {
     position: '',
   },
 };
+// Case screenshots that replace the export's own (case name → root file,
+// deployed by copyStaticAssets). Recovery Advisers: the export showed an empty
+// dashboard; this is a live one with the client table cropped off and every
+// figure blurred (client data stays private).
+const CASE_SHOTS = { 'Recovery Advisers': '/recovery-advisers.jpg' };
 // Unrequested concept sites (dental clinics no one commissioned). They stay
 // live and linked from /demo.html as samples of the free demo; /work/ shows
 // client work only, so they leave its "smaller builds" list.
@@ -2466,6 +2471,14 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         if (pageSpec.faq === 'buyer' ? !isBuyer : isBuyer) item.remove();
       });
     }
+    // Case screenshots replaced before the cards copy them (CASE_SHOTS).
+    document.querySelectorAll('article.case').forEach((art) => {
+      const src = copy.caseShots[(art.querySelector('.case-name')?.textContent || '').trim()];
+      if (!src) return;
+      const shot = [...art.querySelectorAll('img')].find((i) => !i.closest('.case-links') && !i.classList.contains('chip-fav'));
+      if (shot) { shot.setAttribute('src', src); shot.removeAttribute('srcset'); }
+      else warnings.push(`case shot: no screenshot to replace in ${src}'s case — left as exported`);
+    });
     // ── Case studies: cards and project pages ───────────────────────────
     // The five flagships are written up in full on a page each. Where the long
     // write-ups sat, a card per flagship links to its page (home, /work/); on a
@@ -3228,7 +3241,7 @@ async function snapshotVariant({ page, spec, lang, locales }) {
   }, spec, locales.map((l) => l.lang), FAQ_BUYER_KEYS[lang] || FAQ_BUYER_KEYS.en, prefix, PAGE_LAYOUT, SECTION_KEYS,
     { owner: LINK_OWNER, paths: Object.fromEntries(PAGE_SPECS.map((s) => [s.key, s.suffix])) },
     NAV[lang],
-    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en, caseStudies: METRICS.caseStudies.display, conceptHosts: CONCEPT_HOSTS,
+    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en, caseStudies: METRICS.caseStudies.display, conceptHosts: CONCEPT_HOSTS, caseShots: CASE_SHOTS,
       clientQuotes: CLIENT_QUOTES.map((q) => ({ name: q.name, initials: q.initials, role: q.role[lang] || q.role.en, quote: q.quote[lang] || q.quote.en })) }));
 
   // Layout passes are best-effort: a re-export that renames a class leaves the
