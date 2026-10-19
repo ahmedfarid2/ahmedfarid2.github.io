@@ -3716,6 +3716,7 @@ let webpTab = null;
 async function toWebp(browser, buf) {
   if (!browser) return null;
   if (!webpTab) webpTab = await browser.newPage();
+  // An image Chromium cannot decode keeps its original bytes (null = no WebP).
   const b64 = await webpTab.evaluate(async (src) => {
     const img = new Image();
     img.src = src;
@@ -3726,7 +3727,7 @@ async function toWebp(browser, buf) {
     c.getContext('2d').drawImage(img, 0, 0);
     const out = c.toDataURL('image/webp', 0.82);
     return out.startsWith('data:image/webp') ? out.slice(out.indexOf(',') + 1) : null;
-  }, `data:image/jpeg;base64,${buf.toString('base64')}`);
+  }, `data:image/jpeg;base64,${buf.toString('base64')}`).catch(() => null);
   return b64 ? Buffer.from(b64, 'base64') : null;
 }
 
@@ -4117,8 +4118,9 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
   // Calendly popup for any calendly link. The widget (a third-party stylesheet
   // and script) used to load on every page; it now loads when someone heads
   // for a booking link (hover, focus, touch), so the popup is usually ready
-  // by the click. A click before it is ready waits up to 4s for it, then
-  // falls back to the link itself (a new tab on calendly.com).
+  // by the click. A click before it is ready is left alone: the link opens
+  // calendly.com in a new tab, inside the click itself, where no pop-up
+  // blocker can stop it (a delayed window.open could be).
   var calendly=null;
   function loadCalendly(){
     if(calendly)return calendly;
@@ -4133,13 +4135,9 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
   document.querySelectorAll('a[href*="calendly.com"]').forEach(function(a){
     ['pointerenter','focus','touchstart'].forEach(function(ev){a.addEventListener(ev,loadCalendly,{once:true,passive:true});});
     a.addEventListener('click',function(e){
-      var url=a.getAttribute('href');
-      if(window.Calendly){e.preventDefault();window.Calendly.initPopupWidget({url:url});return;}
+      if(!window.Calendly)return;
       e.preventDefault();
-      var done=false;
-      var fallback=setTimeout(function(){if(!done){done=true;window.open(url,'_blank','noopener');}},4000);
-      loadCalendly().then(function(){if(!done){done=true;clearTimeout(fallback);window.Calendly.initPopupWidget({url:url});}},
-        function(){if(!done){done=true;clearTimeout(fallback);window.open(url,'_blank','noopener');}});
+      window.Calendly.initPopupWidget({url:a.getAttribute('href')});
     });
   });
 })();`.trim();
@@ -4330,14 +4328,15 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 [dir=rtl] .dd-outcome{padding-left:0;padding-right:20px}
 [dir=rtl] .exp-row{transition:background .2s ease,padding-right .3s cubic-bezier(.2,.7,.2,1)}
 [dir=rtl] .exp-row:hover{padding-left:0;padding-right:18px}
+[dir=rtl] .exp-row::before{left:auto;right:0}
 [dir=rtl] .exp-row .loc{text-align:left}
 @media (max-width:900px){[dir=rtl] .exp-row .loc{text-align:right}}
 [dir=rtl] .test-link{margin-left:0;margin-right:auto}
 [dir=rtl] .bynum{border-left:0;border-right:1px solid var(--line)}
 [dir=rtl] .bynum:first-child{border-right:0}
 @media (max-width:760px){[dir=rtl] .bynum:nth-child(odd){border-right:0}}
-/* The last serif italic outside the footer wordmark: company names and
-   their initial badges, region counts, logo marks. The site’s sans. */
+/* Serif italic left in Experience (company names and their initial
+   badges), the region counts and the logo marks: the site’s sans. */
 .co-name,.co-logo-mono,.trust-mark-mono,.region-n,.disc-name,.logo-mono{font-family:var(--sans);font-style:normal}
 .co-name{font-weight:500;letter-spacing:-.015em}
 /* Nav: the underline marks the page you are on (aria-current) and nothing
