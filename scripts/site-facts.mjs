@@ -150,23 +150,23 @@ export const SEO = {
   about: {
     en: {
       title: 'About Ahmed Farid — Senior Software Engineer in Dubai',
-      description: 'Experience, engineering depth, architecture principles, open-source work and writing — plus the CV for senior roles. Dubai-based, 6+ years in production.',
+      description: 'Who you work with: 6+ years shipping production SaaS from Dubai, the stack and principles behind it, past roles, open-source code and the CV.',
     },
     ar: {
       title: 'نبذة عن Ahmed Farid — مهندس برمجيات أول في دبي',
-      description: 'الخبرة والعمق الهندسي ومبادئ البنية المعمارية والأعمال مفتوحة المصدر والكتابة — إضافةً إلى السيرة الذاتية للأدوار الأولى. مقيم في دبي، +6 سنوات في الإنتاج.',
+      description: 'مع من ستعمل: +6 سنوات في بناء منصّات SaaS للإنتاج من دبي، والتقنيات والمبادئ وراءها، والأدوار السابقة، والشيفرة المفتوحة المصدر، والسيرة الذاتية.',
     },
     de: {
       title: 'Über Ahmed Farid — Senior-Softwareentwickler in Dubai',
-      description: 'Erfahrung, technische Tiefe, Architekturprinzipien, Open-Source-Arbeit und Texte — plus der Lebenslauf für Senior-Rollen. In Dubai, 6+ Jahre Praxis in Produktion.',
+      description: 'Mit wem Sie arbeiten: 6+ Jahre Produktions-SaaS aus Dubai, Stack und Prinzipien dahinter, bisherige Rollen, Open-Source-Code und der Lebenslauf.',
     },
     es: {
       title: 'Sobre Ahmed Farid — Ingeniero de Software Senior en Dubái',
-      description: 'Experiencia, profundidad técnica, principios de arquitectura, código abierto y escritos — además del CV para roles senior. Desde Dubái, 6+ años en producción.',
+      description: 'Con quién trabajas: 6+ años creando SaaS en producción desde Dubái, el stack y los principios detrás, roles anteriores, código abierto y el CV.',
     },
     fr: {
       title: 'À propos d’Ahmed Farid — Ingénieur logiciel senior à Dubaï',
-      description: 'Expérience, profondeur technique, principes d’architecture, open source et écrits — plus le CV pour les postes senior. Basé à Dubaï, 6+ ans en production.',
+      description: 'Avec qui vous travaillez : 6+ ans de SaaS en production depuis Dubaï, la stack et les principes derrière, les postes passés, le code open source et le CV.',
     },
   },
 };

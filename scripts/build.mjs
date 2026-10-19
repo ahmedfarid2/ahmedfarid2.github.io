@@ -314,6 +314,12 @@ async function applyShellToStandalonePages() {
     '.site-shell{display:block}' +
     '.site-shell ul,.site-shell ol{list-style:none;padding:0;margin:0}' +
     '.site-shell li{padding:0;margin:0;border:0;position:static}' +
+    // The pages' own headings were Georgia with a gold-italic second half,
+    // the formula the rest of the site dropped. Same face and weight as the
+    // site's section titles (Geist, from the shell's font faces).
+    '#main h1,#main h2,#main h3{font-family:Geist,ui-sans-serif,system-ui,sans-serif;font-weight:500;letter-spacing:-.03em}' +
+    '#main h1 em{font-style:normal;color:inherit}' +
+    "#main h2 .num{font-family:'JetBrains Mono',ui-monospace,monospace;font-style:normal;font-size:.62em;letter-spacing:0;vertical-align:.2em}" +
     '.site-shell li:before,.site-shell li:after{content:none}' +
     SKIP_CSS +
     '</style>';
@@ -1218,7 +1224,7 @@ function sitemapPages(locales, specs = PAGE_SPECS) {
 
 // sitemap.xml + robots.txt + a styled 404.html. No browser needed, so this
 // runs in the full build only (there is no raw-export fallback to cover).
-async function writeSeoFiles(locales, specs, projects = null) {
+async function writeSeoFiles(locales, specs, projects = null, prices = null) {
   const today = new Date().toISOString().slice(0, 10);
   const urls = sitemapPages(locales, specs)
     .map((p) =>
@@ -1262,6 +1268,18 @@ async function writeSeoFiles(locales, specs, projects = null) {
       ].join('\n') + `\n\n`
     : '';
 
+  // The ways to work, with the starting prices /services/ shows (read from its
+  // English price cards, so an assistant quotes what the page says).
+  const priced = prices && prices.length && prices.every((p) => p.name && p.amount);
+  if (!priced) console.warn('  ⚠ llms.txt: the /services/ price cards were not found — ways to work listed without prices');
+  const waysBlock = priced
+    ? prices.map((p) => `- ${p.name}: ${p.amount}${p.note ? ` (${p.note})` : ''}${p.tag ? `. ${p.tag}` : ''}`).join('\n') + '\n' +
+      `- Every project is quoted as a flat price after a 30-minute scoping call; no hourly billing\n` +
+      `- Free demo: one real screen of your product, built and deployed in five business days (${SITE_URL}/demo.html)\n\n`
+    : `- Fixed-scope product build: a defined slice with a clear deliverable\n` +
+      `- Ongoing engineering retainer\n` +
+      `- Technical advisory & architecture review\n\n`;
+
   // llms.txt — an emerging convention (llmstxt.org) that gives AI assistants a
   // clean, structured Markdown summary of who this is and how to work with him,
   // so tools like ChatGPT/Claude/Perplexity can recommend him accurately.
@@ -1276,14 +1294,12 @@ async function writeSeoFiles(locales, specs, projects = null) {
     `- Role: Senior Software Engineer\n` +
     `- Location: ${LOCATION_LABEL} — remote and on-site\n` +
     `- Currently: full-time at Recovery Advisers (Dubai)\n` +
-    `- Availability: a small number of freelance/contract engagements per quarter; open to full-time roles\n\n` +
+    `- Availability: a few client projects at a time, alongside the full-time role\n\n` +
     `## Core skills\n\n` +
     `Laravel, PHP, Next.js, React, React Native, TypeScript, FastAPI, Python, Flutter, AWS, ` +
     `PostgreSQL, multi-tenant SaaS architecture, real-time systems, AI integration.\n\n` +
     `## Ways to work together\n\n` +
-    `- Fixed-scope product build — a defined slice with a clear deliverable (typically 4–8 weeks)\n` +
-    `- Ongoing engineering retainer or longer contract\n` +
-    `- Technical advisory & architecture review\n\n` +
+    waysBlock +
     pagesBlock +
     `## Links\n\n` +
     `- Website: ${SITE_URL}\n` +
@@ -1533,6 +1549,7 @@ const HUMAN_COPY = {
       'The questions everyone asks.': 'Common questions.',
       'Six lanes I work in fluently.': 'What I build.',
       "Domains I've shipped real systems for.": "Industries I've worked in.",
+      'Concepts, demos, and recent builds.': 'Smaller client builds.',
       "Logos of teams & products I've shipped.": "Teams and products I've shipped for.",
       'The stack, without the buzzwords.': 'The stack I use.',
       "Code I'm willing to publish.": 'Open-source code.',
@@ -1570,6 +1587,8 @@ const HUMAN_COPY = {
       ["A senior engineer's range, narrowed to what I actually ship — not what's on the résumé. Most projects sit across two or three of these at once.", "What I build most often. Most projects combine two or three of these."],
       ["I'm open to full-time senior engineering roles in Dubai — that's what I'm looking for now. I'm currently full-time at Recovery Advisers (remote) and take a small number of freelance engagements alongside it; those are on the services page.", "Both. I'm full-time at Recovery Advisers (remote), and I take on a few client projects at a time alongside it, so each one gets proper attention. Packages and prices are on the services page."],
       ['UAE, Saudi Arabia, the United States, and Egypt.', 'UAE, Saudi Arabia, the United States, the UK, Spain and Egypt.'],
+      ['Design concepts, client demos and smaller builds — all live on my own domain, so you can click through them instead of taking my word for it. Each one is labelled for what it actually is.', 'Client work and a client demo, live on my own domain so you can click through them. Each one is labelled for what it is.'],
+      ['Concepts & builds', 'Client builds'],
     ],
     position: 'I treat a product as one system, not a pile of features. I design how the parts fit together, build every layer, and stay on the hook when it has to scale.',
   },
@@ -1600,6 +1619,7 @@ const HUMAN_COPY = {
       'الأسئلة التي يطرحها الجميع.': 'أسئلة شائعة.',
       'ستّة مجالات أعمل فيها بطلاقة.': 'ما أبنيه.',
       'مجالات سلّمت لها أنظمة حقيقية.': 'قطاعات عملت فيها.',
+      'مفاهيم وعروض تجريبية وأعمال حديثة.': 'أعمال أصغر لعملاء.',
       'شعارات فِرَق ومنتجات سلّمتها.': 'فِرَق ومنتجات عملت معها.',
       'المنظومة التقنية، دون مصطلحات رنّانة.': 'التقنيات التي أستخدمها.',
       'شيفرة أنا مستعدّ لنشرها.': 'شيفرة مفتوحة المصدر.',
@@ -1611,6 +1631,8 @@ const HUMAN_COPY = {
       ["مرّر للإيقاف المؤقّت؛ انقر أي شعار لفتح موقعه الحيّ.", "كل اسم يفتح موقعه الحيّ."],
       ['أبحث عن أدوار هندسية أولى بدوام كامل في دبي — هذا ما أسعى إليه الآن. أعمل حاليًا بدوام كامل لدى Recovery Advisers (عن بُعد) وآخذ إلى جانبها عددًا محدودًا من التعاقدات الحرّة، وهي معروضة في صفحة الخدمات.', 'كلاهما. أعمل بدوام كامل لدى Recovery Advisers (عن بُعد)، وآخذ إلى جانبها عددًا محدودًا من مشاريع العملاء في الوقت نفسه حتى ينال كلٌّ منها حقه من الاهتمام. الباقات والأسعار في صفحة الخدمات.'],
       ['الإمارات والسعودية والولايات المتحدة ومصر.', 'الإمارات والسعودية والولايات المتحدة والمملكة المتحدة وإسبانيا ومصر.'],
+      ['مفاهيم تصميمية وعروض تجريبية لعملاء وأعمال أصغر — جميعها منشورة على نطاقي الخاص، لتتصفّحها بنفسك بدل أن تأخذ كلامي. وكلٌّ منها موسوم بما هو عليه فعلًا.', 'عمل لعميل وعرض تجريبي لعميل، منشوران على نطاقي الخاص لتتصفّحهما بنفسك. وكلٌّ منهما موسوم بما هو عليه.'],
+      ['مفاهيم وأعمال', 'أعمال لعملاء'],
       ['احجز مكالمة تحديد نطاق مدتها ٣٠ دقيقة', 'احجز مكالمة مدتها ٣٠ دقيقة'],
     ],
     position: 'أتعامل مع المنتج كنظام واحد، لا كمجموعة مزايا متفرّقة. أصمّم كيف تترابط أجزاؤه، وأبني كل طبقاته، وأبقى مسؤولًا عنه حين يكبر.',
@@ -1632,11 +1654,15 @@ const HUMAN_COPY = {
     },
     hi: 'Hallo, ich bin Ahmed. Sie arbeiten direkt mit mir, vom ersten Gespräch bis zum Launch.',
     caseCta: 'Sie brauchen etwas Ähnliches?',
-    headings: {},
+    headings: {
+      'Konzepte, Demos und neuere Arbeiten.': 'Kleinere Kundenprojekte.',
+    },
     text: [
       ["Every mark is a real product I built or contributed to — from Gulf SaaS platforms to a fleet of US & UK pharmacy brands. Hover to pause; click any logo to open its live site.", "Jeder Name ist ein echtes Produkt, das ich gebaut oder mitentwickelt habe, von SaaS-Plattformen am Golf bis zu Apothekenmarken in den USA und Großbritannien. Jeder Link öffnet die Live-Website."],
       ['Ich suche eine Senior-Engineering-Festanstellung in Dubai — das ist mein Ziel. Derzeit bin ich Vollzeit bei Recovery Advisers (remote) und nehme daneben einige wenige freiberufliche Projekte an; die stehen auf der Services-Seite.', 'Beides. Ich bin Vollzeit bei Recovery Advisers (remote) und übernehme daneben nur wenige Kundenprojekte gleichzeitig, damit jedes die nötige Aufmerksamkeit bekommt. Pakete und Preise stehen auf der Services-Seite.'],
       ['VAE, Saudi-Arabien, die Vereinigten Staaten und Ägypten.', 'VAE, Saudi-Arabien, die USA, Großbritannien, Spanien und Ägypten.'],
+      ['Designkonzepte, Kunden-Demos und kleinere Builds — alle live auf meiner eigenen Domain, damit Sie durchklicken können, statt mir zu glauben. Jedes ist als das gekennzeichnet, was es wirklich ist.', 'Eine Kundenarbeit und eine Kunden-Demo, live auf meiner eigenen Domain zum Durchklicken. Jede ist als das gekennzeichnet, was sie ist.'],
+      ['Konzepte & Builds', 'Kundenprojekte'],
     ],
     position: '',
   },
@@ -1657,11 +1683,15 @@ const HUMAN_COPY = {
     },
     hi: 'Hola, soy Ahmed. Trabajarás directamente conmigo, desde la primera llamada hasta el lanzamiento.',
     caseCta: '¿Necesitas algo parecido?',
-    headings: {},
+    headings: {
+      'Conceptos, demos y trabajos recientes.': 'Proyectos más pequeños para clientes.',
+    },
     text: [
       ["Pasa el cursor para pausar; haz clic en cualquier logo para abrir su sitio en vivo.", "Cada nombre abre su sitio en vivo."],
       ['Busco un puesto senior de ingeniería a jornada completa en Dubái — es lo que quiero ahora. Actualmente estoy a jornada completa en Recovery Advisers (remoto) y acepto algunos encargos freelance en paralelo; están en la página de servicios.', 'Ambos. Estoy a jornada completa en Recovery Advisers (remoto) y acepto pocos proyectos de clientes a la vez, para que cada uno reciba la atención que merece. Los paquetes y precios están en la página de servicios.'],
       ['EAU, Arabia Saudí, Estados Unidos y Egipto.', 'EAU, Arabia Saudí, Estados Unidos, Reino Unido, España y Egipto.'],
+      ['Conceptos de diseño, demos para clientes y trabajos más pequeños — todos publicados en mi propio dominio, para que los recorras en vez de creerme. Cada uno está etiquetado por lo que realmente es.', 'Un trabajo para un cliente y una demo para un cliente, publicados en mi propio dominio para que los recorras. Cada uno está etiquetado por lo que es.'],
+      ['Conceptos y builds', 'Proyectos de clientes'],
     ],
     position: '',
   },
@@ -1682,15 +1712,23 @@ const HUMAN_COPY = {
     },
     hi: 'Bonjour, je suis Ahmed. Vous travaillez directement avec moi, du premier appel au lancement.',
     caseCta: 'Besoin de quelque chose de similaire ?',
-    headings: {},
+    headings: {
+      'Concepts, démos et travaux récents.': 'Projets clients plus courts.',
+    },
     text: [
       ["Every mark is a real product I built or contributed to — from Gulf SaaS platforms to a fleet of US & UK pharmacy brands. Hover to pause; click any logo to open its live site.", "Chaque nom est un vrai produit que j’ai construit ou auquel j’ai contribué, des plateformes SaaS du Golfe aux marques de pharmacies aux États-Unis et au Royaume-Uni. Chaque lien ouvre le site en ligne."],
       ["Je cherche un poste senior en ingénierie à temps plein à Dubaï — c'est mon objectif aujourd'hui. Je suis actuellement à temps plein chez Recovery Advisers (à distance) et je prends quelques missions freelance en parallèle ; elles sont sur la page services.", 'Les deux. Je suis à temps plein chez Recovery Advisers (à distance) et je ne prends que quelques projets clients à la fois, pour que chacun reçoive l’attention qu’il mérite. Les forfaits et les tarifs sont sur la page services.'],
       ['EAU, Arabie saoudite, États-Unis et Égypte.', 'EAU, Arabie saoudite, États-Unis, Royaume-Uni, Espagne et Égypte.'],
+      ['Concepts de design, démos client et réalisations plus courtes — tous en ligne sur mon propre domaine, pour que vous cliquiez plutôt que de me croire sur parole. Chacun est étiqueté pour ce qu’il est vraiment.', 'Une réalisation client et une démo client, en ligne sur mon propre domaine pour que vous cliquiez dessus. Chacune est étiquetée pour ce qu’elle est.'],
+      ['Concepts & réalisations', 'Projets clients'],
     ],
     position: '',
   },
 };
+// Unrequested concept sites (dental clinics no one commissioned). They stay
+// live and linked from /demo.html as samples of the free demo; /work/ shows
+// client work only, so they leave its "smaller builds" list.
+const CONCEPT_HOSTS = ['reform.iamahmedfarid.com', 'digitdental.iamahmedfarid.com', 'itqan.iamahmedfarid.com'];
 // Which HUMAN_COPY headings/text a locale's pages actually used; reported after
 // the render so a re-export that rewords one shows up as a warning.
 const HUMAN_HITS = new Map();
@@ -2397,6 +2435,7 @@ async function snapshotVariant({ page, spec, lang, locales }) {
       name: (c.querySelector('.price-name')?.textContent || '').trim(),
       amount: [...(c.querySelector('.price-amount')?.childNodes || [])].map((n) => (n.textContent || '').trim()).filter(Boolean).join(' '),
       note: ((c.querySelector('.price-note')?.textContent || '').split(' · ')[0] || '').trim(),
+      tag: (c.querySelector('.price-tag')?.textContent || '').trim(),
       popular: c.classList.contains('is-popular'),
     }));
     const keptKeys = [];
@@ -2865,6 +2904,26 @@ async function snapshotVariant({ page, spec, lang, locales }) {
       const t = [...recsEyebrow.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
       if (t) { t.textContent = H2.recs; humanHits.push('k:recs'); }
     }
+    // /work/ is client work: the concept sites leave the smaller-builds list.
+    const builds = document.getElementById('builds');
+    if (builds) {
+      const hostOf = (a) => { try { return new URL(a.getAttribute('href')).host; } catch { return ''; } };
+      const concepts = [...builds.querySelectorAll('a.writing-card')].filter((a) => copy.conceptHosts.includes(hostOf(a)));
+      if (concepts.length === copy.conceptHosts.length) concepts.forEach((a) => a.remove());
+      else warnings.push(`builds: expected ${copy.conceptHosts.length} concept cards, found ${concepts.length} — left as exported`);
+    }
+    // Project pages: the same plain line the flagship card carries, under the
+    // tagline, so the page says what changed before how it was built.
+    if (pageSpec.work === 'single') {
+      const outcome = (H2.outcomes || {})[pageSpec.flagship.slug];
+      const tagline = document.querySelector('#case .case-tagline');
+      if (outcome && tagline) {
+        const p = document.createElement('p');
+        p.className = 'case-outcome';
+        p.textContent = outcome;
+        tagline.after(p);
+      } else warnings.push('case: no outcome line or .case-tagline — none added');
+    }
     // Numbered lists read as a template: "What I do" /01–/04 and the ways to
     // work 01–03. The process steps keep theirs; they are a sequence.
     document.querySelectorAll('.position-list .num, .service-card .service-num').forEach((e) => e.remove());
@@ -3131,13 +3190,14 @@ async function snapshotVariant({ page, spec, lang, locales }) {
 
     return {
       faq, warnings, keptKeys, project, humanHits,
+      priceCards: pageSpec.key === 'services' ? priceCards : null,
       caseNames: [...document.querySelectorAll('article.case .case-name')].map((e) => (e.textContent || '').trim()),
       body: document.getElementById('root').innerHTML,
     };
   }, spec, locales.map((l) => l.lang), FAQ_BUYER_KEYS[lang] || FAQ_BUYER_KEYS.en, prefix, PAGE_LAYOUT, SECTION_KEYS,
     { owner: LINK_OWNER, paths: Object.fromEntries(PAGE_SPECS.map((s) => [s.key, s.suffix])) },
     NAV[lang],
-    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en, caseStudies: METRICS.caseStudies.display }));
+    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en, caseStudies: METRICS.caseStudies.display, conceptHosts: CONCEPT_HOSTS }));
 
   // Layout passes are best-effort: a re-export that renames a class leaves the
   // page as the export drew it, which is valid, so warn rather than fail.
@@ -3751,6 +3811,8 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 .position-list li{grid-template-columns:1fr}
 /* Home: each way to work names its package and starting price. */
 .service-pkg{margin:-4px 0 12px;font-family:var(--mono);font-size:12px;color:var(--accent)}
+/* Project pages: the outcome, under the tagline. */
+.case-outcome{margin:10px 0 0;color:var(--ink);font-size:17px;line-height:1.5}
 /* Flagship cards: the outcome line is a sentence, not a metric. */
 .writing-card .wc-outcome{color:var(--ink-dim);font-size:14px;line-height:1.5}
 /* Arabic is a joined script: letter-spacing pulls its letters apart (the
@@ -3888,6 +3950,7 @@ async function build() {
   const assetSeen = new Map();
   const coverage = [];   // per locale: what the render held, and what each cut kept
   const projects = {};   // slug → { name, tagline, chips } from the English render
+  let prices = null;     // the English /services/ price cards, for llms.txt
   for (const loc of locales) {
     const { page, shared } = await renderLocale({ browser, loc, ghData, enhanceJS, locales });
     const snaps = [];
@@ -3896,6 +3959,7 @@ async function build() {
       for (const spec of PAGE_SPECS) {
         const snap = await snapshotVariant({ page, spec, lang: loc.lang, locales });
         if (loc.lang === 'en' && snap.project) projects[snap.project.slug] = snap.project;
+        if (loc.lang === 'en' && snap.priceCards) prices = snap.priceCards;
         snaps.push({ spec, keptKeys: snap.keptKeys, caseNames: snap.caseNames, faq: snap.faq });
         await writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, assetSeen });
       }
@@ -3928,7 +3992,7 @@ async function build() {
   // ── One-time SEO + static assets ──────────────────────────────────────────
   await copyStaticAssets();
 
-  await writeSeoFiles(locales, PAGE_SPECS, projects);
+  await writeSeoFiles(locales, PAGE_SPECS, projects, prices);
 
   // ── Verify each built page actually renders ───────────────────────────────
   console.log('→ Verifying built output…');
