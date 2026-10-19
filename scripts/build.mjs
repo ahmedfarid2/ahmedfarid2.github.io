@@ -1550,6 +1550,7 @@ const HUMAN_COPY = {
       'Six lanes I work in fluently.': 'What I build.',
       "Domains I've shipped real systems for.": "Industries I've worked in.",
       'Concepts, demos, and recent builds.': 'Smaller client builds.',
+      'Shipped for teams across 17+ countries.': 'Clients and products in 17+ countries.',
       "Logos of teams & products I've shipped.": "Teams and products I've shipped for.",
       'The stack, without the buzzwords.': 'The stack I use.',
       "Code I'm willing to publish.": 'Open-source code.',
@@ -1589,6 +1590,7 @@ const HUMAN_COPY = {
       ['UAE, Saudi Arabia, the United States, and Egypt.', 'UAE, Saudi Arabia, the United States, the UK, Spain and Egypt.'],
       ['Design concepts, client demos and smaller builds — all live on my own domain, so you can click through them instead of taking my word for it. Each one is labelled for what it actually is.', 'Client work and client demos, live on my own domain so you can click through them. Each one is labelled for what it is.'],
       ['Concepts & builds', 'Client builds'],
+      ['Customer · Employee · Manager apps — App Store & Play coming soon', 'Customer · Employee · Manager apps for iOS and Android'],
       ['Recommendations from people who managed me directly, verified on LinkedIn.', 'Clients and the people who managed me, in their own words. The LinkedIn-verified one is marked.'],
     ],
     position: 'I treat a product as one system, not a pile of features. I design how the parts fit together, build every layer, and stay on the hook when it has to scale.',
@@ -1621,6 +1623,7 @@ const HUMAN_COPY = {
       'ستّة مجالات أعمل فيها بطلاقة.': 'ما أبنيه.',
       'مجالات سلّمت لها أنظمة حقيقية.': 'قطاعات عملت فيها.',
       'مفاهيم وعروض تجريبية وأعمال حديثة.': 'أعمال أصغر لعملاء.',
+      'سلّمت لفِرَق عبر ١٧+ دولة.': 'عملاء ومنتجات في ١٧+ دولة.',
       'شعارات فِرَق ومنتجات سلّمتها.': 'فِرَق ومنتجات عملت معها.',
       'المنظومة التقنية، دون مصطلحات رنّانة.': 'التقنيات التي أستخدمها.',
       'شيفرة أنا مستعدّ لنشرها.': 'شيفرة مفتوحة المصدر.',
@@ -1634,6 +1637,7 @@ const HUMAN_COPY = {
       ['الإمارات والسعودية والولايات المتحدة ومصر.', 'الإمارات والسعودية والولايات المتحدة والمملكة المتحدة وإسبانيا ومصر.'],
       ['مفاهيم تصميمية وعروض تجريبية لعملاء وأعمال أصغر — جميعها منشورة على نطاقي الخاص، لتتصفّحها بنفسك بدل أن تأخذ كلامي. وكلٌّ منها موسوم بما هو عليه فعلًا.', 'أعمال وعروض تجريبية لعملاء، منشورة على نطاقي الخاص لتتصفّحها بنفسك. وكلٌّ منها موسوم بما هو عليه.'],
       ['مفاهيم وأعمال', 'أعمال لعملاء'],
+      ['تطبيقات العميل · الموظّف · المدير — App Store وPlay قريبًا', 'تطبيقات العميل · الموظّف · المدير لنظامي iOS وAndroid'],
       ['توصيات من أشخاص أداروني مباشرةً، موثّقة على LinkedIn.', 'عملاء وأشخاص أداروني، بكلماتهم. والتوصية الموثّقة على LinkedIn عليها علامة.'],
       ['احجز مكالمة تحديد نطاق مدتها ٣٠ دقيقة', 'احجز مكالمة مدتها ٣٠ دقيقة'],
     ],
@@ -1658,6 +1662,7 @@ const HUMAN_COPY = {
     caseCta: 'Sie brauchen etwas Ähnliches?',
     headings: {
       'Konzepte, Demos und neuere Arbeiten.': 'Kleinere Kundenprojekte.',
+      'Geliefert für Teams in 17+ Ländern.': 'Kunden und Produkte in 17+ Ländern.',
     },
     text: [
       ["Every mark is a real product I built or contributed to — from Gulf SaaS platforms to a fleet of US & UK pharmacy brands. Hover to pause; click any logo to open its live site.", "Jeder Name ist ein echtes Produkt, das ich gebaut oder mitentwickelt habe, von SaaS-Plattformen am Golf bis zu Apothekenmarken in den USA und Großbritannien. Jeder Link öffnet die Live-Website."],
@@ -1665,6 +1670,7 @@ const HUMAN_COPY = {
       ['VAE, Saudi-Arabien, die Vereinigten Staaten und Ägypten.', 'VAE, Saudi-Arabien, die USA, Großbritannien, Spanien und Ägypten.'],
       ['Designkonzepte, Kunden-Demos und kleinere Builds — alle live auf meiner eigenen Domain, damit Sie durchklicken können, statt mir zu glauben. Jedes ist als das gekennzeichnet, was es wirklich ist.', 'Kundenarbeiten und Kunden-Demos, live auf meiner eigenen Domain zum Durchklicken. Jede ist als das gekennzeichnet, was sie ist.'],
       ['Konzepte & Builds', 'Kundenprojekte'],
+      ['Kunden- · Mitarbeiter- · Manager-Apps — App Store & Play demnächst', 'Kunden- · Mitarbeiter- · Manager-Apps für iOS und Android'],
       ['Empfehlungen von Personen, die mich direkt geführt haben, verifiziert auf LinkedIn.', 'Kunden und Vorgesetzte, in ihren eigenen Worten. Die auf LinkedIn verifizierte Empfehlung ist markiert.'],
     ],
     position: '',
@@ -1688,6 +1694,7 @@ const HUMAN_COPY = {
     caseCta: '¿Necesitas algo parecido?',
     headings: {
       'Conceptos, demos y trabajos recientes.': 'Proyectos más pequeños para clientes.',
+      'Entregado para equipos en 17+ países.': 'Clientes y productos en 17+ países.',
     },
     text: [
       ["Pasa el cursor para pausar; haz clic en cualquier logo para abrir su sitio en vivo.", "Cada nombre abre su sitio en vivo."],
@@ -1695,6 +1702,7 @@ const HUMAN_COPY = {
       ['EAU, Arabia Saudí, Estados Unidos y Egipto.', 'EAU, Arabia Saudí, Estados Unidos, Reino Unido, España y Egipto.'],
       ['Conceptos de diseño, demos para clientes y trabajos más pequeños — todos publicados en mi propio dominio, para que los recorras en vez de creerme. Cada uno está etiquetado por lo que realmente es.', 'Trabajos y demos para clientes, publicados en mi propio dominio para que los recorras. Cada uno está etiquetado por lo que es.'],
       ['Conceptos y builds', 'Proyectos de clientes'],
+      ['Apps de Cliente · Empleado · Gerente — App Store y Play próximamente', 'Apps de Cliente · Empleado · Gerente para iOS y Android'],
       ['Recomendaciones de personas que me supervisaron directamente, verificadas en LinkedIn.', 'Clientes y personas que me supervisaron, con sus propias palabras. La recomendación verificada en LinkedIn está marcada.'],
     ],
     position: '',
@@ -1718,6 +1726,7 @@ const HUMAN_COPY = {
     caseCta: 'Besoin de quelque chose de similaire ?',
     headings: {
       'Concepts, démos et travaux récents.': 'Projets clients plus courts.',
+      'Livré pour des équipes dans 17+ pays.': 'Clients et produits dans 17+ pays.',
     },
     text: [
       ["Every mark is a real product I built or contributed to — from Gulf SaaS platforms to a fleet of US & UK pharmacy brands. Hover to pause; click any logo to open its live site.", "Chaque nom est un vrai produit que j’ai construit ou auquel j’ai contribué, des plateformes SaaS du Golfe aux marques de pharmacies aux États-Unis et au Royaume-Uni. Chaque lien ouvre le site en ligne."],
@@ -1725,6 +1734,7 @@ const HUMAN_COPY = {
       ['EAU, Arabie saoudite, États-Unis et Égypte.', 'EAU, Arabie saoudite, États-Unis, Royaume-Uni, Espagne et Égypte.'],
       ['Concepts de design, démos client et réalisations plus courtes — tous en ligne sur mon propre domaine, pour que vous cliquiez plutôt que de me croire sur parole. Chacun est étiqueté pour ce qu’il est vraiment.', 'Réalisations et démos client, en ligne sur mon propre domaine pour que vous cliquiez dessus. Chacune est étiquetée pour ce qu’elle est.'],
       ['Concepts & réalisations', 'Projets clients'],
+      ['Apps Client · Employé · Manager — App Store et Play bientôt disponibles', 'Apps Client · Employé · Manager pour iOS et Android'],
       ["Recommandations de personnes qui m'ont encadré directement, vérifiées sur LinkedIn.", 'Des clients et des personnes qui m’ont encadré, avec leurs propres mots. La recommandation vérifiée sur LinkedIn est signalée.'],
     ],
     position: '',
