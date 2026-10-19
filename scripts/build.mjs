@@ -1626,7 +1626,7 @@ const HUMAN_COPY = {
     outcomes: {
       'yelo-sale': 'Flottenbesitzer verkaufen Fahrzeuge in Live-Online-Auktionen statt in geschlossenen Deals',
       'qoralia': 'Städte sehen, welche Klimaprojekte machbar sind und welche Fördermittel passen',
-      'khebraos': 'Lehrende starten eine eigene arabische Akademie, die Kursentwürfe schreibt die KI',
+      'khebraos': 'Lehrende starten eine eigene arabische Akademie, die KI entwirft die Kurse',
       'phonic-maps': 'Bewertungen und Antworten aller Standorte an einem Ort',
       'recovery-advisers': 'Mandanten verfolgen ihren Fall live im eigenen Portal',
     },
@@ -1709,8 +1709,8 @@ const PACKAGED_ABOVE = {
 // Every page but home is cut from the home render and has no hero. The
 // export's enhancement layer waits for `.hero-stats` before it starts, so on
 // those pages it never started: no language menu, no Arabic numerals, a dead
-// Personalize button. There it waits for the nav alone. Every other feature in the layer is
-// null-safe when the hero is missing. A re-export that changes these strings
+// Personalize button. There it waits for the nav alone. Every other feature
+// in the layer is null-safe when the hero is missing. A re-export that changes these strings
 // leaves the page as before, and assertLocaleRouting then fails the build
 // because the language menu is missing.
 // The first-visit splash (the name on a black screen for 1.5s) is off on home
@@ -1840,7 +1840,7 @@ const PAGE_SPECS = [
     keepUnknown: true, faq: 'other', anchors: 'resolve', renumber: true,
     sortWriting: false, foldCases: false, contactFirst: 'hire', promoteH1: true,
     ld: ['profile', 'faq', 'breadcrumb'], priority: '0.6',
-    verify: { minText: 7350, minSections: 7 },       // measured 10501 chars, 10 sections
+    verify: { minText: 7350, minSections: 7 },       // measured 10501 chars, 10 sections (Oct 2026: Writing retired, 8961 chars; floor kept)
   },
   // One page per flagship case study, cut from the same #work section.
   ...FLAGSHIP.map((f) => ({
@@ -2307,7 +2307,12 @@ async function renderLocale({ browser, loc, ghData, enhanceJS, locales }) {
 
     // Sections taken off the site on purpose (RETIRED_SECTIONS), before the
     // inventory: what is not published is then not counted as lost.
-    retired.forEach((id) => document.getElementById(id)?.closest('section')?.remove());
+    const retiredMissing = [];
+    retired.forEach((id) => {
+      const sec = document.getElementById(id);
+      if (sec && sec.tagName === 'SECTION') sec.remove();
+      else retiredMissing.push(id);
+    });
 
     // ── Inventory + pristine copy ───────────────────────────────────────
     // What the export holds, so the Node side can prove every section, case
@@ -2325,7 +2330,7 @@ async function renderLocale({ browser, loc, ghData, enhanceJS, locales }) {
 
     return {
       title, lang, meta, css, bodyClass, rootAttrs, bodyAttrs, hasOwnSwitcher,
-      blobCount: blobUrls.length, pristineKeys, caseNames, faqQs,
+      blobCount: blobUrls.length, pristineKeys, caseNames, faqQs, retiredMissing,
     };
   }, GH_USER, ghData, !!enhanceJS, locales.map((l) => l.lang), RETIRED_SECTIONS);
 
@@ -2333,6 +2338,7 @@ async function renderLocale({ browser, loc, ghData, enhanceJS, locales }) {
     console.log(`  [${lang}] (${pageErrors.length} non-fatal page errors during render — expected for blocked external assets)`);
   }
   console.log(`  [${lang}] re-embedded ${shared.blobCount} blob asset(s) as data: URLs`);
+  for (const id of shared.retiredMissing || []) console.warn(`  [${lang}] ⚠ retired section "${id}" is not a <section id="${id}"> in the export — nothing removed`);
 
   try { assertFlagshipsRendered(lang, shared.caseNames); }
   catch (e) { await page.close().catch(() => {}); throw e; }
@@ -2391,6 +2397,7 @@ async function snapshotVariant({ page, spec, lang, locales }) {
       name: (c.querySelector('.price-name')?.textContent || '').trim(),
       amount: [...(c.querySelector('.price-amount')?.childNodes || [])].map((n) => (n.textContent || '').trim()).filter(Boolean).join(' '),
       note: ((c.querySelector('.price-note')?.textContent || '').split(' · ')[0] || '').trim(),
+      popular: c.classList.contains('is-popular'),
     }));
     const keptKeys = [];
     document.querySelectorAll('section').forEach((sec) => {
@@ -2864,12 +2871,15 @@ async function snapshotVariant({ page, spec, lang, locales }) {
     // Home: each way to work carries its package name and starting price from
     // /services/ (the cards there were named differently and showed no price).
     // Matched by position: build → the middle card, retainer → the last,
-    // advisory → the first, as the export orders the price list.
+    // advisory → the first, as the export orders the price list. The order is
+    // confirmed, not assumed: the build is the recommended card, and it is in
+    // the middle; a re-export that moves it gets no package lines and a warning.
     if (pageSpec.key === 'home') {
       const cards = [...document.querySelectorAll('#services .services-grid > .service-card')];
       const titleOf = (c) => (c.querySelector('.service-t')?.textContent || '').trim();
       const toPrice = [1, 2, 0];
       if (priceCards.length === 3 && priceCards.every((p) => p.name && p.amount) && cards.length === 3 &&
+          priceCards.findIndex((p) => p.popular) === 1 &&
           cards.every((c, i) => titleOf(c) === copy.serviceOrder[i])) {
         cards.forEach((c, i) => {
           const p = priceCards[toPrice[i]];
@@ -3020,8 +3030,9 @@ async function snapshotVariant({ page, spec, lang, locales }) {
       });
     }
 
-    // On /services the contact block leads with the project path (call,
-    // WhatsApp, brief); on home the hiring path stays first.
+    // On client pages the contact block leads with the project path (call,
+    // WhatsApp, brief); the hiring path is then dropped below, and stays
+    // (first) on /about/ only.
     if (pageSpec.contactFirst === 'project') {
       const paths = document.querySelectorAll('#contact .contact-paths > .contact-path');
       if (paths.length === 2) paths[0].parentNode.insertBefore(paths[1], paths[0]);
@@ -3055,12 +3066,12 @@ async function snapshotVariant({ page, spec, lang, locales }) {
     }
 
     // Right-to-left pages read arrows the other way: "→" after an Arabic label
-    // points back at the text. Only text with Arabic in it is turned, so a
-    // Latin run inside an Arabic page keeps its own direction.
+    // points back at the text. Only text with Arabic in it, or an arrow on its
+    // own (a list bullet), is turned, so a Latin run keeps its own direction.
     if (localePrefix === '/ar/') {
       const walker = document.createTreeWalker(document.getElementById('root'), NodeFilter.SHOW_TEXT);
       for (let n = walker.nextNode(); n; n = walker.nextNode()) {
-        if (n.nodeValue.includes('→') && /[\u0600-\u06FF]/.test(n.nodeValue)) n.nodeValue = n.nodeValue.replace(/→/g, '←');
+        if (n.nodeValue.includes('→') && (/[\u0600-\u06FF]/.test(n.nodeValue) || n.nodeValue.trim() === '→')) n.nodeValue = n.nodeValue.replace(/→/g, '←');
       }
     }
 
@@ -3736,6 +3747,8 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 /* Service-card tags: the export styles .chip only inside project and build
    cards, so these rendered as plain run-together text. */
 .service-tags .chip{font-family:var(--mono);font-size:10.5px;padding:4px 9px;border:1px solid var(--line-strong);border-radius:99px;color:var(--ink-mute)}
+/* "What I do" lost its /01–/04 column: the text takes the full row. */
+.position-list li{grid-template-columns:1fr}
 /* Home: each way to work names its package and starting price. */
 .service-pkg{margin:-4px 0 12px;font-family:var(--mono);font-size:12px;color:var(--accent)}
 /* Flagship cards: the outcome line is a sentence, not a metric. */
