@@ -169,6 +169,28 @@ export const SEO = {
       description: 'Avec qui vous travaillez : 6+ ans de SaaS en production depuis Dubaï, la stack et les principes derrière, les postes passés, le code open source et le CV.',
     },
   },
+  contact: {
+    en: {
+      title: 'Contact Ahmed Farid — Book a Call, Email or WhatsApp · Dubai',
+      description: 'Schedule a 30-minute scoping call, send a project brief, or reach me by email, WhatsApp or LinkedIn. Dubai-based, GMT+4; I reply within a day.',
+    },
+    ar: {
+      title: 'تواصل مع Ahmed Farid — احجز مكالمة أو راسلني · دبي',
+      description: 'احجز مكالمة تحديد نطاق مدتها ٣٠ دقيقة، أو أرسل وصف مشروعك، أو تواصل عبر البريد أو واتساب أو LinkedIn. من دبي (GMT+4)، وأردّ خلال يوم.',
+    },
+    de: {
+      title: 'Kontakt — Ahmed Farid · Call buchen, E-Mail oder WhatsApp · Dubai',
+      description: '30-minütigen Scoping-Call buchen, ein Projekt-Briefing schicken oder per E-Mail, WhatsApp oder LinkedIn schreiben. Aus Dubai (GMT+4), Antwort binnen eines Tages.',
+    },
+    es: {
+      title: 'Contacto — Ahmed Farid · Agenda una llamada, email o WhatsApp · Dubái',
+      description: 'Agenda una llamada de alcance de 30 minutos, envía un brief de proyecto o escríbeme por email, WhatsApp o LinkedIn. Desde Dubái (GMT+4); respondo en un día.',
+    },
+    fr: {
+      title: 'Contacter Ahmed Farid — Appel, e-mail ou WhatsApp · Dubaï',
+      description: 'Réservez un appel de cadrage de 30 minutes, envoyez un brief de projet ou écrivez-moi par e-mail, WhatsApp ou LinkedIn. Basé à Dubaï (GMT+4), réponse sous un jour.',
+    },
+  },
 };
 
 // Page names and link labels the build writes into the navigation, breadcrumbs
