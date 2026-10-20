@@ -4,7 +4,7 @@ Personal portfolio site deployed to GitHub Pages. Claude Design exports (`index*
 
 ## Repository facts
 
-**What it is.** Ahmed Farid's personal portfolio, published to GitHub Pages at the custom domain in `CNAME`, pitched at clients (projects and consulting; hiring/CV lives on `/about/`). Five locales (`en` at `/`, `ar` RTL, `de`, `es`, `fr` under `/<code>/`), each with 9 pages: home, `/work/`, `/work/<slug>/` for the 5 flagships, `/services/`, `/about/` — 45 pages, 47 sitemap URLs. Plus `checklist.html`, `get-checklist.html`, `demo.html` and `lead-magnet/`.
+**What it is.** Ahmed Farid's personal portfolio, published to GitHub Pages at the custom domain in `CNAME`, pitched at clients (projects and consulting; hiring/CV lives on `/about/`). Five locales (`en` at `/`, `ar` RTL, `de`, `es`, `fr` under `/<code>/`), each with 10 pages: home, `/work/`, `/work/<slug>/` for the 5 flagships, `/services/`, `/about/`, `/contact/` — 50 pages, 52 sitemap URLs. Plus `checklist.html`, `get-checklist.html`, `demo.html` and `lead-magnet/`.
 
 **Stack.** Static HTML produced from Claude Design exports by a Node 20 ESM build pipeline (`scripts/build.mjs`: puppeteer renders the export, snapshots the DOM, strips React/Babel, inlines fonts, adds a small vanilla-JS layer; `html-minifier-terser`). No framework at runtime.
 
@@ -40,7 +40,7 @@ Personal portfolio site deployed to GitHub Pages. Claude Design exports (`index*
 - `npm run copy:check` — reports whether each copy edit is applied; must not report a failed match
 - `npm run build` — produces `dist/`; needs a Chromium. In a sandbox where puppeteer cannot download one, set `PUPPETEER_EXECUTABLE_PATH` to an installed Chromium (this cloud environment provides `/opt/pw-browsers/chromium`)
 - Known sandbox quirk: the cloud sandbox has the Inter font installed, so Chromium renders the checklist's `system-ui`/`sans-serif` text in Inter instead of DejaVu Sans (what CI on ubuntu and the committed PDF use), and the last gate fails with `multi-tenant-saas-checklist.pdf: out of date with lead-magnet source (text differ)` even on an untouched `main`. Fix: hide Inter from fontconfig for both `checklist:build` and `build` — write a `fonts.conf` that includes `/etc/fonts/fonts.conf` and adds `<selectfont><rejectfont><glob>*/Inter*</glob></rejectfont></selectfont>`, then run with `FONTCONFIG_FILE=<that file>`. Verify with `pdffonts multi-tenant-saas-checklist.pdf` (DejaVuSans + LiberationSerif only, no Inter). Without that override, never commit a sandbox-rendered PDF; the PR's CI run stays the authoritative full pass
-- Inspect `dist/` — confirm React/Babel scripts are gone, the copy edits are present, and the gate lines report 45 pages / 47 sitemap URLs
+- Inspect `dist/` — confirm React/Babel scripts are gone, the copy edits are present, and the gate lines report 50 pages / 52 sitemap URLs
 
 ## Engineering orchestration
 

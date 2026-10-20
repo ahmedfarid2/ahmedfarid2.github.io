@@ -888,7 +888,7 @@ async function assertInternalLinks(files, locales = []) {
 // written pages, from the same table that drives them.
 const LD_TYPES = {
   service: 'ProfessionalService', project: 'CreativeWork', profile: 'ProfilePage',
-  collection: 'CollectionPage', breadcrumb: 'BreadcrumbList', faq: 'FAQPage',
+  collection: 'CollectionPage', breadcrumb: 'BreadcrumbList', faq: 'FAQPage', contactpage: 'ContactPage',
 };
 async function assertPageRoles(locales) {
   const bad = [];
@@ -899,7 +899,7 @@ async function assertPageRoles(locales) {
     // The navigation: exactly these four links, in this order.
     const navBlock = (masked.match(/<div class="nav-links">([\s\S]*?)<\/div>/) || [])[1] || '';
     const navHrefs = [...navBlock.matchAll(/<a href="([^"]*)"/g)].map((m) => m[1]);
-    const wantNav = [`${loc.urlPath}work/`, `${loc.urlPath}services/`, `${loc.urlPath}about/`, '#contact'];
+    const wantNav = ['work/', 'services/', 'about/', 'contact/'].map((p) => `${loc.urlPath}${p}`);
     if (navHrefs.join(' ') !== wantNav.join(' ')) bad.push(`${urlPath}: nav links [${navHrefs.join(', ')}], expected [${wantNav.join(', ')}]`);
     // Who the contact block addresses first.
     const at = masked.indexOf('class="contact-path"');
@@ -952,7 +952,7 @@ async function assertPageRoles(locales) {
 
 // What search engines and share cards read: the title and description of every
 // locale page, and its structured data. Limits are what a result snippet shows
-// before cutting; uniqueness is what keeps 45 pages from competing as one.
+// before cutting; uniqueness is what keeps 50 pages from competing as one.
 const HEAD_LIMITS = { title: 80, description: 170 };
 async function assertHeadMeta(locales) {
   const bad = [];
@@ -1267,6 +1267,7 @@ async function writeSeoFiles(locales, specs, projects = null, prices = null) {
           (projects[f.slug].hard ? ` The hard part: ${projects[f.slug].hard}` : '')),
         `- [Services](${SITE_URL}/services/): ${SEO.services.en.description}`,
         `- [About](${SITE_URL}/about/): ${SEO.about.en.description}`,
+        `- [Contact](${SITE_URL}/contact/): ${SEO.contact.en.description}`,
       ].join('\n') + `\n\n`
     : '';
 
@@ -1592,10 +1593,12 @@ const HOME_COPY = {
 //   text      exact sentence fragments → rewrites without the em dashes (en)
 //   position  the home position statement, rewritten without metaphors
 //   navCta    the nav pill, which now books the call
-//   caseCount the label of /about/'s first number (METRICS.caseStudies)
 //   recs      the testimonials eyebrow (the export says "Trust signals")
 //   hireAsk   the closing block's opening question, which also pitches a
-//             hire; dropped on every page but /about/ (the hiring page)
+//             hire; dropped on every page but /about/ and /contact/
+//   contactTitle  /contact/'s h1, in place of "Find me online."
+//   addonsTitle   the heading over /services/' three focused builds
+//   brandsSub     /work/'s name-list subtitle, once the carded names are gone
 //   existingQ/existingA  a services FAQ for a company with a product
 //             already in production; cloned from the rate question
 //   rateQ     the services FAQ question about price; its answer is rebuilt
@@ -1605,7 +1608,6 @@ const HOME_COPY = {
 const HUMAN_COPY = {
   en: {
     navCta: 'Book a call',
-    caseCount: 'Case studies, each linked to the live product',
     recs: 'Recommendations',
     hireAsk: 'Need a system built, or hiring a senior engineer?',
     rateQ: "What's your rate?",
@@ -1682,13 +1684,13 @@ const HUMAN_COPY = {
     ],
     position: 'I treat a product as one system, not a pile of features. I design how the parts fit together, build every layer, and stay on the hook when it has to scale.',
     pinnedStat: 'Pinned projects',
-    footBuild: 'What I build',
-    footStack: 'Tech stack',
+    contactTitle: 'Let’s talk.',
+    brandsSub: 'More real products and teams I built for, beyond the case studies above: from a bank and an e-learning platform to US and UK pharmacy brands. Each name opens its live site.',
+    addonsTitle: 'Focused builds',
     toolbeltMore: ['Show all 60+ tools', 'Show fewer'],
   },
   ar: {
     navCta: 'احجز مكالمة',
-    caseCount: 'دراسة حالة، كلٌّ منها مرتبط بالمنتج الحيّ',
     recs: 'توصيات',
     hireAsk: 'تحتاج إلى بناء نظام، أو تبحث عن مهندس أول؟',
     rateQ: 'ما سعرك؟',
@@ -1744,13 +1746,13 @@ const HUMAN_COPY = {
     ],
     position: 'أتعامل مع المنتج كنظام واحد، لا كمجموعة مزايا متفرّقة. أصمّم كيف تترابط أجزاؤه، وأبني كل طبقاته، وأبقى مسؤولًا عنه حين يكبر.',
     pinnedStat: 'مشاريع مثبّتة',
-    footBuild: 'ما أبنيه',
-    footStack: 'التقنيات',
+    contactTitle: 'لنتحدّث.',
+    brandsSub: 'منتجات وفرق حقيقية أخرى بنيت لها، غير دراسات الحالة أعلاه: من بنك ومنصّة تعليم إلى علامات صيدليات أمريكية وبريطانية. كل اسم يفتح موقعه الحيّ.',
+    addonsTitle: 'مشاريع مركّزة',
     toolbeltMore: ['عرض كل الأدوات (٦٠+)', 'عرض أقل'],
   },
   de: {
     navCta: 'Gespräch buchen',
-    caseCount: 'Fallstudien, jede mit dem Live-Produkt verlinkt',
     recs: 'Empfehlungen',
     hireAsk: 'Sie brauchen ein System oder suchen einen Senior-Engineer?',
     rateQ: 'Wie hoch ist Ihr Satz?',
@@ -1813,13 +1815,13 @@ const HUMAN_COPY = {
     ],
     position: "Ich behandle ein Produkt als ein System, nicht als Sammlung von Features. Ich entwerfe, wie die Teile zusammenspielen, baue jede Schicht und bleibe verantwortlich, wenn es wachsen muss.",
     pinnedStat: 'Angepinnte Projekte',
-    footBuild: 'Was ich baue',
-    footStack: 'Tech-Stack',
+    contactTitle: 'Sprechen wir.',
+    brandsSub: 'Weitere echte Produkte und Teams, für die ich gebaut habe, über die Fallstudien oben hinaus: von einer Bank und einer E-Learning-Plattform bis zu Apothekenmarken in den USA und Großbritannien. Jeder Name öffnet die Live-Website.',
+    addonsTitle: 'Fokussierte Projekte',
     toolbeltMore: ['Alle 60+ Tools zeigen', 'Weniger anzeigen'],
   },
   es: {
     navCta: 'Reservar una llamada',
-    caseCount: 'Casos de estudio, cada uno enlazado al producto en vivo',
     recs: 'Recomendaciones',
     hireAsk: '¿Necesitas construir un sistema o buscas un ingeniero senior?',
     rateQ: '¿Cuál es tu tarifa?',
@@ -1883,13 +1885,13 @@ const HUMAN_COPY = {
     ],
     position: "Trato un producto como un solo sistema, no como un montón de funciones. Diseño cómo encajan las piezas, construyo cada capa y sigo respondiendo cuando tiene que escalar.",
     pinnedStat: 'Proyectos fijados',
-    footBuild: 'Qué construyo',
-    footStack: 'Tecnologías',
+    contactTitle: 'Hablemos.',
+    brandsSub: 'Más productos y equipos reales para los que construí, además de los casos de arriba: desde un banco y una plataforma de e-learning hasta marcas de farmacia de EE. UU. y Reino Unido. Cada nombre abre su sitio en vivo.',
+    addonsTitle: 'Proyectos acotados',
     toolbeltMore: ['Ver las 60+ herramientas', 'Ver menos'],
   },
   fr: {
     navCta: 'Réserver un appel',
-    caseCount: 'Études de cas, chacune liée au produit en ligne',
     recs: 'Recommandations',
     hireAsk: 'Vous avez un système à construire ou recrutez un ingénieur senior ?',
     rateQ: 'Quel est votre tarif ?',
@@ -1952,8 +1954,9 @@ const HUMAN_COPY = {
     ],
     position: "Je traite un produit comme un seul système, pas comme un empilement de fonctionnalités. Je conçois la façon dont les pièces s’assemblent, je construis chaque couche et je reste responsable quand il faut passer à l’échelle.",
     pinnedStat: 'Projets épinglés',
-    footBuild: 'Ce que je construis',
-    footStack: 'Technologies',
+    contactTitle: 'Parlons-en.',
+    brandsSub: 'D’autres produits et équipes pour qui j’ai construit, au-delà des études de cas ci-dessus : d’une banque et d’une plateforme d’e-learning à des marques de pharmacies aux États-Unis et au Royaume-Uni. Chaque nom ouvre le site en ligne.',
+    addonsTitle: 'Projets ciblés',
     toolbeltMore: ['Voir les 60+ outils', 'Voir moins'],
   },
 };
@@ -2098,8 +2101,11 @@ const PAGE_LAYOUT = {
 //   foldCases    fold Problem + Approach of the non-flagship cases
 //   contactFirst 'project' puts the project path before the hiring path
 //   promoteH1    promote the first section title to <h1> (no hero on the page)
+//   hiring       keep the hiring path (CV) second in the contact block on a
+//                page that leads with the project path (/contact/ only)
 //   ld           extra JSON-LD for the page: 'service' (ProfessionalService),
 //                'project' (CreativeWork), 'profile' (ProfilePage),
+//                'contactpage' (ContactPage),
 //                'collection' (CollectionPage), 'breadcrumb' (BreadcrumbList —
 //                needs a NAV label), 'faq' (FAQPage from the FAQ items kept;
 //                home shows the buyer questions without it, so the same
@@ -2112,7 +2118,9 @@ const PAGE_LAYOUT = {
 // the render before the page inventory, so the inventory gate still proves
 // everything else is published. "writing": six one-line teasers that all
 // linked to the same LinkedIn feed, not to any post (Oct 2026 review).
-const RETIRED_SECTIONS = ['writing'];
+// "bynumbers": a second row of four numbers right under the profile's own row
+// of four (Oct 2026 UI review); the profile row stays.
+const RETIRED_SECTIONS = ['writing', 'bynumbers'];
 const SECTION_KEYS = [
   'top', 'trust', 'position', 'about', 'bynumbers', 'work', 'products', 'builds', 'build',
   'domains', 'brands', 'regions', 'depth', 'arch', 'github', 'experience', 'process', 'why',
@@ -2163,11 +2171,23 @@ const PAGE_SPECS = [
   },
   {
     key: 'about', suffix: 'about/',
-    sections: ['about', 'bynumbers', 'depth', 'arch', 'github', 'experience', 'why', 'faq', 'connect', 'contact'],
+    // The channel list (#connect) moved to /contact/, which the nav links to.
+    sections: ['about', 'depth', 'arch', 'github', 'experience', 'why', 'faq', 'contact'],
     keepUnknown: true, faq: 'other', anchors: 'resolve', renumber: true,
     sortWriting: false, foldCases: false, contactFirst: 'hire', promoteH1: true,
     ld: ['profile', 'faq', 'breadcrumb'], priority: '0.6',
-    verify: { minText: 7350, minSections: 7 },       // measured 10501 chars, 10 sections (Oct 2026: Writing retired, 8961 chars; floor kept)
+    verify: { minText: 5649, minSections: 5 },       // measured 8070 chars, 8 sections (Oct 2026: Writing and By the numbers retired, Connect moved to /contact/)
+  },
+  {
+    // Every way to reach me, at an address the nav, an email signature or a
+    // proposal can carry: the channels first, then the booking block with both
+    // paths (a project first, then hiring).
+    key: 'contact', suffix: 'contact/',
+    sections: ['connect', 'contact'],
+    keepUnknown: false, faq: null, anchors: 'resolve', renumber: true,
+    sortWriting: false, foldCases: false, contactFirst: 'project', hiring: true, promoteH1: true,
+    ld: ['contactpage', 'breadcrumb'], priority: '0.6',
+    verify: { minText: 1318, minSections: 1 },        // measured 1883 chars, 2 sections
   },
   // One page per flagship case study, cut from the same #work section.
   ...FLAGSHIP.map((f) => ({
@@ -2184,9 +2204,9 @@ const PAGE_SPECS = [
 // carry it. `contact` is on every page and `position` has no id, so neither
 // is listed. Each value is a PAGE_SPECS key.
 const LINK_OWNER = {
-  top: 'home', 'what-i-do': 'home', trust: 'home', process: 'home', testimonials: 'home', bynumbers: 'about',
+  top: 'home', 'what-i-do': 'home', trust: 'home', process: 'home', testimonials: 'home',
   about: 'about', depth: 'about', arch: 'about', github: 'about', experience: 'about',
-  why: 'about', connect: 'about',   // no writing: retired (RETIRED_SECTIONS)
+  why: 'about', connect: 'contact',   // no writing or bynumbers: retired (RETIRED_SECTIONS)
   work: 'work', products: 'work', builds: 'work', build: 'services', domains: 'services',
   brands: 'work', regions: 'work',
   pricing: 'services', services: 'home', faq: 'services',
@@ -2824,6 +2844,7 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         };
         if (pageSpec.work === 'teaser') {
           const g = grid(layout.flagships);
+          g.classList.add('flagship-grid');
           if (pageSpec.key === 'home') {
             articles.forEach((c) => c.remove());
             holder.replaceWith(g);
@@ -2883,8 +2904,8 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         }
       }
     }
-    // The navigation is the same four links on every page: three pages and the
-    // contact block. The export's six in-page anchors (Work, Brands, Engineering,
+    // The navigation is the same four links on every page, each a page of its
+    // own. The export's six in-page anchors (Work, Brands, Engineering,
     // Experience, Process, FAQ) described a single long page. Numbers are taken
     // from the links being replaced, so Arabic keeps its Arabic-Indic digits.
     {
@@ -2893,7 +2914,7 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         { key: 'work', href: `${localePrefix}work/`, label: labels.work },
         { key: 'services', href: `${localePrefix}services/`, label: labels.services },
         { key: 'about', href: `${localePrefix}about/`, label: labels.about },
-        { key: 'contact', href: '#contact', label: labels.contact },
+        { key: 'contact', href: `${localePrefix}contact/`, label: labels.contact },
       ];
       const fill = (container, existing, anchorBefore) => {
         const nums = existing.slice(0, items.length).map((a) => (a.querySelector('.idx') || {}).textContent);
@@ -3071,10 +3092,22 @@ async function snapshotVariant({ page, spec, lang, locales }) {
     // The footer's services link said "Freelance & consulting"; it is the
     // same page the nav calls Services.
     document.querySelectorAll(`.foot-col a[href="${localePrefix}services/"]`).forEach((a) => { a.textContent = labels.services; });
-    // "Capabilities" and "Engineering" opened sections titled "What I build"
-    // and "The stack I use"; name the links after what they open.
-    if (H2.footBuild) document.querySelectorAll('.foot-col a[href$="#build"]').forEach((a) => { a.textContent = H2.footBuild; });
-    if (H2.footStack) document.querySelectorAll('.foot-col a[href$="#depth"]').forEach((a) => { a.textContent = H2.footStack; });
+    // The footer's first column named five in-page sections, three of them
+    // on other pages; it lists the same four pages as the nav instead.
+    {
+      const list = document.querySelector('footer .foot-col ul');
+      const tpl = list && list.querySelector(':scope > li');
+      if (tpl && tpl.querySelector('a')) {
+        list.replaceChildren(...['work', 'services', 'about', 'contact'].map((k) => {
+          const li = tpl.cloneNode(true);
+          const a = li.querySelector('a');
+          for (const at of [...a.attributes]) if (at.name !== 'class') a.removeAttribute(at.name);
+          a.setAttribute('href', `${localePrefix}${k}/`);
+          a.textContent = labels[k];
+          return li;
+        }));
+      } else warnings.push('footer: the first link column was not found — left as exported');
+    }
     // Testimonials: the one about working with the business comes first; the
     // other praises a Flutter developer, which is the secondary lane.
     const tests = document.querySelector('.tests');
@@ -3119,19 +3152,6 @@ async function snapshotVariant({ page, spec, lang, locales }) {
     // About: the portrait badge said "Open to work · Now", which on a client
     // site reads as job hunting.
     document.querySelectorAll('.about-portrait-badge').forEach((b) => b.remove());
-    // By the numbers: "9+ flagship platforms" contradicted the five flagships
-    // the site shows; the first tile counts the case studies instead.
-    const firstNum = document.querySelector('#bynumbers .bynum');
-    if (firstNum && H2.caseCount) {
-      const v = firstNum.querySelector('.bynum-v');
-      const l = firstNum.querySelector('.bynum-l');
-      const digits = localePrefix === '/ar/' ? copy.caseStudies.replace(/[0-9]/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]) : copy.caseStudies;
-      // Only the tile that still says 9+ (any digits, either side of the
-      // plus): a re-export that reorders the tiles must not lose a stat.
-      if (v && l && /^\+?[9٩]\+?$/.test((v.textContent || '').trim())) {
-        v.textContent = digits; l.textContent = H2.caseCount; humanHits.push('caseCount');
-      } else warnings.push('about: the first number tile no longer reads 9+ — left as exported');
-    }
     // Ibdaa Course left alpha: production is ibdaacourse.com, and the
     // "working title, pending the client's brand" note is out of date.
     document.querySelectorAll('a[href^="https://alpha.ibdaacourse.com"]').forEach((a) => {
@@ -3184,6 +3204,31 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         wrap.appendChild(list);
         wall.replaceWith(wrap);
       } else warnings.push('brands: .logo-wall not found — left as exported');
+      // The cards above already show the case studies; the name list keeps
+      // the products and teams that have no card, and says so.
+      const squash = (t) => (t || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const carded = new Set([...document.querySelectorAll('#work .writing-card-title, #work .case-name, #products .writing-card-title, #builds .writing-card-title')]
+        .map((h) => squash(h.textContent)).filter(Boolean));
+      const chips = [...document.querySelectorAll('#brands .brand-list > a.chip')];
+      const dupes = chips.filter((c) => carded.has(squash(c.textContent)));
+      if (dupes.length && dupes.length < chips.length) dupes.forEach((c) => c.remove());
+      else warnings.push(`brands: ${dupes.length} of ${chips.length} names match a card — list left whole`);
+      const brandsSub = document.querySelector('#brands .section-sub');
+      if (brandsSub && H2.brandsSub) brandsSub.textContent = H2.brandsSub;
+      else warnings.push('brands: no .section-sub or brandsSub — subtitle left as exported');
+      // Further cases: one label for all of them ("PLATFORM / 08" stood out
+      // among seven "CASE / 0n").
+      const nums = [...document.querySelectorAll('#work .cases .case-num')];
+      const label = (nums[0]?.textContent || '').split(' / ')[0];
+      if (label && nums.every((n) => n.textContent.includes(' / '))) {
+        nums.forEach((n) => { n.textContent = `${label} / ${n.textContent.split(' / ').slice(1).join(' / ')}`; });
+      } else warnings.push('work: case labels not in "LABEL / NN" form — left as exported');
+    }
+    // /contact/: the page is the channel list, so its h1 says what to do.
+    if (pageSpec.key === 'contact') {
+      const t = document.querySelector('#connect .section-title');
+      if (t && H2.contactTitle) t.textContent = H2.contactTitle;
+      else warnings.push('contact: #connect title or contactTitle missing — heading left as exported');
     }
     // /services/: what I build and the industries sit after the price list
     // (the export orders them before it).
@@ -3193,6 +3238,18 @@ async function snapshotVariant({ page, spec, lang, locales }) {
       const domains = document.querySelector('.industries')?.closest('section');
       if (pricing && build && domains) { pricing.after(build); build.after(domains); }
       else warnings.push('services: #pricing, #build or the industries section not found — left in export order');
+      // The focused builds under the price cards get a heading of their own.
+      const addons = document.querySelector('#pricing .addons-grid');
+      if (addons && H2.addonsTitle) {
+        const h = document.createElement('h3');
+        h.className = 'addons-title';
+        h.textContent = H2.addonsTitle;
+        addons.before(h);
+      } else warnings.push('services: .addons-grid or addonsTitle missing — no heading');
+      // "What I build": the glyph tiles (◐ ◧ …) read as placeholder icons.
+      const icos = document.querySelectorAll('#build .build-card > .ico');
+      if (icos.length) icos.forEach((e) => e.remove());
+      else warnings.push('services: no .build-card icons found');
     }
     // The testimonials are recommendations; "Trust signals" was the marketer
     // talking to himself.
@@ -3304,6 +3361,35 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         .find((st) => (st.querySelector('.l')?.textContent || '').trim() === copy.human.pinnedStat);
       if (pinned) pinned.remove();
       else warnings.push('about: "pinned projects" stat not found — left as exported');
+      // GitHub achievements are badges, not a signal a client reads: the
+      // public-repo count (first) stays alone.
+      const ghStats = [...document.querySelectorAll('#github .gh-stat')];
+      if (ghStats.length === 2) ghStats[1].remove();
+      else warnings.push(`about: expected 2 GitHub stats after the pinned one, found ${ghStats.length} — left as exported`);
+      // Experience: one letter tile per company. Favicons rendered as grey
+      // squares beside the letter tiles, and Compass Med had no mark at all.
+      const tileTpl = document.querySelector('#experience .co-link > .co-logo-mono');
+      const coLinks = [...document.querySelectorAll('#experience .co-link')];
+      if (tileTpl && coLinks.length) {
+        for (const link of coLinks) {
+          const name = (link.querySelector('.co-name')?.textContent || '').trim();
+          const mark = link.querySelector(':scope > .co-logo');
+          if (!name || (mark && mark.classList.contains('co-logo-mono'))) continue;
+          const tile = tileTpl.cloneNode(true);
+          tile.textContent = name[0].toUpperCase();
+          if (mark) mark.replaceWith(tile);
+          else link.prepend(tile);
+        }
+      } else warnings.push('about: no experience letter tile to copy — logos left as exported');
+      // The hero: one CV button (it opens the PDF, which has its own
+      // download); the portrait is the first thing painted, so it loads now.
+      const cvButtons = [...document.querySelectorAll('#about .about-cta a[href$="Ahmed-Farid-CV.pdf"]')];
+      const dl = cvButtons.find((a) => a.hasAttribute('download'));
+      if (cvButtons.length === 2 && dl) dl.remove();
+      else warnings.push(`about: expected a View and a Download CV button, found ${cvButtons.length} — left as exported`);
+      const portrait = document.querySelector('#about .about-portrait img');
+      if (portrait) { portrait.setAttribute('loading', 'eager'); portrait.setAttribute('fetchpriority', 'high'); }
+      else warnings.push('about: portrait image not found — left lazy');
       // Toolbelt: the core stack stays visible; the long tail (60+ items) sits
       // behind a native checkbox + label, so it works without the enhancement
       // script. The label stays visible in both states, so keyboard focus
@@ -3561,10 +3647,11 @@ async function snapshotVariant({ page, spec, lang, locales }) {
     }
 
     // The hiring path (CV, "contact me about a senior role") belongs to
-    // /about/. Every other page is a client page: its closing block keeps the
+    // /about/ (first) and /contact/ (second, `hiring`). Every other page is a
+    // client page: its closing block keeps the
     // project path only, and drops the opening question's "or hiring a senior
     // engineer?" half by dropping that question.
-    if (pageSpec.contactFirst !== 'hire') {
+    if (pageSpec.contactFirst !== 'hire' && !pageSpec.hiring) {
       const paths = [...document.querySelectorAll('#contact .contact-paths > .contact-path')];
       const hire = paths.filter((p) => !p.querySelector('a[href*="calendly.com"]'));
       if (paths.length === 2 && hire.length === 1) hire[0].remove();
@@ -3650,7 +3737,7 @@ async function snapshotVariant({ page, spec, lang, locales }) {
   }, spec, locales.map((l) => l.lang), FAQ_BUYER_KEYS[lang] || FAQ_BUYER_KEYS.en, prefix, PAGE_LAYOUT, SECTION_KEYS,
     { owner: LINK_OWNER, paths: Object.fromEntries(PAGE_SPECS.map((s) => [s.key, s.suffix])) },
     NAV[lang],
-    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en, caseStudies: METRICS.caseStudies.display, conceptHosts: CONCEPT_HOSTS, caseShots: CASE_SHOTS, impact: IMPACT_PLAIN[lang] || IMPACT_PLAIN.en, aedRate: AED_PER_USD, priceLocale: PRICE_LOCALE[lang] || 'en-AE', moreRecs: MORE_RECS[lang] || MORE_RECS.en,
+    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en, conceptHosts: CONCEPT_HOSTS, caseShots: CASE_SHOTS, impact: IMPACT_PLAIN[lang] || IMPACT_PLAIN.en, aedRate: AED_PER_USD, priceLocale: PRICE_LOCALE[lang] || 'en-AE', moreRecs: MORE_RECS[lang] || MORE_RECS.en,
       clientQuotes: CLIENT_QUOTES.map((q) => ({ name: q.name[lang] || q.name.en, initials: q.initials[lang] || q.initials.en, role: q.role[lang] || q.role.en, quote: q.quote[lang] || q.quote.en })) }));
 
   // Layout passes are best-effort: a re-export that renames a class leaves the
@@ -3991,6 +4078,9 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
   const pageLd = [
     spec.ld.includes('profile')
       ? { ...pageNode, '@type': 'ProfilePage', '@id': `${pageUrl}#profile`, mainEntity: { '@id': `${SITE_URL}/#person` } }
+      : null,
+    spec.ld.includes('contactpage')
+      ? { ...pageNode, '@type': 'ContactPage', '@id': `${pageUrl}#page`, about: { '@id': `${SITE_URL}/#person` } }
       : null,
     spec.ld.includes('collection')
       ? {
@@ -4389,12 +4479,12 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 /* Home on a phone: flagship cards keep the screenshot, name and outcome; the
    tagline and stack chips stay on /work/ and the case study. */
 @media (max-width:760px){#main > #work:not(:first-child) .writing-card .writing-card-desc,#main > #work:not(:first-child) .writing-card .case-stack{display:none}}
-/* /services/ and /work/ open on a section head, with no eyebrow or crumbs
+/* /services/, /work/ and /contact/ open on a section head, with no eyebrow or crumbs
    above it, so the fixed nav sat almost on the headline. */
-#main > #pricing:first-child,#main > #work:first-child{padding-top:150px}
-@media (max-width:760px){#main > #pricing:first-child,#main > #work:first-child{padding-top:128px}}
-/* /about/: two GitHub stats once the pinned count is gone. */
-#github .gh-stats{grid-template-columns:repeat(2,1fr)}
+#main > #pricing:first-child,#main > #work:first-child,#main > #connect:first-child{padding-top:150px}
+@media (max-width:760px){#main > #pricing:first-child,#main > #work:first-child,#main > #connect:first-child{padding-top:128px}}
+/* /about/: one GitHub stat (public repos) once pinned and achievements are gone. */
+#github .gh-stats{grid-template-columns:1fr}
 /* /about/ toolbelt: core stack shown, the rest behind a native toggle. */
 .tb-more-cb{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 .tb-more-cb:not(:checked) ~ .toolbelt-grid .tb-extra{display:none}
@@ -4418,8 +4508,54 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 }
 /* Project pages: the outcome, under the tagline. */
 .case-outcome{margin:10px 0 0;color:var(--ink);font-size:17px;line-height:1.5}
-/* Flagship cards: the outcome line is a sentence, not a metric. */
-.writing-card .wc-outcome{color:var(--ink-dim);font-size:14px;line-height:1.5}
+/* Flagship cards: the outcome is the line that sells, so it reads brighter
+   than the description above it. */
+.writing-card .wc-outcome{color:var(--ink);font-size:14.5px;line-height:1.5;font-weight:500}
+/* Grids never end on an empty cell. Five flagships (home, /work/): three,
+   then two centred under them; a lone last card is centred at the width of
+   its neighbours; a grid of two or four cards runs two across. */
+@media (min-width:901px){
+  .flagship-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .flagship-grid>*{grid-column:span 2}
+  .flagship-grid>:nth-child(4):nth-last-child(2){grid-column:2 / span 2}
+  #work .cases>article.case:last-of-type:nth-of-type(odd){grid-column:1 / -1;justify-self:center;width:calc(50% - 10px)}
+  .writing-grid:not(.flagship-grid):has(> :nth-child(4):last-child){grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (min-width:561px) and (max-width:900px){
+  .flagship-grid>:last-child:nth-child(odd){grid-column:1 / -1;justify-self:center;width:calc(50% - 9px)}
+}
+@media (min-width:561px){
+  .writing-grid:not(.flagship-grid):has(> :nth-child(2):last-child){grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+/* About on a phone: the portrait shares the first screen with the headline. */
+@media (max-width:760px){
+  .about-portrait{aspect-ratio:auto;min-height:0;height:min(46svh,400px);max-width:none}
+  .about-portrait img{object-position:50% 18%!important}
+}
+/* Experience: the freelance clients as one quiet line of names, not a wall
+   of pills; every company gets the same letter tile. */
+.exp-row .co-multi{display:block;font-size:13.5px;line-height:1.7;color:var(--ink-mute)}
+.exp-row .co-multi .co-chip{display:inline;padding:0;border:0;border-radius:0;background:none;font-family:var(--sans);font-style:normal;font-size:inherit;color:inherit}
+.exp-row .co-multi .co-chip:hover{background:none;color:var(--accent)}
+.exp-row .co-multi .co-chip .ext{display:none}
+.exp-row .co-multi .co-chip:not(:last-child)::after{content:"\\00a0· ";color:var(--ink-mute)}
+/* GitHub: one full-width line: who, how many public repos, the link. */
+#github .gh.gh-solo{grid-template-columns:minmax(0,1fr)}
+@media (min-width:761px){
+  #github .gh-solo .gh-card{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px 40px}
+  #github .gh-solo .gh-stats{margin:0;padding:0;border:0}
+  #github .gh-solo .gh-profile-link{margin-top:0!important}
+}
+/* Services: the three focused builds under the price cards get a name, and a
+   price that reads as one. */
+.addons-title{margin:44px 0 0;text-align:center;font-family:var(--mono);font-size:12px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-mute)}
+.addon-price{font-family:var(--sans);font-size:17px;font-weight:600;color:var(--accent)}
+/* Closing block: the six promises as a 3 × 2 grid on a wide screen, two
+   across on a tablet (the German and Spanish lines are long), one column on
+   a phone. Columns may shrink and wrap rather than spill past the block. */
+@media (min-width:761px){.contact-terms{display:grid;grid-template-columns:repeat(2,minmax(0,max-content));justify-content:center;gap:8px 28px;max-width:none}}
+@media (min-width:1100px){.contact-terms{grid-template-columns:repeat(3,minmax(0,max-content))}}
+@media (max-width:760px){.contact-terms{display:grid;grid-template-columns:1fr;justify-items:start;width:max-content;max-width:100%}}
 /* Arabic is a joined script: letter-spacing pulls its letters apart (the
    export tracks labels at 1–2px and the hero at −6px). None in Arabic. */
 [dir=rtl] body,[dir=rtl] body *{letter-spacing:0!important}
@@ -4584,13 +4720,13 @@ async function build() {
     for (const k of unused) console.warn(`  [${lang}] ⚠ human copy not applied (export reworded?): ${k.slice(2)}`);
   }
 
-  // /about/'s first number is METRICS.caseStudies: it must still be what
-  // /work/ carries (the flagship pages plus the further case studies).
+  // METRICS.caseStudies must still be what /work/ carries (the flagship
+  // pages plus the further case studies).
   for (const { lang, snaps } of coverage) {
     const work = snaps.find((x) => x.spec.key === 'work');
     const more = work ? work.caseNames.length : 0;
     if (String(FLAGSHIP.length + more) !== METRICS.caseStudies.display) {
-      throw Object.assign(new Error(`[build] /about/ says ${METRICS.caseStudies.display} case studies, but [${lang}] /work/ carries ${FLAGSHIP.length + more} (${FLAGSHIP.length} flagship + ${more}) — update METRICS.caseStudies in site-facts.mjs`), { fatal: true });
+      throw Object.assign(new Error(`[build] METRICS.caseStudies says ${METRICS.caseStudies.display}, but [${lang}] /work/ carries ${FLAGSHIP.length + more} (${FLAGSHIP.length} flagship + ${more}) — update METRICS.caseStudies in site-facts.mjs`), { fatal: true });
     }
   }
 
