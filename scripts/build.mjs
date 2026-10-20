@@ -1744,6 +1744,15 @@ const HUMAN_COPY = {
       ["Saeed Al-Badry, MBA", "سعيد البدري، MBA"],
       ["المعمارية والـ Backend والويب والجوّال والبنية التحتية — مهندس واحد يمسك الحبل كاملًا.", "المعمارية والـ Backend والويب والجوّال والبنية التحتية، ومهندس أول واحد مسؤول عنها كلها."],
       ["Backend، ويب، جوّال، بنية تحتية — يجمعها شخص واحد.", "الـ Backend والويب والجوّال والبنية التحتية، وشخص واحد مسؤول عنها كلها."],
+      ["المحفظة الكاملة — منصّات SaaS الرئيسية أولًا، ثم البقية. كل مدخل يرتبط مباشرةً بالمنتج الحيّ أو صفحة المتجر أو لوحة الإدارة، مسحوبًا من ملفّي على GitHub.", "منصّات SaaS الرئيسية أولًا، ثم البقية. كل مدخل يرتبط بالمنتج الحيّ أو صفحة المتجر أو لوحة الإدارة."],
+      ["تفضّل إعدادًا مخصّصًا أو أطول مدى؟ إليك كيف يمكننا العمل معًا — كل تعاقد يبدأ بمكالمة ٣٠ دقيقة.", "تريد شيئًا مخصّصًا أو أطول مدى؟ إليك كيف يمكننا العمل معًا. كل تعاقد يبدأ بمكالمة واحدة مدتها ٣٠ دقيقة."],
+      ["نقاط انطلاق شفّافة لأكثر التعاقدات شيوعًا. كل مشروع يُسعّر بعد مكالمة ٣٠ دقيقة — دون مفاجآت، دون انجراف بالساعة.", "نقاط انطلاق شفّافة لأكثر التعاقدات شيوعًا. كل مشروع يُسعَّر بعد مكالمة تحديد نطاق مدتها ٣٠ دقيقة، فلا مفاجآت ولا فوترة بالساعة."],
+      ["نطاق مهندس أوّل، مُضيَّق إلى ما أسلّمه فعلًا — لا ما هو مكتوب في السيرة الذاتية. معظم المشاريع تقع عبر اثنين أو ثلاثة منها في آنٍ واحد.", "ما أبنيه في أغلب الأحيان. معظم المشاريع تجمع اثنين أو ثلاثة منها."],
+      ["إن لم يكن سؤالك هنا، فاطرحه مباشرةً — أسفل الصفحة.", "إن لم يكن سؤالك هنا، فاسألني مباشرةً أسفل الصفحة."],
+      ["ما ألجأ إليه فعلًا، ولماذا. لا أطر «هذا الشهر» — بل الأدوات المملّة التي تنجو من ملامسة الإنتاج.", "ما أستخدمه، ولماذا. في الغالب أدوات مجرَّبة تصمد في الإنتاج."],
+      ["خمسة مبادئ أطبّقها في كل مشروع. ليست قوانين — بل افتراضات مستعدّ لكسرها أمام الأدلّة.", "خمسة مبادئ أطبّقها في كل مشروع، وأتخلّى عنها حين تقول الأدلّة غير ذلك."],
+      ["دوام كامل وعمل حرّ، في الموقع وعن بُعد. الخيط الناظم ليس المسمّى — بل العمل المُسلَّم.", "أدوار بدوام كامل وعمل حرّ، في الموقع وعن بُعد."],
+      ["ليست قائمة تباهٍ — بل مواصفات. إن شعرت أن أيًّا من هذه ناقص في مشروعك الحالي، فهناك أساعد.", "ما يمكنك توقّعه حين نعمل معًا."],
     ],
     position: 'أتعامل مع المنتج كنظام واحد، لا كمجموعة مزايا متفرّقة. أصمّم كيف تترابط أجزاؤه، وأبني كل طبقاته، وأبقى مسؤولًا عنه حين يكبر.',
     pinnedStat: 'مشاريع مثبّتة',
@@ -3359,6 +3368,13 @@ async function snapshotVariant({ page, spec, lang, locales }) {
           at = chip;
         }
       } else warnings.push('about: freelance client chips not found — Ibdaa Course and Applyni not added');
+      // The same company names the cards, case studies and CV use.
+      const chipNames = { CompassMed: 'Compass Med', PhonicMaps: 'Phonic Maps' };
+      document.querySelectorAll('#experience .co-chip').forEach((chip) => {
+        const t = chip.firstChild;
+        const fixed = t && t.nodeType === 3 && chipNames[t.nodeValue.trim()];
+        if (fixed) t.nodeValue = fixed;
+      });
       // The pinned list is gone, so its count goes too.
       const pinned = [...document.querySelectorAll('#github .gh-stat')]
         .find((st) => (st.querySelector('.l')?.textContent || '').trim() === copy.human.pinnedStat);
@@ -4556,6 +4572,16 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
    a phone. Columns may shrink and wrap rather than spill past the block. */
 @media (min-width:761px){.contact-terms{display:grid;grid-template-columns:repeat(2,minmax(0,max-content));justify-content:center;gap:8px 28px;max-width:none}}
 @media (min-width:1100px){.contact-terms{grid-template-columns:repeat(3,minmax(0,max-content))}}
+/* Testimonials: the export’s .test>* rule (position:relative) beat the quote
+   mark’s own position:absolute, so the 150px glyph took up a block of empty
+   space above every quote. It floats behind the text again, at the card’s end
+   corner (mirrored in Arabic). */
+.test>.test-mark{position:absolute;z-index:0}
+[dir=rtl] .test>.test-mark{right:auto;left:18px}
+/* Case-study pages on a phone: the breadcrumb sat under the fixed nav. */
+@media (max-width:760px){#main > #case:first-child{padding-top:100px}}
+/* Home hero: the scroll cue sat on the stats row’s bottom rule. */
+@media (min-width:761px){#top{padding-bottom:110px}}
 @media (max-width:760px){.contact-terms{display:grid;grid-template-columns:1fr;justify-items:start;width:max-content;max-width:100%}}
 /* Arabic is a joined script: letter-spacing pulls its letters apart (the
    export tracks labels at 1–2px and the hero at −6px). None in Arabic. */
@@ -4613,6 +4639,27 @@ ${enhanceJS ? `<script>${enhanceForVariant(enhanceJS, spec)}</script>` : ''}
       assetSeen.set(full, file);
     }
     externalized = externalized.split(full).join(file);
+  }
+  // The owner-supplied case screenshots (CASE_SHOTS) are files at the repo
+  // root, not data URLs; they get the same WebP pass, keeping whichever is
+  // smaller.
+  for (const src of Object.values(CASE_SHOTS)) {
+    if (!externalized.includes(`"${src}"`)) continue;
+    let file = assetSeen.get(src);
+    if (!file) {
+      file = src;
+      const buf = await readFile(path.join(ROOT, src.slice(1)));
+      const webp = /\.jpe?g$/i.test(src) ? await toWebp(browser, buf) : null;
+      if (webp && webp.length < buf.length) {
+        file = `/assets/${createHash('sha1').update(webp).digest('hex').slice(0, 12)}.webp`;
+        if (!existsSync(path.join(DIST, file.slice(1)))) {
+          await writeFile(path.join(DIST, file.slice(1)), webp);
+          assetCount++; assetBytes += webp.length;
+        }
+      }
+      assetSeen.set(src, file);
+    }
+    externalized = externalized.split(`"${src}"`).join(`"${file}"`);
   }
   console.log(`  [${lang}] externalized ${assetCount} new asset(s) (${(assetBytes / 1e6).toFixed(2)} MB) to dist/assets/`);
 
