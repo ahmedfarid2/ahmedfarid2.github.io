@@ -28,6 +28,7 @@ import { SITE_URL, LOCATION, LOCATION_LABEL, CONTACT, YEARS_PROSE, SEO, NAV, FLA
 import { inspectPdf, pdfProblems, textFingerprint, PDF_REQUIRED_URIS } from './pdf-check.mjs';
 import { faviconSvg, appleIconSvg, badgeSvg, ICON_LINKS } from './brand-mark.mjs';
 import { renderChecklist, CHECKLIST_PDF, CHECKLIST_REQUIRED_URIS, CHECKLIST_REQUIRED_TEXT } from './build-checklist.mjs';
+import { INSIGHTS, INSIGHTS_INDEX } from './insights.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = path.join(ROOT, 'index.html');
@@ -324,7 +325,8 @@ async function applyShellToStandalonePages() {
     SKIP_CSS +
     '</style>';
 
-  const PAGES = ['demo.html', 'checklist.html', 'get-checklist.html', '404.html'];
+  const PAGES = ['demo.html', 'checklist.html', 'get-checklist.html', '404.html',
+    'insights/index.html', ...INSIGHTS.map((a) => `insights/${a.slug}/index.html`)];
   for (const name of PAGES) {
     const file = path.join(DIST, name);
     if (!existsSync(file)) continue;
@@ -582,9 +584,10 @@ const FORBIDDEN = [
   { s: 'Book a free demo', max: 0, except: 'services/index.html', alsoExcept: ['demo.html'] },
   // /demo.html is the freelance landing page. It stays live and indexable, but
   // no page may route anyone to it except /services/ (home included: its hero
-  // books the scoping call and links to /services/ instead).
+  // books the scoping call and links to /services/ instead). The crawler files
+  // (sitemap.xml, lastmod.json, llms.txt) list it without routing anyone.
   { s: 'demo.html', max: 0, except: 'services/index.html',
-    alsoExcept: ['demo.html', 'get-checklist.html', 'checklist.html', 'sitemap.xml', 'llms.txt', '404.html'] },
+    alsoExcept: ['demo.html', 'get-checklist.html', 'checklist.html', 'sitemap.xml', 'lastmod.json', 'llms.txt', '404.html'] },
   { s: 'fast learner', max: 0 },
   { s: 'adapt to whatever stack', max: 0 },
   { s: 'Available now', max: 0 },
@@ -783,6 +786,13 @@ async function assertPageInventory(locales, coverage) {
   const pages = localePages(locales);
   const expected = new Set(pages.map((p) => p.rel));
   for (const p of pages) if (!existsSync(path.join(DIST, p.rel))) bad.push(`${p.rel}: not written`);
+  // The hand-written pages that live in a directory (/insights/…) are part of
+  // the map too, and must exist just the same.
+  for (const p of EXTRA_PAGES.filter((x) => x.path.endsWith('/'))) {
+    const rel = `${p.path.slice(1)}index.html`;
+    expected.add(rel);
+    if (!existsSync(path.join(DIST, rel))) bad.push(`${rel}: not written`);
+  }
 
   const found = [];
   const walk = async (dir) => {
@@ -1205,6 +1215,8 @@ async function extractEnhancementLayer() {
 const EXTRA_PAGES = [
   { path: '/demo.html', priority: '0.9', changefreq: 'monthly' },
   { path: '/checklist.html', priority: '0.8', changefreq: 'yearly' },
+  { path: '/insights/', priority: '0.7', changefreq: 'monthly' },
+  ...INSIGHTS.map((a) => ({ path: `/insights/${a.slug}/`, priority: '0.7', changefreq: 'yearly' })),
 ];
 
 // Every URL the sitemap lists, in order: the locale homes, the hand-written
@@ -1224,13 +1236,186 @@ function sitemapPages(locales, specs = PAGE_SPECS) {
   ];
 }
 
+// ── /insights/: engineering write-ups (scripts/insights.mjs) ──────────────────
+// Standalone English pages like demo.html and checklist.html: written here,
+// then given the site's nav, footer and fonts by applyShellToStandalonePages.
+// Each article links to the case study it comes from, and that case study
+// links back (the project-page pass); the footer links the index.
+const INSIGHT_CSS =
+  ':root{color-scheme:dark}*{box-sizing:border-box}' +
+  'body{margin:0;background:#0B0D10;color:#F4F1EA;font-family:Geist,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}' +
+  '.ins{max-width:760px;margin:0 auto;padding:56px 24px 88px}.ins a{color:#E6C8A0}' +
+  '.crumbs ol{display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0 0 32px;padding:0;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;color:#8b857b}' +
+  '.crumbs li+li::before{content:"/";margin-right:8px}.crumbs a{color:#a8a297;text-decoration:none}' +
+  '.eyebrow{margin:0 0 18px;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#a8a297}' +
+  '.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#E6C8A0;margin-right:10px;vertical-align:middle}' +
+  '.ins h1{margin:0;font-size:clamp(34px,6vw,54px);line-height:1.05;letter-spacing:-.03em;font-weight:500}' +
+  '.lede{margin:22px 0 0;font-size:19px;line-height:1.55;color:#c9c3b8}' +
+  '.byline{margin:16px 0 0;font-size:14px;color:#8b857b}' +
+  '.prose{margin-top:40px;font-size:17px;color:#e7e2d8}' +
+  '.prose h2{margin:44px 0 12px;font-size:26px;line-height:1.2;font-weight:500;color:#F4F1EA}' +
+  '.prose p{margin:0 0 18px}.prose ul{margin:0 0 18px;padding-left:22px}.prose li{margin:8px 0}' +
+  '.prose b{color:#F4F1EA;font-weight:600}' +
+  '.prose pre{margin:0 0 22px;padding:18px 20px;overflow-x:auto;background:#12151a;border:1px solid rgba(255,255,255,.1);border-radius:12px;font-size:13.5px;line-height:1.55}' +
+  '.prose code{font-family:"JetBrains Mono",ui-monospace,monospace;color:#e7e2d8}' +
+  '.ins-cta{margin-top:52px;padding:28px 30px;border:1px solid rgba(230,200,160,.28);border-radius:16px;background:linear-gradient(180deg,rgba(230,200,160,.10),rgba(230,200,160,.03))}' +
+  '.ins-cta h2{margin:0 0 10px;font-size:22px;font-weight:500}.ins-cta p{margin:0;color:#c9c3b8}' +
+  '.ins-cta .btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:18px}' +
+  '.ins-cta .btns a{padding:11px 22px;border-radius:99px;text-decoration:none;font-weight:600;font-size:14px;background:#E6C8A0;color:#0B0D10}' +
+  '.ins-cta .btns a.ghost{background:transparent;color:#F4F1EA;border:1px solid rgba(255,255,255,.18)}' +
+  '.ins-list{list-style:none;margin:40px 0 0;padding:0;display:grid;gap:16px}' +
+  '.ins-list li{padding:24px 26px;border:1px solid rgba(255,255,255,.1);border-radius:14px;background:rgba(255,255,255,.02)}' +
+  '.ins-list h2{margin:0;font-size:22px;line-height:1.25;font-weight:500}.ins-list h2 a{color:#F4F1EA;text-decoration:none}.ins-list h2 a:hover{color:#E6C8A0}' +
+  '.ins-list p{margin:10px 0 0;color:#c9c3b8;font-size:15.5px}' +
+  '.ins-list .meta{margin-top:12px;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;color:#8b857b}';
+
+const insightEsc = (t) => String(t).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const insightDate = (iso) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+
+function insightPage({ url, title, description, ogImage, ogAlt, type, published, ld, main }) {
+  const meta = [
+    `<title>${insightEsc(title)}</title>`,
+    `<meta name="description" content="${insightEsc(description)}">`,
+    `<link rel="canonical" href="${url}">`,
+    `<meta property="og:type" content="${type}">`,
+    `<meta property="og:site_name" content="Ahmed Farid">`,
+    `<meta property="og:title" content="${insightEsc(title)}">`,
+    `<meta property="og:description" content="${insightEsc(description)}">`,
+    `<meta property="og:url" content="${url}">`,
+    `<meta property="og:image" content="${ogImage}">`,
+    `<meta property="og:image:width" content="1200">`,
+    `<meta property="og:image:height" content="630">`,
+    `<meta property="og:image:alt" content="${insightEsc(ogAlt)}">`,
+    `<meta name="twitter:card" content="summary_large_image">`,
+    `<meta name="twitter:title" content="${insightEsc(title)}">`,
+    `<meta name="twitter:description" content="${insightEsc(description)}">`,
+    `<meta name="twitter:image" content="${ogImage}">`,
+    published ? `<meta property="article:published_time" content="${published}">` : '',
+    `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>`,
+  ].filter(Boolean).join('\n');
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8">\n` +
+    `<meta name="viewport" content="width=device-width, initial-scale=1">\n${meta}\n<style>${INSIGHT_CSS}</style></head>\n` +
+    `<body>\n<main class="ins" id="main" tabindex="-1">\n${main}\n</main>\n</body></html>\n`;
+}
+
+async function writeInsights() {
+  const person = { '@type': 'Person', '@id': `${SITE_URL}/#person`, name: 'Ahmed Farid', url: `${SITE_URL}/about/` };
+  const indexUrl = `${SITE_URL}/insights/`;
+  const crumb = (items) => ({
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map(([name, item], i) => ({ '@type': 'ListItem', position: i + 1, name, item })),
+  });
+  for (const a of INSIGHTS) {
+    const f = FLAGSHIP.find((x) => x.slug === a.related);
+    if (!f) throw Object.assign(new Error(`[build] insight ${a.slug}: related "${a.related}" is not a FLAGSHIP slug`), { fatal: true });
+    const url = `${SITE_URL}/insights/${a.slug}/`;
+    const ogImage = `${SITE_URL}/og-${f.slug}.png`;
+    const ld = {
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'TechArticle', '@id': `${url}#article`, headline: a.title, description: a.description,
+          datePublished: a.datePublished, dateModified: a.dateModified || a.datePublished, inLanguage: 'en',
+          author: person, publisher: person, mainEntityOfPage: url, image: ogImage,
+          about: { '@type': 'CreativeWork', name: f.name, url: `${SITE_URL}/work/${f.slug}/` },
+          isPartOf: { '@type': 'CollectionPage', '@id': `${indexUrl}#page` },
+        },
+        crumb([['Ahmed Farid', `${SITE_URL}/`], [NAV.en.insights, indexUrl], [a.title, url]]),
+      ],
+    };
+    const main = [
+      `<nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="/">Ahmed Farid</a></li><li><a href="/insights/">${NAV.en.insights}</a></li><li aria-current="page">${insightEsc(f.name)}</li></ol></nav>`,
+      `<p class="eyebrow"><span class="dot"></span>${NAV.en.writeUp} · ${a.minutes} min read</p>`,
+      `<h1>${insightEsc(a.h1)}</h1>`,
+      `<p class="lede">${insightEsc(a.lede)}</p>`,
+      `<p class="byline">By <a href="/about/">Ahmed Farid</a>, senior software engineer · <time datetime="${a.datePublished}">${insightDate(a.datePublished)}</time></p>`,
+      `<article class="prose">${a.body}</article>`,
+      `<aside class="ins-cta" aria-label="Work with me"><h2>Need a system that stays correct under load?</h2>` +
+        `<p>This write-up comes from the <a href="/work/${f.slug}/">${insightEsc(f.name)} case study</a>. If part of your product has to stay right when it gets busy, a 30-minute call is usually enough to tell whether I can help.</p>` +
+        `<div class="btns"><a href="${CONTACT.calendly}" target="_blank" rel="noreferrer">Book a 30-minute scoping call</a>` +
+        `<a class="ghost" href="/insights/">All write-ups</a></div></aside>`,
+    ].join('\n');
+    const dir = path.join(DIST, 'insights', a.slug);
+    await mkdir(dir, { recursive: true });
+    await writeFile(path.join(dir, 'index.html'), insightPage({
+      url, title: `${a.title} · Ahmed Farid`, description: a.description, ogImage, ogAlt: `${f.name} — ${a.title}`,
+      type: 'article', published: a.datePublished, ld, main,
+    }), 'utf8');
+  }
+  const ld = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'CollectionPage', '@id': `${indexUrl}#page`, url: indexUrl, name: INSIGHTS_INDEX.title,
+        description: INSIGHTS_INDEX.description, inLanguage: 'en', author: person,
+        mainEntity: {
+          '@type': 'ItemList',
+          itemListElement: INSIGHTS.map((a, i) => ({ '@type': 'ListItem', position: i + 1, name: a.title, url: `${SITE_URL}/insights/${a.slug}/` })),
+        },
+      },
+      crumb([['Ahmed Farid', `${SITE_URL}/`], [NAV.en.insights, indexUrl]]),
+    ],
+  };
+  const items = INSIGHTS.map((a) => {
+    const f = FLAGSHIP.find((x) => x.slug === a.related);
+    return `<li><h2><a href="/insights/${a.slug}/">${insightEsc(a.title)}</a></h2><p>${insightEsc(a.description)}</p>` +
+      `<p class="meta">${a.minutes} min read · from the <a href="/work/${f.slug}/">${insightEsc(f.name)}</a> case study · <time datetime="${a.datePublished}">${insightDate(a.datePublished)}</time></p></li>`;
+  }).concat(`<li><h2><a href="/checklist.html">The Multi-Tenant SaaS Architecture Checklist</a></h2>` +
+    `<p>The decisions you can’t cheaply undo six months later: tenancy, roles, billing, real-time, integrations and delivery.</p><p class="meta">Checklist · free PDF</p></li>`);
+  const main = [
+    `<nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="/">Ahmed Farid</a></li><li aria-current="page">${NAV.en.insights}</li></ol></nav>`,
+    `<p class="eyebrow"><span class="dot"></span>${NAV.en.insights}</p>`,
+    `<h1>${insightEsc(INSIGHTS_INDEX.h1)}</h1>`,
+    `<p class="lede">${insightEsc(INSIGHTS_INDEX.lede)}</p>`,
+    `<ul class="ins-list">${items.join('')}</ul>`,
+  ].join('\n');
+  await mkdir(path.join(DIST, 'insights'), { recursive: true });
+  await writeFile(path.join(DIST, 'insights', 'index.html'), insightPage({
+    url: indexUrl, title: INSIGHTS_INDEX.title, description: INSIGHTS_INDEX.description,
+    ogImage: `${SITE_URL}/og.png`, ogAlt: OG_MAIN.en.alt, type: 'website', published: null, ld, main,
+  }), 'utf8');
+  console.log(`  wrote /insights/ + ${INSIGHTS.length} write-up(s)`);
+}
+
+// A sitemap <lastmod> is only worth sending if it is true: a date that moves
+// on every deploy teaches crawlers to ignore it. Each page's visible text is
+// fingerprinted; the live site's /lastmod.json (published by the previous
+// deploy) says when each fingerprint last changed. Unchanged page, old date;
+// changed or new page, today. If the live file cannot be read (network, first
+// deploy), the sitemap leaves <lastmod> out rather than guess, and the
+// manifest starts over from today.
+async function pageLastmods(pages) {
+  const { createHash } = await import('node:crypto');
+  const today = new Date().toISOString().slice(0, 10);
+  let prev = null;
+  try {
+    const r = await fetch(`${SITE_URL}/lastmod.json`, { signal: AbortSignal.timeout(8000) });
+    if (r.ok) prev = await r.json();
+    else if (r.status === 404) prev = {};
+  } catch { prev = null; }
+  const next = {};
+  for (const p of pages) {
+    const file = path.join(DIST, p.path.endsWith('/') ? `${p.path}index.html` : p.path);
+    const html = existsSync(file) ? await readFile(file, 'utf8') : '';
+    const main = (html.match(/<main[\s\S]*?<\/main>/) || [html])[0];
+    const text = main.replace(/<(script|style)[\s\S]*?<\/\1>/g, ' ').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    const hash = createHash('sha1').update(text).digest('hex').slice(0, 16);
+    const was = prev && prev[p.path];
+    next[p.path] = { hash, date: was && was.hash === hash && /^\d{4}-\d{2}-\d{2}$/.test(was.date) ? was.date : today };
+  }
+  return { next, trusted: prev !== null };
+}
+
 // sitemap.xml + robots.txt + a styled 404.html. No browser needed, so this
 // runs in the full build only (there is no raw-export fallback to cover).
 async function writeSeoFiles(locales, specs, projects = null, prices = null) {
-  const today = new Date().toISOString().slice(0, 10);
-  const urls = sitemapPages(locales, specs)
+  const pages = sitemapPages(locales, specs);
+  const { next: lastmods, trusted } = await pageLastmods(pages);
+  await writeFile(path.join(DIST, 'lastmod.json'), JSON.stringify(lastmods, null, 0) + '\n', 'utf8');
+  if (!trusted) console.warn('  ⚠ sitemap: the live /lastmod.json could not be read — <lastmod> left out this build');
+  const urls = pages
     .map((p) =>
-      `  <url><loc>${SITE_URL}${p.path}</loc><lastmod>${today}</lastmod>` +
+      `  <url><loc>${SITE_URL}${p.path}</loc>${trusted ? `<lastmod>${lastmods[p.path].date}</lastmod>` : ''}` +
       `<changefreq>${p.changefreq}</changefreq><priority>${p.priority}</priority></url>`)
     .join('\n');
   await writeFile(path.join(DIST, 'sitemap.xml'),
@@ -1269,6 +1454,11 @@ async function writeSeoFiles(locales, specs, projects = null, prices = null) {
         `- [Services](${SITE_URL}/services/): ${SEO.services.en.description}`,
         `- [About](${SITE_URL}/about/): ${SEO.about.en.description}`,
         `- [Contact](${SITE_URL}/contact/): ${SEO.contact.en.description}`,
+      ].join('\n') + `\n\n` +
+      `## Writing\n\n` + [
+        `- [${INSIGHTS_INDEX.h1.replace(/\.$/, '')}](${SITE_URL}/insights/): ${INSIGHTS_INDEX.description}`,
+        ...INSIGHTS.map((a) => `- [${a.title}](${SITE_URL}/insights/${a.slug}/): ${a.description}`),
+        `- [The Multi-Tenant SaaS Architecture Checklist](${SITE_URL}/checklist.html): the pre-build decisions that are expensive to undo later`,
       ].join('\n') + `\n\n`
     : '';
 
@@ -2966,7 +3156,10 @@ async function snapshotVariant({ page, spec, lang, locales }) {
           const more = grid(layout.flagships.filter((x) => x.slug !== f.slug));
           project = {
             name: f.name, slug: f.slug,
-            tagline: (art.querySelector('.case-tagline')?.textContent || '').trim(),
+            // The copy pairs (HUMAN_COPY text) rewrite the tagline on the page
+            // later in this pass; the title, description, JSON-LD and llms.txt
+            // are cut from this string, so it gets the same rewrite now.
+            tagline: copy.human.text.reduce((t, [from, to]) => t.split(from).join(to), (art.querySelector('.case-tagline')?.textContent || '').trim()),
             chips: [...art.querySelectorAll('.case-stack .chip')].map((c) => (c.textContent || '').trim()).filter(Boolean),
             shot: ([...art.querySelectorAll('img')].find((i) => !i.closest('.case-links') && !i.classList.contains('chip-fav'))?.getAttribute('src')) || '',
             // The deep dive’s second block (the hard part), for llms.txt.
@@ -3199,16 +3392,17 @@ async function snapshotVariant({ page, spec, lang, locales }) {
     // same page the nav calls Services.
     document.querySelectorAll(`.foot-col a[href="${localePrefix}services/"]`).forEach((a) => { a.textContent = labels.services; });
     // The footer's first column named five in-page sections, three of them
-    // on other pages; it lists the same four pages as the nav instead.
+    // on other pages; it lists the nav's four pages and the write-ups instead.
     {
       const list = document.querySelector('footer .foot-col ul');
       const tpl = list && list.querySelector(':scope > li');
       if (tpl && tpl.querySelector('a')) {
-        list.replaceChildren(...['work', 'services', 'about', 'contact'].map((k) => {
+        // Plus the write-ups, which exist in English only (/insights/).
+        list.replaceChildren(...['work', 'services', 'about', 'contact', 'insights'].map((k) => {
           const li = tpl.cloneNode(true);
           const a = li.querySelector('a');
           for (const at of [...a.attributes]) if (at.name !== 'class') a.removeAttribute(at.name);
-          a.setAttribute('href', `${localePrefix}${k}/`);
+          a.setAttribute('href', k === 'insights' ? '/insights/' : `${localePrefix}${k}/`);
           a.textContent = labels[k];
           return li;
         }));
@@ -3436,6 +3630,19 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         p.textContent = outcome;
         tagline.after(p);
       } else warnings.push('case: no outcome line or .case-tagline — none added');
+      // A flagship with an engineering write-up links to it, at the end of
+      // the case study (the write-up is in English; the label says so).
+      const writeUp = copy.insights.find((a) => a.related === pageSpec.flagship.slug);
+      const body = document.querySelector('#case .case-body');
+      if (writeUp && body) {
+        const p = document.createElement('p');
+        p.className = 'case-writeup';
+        const a = document.createElement('a');
+        a.setAttribute('href', `/insights/${writeUp.slug}/`);
+        a.textContent = `${writeUp.title} →`;
+        p.append(`${labels.writeUp}: `, a);
+        body.appendChild(p);
+      } else if (writeUp) warnings.push('case: no .case-body for the write-up link');
     }
     // Client testimonials (CLIENT_QUOTES) first, cut from the export's own card
     // so they look the same, without the LinkedIn badge and link: those mark
@@ -3912,7 +4119,7 @@ async function snapshotVariant({ page, spec, lang, locales }) {
   }, spec, locales.map((l) => l.lang), FAQ_BUYER_KEYS[lang] || FAQ_BUYER_KEYS.en, prefix, PAGE_LAYOUT, SECTION_KEYS,
     { owner: LINK_OWNER, paths: Object.fromEntries(PAGE_SPECS.map((s) => [s.key, s.suffix])) },
     NAV[lang],
-    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en, conceptHosts: CONCEPT_HOSTS, caseShots: CASE_SHOTS, formAction: `https://formsubmit.co/${CONTACT.email}`, siteUrl: SITE_URL, impact: IMPACT_PLAIN[lang] || IMPACT_PLAIN.en, aedRate: AED_PER_USD, priceLocale: PRICE_LOCALE[lang] || 'en-AE', moreRecs: MORE_RECS[lang] || MORE_RECS.en,
+    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en, conceptHosts: CONCEPT_HOSTS, insights: INSIGHTS.map(({ slug, title, related }) => ({ slug, title, related })), caseShots: CASE_SHOTS, formAction: `https://formsubmit.co/${CONTACT.email}`, siteUrl: SITE_URL, impact: IMPACT_PLAIN[lang] || IMPACT_PLAIN.en, aedRate: AED_PER_USD, priceLocale: PRICE_LOCALE[lang] || 'en-AE', moreRecs: MORE_RECS[lang] || MORE_RECS.en,
       clientQuotes: CLIENT_QUOTES.map((q) => ({ name: q.name[lang] || q.name.en, initials: q.initials[lang] || q.initials.en, role: q.role[lang] || q.role.en, quote: q.quote[lang] || q.quote.en,
         caseStudy: q.caseStudy ? { slug: q.caseStudy, name: FLAGSHIP.find((f) => f.slug === q.caseStudy).name } : null })) }));
 
@@ -3943,7 +4150,10 @@ function projectSeo(project, lang) {
   if (!tagline) {
     throw Object.assign(new Error(`[build] [${lang}] ${name}: the case has no .case-tagline, so its page has no title or description to build.`), { fatal: true });
   }
-  const cut = tagline.search(/ — | – |: /);
+  // The title keeps the tagline's first clause: up to a dash, a colon, a
+  // comma, or the word that starts the second half ("with", "where", and
+  // their de/es/fr counterparts).
+  const cut = tagline.search(/ — | – | ?: |, |، | with | where | mit | con | donde | avec | où /);
   const clause = (cut > 0 ? tagline.slice(0, cut) : tagline).replace(/\.$/, '').trim();
   const label = NAV[lang].caseStudy;
   let title = `${clause} — ${label}: ${name}`;
@@ -4768,6 +4978,9 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 .pf.is-sent form{display:none}
 .pf.is-sent .pf-sent{display:block}
 @media (max-width:640px){.pf form{grid-template-columns:1fr}}
+/* Case study: the link to its engineering write-up. */
+.case-writeup{margin:36px 0 0;padding-top:20px;border-top:1px solid var(--line);font-size:15px;color:var(--ink-mute)}
+.case-writeup a{color:var(--accent)}
 /* Testimonials: the link from a quote to its case study. */
 .test-case{align-self:flex-start;font-family:var(--mono);font-size:12px;color:var(--accent);text-decoration:none}
 .test-case:hover{text-decoration:underline;text-underline-offset:3px}
@@ -4984,6 +5197,7 @@ async function build() {
   } catch (e) { e.fatal = true; e.message = `share cards could not be generated: ${e.message}`; throw e; }
   await browser.close();
 
+  await writeInsights();
   await writeSeoFiles(locales, PAGE_SPECS, projects, prices);
 
   // ── Verify each built page actually renders ───────────────────────────────

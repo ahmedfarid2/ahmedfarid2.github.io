@@ -201,12 +201,14 @@ export const SEO = {
 //   work/services/about/contact  the four navigation links
 //   pricing                      the home hero's button to /services/
 //   caseStudy / allWork / moreWork  project cards and the links around them
+//   insights / writeUp           the footer link to /insights/ and the label of
+//                                a case study's link to its write-up (English)
 export const NAV = {
-  en: { work: 'Work', services: 'Services', about: 'About', contact: 'Contact', caseStudy: 'Case study', allWork: 'All work', moreWork: 'More work', pricing: 'Services & pricing' },
-  ar: { work: 'أعمال', services: 'الخدمات', about: 'نبذة عني', contact: 'تواصل', caseStudy: 'دراسة الحالة', allWork: 'كل الأعمال', moreWork: 'أعمال أخرى', pricing: 'الخدمات والأسعار' },
-  de: { work: 'Arbeiten', services: 'Leistungen', about: 'Über mich', contact: 'Kontakt', caseStudy: 'Fallstudie', allWork: 'Alle Arbeiten', moreWork: 'Weitere Arbeiten', pricing: 'Leistungen & Preise' },
-  es: { work: 'Proyectos', services: 'Servicios', about: 'Sobre mí', contact: 'Contacto', caseStudy: 'Caso de estudio', allWork: 'Todo el trabajo', moreWork: 'Más trabajo', pricing: 'Servicios y precios' },
-  fr: { work: 'Projets', services: 'Services', about: 'À propos', contact: 'Contact', caseStudy: 'Étude de cas', allWork: 'Toutes les réalisations', moreWork: 'Autres réalisations', pricing: 'Services et tarifs' },
+  en: { work: 'Work', services: 'Services', about: 'About', contact: 'Contact', caseStudy: 'Case study', allWork: 'All work', moreWork: 'More work', pricing: 'Services & pricing', insights: 'Insights', writeUp: 'Engineering write-up' },
+  ar: { work: 'أعمال', services: 'الخدمات', about: 'نبذة عني', contact: 'تواصل', caseStudy: 'دراسة الحالة', allWork: 'كل الأعمال', moreWork: 'أعمال أخرى', pricing: 'الخدمات والأسعار', insights: 'مقالات', writeUp: 'مقال تقني (بالإنجليزية)' },
+  de: { work: 'Arbeiten', services: 'Leistungen', about: 'Über mich', contact: 'Kontakt', caseStudy: 'Fallstudie', allWork: 'Alle Arbeiten', moreWork: 'Weitere Arbeiten', pricing: 'Leistungen & Preise', insights: 'Artikel', writeUp: 'Technischer Artikel (auf Englisch)' },
+  es: { work: 'Proyectos', services: 'Servicios', about: 'Sobre mí', contact: 'Contacto', caseStudy: 'Caso de estudio', allWork: 'Todo el trabajo', moreWork: 'Más trabajo', pricing: 'Servicios y precios', insights: 'Artículos', writeUp: 'Artículo técnico (en inglés)' },
+  fr: { work: 'Projets', services: 'Services', about: 'À propos', contact: 'Contact', caseStudy: 'Étude de cas', allWork: 'Toutes les réalisations', moreWork: 'Autres réalisations', pricing: 'Services et tarifs', insights: 'Articles', writeUp: 'Article technique (en anglais)' },
 };
 
 // The five flagship case studies, each with a page of its own at
