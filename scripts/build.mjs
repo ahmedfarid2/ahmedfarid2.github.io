@@ -3389,6 +3389,7 @@ async function snapshotVariant({ page, spec, lang, locales }) {
       else warnings.push(`about: expected a View and a Download CV button, found ${cvButtons.length} — left as exported`);
       const portrait = document.querySelector('#about .about-portrait img');
       if (portrait) { portrait.setAttribute('loading', 'eager'); portrait.setAttribute('fetchpriority', 'high'); }
+      else warnings.push('about: portrait image not found — left lazy');
       // Toolbelt: the core stack stays visible; the long tail (60+ items) sits
       // behind a native checkbox + label, so it works without the enhancement
       // script. The label stays visible in both states, so keyboard focus
@@ -4549,8 +4550,11 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
    price that reads as one. */
 .addons-title{margin:44px 0 0;text-align:center;font-family:var(--mono);font-size:12px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-mute)}
 .addon-price{font-family:var(--sans);font-size:17px;font-weight:600;color:var(--accent)}
-/* Closing block: the six promises as a 3 × 2 grid, one column on a phone. */
-@media (min-width:761px){.contact-terms{display:grid;grid-template-columns:repeat(3,max-content);justify-content:center;gap:8px 28px;max-width:none}}
+/* Closing block: the six promises as a 3 × 2 grid on a wide screen, two
+   across on a tablet (the German and Spanish lines are long), one column on
+   a phone. Columns may shrink and wrap rather than spill past the block. */
+@media (min-width:761px){.contact-terms{display:grid;grid-template-columns:repeat(2,minmax(0,max-content));justify-content:center;gap:8px 28px;max-width:none}}
+@media (min-width:1100px){.contact-terms{grid-template-columns:repeat(3,minmax(0,max-content))}}
 @media (max-width:760px){.contact-terms{display:grid;grid-template-columns:1fr;justify-items:start;width:max-content;max-width:100%}}
 /* Arabic is a joined script: letter-spacing pulls its letters apart (the
    export tracks labels at 1–2px and the hero at −6px). None in Arabic. */
