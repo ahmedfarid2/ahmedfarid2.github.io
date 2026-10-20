@@ -2,7 +2,7 @@
 
 The on-site work is in the build: titles and descriptions per page and locale,
 hreflang, canonicals, JSON-LD, honest sitemap dates, IndexNow on every deploy,
-share cards in five languages, and the `/insights/` write-ups. What is left
+share cards in English and Arabic, and the `/insights/` write-ups. What is left
 needs your accounts. Do it in this order; the first two sections are worth more
 than everything after them.
 

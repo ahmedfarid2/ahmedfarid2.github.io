@@ -962,7 +962,7 @@ async function assertPageRoles(locales) {
 }
 
 // What search engines and share cards read: the title and description of every
-// locale page, and its structured data. Limits are what a result snippet shows
+// locale page and /insights/ page, and its structured data. Limits are what a result snippet shows
 // before cutting; uniqueness is what keeps 50 pages from competing as one.
 const HEAD_LIMITS = { title: 80, description: 170 };
 async function assertHeadMeta(locales) {
@@ -970,7 +970,8 @@ async function assertHeadMeta(locales) {
   const attr = (s) => String(s ?? '').replace(/&lt;/g, '<').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
   const seen = { title: new Map(), description: new Map() };
   let blocks = 0;
-  for (const { urlPath, rel } of localePages(locales)) {
+  const insights = EXTRA_PAGES.filter((p) => p.path.startsWith('/insights/')).map((p) => ({ urlPath: p.path, rel: `${p.path.slice(1)}index.html` }));
+  for (const { urlPath, rel } of [...localePages(locales), ...insights]) {
     const body = await readFile(path.join(DIST, rel), 'utf8');
     const head = {
       title: attr((body.match(/<title>([\s\S]*?)<\/title>/) || [])[1]),
@@ -1320,11 +1321,11 @@ async function writeInsights() {
           about: { '@type': 'CreativeWork', name: f.name, url: `${SITE_URL}/work/${f.slug}/` },
           isPartOf: { '@type': 'CollectionPage', '@id': `${indexUrl}#page` },
         },
-        crumb([['Ahmed Farid', `${SITE_URL}/`], [NAV.en.insights, indexUrl], [a.title, url]]),
+        crumb([['Ahmed Farid', `${SITE_URL}/`], [NAV.en.insights, indexUrl], [a.crumb, url]]),
       ],
     };
     const main = [
-      `<nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="/">Ahmed Farid</a></li><li><a href="/insights/">${NAV.en.insights}</a></li><li aria-current="page">${insightEsc(f.name)}</li></ol></nav>`,
+      `<nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="/">Ahmed Farid</a></li><li><a href="/insights/">${NAV.en.insights}</a></li><li aria-current="page">${insightEsc(a.crumb)}</li></ol></nav>`,
       `<p class="eyebrow"><span class="dot"></span>${NAV.en.writeUp} · ${a.minutes} min read</p>`,
       `<h1>${insightEsc(a.h1)}</h1>`,
       `<p class="lede">${insightEsc(a.lede)}</p>`,
@@ -1381,18 +1382,25 @@ async function writeInsights() {
 // on every deploy teaches crawlers to ignore it. Each page's visible text is
 // fingerprinted; the live site's /lastmod.json (published by the previous
 // deploy) says when each fingerprint last changed. Unchanged page, old date;
-// changed or new page, today. If the live file cannot be read (network, first
-// deploy), the sitemap leaves <lastmod> out rather than guess, and the
-// manifest starts over from today.
+// changed or new page, today. A 404 (first deploy) starts every page at today.
+// Any other failure is retried; if the file still cannot be read, a CI build
+// fails (deploying a manifest of invented dates would reset every page’s date
+// for good), and a local build leaves <lastmod> out of the sitemap.
 async function pageLastmods(pages) {
   const { createHash } = await import('node:crypto');
   const today = new Date().toISOString().slice(0, 10);
   let prev = null;
-  try {
-    const r = await fetch(`${SITE_URL}/lastmod.json`, { signal: AbortSignal.timeout(8000) });
-    if (r.ok) prev = await r.json();
-    else if (r.status === 404) prev = {};
-  } catch { prev = null; }
+  for (let attempt = 1; attempt <= 3 && prev === null; attempt++) {
+    try {
+      const r = await fetch(`${SITE_URL}/lastmod.json?b=${Date.now()}`, { cache: 'no-store', signal: AbortSignal.timeout(8000) });
+      if (r.ok) prev = await r.json();
+      else if (r.status === 404) prev = {};
+    } catch { prev = null; }
+    if (prev === null && attempt < 3) await new Promise((res) => setTimeout(res, 2000 * attempt));
+  }
+  if (prev === null && process.env.CI) {
+    throw Object.assign(new Error(`[build] sitemap: ${SITE_URL}/lastmod.json could not be read after 3 tries; refusing to deploy invented <lastmod> dates (re-run the job)`), { fatal: true });
+  }
   const next = {};
   for (const p of pages) {
     const file = path.join(DIST, p.path.endsWith('/') ? `${p.path}index.html` : p.path);

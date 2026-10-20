@@ -8,12 +8,16 @@
 //
 // `body` is trusted HTML written here (not user input). `related` is a
 // FLAGSHIP slug: the article links to that case study, the case study links
-// back, and the article shares that case's card.
+// back, and the article shares that case's card. `crumb` is the short page name
+// used by both the visible breadcrumb and its BreadcrumbList.
+//
+// Editing a published article: set `dateModified: 'YYYY-MM-DD'` on it so the
+// article's JSON-LD agrees with the sitemap date the edit will produce.
 
 export const INSIGHTS_INDEX = {
   title: 'Engineering write-ups from production systems · Ahmed Farid',
   h1: 'Engineering write-ups.',
-  description: 'How production systems stay correct under load: real-time bidding, webhook sync and multi-tenant SaaS architecture. Written by Ahmed Farid, senior software engineer in Dubai.',
+  description: 'How production systems stay correct under load: real-time bidding, webhook sync and multi-tenant SaaS. By Ahmed Farid, senior software engineer in Dubai.',
   lede: 'Notes from systems that are live: the problem, the decision that mattered, and what I would tell a team about to build the same thing.',
 };
 
@@ -21,6 +25,7 @@ export const INSIGHTS = [
   {
     slug: 'real-time-bidding-laravel-redis',
     title: 'Real-time Auction Bidding with Laravel, Redis and Socket.IO',
+    crumb: 'Real-time bidding',
     h1: 'Bids that never go out of order.',
     description: 'How a live vehicle auction keeps every bid in order under final-second load: bid order decided on the server in Redis, Socket.IO broadcast and proxy auto-bidding.',
     datePublished: '2026-10-20',
@@ -50,16 +55,16 @@ return {seq, 'accepted'}</code></pre>
 <p>The sequence number is the useful part: every accepted bid gets the next number, so anything downstream (the broadcast, the bid history, the ERP) can tell which bid came after which without trusting arrival order.</p>
 
 <h2>Broadcast what was accepted, not what was attempted</h2>
-<p>Only after the server accepts a bid does anyone hear about it. On Yelo Sale a Socket.IO layer on Node broadcasts the accepted state to everyone watching the lot, on web and mobile alike, with under 200&nbsp;ms from bid to broadcast end to end. The clients render the state they are sent. None of them shows "you are winning" on its own initiative, because an optimistic winner that turns out to be wrong is worse than a short wait.</p>
+<p>Only after the server accepts a bid does anyone hear about it. On Yelo Sale a Socket.IO layer on Node broadcasts the accepted state to everyone watching the lot, on web and mobile alike, with under 200&nbsp;ms from bid to broadcast end to end. The rule I would hold any client app to: render the state the server sends, and never show "you are winning" on its own initiative, because an optimistic winner that turns out to be wrong is worse than a short wait.</p>
 <p>Keeping one API for all three clients matters here. In an Nx monorepo the web app and the mobile apps share the same contract, so a rule like "a lot that has closed refuses bids" lives in one place, not in three.</p>
 
 <h2>Proxy bidding belongs on the server too</h2>
-<p>Proxy auto-bidding lets a bidder set a ceiling and walk away: the system counters rivals on their behalf, one step at a time, up to that ceiling, so they win at the lowest price necessary. It is tempting to treat this as a background job that "reacts" to new bids. That reintroduces the race: two proxies reacting to the same bid are two writers again.</p>
-<p>The fix is to resolve proxies inside the same server-side step that accepts the bid. When a new bid arrives, the server compares it with the standing ceilings, works out where the price settles (the higher ceiling wins, at one step above the lower one), and records that outcome as accepted bids in order. Then it broadcasts once.</p>
+<p>Proxy auto-bidding lets a bidder set a ceiling and walk away: the system counters rivals on their behalf, up to that ceiling, so they win at the lowest price necessary. On Yelo Sale it runs server-side, like the bids themselves. It is tempting to treat this as a background job that "reacts" to new bids. That reintroduces the race: two proxies reacting to the same bid are two writers again.</p>
+<p>The way I would structure it in any auction: resolve proxies inside the same server-side step that accepts the bid. When a new bid arrives, compare it with the standing ceilings, work out where the price settles (typically the higher ceiling wins, one step above the lower one), and record that outcome as accepted bids in order. Then broadcast once.</p>
 
 <h2>After the hammer: the lot is a state machine</h2>
 <p>Bidding is the exciting part; the money is in what happens next. Every lot on Yelo Sale moves through <i>listed → live auction → reserved → paid → delivered</i>, with admin governance at each step, and that is where payments (Amazon Payfort), PDF and QR invoices and the two-way sync with Microsoft Dynamics 365 come in. The rule I apply to anything like this: tie side effects to transitions, never to individual bids. A transition happens once or not at all, which is what keeps an ERP and a platform agreeing about which car was sold to whom.</p>
-<p>Access follows the same idea of hard boundaries: admins, companies and customers each sign in behind their own guard, so a customer token can never reach a company endpoint by accident.</p>
+<p>Access follows the same idea of hard boundaries: admins, companies and customers each sign in behind their own guard. Separate guards are a cheap way to make sure a token issued to one kind of user is never accepted on another kind's endpoints.</p>
 
 <h2>What I would tell a team building an auction</h2>
 <ul>
@@ -74,8 +79,9 @@ return {seq, 'accepted'}</code></pre>
   {
     slug: 'webhook-sync-out-of-order',
     title: 'Out-of-Order Webhooks: Keeping a Client Portal in Sync',
+    crumb: 'Out-of-order webhooks',
     h1: 'Webhooks that arrive late, twice or out of order.',
-    description: 'Webhooks arrive late, twice and out of order. How per-record sequence numbers keep a mirrored client portal from ever moving backwards, from a live debt-recovery platform.',
+    description: 'Webhooks arrive late, twice and out of order. How per-record sequence numbers keep a mirrored client portal from moving backwards, from a live platform.',
     datePublished: '2026-10-20',
     related: 'recovery-advisers',
     minutes: 5,
