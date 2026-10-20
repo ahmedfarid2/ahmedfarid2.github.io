@@ -1537,7 +1537,7 @@ const HOME_COPY = {
     notReady: 'Not ready for a call?',
     checklist: 'Get the free multi-tenant SaaS architecture checklist →',
     recommended: 'Recommended',
-    terms: ['Reply within 24 hours', 'NDA before the first call', 'You own all code & IP once paid', 'Contract & invoice directly with me', 'Any size of project, with a vetted team'],
+    terms: ['Reply within 24 hours', 'NDA before the first call', 'You own all code & IP once paid', 'Contract & invoice directly with me', 'Any size of project, with a vetted team', 'Same NDA and IP terms for the whole team'],
   },
   ar: {
     tag: { 'tag-full': 'بناء منصّات SaaS بـ Laravel وNext.js · دبي، الإمارات 🇦🇪', 'tag-short': 'بناء منصّات SaaS · دبي 🇦🇪', 'tag-tiny': 'SaaS · دبي 🇦🇪' },
@@ -1547,7 +1547,7 @@ const HOME_COPY = {
     notReady: 'هل الوقت مبكر لمكالمة؟',
     checklist: 'حمّل قائمة التحقق المجانية لمعمارية SaaS متعدّدة المستأجرين (بالإنجليزية) →',
     recommended: 'موصى به',
-    terms: ['ردّ خلال ٢٤ ساعة', 'اتفاقية سرّية قبل أول مكالمة', 'الكود والملكية الفكرية لك بعد السداد', 'العقد والفاتورة معي مباشرةً', 'مشاريع بأي حجم، مع فريق مؤهّل'],
+    terms: ['ردّ خلال ٢٤ ساعة', 'اتفاقية سرّية قبل أول مكالمة', 'الكود والملكية الفكرية لك بعد السداد', 'العقد والفاتورة معي مباشرةً', 'مشاريع بأي حجم، مع فريق مؤهّل', 'الاتفاقية السرّية وملكية الكود تشملان الفريق كله'],
   },
   de: {
     tag: { 'tag-full': 'SaaS-Entwicklung mit Laravel & Next.js · Dubai, VAE 🇦🇪', 'tag-short': 'SaaS-Entwicklung · Dubai 🇦🇪', 'tag-tiny': 'SaaS · Dubai 🇦🇪' },
@@ -1557,7 +1557,7 @@ const HOME_COPY = {
     notReady: 'Noch nicht bereit für ein Gespräch?',
     checklist: 'Kostenlose Checkliste zur Multi-Tenant-SaaS-Architektur (Englisch) →',
     recommended: 'Empfohlen',
-    terms: ['Antwort innerhalb von 24 Stunden', 'NDA vor dem ersten Gespräch', 'Code und IP gehören Ihnen nach Zahlung', 'Vertrag und Rechnung direkt mit mir', 'Projekte jeder Größe, mit erprobtem Team'],
+    terms: ['Antwort innerhalb von 24 Stunden', 'NDA vor dem ersten Gespräch', 'Code und IP gehören Ihnen nach Zahlung', 'Vertrag und Rechnung direkt mit mir', 'Projekte jeder Größe, mit erprobtem Team', 'Gleiche NDA- und IP-Regeln für das ganze Team'],
   },
   es: {
     tag: { 'tag-full': 'Desarrollo SaaS con Laravel y Next.js · Dubái, EAU 🇦🇪', 'tag-short': 'Desarrollo SaaS · Dubái 🇦🇪', 'tag-tiny': 'SaaS · Dubái 🇦🇪' },
@@ -1567,7 +1567,7 @@ const HOME_COPY = {
     notReady: '¿Aún no estás listo para una llamada?',
     checklist: 'Descarga gratis la checklist de arquitectura SaaS multi-tenant (en inglés) →',
     recommended: 'Recomendado',
-    terms: ['Respuesta en menos de 24 horas', 'NDA antes de la primera llamada', 'Código y PI son tuyos tras el pago', 'Contrato y factura directamente conmigo', 'Proyectos de cualquier tamaño, con un equipo probado'],
+    terms: ['Respuesta en menos de 24 horas', 'NDA antes de la primera llamada', 'Código y PI son tuyos tras el pago', 'Contrato y factura directamente conmigo', 'Proyectos de cualquier tamaño, con un equipo probado', 'Mismo NDA y misma PI para todo el equipo'],
   },
   fr: {
     tag: { 'tag-full': 'Développement SaaS Laravel & Next.js · Dubaï, EAU 🇦🇪', 'tag-short': 'Développement SaaS · Dubaï 🇦🇪', 'tag-tiny': 'SaaS · Dubaï 🇦🇪' },
@@ -1577,7 +1577,7 @@ const HOME_COPY = {
     notReady: 'Pas encore prêt pour un appel ?',
     checklist: 'Téléchargez la checklist gratuite d’architecture SaaS multi-tenant (en anglais) →',
     recommended: 'Recommandé',
-    terms: ['Réponse sous 24 heures', 'NDA avant le premier appel', 'Code et PI à vous après paiement', 'Contrat et facture directement avec moi', 'Projets de toute taille, avec une équipe éprouvée'],
+    terms: ['Réponse sous 24 heures', 'NDA avant le premier appel', 'Code et PI à vous après paiement', 'Contrat et facture directement avec moi', 'Projets de toute taille, avec une équipe éprouvée', 'Mêmes NDA et règles de PI pour toute l’équipe'],
   },
 };
 
@@ -1596,6 +1596,8 @@ const HOME_COPY = {
 //   recs      the testimonials eyebrow (the export says "Trust signals")
 //   hireAsk   the closing block's opening question, which also pitches a
 //             hire; dropped on every page but /about/ (the hiring page)
+//   existingQ/existingA  a services FAQ for a company with a product
+//             already in production; cloned from the rate question
 //   rateQ     the services FAQ question about price; its answer is rebuilt
 //             from the price cards on the same page (rateIntro … rateOutro)
 //   outcomes  one plain line per flagship card (slug → text): what it changed
@@ -1607,6 +1609,8 @@ const HUMAN_COPY = {
     recs: 'Recommendations',
     hireAsk: 'Need a system built, or hiring a senior engineer?',
     rateQ: "What's your rate?",
+    existingQ: "Can you work on an existing codebase?",
+    existingA: "Yes. Most Architecture Clinic reviews start from a repo that is already in production, and Recovery Advisers was rebuilt while the team kept using it every day. I read the code first, then we agree on what changes and in what order.",
     rateIntro: 'Starting points:',
     rateOutro: 'After a 30-minute scoping call you get one flat quote for your scope, never an hourly bill.',
     outcomes: {
@@ -1639,7 +1643,7 @@ const HUMAN_COPY = {
     },
     text: [
       ['real-time, multi-tenant SaaS — live bidding', 'real-time, multi-tenant SaaS: live bidding'],
-      ['Architecture, backend, web, mobile and infra — one engineer who can hold the whole rope.', 'Architecture, backend, web, mobile and infra, handled by one engineer.'],
+      ['Architecture, backend, web, mobile and infra — one engineer who can hold the whole rope.', 'Architecture, backend, web, mobile and infra, with one senior engineer accountable for all of it.'],
       ['Tenant isolation, role boundaries, billing-aware data — I build platforms', 'Tenant isolation, role boundaries and billing-aware data. I build platforms'],
       ['The full portfolio — flagship SaaS first, then the rest. Each entry links straight to the live product, store listing, or admin surface, pulled from my GitHub profile.', 'Flagship SaaS first, then the rest. Every entry links to the live product, its store listing or its admin panel.'],
       ["My process isn't proprietary — it's just disciplined. Same shape whether the engagement is six weeks or six months.", 'Nothing proprietary: the same four steps whether the work takes six weeks or six months.'],
@@ -1661,7 +1665,7 @@ const HUMAN_COPY = {
       ["Five principles I apply across every project. They're not laws — they're priors I'm willing to break with evidence.", "Five principles I apply on every project, and drop when the evidence says otherwise."],
       ["Full-time and freelance, on-site and remote. The throughline isn't the title — it's the work shipped.", "Full-time and freelance roles, on-site and remote."],
       ["Not a brag list — a spec. If any of these feel like they're missing on your current project, that's where I help.", "What you can expect when we work together."],
-      ["Backend, web, mobile, infra — held together by one person.", "Backend, web, mobile and infra, handled by one person."],
+      ["Backend, web, mobile, infra — held together by one person.", "Backend, web, mobile and infra, with one person accountable for all of it."],
       ["Quotes business outcomes — and the trade-offs to get there.", "Talks in business outcomes, and the trade-offs behind them."],
       ["Every mark is a real product I built or contributed to — from Gulf SaaS platforms to a fleet of US & UK pharmacy brands. Hover to pause; click any logo to open its live site.", "Every name here is a real product I built or contributed to, from Gulf SaaS platforms to US and UK pharmacy brands. Each one opens its live site."],
       ["A senior engineer's range, narrowed to what I actually ship — not what's on the résumé. Most projects sit across two or three of these at once.", "What I build most often. Most projects combine two or three of these."],
@@ -1688,6 +1692,8 @@ const HUMAN_COPY = {
     recs: 'توصيات',
     hireAsk: 'تحتاج إلى بناء نظام، أو تبحث عن مهندس أول؟',
     rateQ: 'ما سعرك؟',
+    existingQ: "هل يمكنك العمل على شيفرة قائمة؟",
+    existingA: "نعم. معظم مراجعات عيادة المعمارية تبدأ من مستودع يعمل في الإنتاج بالفعل، وأُعيد بناء Recovery Advisers بينما ظلّ الفريق يستخدمه كل يوم. أقرأ الشيفرة أولًا، ثم نتّفق على ما يتغيّر وبأي ترتيب.",
     rateIntro: 'نقاط البداية:',
     rateOutro: 'بعد مكالمة تحديد نطاق مدتها ٣٠ دقيقة تحصل على عرض سعر ثابت لنطاقك، لا فاتورة بالساعة.',
     outcomes: {
@@ -1733,6 +1739,8 @@ const HUMAN_COPY = {
       ["ElastiCache، PayFort.", "ElastiCache."],
       ["عمليتي ليست حِكرًا — إنها منضبطة فحسب. الشكل ذاته سواء استمرّ التعاقد ستّة أسابيع أو ستّة أشهر.", "لا أسرار في طريقتي: الخطوات الأربع نفسها، سواء استمرّ العمل ستّة أسابيع أو ستّة أشهر."],
       ["Saeed Al-Badry, MBA", "سعيد البدري، MBA"],
+      ["المعمارية والـ Backend والويب والجوّال والبنية التحتية — مهندس واحد يمسك الحبل كاملًا.", "المعمارية والـ Backend والويب والجوّال والبنية التحتية، ومهندس أول واحد مسؤول عنها كلها."],
+      ["Backend، ويب، جوّال، بنية تحتية — يجمعها شخص واحد.", "الـ Backend والويب والجوّال والبنية التحتية، وشخص واحد مسؤول عنها كلها."],
     ],
     position: 'أتعامل مع المنتج كنظام واحد، لا كمجموعة مزايا متفرّقة. أصمّم كيف تترابط أجزاؤه، وأبني كل طبقاته، وأبقى مسؤولًا عنه حين يكبر.',
     pinnedStat: 'مشاريع مثبّتة',
@@ -1746,6 +1754,8 @@ const HUMAN_COPY = {
     recs: 'Empfehlungen',
     hireAsk: 'Sie brauchen ein System oder suchen einen Senior-Engineer?',
     rateQ: 'Wie hoch ist Ihr Satz?',
+    existingQ: "Können Sie an einer bestehenden Codebasis arbeiten?",
+    existingA: "Ja. Die meisten Reviews der Architektur-Klinik beginnen mit einem Repo, das schon in Produktion läuft, und Recovery Advisers wurde umgebaut, während das Team täglich damit weiterarbeitete. Ich lese zuerst den Code, dann vereinbaren wir, was sich in welcher Reihenfolge ändert.",
     rateIntro: 'Einstiegspreise:',
     rateOutro: 'Nach einem 30-minütigen Scoping-Call bekommen Sie ein Festpreisangebot für Ihren Umfang, keine Stundenrechnung.',
     outcomes: {
@@ -1798,6 +1808,8 @@ const HUMAN_COPY = {
       ["Fünf Prinzipien, die ich auf jedes Projekt anwende. Es sind keine Gesetze — es sind Annahmen, die ich bei Belegen zu brechen bereit bin.", "Fünf Prinzipien, die ich in jedem Projekt anwende und aufgebe, wenn die Belege dagegen sprechen."],
       ["Vollzeit und freiberuflich, vor Ort und remote. Der rote Faden ist nicht der Titel — es ist die gelieferte Arbeit.", "Festanstellungen und freiberufliche Projekte, vor Ort und remote."],
       ["Keine Angeberliste — eine Spezifikation. Wenn sich etwas davon in Ihrem aktuellen Projekt vermisst anfühlt, dort helfe ich.", "Was Sie von der Zusammenarbeit erwarten können."],
+      ["Architektur, Backend, Web, Mobile und Infrastruktur — ein Entwickler, der das ganze Seil halten kann.", "Architektur, Backend, Web, Mobile und Infrastruktur, mit einem Senior-Entwickler, der für alles verantwortlich ist."],
+      ["Backend, Web, Mobile, Infra — von einer Person zusammengehalten.", "Backend, Web, Mobile und Infra, mit einer Person, die für alles verantwortlich ist."],
     ],
     position: "Ich behandle ein Produkt als ein System, nicht als Sammlung von Features. Ich entwerfe, wie die Teile zusammenspielen, baue jede Schicht und bleibe verantwortlich, wenn es wachsen muss.",
     pinnedStat: 'Angepinnte Projekte',
@@ -1811,6 +1823,8 @@ const HUMAN_COPY = {
     recs: 'Recomendaciones',
     hireAsk: '¿Necesitas construir un sistema o buscas un ingeniero senior?',
     rateQ: '¿Cuál es tu tarifa?',
+    existingQ: "¿Puedes trabajar sobre un código existente?",
+    existingA: "Sí. La mayoría de las revisiones de la Clínica de Arquitectura parten de un repositorio que ya está en producción, y Recovery Advisers se reconstruyó mientras el equipo lo seguía usando cada día. Primero leo el código y después acordamos qué cambia y en qué orden.",
     rateIntro: 'Precios de partida:',
     rateOutro: 'Tras una llamada de 30 minutos recibes un precio cerrado para tu alcance, nunca una factura por horas.',
     outcomes: {
@@ -1864,6 +1878,8 @@ const HUMAN_COPY = {
       ["Jornada completa y freelance, presencial y remoto. El hilo conductor no es el título — es el trabajo entregado.", "Puestos a jornada completa y freelance, presenciales y en remoto."],
       ["No es una lista para presumir — es una especificación. Si sientes que falta alguno de estos en tu proyecto actual, ahí es donde ayudo.", "Lo que puedes esperar cuando trabajamos juntos."],
       ["Cada marca es un producto real que construí o en el que contribuí — desde plataformas SaaS del Golfo hasta una flota de marcas de farmacia de EE. UU. y Reino Unido. Cada nombre abre su sitio en vivo.", "Cada nombre es un producto real que construí o en el que contribuí, desde plataformas SaaS del Golfo hasta marcas de farmacia de EE. UU. y Reino Unido. Cada uno abre su sitio en vivo."],
+      ["Arquitectura, backend, web, móvil e infraestructura — un solo ingeniero que sostiene toda la cuerda.", "Arquitectura, backend, web, móvil e infraestructura, con un ingeniero sénior responsable de todo."],
+      ["Backend, web, móvil, infra — sostenidos por una sola persona.", "Backend, web, móvil e infra, con una sola persona responsable de todo."],
     ],
     position: "Trato un producto como un solo sistema, no como un montón de funciones. Diseño cómo encajan las piezas, construyo cada capa y sigo respondiendo cuando tiene que escalar.",
     pinnedStat: 'Proyectos fijados',
@@ -1877,6 +1893,8 @@ const HUMAN_COPY = {
     recs: 'Recommandations',
     hireAsk: 'Vous avez un système à construire ou recrutez un ingénieur senior ?',
     rateQ: 'Quel est votre tarif ?',
+    existingQ: "Pouvez-vous travailler sur une base de code existante ?",
+    existingA: "Oui. La plupart des revues de la Clinique d’Architecture partent d’un dépôt déjà en production, et Recovery Advisers a été refondu pendant que l’équipe continuait à l’utiliser chaque jour. Je lis d’abord le code, puis nous convenons de ce qui change et dans quel ordre.",
     rateIntro: 'Tarifs de départ :',
     rateOutro: 'Après un appel de 30 minutes, vous recevez un devis forfaitaire pour votre périmètre, jamais une facture horaire.',
     outcomes: {
@@ -1929,6 +1947,8 @@ const HUMAN_COPY = {
       ["Cinq principes que j'applique à chaque projet. Ce ne sont pas des lois — ce sont des a priori que je suis prêt à briser sur preuves.", "Cinq principes que j’applique à chaque projet, et que j’abandonne quand les faits disent le contraire."],
       ["Temps plein et freelance, sur site et à distance. Le fil conducteur n'est pas le titre — c'est le travail livré.", "Postes à temps plein et missions freelance, sur site et à distance."],
       ["Pas une liste pour se vanter — un cahier des charges. Si l'un de ces points manque sur votre projet actuel, c'est là que j'interviens.", "Ce à quoi vous pouvez vous attendre en travaillant avec moi."],
+      ["Architecture, backend, web, mobile et infra — un seul ingénieur qui tient toute la corde.", "Architecture, backend, web, mobile et infra, avec un ingénieur senior responsable de l’ensemble."],
+      ["Backend, web, mobile, infra — tenus ensemble par une seule personne.", "Backend, web, mobile et infra, avec une seule personne responsable de l’ensemble."],
     ],
     position: "Je traite un produit comme un seul système, pas comme un empilement de fonctionnalités. Je conçois la façon dont les pièces s’assemblent, je construis chaque couche et je reste responsable quand il faut passer à l’échelle.",
     pinnedStat: 'Projets épinglés',
@@ -3379,6 +3399,24 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         humanHits.push('k:rateQ');
       } else warnings.push(`services: the rate question (${H2.rateQ}) or the price cards not found — answer left as exported`);
     }
+    // /services/: "Can you work on an existing codebase?", the first question
+    // of a company with a product already in production. Cloned from the rate
+    // question (same markup and accordion), so the FAQPage data picks it up.
+    if (pageSpec.key === 'services' && H2.existingQ) {
+      const tpl = [...document.querySelectorAll('.faq-item')].find((i) => norm(i.querySelector('.faq-q .text')?.textContent || '') === norm(H2.rateQ));
+      const q = tpl && tpl.querySelector('.faq-q .text');
+      const a = tpl && tpl.querySelector('.faq-a');
+      if (q && a) {
+        const item = tpl.cloneNode(true);
+        item.setAttribute('data-open', 'false');
+        item.querySelector('.faq-q .text').textContent = H2.existingQ;
+        const ans = item.querySelector('.faq-a');
+        ans.textContent = H2.existingA;
+        ans.removeAttribute('id');
+        tpl.before(item);
+        humanHits.push('k:existingQ');
+      } else warnings.push('services: no FAQ item to clone for the existing-codebase question');
+    }
 
     // Nav and footer links point at sections that may not be on this page.
     // One that is here stays an in-page link; one that lives on another page
@@ -4542,7 +4580,7 @@ async function build() {
   for (const [lang, c] of Object.entries(HUMAN_COPY)) {
     const hits = HUMAN_HITS.get(lang) || new Set();
     const unused = [...Object.keys(c.headings).map((k) => `h:${k}`), ...c.text.map(([f]) => `t:${f}`),
-      ...['recs', 'hireAsk', 'rateQ'].filter((k) => c[k]).map((k) => `k:${k}`)].filter((k) => !hits.has(k));
+      ...['recs', 'hireAsk', 'rateQ', 'existingQ'].filter((k) => c[k]).map((k) => `k:${k}`)].filter((k) => !hits.has(k));
     for (const k of unused) console.warn(`  [${lang}] ⚠ human copy not applied (export reworded?): ${k.slice(2)}`);
   }
 
