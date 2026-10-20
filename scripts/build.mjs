@@ -862,10 +862,11 @@ async function assertInternalLinks(files, locales = []) {
         dead.push(`${rel} → ${href} (no #${fragment} in ${path.relative(DIST, target)})`);
     }
   }
-  // The home page's forwarding of old deep links (REDIRECTS): each id must be
+  // Every page's forwarding of old deep links (redirectsFor): each id must be
   // on the page it forwards to, in every locale.
+  const forwards = new Map(PAGE_SPECS.flatMap((spec) => Object.entries(redirectsFor(spec))).map(([id, suffix]) => [`${id} ${suffix}`, [id, suffix]]));
   for (const l of locales) {
-    for (const [id, suffix] of Object.entries(REDIRECTS)) {
+    for (const [id, suffix] of forwards.values()) {
       const target = path.join(DIST, l.urlPath, suffix, 'index.html');
       const ids = existsSync(target) ? await idsOf(target) : new Set();
       if (!ids.has(id)) dead.push(`redirect #${id} → ${l.urlPath}${suffix} (no #${id} there)`);
@@ -879,7 +880,7 @@ async function assertInternalLinks(files, locales = []) {
     throw err;
   }
   console.log(`  ✓ internal links: ${checked} on-site href(s) all resolve — to a file, and to an id where they name one; ` +
-    `${Object.keys(REDIRECTS).length} legacy #id redirect(s) land on a page that has the id`);
+    `${forwards.size} legacy #id redirect(s) land on a page that has the id`);
 }
 
 // Each page type has a job, and the file is where a cut can quietly get it
@@ -2221,15 +2222,17 @@ const LINK_OWNER = {
 // to them, so there is nothing to forward.
 const UNNAMED_SECTIONS = ['trust', 'position', 'domains'];
 const NAV_LABELS = ['work', 'services', 'about', 'contact', 'caseStudy', 'allWork', 'moreWork', 'pricing'];
-const REDIRECTS = (() => {
-  const home = PAGE_SPECS.find((spec) => spec.key === 'home');
+// The same holds on every other page: /about/#connect, bookmarked before the
+// channel list moved to /contact/, forwards there. redirectsFor(page) is that
+// page's map.
+function redirectsFor(page) {
   const out = {};
   for (const [id, owner] of Object.entries(LINK_OWNER)) {
-    if (owner === 'home' || home.sections.includes(id) || UNNAMED_SECTIONS.includes(id)) continue;
+    if (owner === page.key || page.sections.includes(id) || UNNAMED_SECTIONS.includes(id)) continue;
     out[id] = PAGE_SPECS.find((spec) => spec.key === owner).suffix;
   }
   return out;
-})();
+}
 
 // Checked before anything renders: a table that drives every page would
 // otherwise turn a typo (a section key, a missing SEO row for one locale) into a
@@ -4270,11 +4273,13 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
   });
 })();`.trim();
 
-  // Home only: forward the old single-page deep links (see REDIRECTS). The map
-  // is a build constant and is looked up with hasOwnProperty, so a hash such as
-  // "#__proto__" or "#constructor" cannot reach anything.
-  const redirectScript = spec.key === 'home' && Object.keys(REDIRECTS).length
-    ? `<script>(function(){var m=${JSON.stringify(REDIRECTS)},h=location.hash.slice(1);` +
+  // Forward old deep links to a section this page does not carry (see
+  // redirectsFor). The map is a build constant and is looked up with
+  // hasOwnProperty, so a hash such as "#__proto__" or "#constructor" cannot
+  // reach anything.
+  const forwards = redirectsFor(spec);
+  const redirectScript = Object.keys(forwards).length
+    ? `<script>(function(){var m=${JSON.stringify(forwards)},h=location.hash.slice(1);` +
       `if(h&&Object.prototype.hasOwnProperty.call(m,h))location.replace(${JSON.stringify(urlPath)}+m[h]+'#'+h)})()</script>`
     : '';
 
@@ -4446,8 +4451,8 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 @media (min-width:1101px){.tests.tests-many{grid-template-columns:repeat(3,1fr)}}
 /* /services/: the price in dirhams, under the dollar price. */
 .price-aed{margin-top:4px;font-family:var(--mono);font-size:12px;color:var(--ink-mute)}
-/* /about/: the GitHub card on its own, with the link to the live profile. */
-#github .gh.gh-solo{grid-template-columns:minmax(0,640px)}
+/* /about/: the GitHub card on its own, full width, with the link to the live profile. */
+#github .gh.gh-solo{grid-template-columns:minmax(0,1fr)}
 #github .gh-profile-link{display:inline-block;margin-top:18px}
 /* Arabic (RTL): these components were written with left-side spacing, so
    in Arabic the text ran flush to the right edge and the accent line sat on
@@ -4460,9 +4465,6 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 [dir=rtl] .exp-row .loc{text-align:left}
 @media (max-width:900px){[dir=rtl] .exp-row .loc{text-align:right}}
 [dir=rtl] .test-link{margin-left:0;margin-right:auto}
-[dir=rtl] .bynum{border-left:0;border-right:1px solid var(--line)}
-[dir=rtl] .bynum:first-child{border-right:0}
-@media (max-width:760px){[dir=rtl] .bynum:nth-child(odd){border-right:0}}
 /* Serif italic left in Experience (company names and their initial
    badges), the region counts and the logo marks: the site’s sans. */
 .co-name,.co-logo-mono,.trust-mark-mono,.region-n,.disc-name,.logo-mono{font-family:var(--sans);font-style:normal}
@@ -4539,8 +4541,7 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 .exp-row .co-multi .co-chip:hover{background:none;color:var(--accent)}
 .exp-row .co-multi .co-chip .ext{display:none}
 .exp-row .co-multi .co-chip:not(:last-child)::after{content:"\\00a0· ";color:var(--ink-mute)}
-/* GitHub: one full-width line: who, how many public repos, the link. */
-#github .gh.gh-solo{grid-template-columns:minmax(0,1fr)}
+/* GitHub: one line on a wide screen: who, how many public repos, the link. */
 @media (min-width:761px){
   #github .gh-solo .gh-card{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px 40px}
   #github .gh-solo .gh-stats{margin:0;padding:0;border:0}
