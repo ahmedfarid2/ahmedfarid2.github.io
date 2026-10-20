@@ -1682,6 +1682,11 @@ const HUMAN_COPY = {
       [" public repos spanning TypeScript tooling, PHP, and ML notebooks. Most client work lives behind NDAs.", " public repos. Most of my client work is private, under NDA."],
       ["Source, pinned projects & ML notebooks.", "My public code. Client work stays private."],
       ["ElastiCache, PayFort.", "ElastiCache."],
+      ["Two calls, a shared doc, and a clear definition of done before code.", "The 30-minute scoping call, then a working session, a shared doc and a clear definition of done before any code."],
+      ["B2B2C vehicle auction & sales platform — real-time live bidding across web and mobile.", "B2B2C vehicle auction and sales platform with real-time bidding on web, iOS and Android."],
+      ["Decarbonization planning platform for municipalities — AI-assisted climate intervention & funding.", "Decarbonization planning platform for municipalities, with AI-assisted search for grants and interventions."],
+      ["Arabic-first all-in-one academy platform — launch a branded school at username.khebraos.com.", "Arabic-first academy platform where every school gets its own branded subdomain."],
+      ["Debt-recovery & case management — internal app + multi-tenant client portal, webhook-synced.", "Debt-recovery case management: an internal app and a multi-tenant client portal, kept in sync by webhooks."],
     ],
     position: 'I treat a product as one system, not a pile of features. I design how the parts fit together, build every layer, and stay on the hook when it has to scale.',
     pinnedStat: 'Pinned projects',
@@ -1753,6 +1758,11 @@ const HUMAN_COPY = {
       ["خمسة مبادئ أطبّقها في كل مشروع. ليست قوانين — بل افتراضات مستعدّ لكسرها أمام الأدلّة.", "خمسة مبادئ أطبّقها في كل مشروع، وأتخلّى عنها حين تقول الأدلّة غير ذلك."],
       ["دوام كامل وعمل حرّ، في الموقع وعن بُعد. الخيط الناظم ليس المسمّى — بل العمل المُسلَّم.", "أدوار بدوام كامل وعمل حرّ، في الموقع وعن بُعد."],
       ["ليست قائمة تباهٍ — بل مواصفات. إن شعرت أن أيًّا من هذه ناقص في مشروعك الحالي، فهناك أساعد.", "ما يمكنك توقّعه حين نعمل معًا."],
+      ["مكالمتان، ومستند مشترك، وتعريف واضح لـ«المُنجَز» قبل الشيفرة.", "مكالمة تحديد النطاق (٣٠ دقيقة)، ثم جلسة عمل، ومستند مشترك، وتعريف واضح لـ«المُنجَز» قبل أي شيفرة."],
+      ["منصّة B2B2C لمزادات وبيع المركبات — مزايدة حيّة فورية عبر الويب والجوّال.", "منصّة B2B2C لمزادات وبيع المركبات، بمزايدة فورية على الويب وiOS وAndroid."],
+      ["منصّة تخطيط إزالة الكربون للبلديات — تدخّل مناخي وتمويل مدعومان بالذكاء الاصطناعي.", "منصّة لتخطيط إزالة الكربون للبلديات، مع بحث عن المنح والتدخّلات بمساعدة الذكاء الاصطناعي."],
+      ["منصّة أكاديمية متكاملة عربية أولًا — أطلق مدرسة بعلامتك على username.khebraos.com.", "منصّة أكاديميات عربية أولًا، لكل مدرسة فيها نطاق فرعي بعلامتها الخاصة."],
+      ["تحصيل الديون وإدارة القضايا — تطبيق داخلي + بوابة عملاء متعدّدة المستأجرين، متزامنة عبر Webhook.", "إدارة قضايا تحصيل الديون: تطبيق داخلي وبوابة عملاء متعدّدة المستأجرين، متزامنان عبر Webhook."],
     ],
     position: 'أتعامل مع المنتج كنظام واحد، لا كمجموعة مزايا متفرّقة. أصمّم كيف تترابط أجزاؤه، وأبني كل طبقاته، وأبقى مسؤولًا عنه حين يكبر.',
     pinnedStat: 'مشاريع مثبّتة',
@@ -1822,6 +1832,11 @@ const HUMAN_COPY = {
       ["Keine Angeberliste — eine Spezifikation. Wenn sich etwas davon in Ihrem aktuellen Projekt vermisst anfühlt, dort helfe ich.", "Was Sie von der Zusammenarbeit erwarten können."],
       ["Architektur, Backend, Web, Mobile und Infrastruktur — ein Entwickler, der das ganze Seil halten kann.", "Architektur, Backend, Web, Mobile und Infrastruktur, mit einem Senior-Entwickler, der für alles verantwortlich ist."],
       ["Backend, Web, Mobile, Infra — von einer Person zusammengehalten.", "Backend, Web, Mobile und Infra, mit einer Person, die für alles verantwortlich ist."],
+      ["Zwei Calls, ein gemeinsames Dokument und eine klare Definition von „fertig“ vor dem Code.", "Der 30-minütige Scoping-Call, dann eine Arbeitssitzung, ein gemeinsames Dokument und eine klare Definition von „fertig“, bevor Code entsteht."],
+      ["B2B2C-Plattform für Fahrzeugauktionen und -verkauf — Echtzeit-Live-Gebote über Web und Mobile.", "B2B2C-Plattform für Fahrzeugauktionen und -verkauf mit Echtzeit-Geboten auf Web, iOS und Android."],
+      ["Dekarbonisierungs-Planungsplattform für Kommunen — KI-gestützte Klimaintervention & Finanzierung.", "Dekarbonisierungs-Planungsplattform für Kommunen, mit KI-gestützter Suche nach Fördermitteln und Maßnahmen."],
+      ["Arabisch-zuerst All-in-One-Akademieplattform — starte eine Marken-Schule unter benutzer.khebraos.com.", "Arabisch-zuerst-Akademieplattform, in der jede Schule eine eigene Marken-Subdomain bekommt."],
+      ["Inkasso & Fallmanagement — interne App + Multi-Tenant-Kundenportal, per Webhook synchronisiert.", "Fallmanagement für Inkasso: eine interne App und ein Multi-Tenant-Kundenportal, per Webhooks synchron gehalten."],
     ],
     position: "Ich behandle ein Produkt als ein System, nicht als Sammlung von Features. Ich entwerfe, wie die Teile zusammenspielen, baue jede Schicht und bleibe verantwortlich, wenn es wachsen muss.",
     pinnedStat: 'Angepinnte Projekte',
@@ -1892,6 +1907,11 @@ const HUMAN_COPY = {
       ["Cada marca es un producto real que construí o en el que contribuí — desde plataformas SaaS del Golfo hasta una flota de marcas de farmacia de EE. UU. y Reino Unido. Cada nombre abre su sitio en vivo.", "Cada nombre es un producto real que construí o en el que contribuí, desde plataformas SaaS del Golfo hasta marcas de farmacia de EE. UU. y Reino Unido. Cada uno abre su sitio en vivo."],
       ["Arquitectura, backend, web, móvil e infraestructura — un solo ingeniero que sostiene toda la cuerda.", "Arquitectura, backend, web, móvil e infraestructura, con un ingeniero sénior responsable de todo."],
       ["Backend, web, móvil, infra — sostenidos por una sola persona.", "Backend, web, móvil e infra, con una sola persona responsable de todo."],
+      ["Dos llamadas, un documento compartido y una definición clara de \"hecho\" antes de programar.", "La llamada de alcance de 30 minutos, luego una sesión de trabajo, un documento compartido y una definición clara de \"hecho\" antes de programar."],
+      ["Plataforma B2B2C de subastas y venta de vehículos — pujas en vivo en tiempo real en web y móvil.", "Plataforma B2B2C de subastas y venta de vehículos con pujas en tiempo real en web, iOS y Android."],
+      ["Plataforma de planificación de descarbonización para municipios — intervención climática y financiación asistidas por IA.", "Plataforma de planificación de descarbonización para municipios, con búsqueda de subvenciones e intervenciones asistida por IA."],
+      ["Plataforma de academia todo-en-uno árabe-primero — lanza una escuela de marca en usuario.khebraos.com.", "Plataforma de academias árabe-primero donde cada escuela tiene su propio subdominio de marca."],
+      ["Recobro de deuda y gestión de casos — app interna + portal de clientes multi-tenant, sincronizado por webhooks.", "Gestión de casos de recobro: una app interna y un portal de clientes multi-tenant, sincronizados por webhooks."],
     ],
     position: "Trato un producto como un solo sistema, no como un montón de funciones. Diseño cómo encajan las piezas, construyo cada capa y sigo respondiendo cuando tiene que escalar.",
     pinnedStat: 'Proyectos fijados',
@@ -1961,6 +1981,11 @@ const HUMAN_COPY = {
       ["Pas une liste pour se vanter — un cahier des charges. Si l'un de ces points manque sur votre projet actuel, c'est là que j'interviens.", "Ce à quoi vous pouvez vous attendre en travaillant avec moi."],
       ["Architecture, backend, web, mobile et infra — un seul ingénieur qui tient toute la corde.", "Architecture, backend, web, mobile et infra, avec un ingénieur senior responsable de l’ensemble."],
       ["Backend, web, mobile, infra — tenus ensemble par une seule personne.", "Backend, web, mobile et infra, avec une seule personne responsable de l’ensemble."],
+      ["Deux appels, un document partagé et une définition claire du « terminé » avant de coder.", "L’appel de cadrage de 30 minutes, puis une séance de travail, un document partagé et une définition claire du « terminé » avant de coder."],
+      ["Plateforme B2B2C d'enchères et de vente de véhicules — enchères en direct en temps réel sur web et mobile.", "Plateforme B2B2C d’enchères et de vente de véhicules, avec enchères en temps réel sur web, iOS et Android."],
+      ["Plateforme de planification de décarbonation pour les municipalités — intervention climatique et financement assistés par IA.", "Plateforme de planification de décarbonation pour les municipalités, avec recherche de subventions et d’actions assistée par IA."],
+      ["Plateforme d'académie tout-en-un arabe d'abord — lancez une école de marque sur utilisateur.khebraos.com.", "Plateforme d’académies arabe d’abord, où chaque école a son propre sous-domaine à sa marque."],
+      ["Recouvrement de créances et gestion de dossiers — app interne + portail client multi-tenant, synchronisé par webhooks.", "Gestion de dossiers de recouvrement : une app interne et un portail client multi-tenant, synchronisés par webhooks."],
     ],
     position: "Je traite un produit comme un seul système, pas comme un empilement de fonctionnalités. Je conçois la façon dont les pièces s’assemblent, je construis chaque couche et je reste responsable quand il faut passer à l’échelle.",
     pinnedStat: 'Projets épinglés',
@@ -3311,6 +3336,15 @@ async function snapshotVariant({ page, spec, lang, locales }) {
           av.setAttribute('aria-hidden', 'true');
           card.querySelector('.who').textContent = q.name;
           card.querySelector('.role').textContent = q.role;
+          // A quote about a flagship links to its case study: the proof
+          // behind the praise is one click away.
+          if (q.caseStudy) {
+            const a = document.createElement('a');
+            a.className = 'test-case';
+            a.setAttribute('href', `${localePrefix}work/${q.caseStudy.slug}/`);
+            a.textContent = `${q.caseStudy.name} · ${labels.caseStudy} →`;
+            card.querySelector('.test-quote').after(a);
+          }
           testsGrid.insertBefore(card, first);
         });
         testsGrid.classList.add('tests-many');
@@ -3757,7 +3791,8 @@ async function snapshotVariant({ page, spec, lang, locales }) {
     { owner: LINK_OWNER, paths: Object.fromEntries(PAGE_SPECS.map((s) => [s.key, s.suffix])) },
     NAV[lang],
     { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en, conceptHosts: CONCEPT_HOSTS, caseShots: CASE_SHOTS, impact: IMPACT_PLAIN[lang] || IMPACT_PLAIN.en, aedRate: AED_PER_USD, priceLocale: PRICE_LOCALE[lang] || 'en-AE', moreRecs: MORE_RECS[lang] || MORE_RECS.en,
-      clientQuotes: CLIENT_QUOTES.map((q) => ({ name: q.name[lang] || q.name.en, initials: q.initials[lang] || q.initials.en, role: q.role[lang] || q.role.en, quote: q.quote[lang] || q.quote.en })) }));
+      clientQuotes: CLIENT_QUOTES.map((q) => ({ name: q.name[lang] || q.name.en, initials: q.initials[lang] || q.initials.en, role: q.role[lang] || q.role.en, quote: q.quote[lang] || q.quote.en,
+        caseStudy: q.caseStudy ? { slug: q.caseStudy, name: FLAGSHIP.find((f) => f.slug === q.caseStudy).name } : null })) }));
 
   // Layout passes are best-effort: a re-export that renames a class leaves the
   // page as the export drew it, which is valid, so warn rather than fail.
@@ -4580,6 +4615,17 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 [dir=rtl] .test>.test-mark{right:auto;left:18px}
 /* Case-study pages on a phone: the breadcrumb sat under the fixed nav. */
 @media (max-width:760px){#main > #case:first-child{padding-top:100px}}
+/* Home hero on a phone: the four numbers take a third of a screen, not a
+   whole one, so the first project shows sooner. */
+@media (max-width:760px){
+  .hero-stats{margin-top:48px}
+  .hero-stat{padding:18px 16px}
+  .hero-stat .num{font-size:32px}
+  .hero-stat .lbl{margin-top:8px;font-size:10px;letter-spacing:.08em}
+}
+/* Testimonials: the link from a quote to its case study. */
+.test-case{align-self:flex-start;font-family:var(--mono);font-size:12px;color:var(--accent);text-decoration:none}
+.test-case:hover{text-decoration:underline;text-underline-offset:3px}
 /* Home hero: the scroll cue sat on the stats row’s bottom rule. */
 @media (min-width:761px){#top{padding-bottom:110px}}
 @media (max-width:760px){.contact-terms{display:grid;grid-template-columns:1fr;justify-items:start;width:max-content;max-width:100%}}

@@ -221,11 +221,13 @@ export const NAV = {
 // Changing a quote means getting that approval again. No LinkedIn badge: that
 // mark stays on recommendations that are actually on LinkedIn.
 // `name` and `initials` are per locale only where the script changes (Arabic);
-// every other locale falls back to `en`.
+// every other locale falls back to `en`. `caseStudy` is the FLAGSHIP slug of
+// the product the quote is about; the card links to that case study.
 export const CLIENT_QUOTES = [
   {
     name: { en: 'Remon Adel', ar: 'ريمون عادل' }, initials: { en: 'RA', ar: 'ر' },
     role: { en: 'CTO, Recovery Advisers', ar: 'المدير التقني، Recovery Advisers', de: 'CTO, Recovery Advisers', es: 'CTO, Recovery Advisers', fr: 'CTO, Recovery Advisers' },
+    caseStudy: 'recovery-advisers',
     quote: {
       en: "He rebuilt our case system while the team kept using it every day, which I honestly didn't think was possible. Our clients now check their own case status instead of emailing us.",
       ar: 'أعاد بناء نظام القضايا لدينا بينما كان الفريق يستخدمه كل يوم، وبصراحة لم أكن أظن ذلك ممكنًا. عملاؤنا الآن يتابعون حالة قضاياهم بأنفسهم بدل مراسلتنا.',
@@ -237,6 +239,7 @@ export const CLIENT_QUOTES = [
   {
     name: { en: 'Mohamed Atef', ar: 'محمد عاطف' }, initials: { en: 'MA', ar: 'م' },
     role: { en: 'Tech Lead, Yelo Sale', ar: 'قائد الفريق التقني، Yelo Sale', de: 'Tech Lead, Yelo Sale', es: 'Líder técnico, Yelo Sale', fr: 'Responsable technique, Yelo Sale' },
+    caseStudy: 'yelo-sale',
     quote: {
       en: "Live auctions don't forgive mistakes. One bid in the wrong order and you lose a buyer's trust. Ahmed owned that part, web and mobile, Arabic and English, and it held up when real traffic hit it.",
       ar: 'المزادات المباشرة لا تغفر الأخطاء. مزايدة واحدة بترتيب خاطئ وتخسر ثقة المشتري. تولّى أحمد هذا الجزء على الويب والجوال، بالعربية والإنجليزية، وصمد النظام حين جاءت الحركة الحقيقية.',
@@ -270,6 +273,7 @@ export const CLIENT_QUOTES = [
   {
     name: { en: 'Amr Khalil', ar: 'عمرو خليل' }, initials: { en: 'AK', ar: 'ع' },
     role: { en: 'Project Manager, Phonic Maps', ar: 'مدير المشروع، Phonic Maps', de: 'Projektmanager, Phonic Maps', es: 'Jefe de proyecto, Phonic Maps', fr: 'Chef de projet, Phonic Maps' },
+    caseStudy: 'phonic-maps',
     quote: {
       en: "We manage reviews for a lot of locations, and before this it was tab after tab. Now it's one screen, with replies drafted for us. He also flagged problems before we ran into them, which doesn't happen often.",
       ar: 'ندير التقييمات لعدد كبير من الفروع، وكان الأمر قبل ذلك تبويبًا بعد تبويب. الآن أصبح شاشة واحدة، والردود تُصاغ لنا. وكان ينبّهنا إلى المشكلات قبل أن نقع فيها، وهذا نادر.',
