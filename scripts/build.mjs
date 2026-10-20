@@ -324,7 +324,7 @@ async function applyShellToStandalonePages() {
     SKIP_CSS +
     '</style>';
 
-  const PAGES = ['demo.html', 'checklist.html', 'get-checklist.html'];
+  const PAGES = ['demo.html', 'checklist.html', 'get-checklist.html', '404.html'];
   for (const name of PAGES) {
     const file = path.join(DIST, name);
     if (!existsSync(file)) continue;
@@ -1319,28 +1319,35 @@ async function writeSeoFiles(locales, specs, projects = null, prices = null) {
     `- Project work: book a 30-minute scoping call (${CONTACT.calendly}) or WhatsApp Business (${CONTACT.whatsapp})\n` +
     `- Senior roles: email ${CONTACT.email}, or LinkedIn\n`, 'utf8');
 
+  // The 404 joins the standalone pages that get the site's nav and footer
+  // (applyShellToStandalonePages, which also brings the Geist faces), and
+  // offers the pages a lost visitor most likely wanted.
   await writeFile(path.join(DIST, '404.html'),
     `<!doctype html><html lang="en"><head><meta charset="utf-8">\n` +
     `<meta name="viewport" content="width=device-width, initial-scale=1">\n` +
-    `<title>404 — Ahmed Farid</title><meta name="robots" content="noindex">\n${ICON_LINKS}\n` +
-    `<style>:root{color-scheme:dark}*{margin:0;box-sizing:border-box}` +
-    `body{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;` +
-    `gap:18px;text-align:center;padding:24px;background:#0B0D10;color:#F4F1EA;` +
-    `font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;position:relative;overflow:hidden}` +
-    `body::before{content:"";position:absolute;top:-30%;left:50%;transform:translateX(-50%);width:700px;height:700px;` +
+    `<title>404 — Ahmed Farid</title><meta name="robots" content="noindex">\n` +
+    `<style>:root{color-scheme:dark}*{box-sizing:border-box}` +
+    `body{margin:0;background:#0B0D10;color:#F4F1EA;font-family:Geist,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}` +
+    `.nf{position:relative;overflow:hidden;min-height:68vh;display:flex;flex-direction:column;align-items:center;justify-content:center;` +
+    `gap:18px;text-align:center;padding:96px 24px}` +
+    `.nf::before{content:"";position:absolute;top:-30%;left:50%;transform:translateX(-50%);width:700px;height:700px;` +
     `border-radius:50%;background:radial-gradient(circle,rgba(230,200,160,.14),transparent 60%);pointer-events:none}` +
-    `.code{font-size:clamp(72px,18vw,160px);line-height:1;letter-spacing:-.05em;font-weight:500;position:relative}` +
+    `.nf>*{position:relative}` +
+    `.code{font-size:clamp(72px,18vw,160px);line-height:1;letter-spacing:-.05em;font-weight:500}` +
     `.code em{font-style:normal;color:#E6C8A0}` +
-    `h1{font-size:clamp(20px,4vw,28px);font-weight:500;letter-spacing:-.01em}` +
-    `p{color:#a8a297;max-width:440px;line-height:1.5}` +
-    `a{margin-top:8px;display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:99px;` +
-    `border:1px solid rgba(255,255,255,.18);color:#0B0D10;background:#E6C8A0;text-decoration:none;font-weight:600;` +
-    `position:relative;transition:transform .2s}a:hover{transform:translateY(-2px)}` +
-    `main{display:flex;flex-direction:column;align-items:center;gap:18px;position:relative}</style></head>` +
-    `<body><main><div class="code">4<em>0</em>4</div>` +
+    `.nf h1{margin:0;font-size:clamp(20px,4vw,28px);font-weight:500;letter-spacing:-.01em}` +
+    `.nf p{margin:0;color:#a8a297;max-width:440px;line-height:1.5}` +
+    `.nf-links{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:8px}` +
+    `.nf-links a{padding:11px 20px;border-radius:99px;border:1px solid rgba(255,255,255,.18);color:#F4F1EA;` +
+    `text-decoration:none;font-size:15px;transition:transform .2s,border-color .2s}` +
+    `.nf-links a:hover{transform:translateY(-2px);border-color:#E6C8A0}` +
+    `.nf-links a.primary{background:#E6C8A0;border-color:#E6C8A0;color:#0B0D10;font-weight:600}</style></head>` +
+    `<body><main id="main" class="nf"><div class="code" aria-hidden="true">4<em>0</em>4</div>` +
     `<h1>This page wandered off.</h1>` +
-    `<p>The link may be broken or the page may have moved.</p>` +
-    `<a href="/">← Back to Ahmed Farid's portfolio</a></main></body></html>\n`, 'utf8');
+    `<p>The link may be broken or the page may have moved. These are the pages most people are looking for:</p>` +
+    `<nav class="nf-links" aria-label="Pages"><a class="primary" href="/">Home</a>` +
+    `<a href="/work/">${NAV.en.work}</a><a href="/services/">${NAV.en.services}</a><a href="/contact/">${NAV.en.contact}</a></nav>` +
+    `</main></body></html>\n`, 'utf8');
 
   console.log('  wrote sitemap.xml, robots.txt, llms.txt, 404.html');
 }
@@ -1381,6 +1388,47 @@ async function ogFontCss() {
   return out.join('');
 }
 
+// The Arabic share cards: the site ships no Arabic web font (Arabic falls
+// back to the visitor's system face), so a card rendered on the build machine
+// would come out in whatever that machine has. IBM Plex Sans Arabic (SIL OFL,
+// scripts/fonts/) is bundled for the cards only; Latin stays in Geist.
+async function ogArabicFontCss() {
+  const face = async (file, weight) => {
+    const data = (await readFile(path.join(ROOT, 'scripts', 'fonts', file))).toString('base64');
+    return `@font-face{font-family:'Plex Arabic';font-weight:${weight};font-style:normal;` +
+      `unicode-range:U+0600-06FF,U+0750-077F,U+08A0-08FF,U+FB50-FDFF,U+FE70-FEFF;` +
+      `src:url(data:font/woff2;base64,${data}) format('woff2')}`;
+  };
+  return (await face('IBMPlexSansArabic-Regular.woff2', 400)) + (await face('IBMPlexSansArabic-Medium.woff2', 500)) +
+    '[dir=rtl] body{font-family:Geist,"Plex Arabic",ui-sans-serif,system-ui,sans-serif}' +
+    '[dir=rtl] .dot{margin-right:0;margin-left:14px}[dir=rtl] .eyebrow{letter-spacing:0}' +
+    '[dir=rtl] .brand{left:auto;right:90px}';
+}
+
+// What the site-wide card says, per card language. Arabic follows the Arabic
+// home hero word for word.
+const OG_MAIN = {
+  en: {
+    file: 'og.png', dir: 'ltr', eyebrow: `Senior software engineer · ${LOCATION.city}`,
+    h1: 'I build the systems<br>other teams <span>depend on.</span>',
+    sub: 'Real-time, multi-tenant SaaS, AI tools and mobile apps, shipped across the Gulf, the US and the UK.',
+    alt: 'Ahmed Farid — Senior Software Engineer',
+  },
+  ar: {
+    file: 'og-ar.png', dir: 'rtl', eyebrow: 'مهندس برمجيات أول · دبي',
+    h1: 'أبني الأنظمة<br>التي تعتمد عليها <span>الفِرَق الأخرى.</span>',
+    sub: 'منصّات SaaS فورية متعدّدة المستأجرين، وأدوات ذكاء اصطناعي وتطبيقات جوّال، أُطلقت في الخليج والولايات المتحدة والمملكة المتحدة.',
+    alt: 'Ahmed Farid — مهندس برمجيات أول',
+    caseEyebrow: 'دراسة حالة', caseAlt: 'دراسة حالة من Ahmed Farid',
+  },
+};
+// The card a page shares: Arabic pages get the Arabic cards, every other
+// locale the English ones (brand and product names are the same everywhere).
+const ogCardFor = (lang, slug) => {
+  const ar = lang === 'ar';
+  return { file: slug ? `og-${ar ? 'ar-' : ''}${slug}.png` : OG_MAIN[ar ? 'ar' : 'en'].file };
+};
+
 const OG_BASE_CSS =
   '*{margin:0;box-sizing:border-box}html,body{width:1200px;height:630px}' +
   'body{background:#0B0D10;color:#F4F1EA;font-family:Geist,ui-sans-serif,system-ui,sans-serif;position:relative;overflow:hidden}' +
@@ -1412,30 +1460,36 @@ const ogEscape = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').r
 // The 1200×630 card every page but the project pages shares (LinkedIn, X,
 // WhatsApp, Slack previews). Same type as the site: Geist, the gold accent
 // on "depend on." without the old serif italic.
-async function generateOgImage(browser, fontCss = '') {
-  const card = `<!doctype html><html><head><meta charset="utf-8"><style>${fontCss}${OG_BASE_CSS}
+async function generateOgImage(browser, fontCss = '', arFontCss = '') {
+  for (const c of [OG_MAIN.en, OG_MAIN.ar]) {
+  const rtl = c.dir === 'rtl';
+  const card = `<!doctype html><html dir="${c.dir}"><head><meta charset="utf-8"><style>${fontCss}${OG_BASE_CSS}${rtl ? arFontCss : ''}
     .main{position:absolute;left:90px;right:90px;top:92px}
     h1{margin-top:34px;font-size:94px;line-height:1.02;letter-spacing:-.045em;font-weight:500}
     h1 span{color:#E6C8A0}
     .sub{margin-top:30px;font-size:27px;color:#c9c3b8;max-width:900px;line-height:1.42}
     .tags{position:absolute;right:90px;bottom:66px;font-size:19px;color:#8b857b;letter-spacing:.04em}
+    [dir=rtl] h1{font-size:84px;line-height:1.18;letter-spacing:0}
+    [dir=rtl] .sub{font-size:28px;line-height:1.55}
+    [dir=rtl] .tags{right:auto;left:90px}
   </style></head><body>
     <div class="grid"></div><div class="glow"></div>
     <div class="main">
-      <div class="eyebrow"><span class="dot"></span>Senior software engineer · ${ogEscape(LOCATION.city)}</div>
-      <h1>I build the systems<br>other teams <span>depend on.</span></h1>
-      <div class="sub">Real-time, multi-tenant SaaS, AI tools and mobile apps, shipped across the Gulf, the US and the UK.</div>
+      <div class="eyebrow"><span class="dot"></span>${ogEscape(c.eyebrow)}</div>
+      <h1>${c.h1}</h1>
+      <div class="sub">${ogEscape(c.sub)}</div>
     </div>
-    <div class="brand"><span class="mark">AF</span><span><b>Ahmed Farid</b> · iamahmedfarid.com</span></div>
-    <div class="tags">Laravel · Next.js · FastAPI · Flutter</div>
+    <div class="brand"><span class="mark">AF</span><span dir="ltr"><b>Ahmed Farid</b> · iamahmedfarid.com</span></div>
+    <div class="tags" dir="ltr">Laravel · Next.js · FastAPI · Flutter</div>
   </body></html>`;
-  await renderOgCard(browser, card, 'og.png');
+  await renderOgCard(browser, card, c.file);
+  }
 }
 
 // One card per flagship (og-<slug>.png): the project name, its plain outcome
-// line and its screenshot. English on every locale: the name and the product
-// are what the preview is for.
-async function generateCaseOgImages(browser, fontCss, projects) {
+// line and its screenshot, in English and in Arabic (og-ar-<slug>.png, mirrored,
+// with the Arabic outcome line).
+async function generateCaseOgImages(browser, fontCss, projects, arFontCss = '') {
   const missing = [];
   for (const f of FLAGSHIP) {
     const pr = projects[f.slug];
@@ -1448,8 +1502,11 @@ async function generateCaseOgImages(browser, fontCss, projects) {
       shot = file ? `data:${mime};base64,${(await readFile(file)).toString('base64')}` : '';
     }
     if (!shot) { missing.push(f.slug); continue; }
-    const outcome = (HUMAN_COPY.en.outcomes || {})[f.slug] || (pr && pr.tagline) || '';
-    const card = `<!doctype html><html><head><meta charset="utf-8"><style>${fontCss}${OG_BASE_CSS}
+    for (const lang of ['en', 'ar']) {
+    const rtl = lang === 'ar';
+    const outcome = (HUMAN_COPY[lang].outcomes || {})[f.slug] || (HUMAN_COPY.en.outcomes || {})[f.slug] || (pr && pr.tagline) || '';
+    if (rtl && !(HUMAN_COPY.ar.outcomes || {})[f.slug]) throw new Error(`${f.slug}: no Arabic outcome line for the Arabic share card`);
+    const card = `<!doctype html><html dir="${rtl ? 'rtl' : 'ltr'}"><head><meta charset="utf-8"><style>${fontCss}${OG_BASE_CSS}${rtl ? arFontCss : ''}
       .meta{position:absolute;left:90px;top:96px;width:470px}
       h1{margin-top:26px;font-size:66px;line-height:1.02;letter-spacing:-.04em;font-weight:500}
       .out{margin-top:24px;font-size:26px;line-height:1.4;color:#c9c3b8}
@@ -1458,21 +1515,26 @@ async function generateCaseOgImages(browser, fontCss, projects) {
       .bar{height:34px;display:flex;align-items:center;gap:8px;padding:0 14px;background:#15181d;border-bottom:1px solid rgba(255,255,255,.08)}
       .bar i{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.18)}
       .frame img{display:block;width:100%;height:412px;object-fit:cover;object-position:0 0}
+      [dir=rtl] .meta{left:auto;right:90px}
+      [dir=rtl] .frame{left:auto;right:610px}
+      [dir=rtl] .out{font-size:27px;line-height:1.6}
+      [dir=rtl] h1{letter-spacing:-.02em}
     </style></head><body>
       <div class="grid"></div><div class="glow"></div>
       <div class="meta">
-        <div class="eyebrow"><span class="dot"></span>Case study</div>
-        <h1>${ogEscape(f.name)}</h1>
+        <div class="eyebrow"><span class="dot"></span>${rtl ? OG_MAIN.ar.caseEyebrow : 'Case study'}</div>
+        <h1 dir="ltr">${ogEscape(f.name)}</h1>
         <div class="out">${ogEscape(outcome)}</div>
       </div>
       <div class="frame"><div class="bar"><i></i><i></i><i></i></div><img src="${shot}" alt=""></div>
-      <div class="brand"><span class="mark">AF</span><span><b>Ahmed Farid</b> · iamahmedfarid.com</span></div>
+      <div class="brand"><span class="mark">AF</span><span dir="ltr"><b>Ahmed Farid</b> · iamahmedfarid.com</span></div>
     </body></html>`;
-    await renderOgCard(browser, card, `og-${f.slug}.png`);
+    await renderOgCard(browser, card, ogCardFor(lang, f.slug).file);
+    }
   }
   // Every project page links its card: a missing one is a broken preview.
   if (missing.length) throw Object.assign(new Error(`[build] no screenshot for the share card of: ${missing.join(', ')}`), { fatal: true });
-  console.log(`  generated og.png + ${FLAGSHIP.length} project cards (1200×630)`);
+  console.log(`  generated og.png, og-ar.png + ${FLAGSHIP.length * 2} project cards (English and Arabic, 1200×630)`);
 }
 
 // Fail closed. Any failure — a gate, a render timeout, a bug in this file — ends
@@ -1598,6 +1660,8 @@ const HOME_COPY = {
 //   hireAsk   the closing block's opening question, which also pitches a
 //             hire; dropped on every page but /about/ and /contact/
 //   contactTitle  /contact/'s h1, in place of "Find me online."
+//   projectForm   the short project form on /contact/ (labels, hint, the
+//                 thank-you shown after FormSubmit sends the visitor back)
 //   addonsTitle   the heading over /services/' three focused builds
 //   brandsSub     /work/'s name-list subtitle, once the carded names are gone
 //   existingQ/existingA  a services FAQ for a company with a product
@@ -1691,6 +1755,7 @@ const HUMAN_COPY = {
     position: 'I treat a product as one system, not a pile of features. I design how the parts fit together, build every layer, and stay on the hook when it has to scale.',
     pinnedStat: 'Pinned projects',
     contactTitle: 'Let’s talk.',
+    projectForm: {"title": "Or tell me about the project here", "sub": "Four fields. I reply personally, usually within a day.", "name": "Your name", "email": "Email", "company": "Company or product URL", "optional": "optional", "brief": "What are you building, and what do you need from me?", "briefPh": "The product, who it is for, where it stands today, and the timeline you have in mind.", "submit": "Send project details", "note": "No newsletter, no sequence. Your details go to my inbox and nowhere else.", "sentTitle": "Got it, thank you.", "sentBody": "Your message is in my inbox. I'll reply personally, usually within a day."},
     brandsSub: 'More real products and teams I built for, beyond the case studies above: from a bank and an e-learning platform to US and UK pharmacy brands. Each name opens its live site.',
     addonsTitle: 'Focused builds',
     toolbeltMore: ['Show all 60+ tools', 'Show fewer'],
@@ -1767,6 +1832,7 @@ const HUMAN_COPY = {
     position: 'أتعامل مع المنتج كنظام واحد، لا كمجموعة مزايا متفرّقة. أصمّم كيف تترابط أجزاؤه، وأبني كل طبقاته، وأبقى مسؤولًا عنه حين يكبر.',
     pinnedStat: 'مشاريع مثبّتة',
     contactTitle: 'لنتحدّث.',
+    projectForm: {"title": "أو أخبرني عن مشروعك هنا", "sub": "أربعة حقول. أردّ بنفسي، عادةً خلال يوم.", "name": "اسمك", "email": "البريد الإلكتروني", "company": "الشركة أو رابط المنتج", "optional": "اختياري", "brief": "ماذا تبني، وما الذي تحتاجه مني؟", "briefPh": "المنتج، ولمن هو، وأين وصل اليوم، والجدول الزمني الذي تفكّر فيه.", "submit": "أرسل تفاصيل المشروع", "note": "لا نشرات بريدية ولا رسائل متتابعة. تصل بياناتك إلى بريدي فقط.", "sentTitle": "وصلتني رسالتك، شكرًا لك.", "sentBody": "رسالتك في بريدي الآن. سأردّ بنفسي، عادةً خلال يوم."},
     brandsSub: 'منتجات وفرق حقيقية أخرى بنيت لها، غير دراسات الحالة أعلاه: من بنك ومنصّة تعليم إلى علامات صيدليات أمريكية وبريطانية. كل اسم يفتح موقعه الحيّ.',
     addonsTitle: 'مشاريع مركّزة',
     toolbeltMore: ['عرض كل الأدوات (٦٠+)', 'عرض أقل'],
@@ -1841,6 +1907,7 @@ const HUMAN_COPY = {
     position: "Ich behandle ein Produkt als ein System, nicht als Sammlung von Features. Ich entwerfe, wie die Teile zusammenspielen, baue jede Schicht und bleibe verantwortlich, wenn es wachsen muss.",
     pinnedStat: 'Angepinnte Projekte',
     contactTitle: 'Sprechen wir.',
+    projectForm: {"title": "Oder erzählen Sie mir hier vom Projekt", "sub": "Vier Felder. Ich antworte persönlich, meist innerhalb eines Tages.", "name": "Ihr Name", "email": "E-Mail", "company": "Firma oder Produkt-URL", "optional": "optional", "brief": "Was bauen Sie, und was brauchen Sie von mir?", "briefPh": "Das Produkt, für wen es ist, wo es heute steht und welchen Zeitrahmen Sie im Kopf haben.", "submit": "Projektdetails senden", "note": "Kein Newsletter, keine Mail-Sequenz. Ihre Angaben landen nur in meinem Postfach.", "sentTitle": "Angekommen, danke.", "sentBody": "Ihre Nachricht ist in meinem Postfach. Ich antworte persönlich, meist innerhalb eines Tages."},
     brandsSub: 'Weitere echte Produkte und Teams, für die ich gebaut habe, über die Fallstudien oben hinaus: von einer Bank und einer E-Learning-Plattform bis zu Apothekenmarken in den USA und Großbritannien. Jeder Name öffnet die Live-Website.',
     addonsTitle: 'Fokussierte Projekte',
     toolbeltMore: ['Alle 60+ Tools zeigen', 'Weniger anzeigen'],
@@ -1916,6 +1983,7 @@ const HUMAN_COPY = {
     position: "Trato un producto como un solo sistema, no como un montón de funciones. Diseño cómo encajan las piezas, construyo cada capa y sigo respondiendo cuando tiene que escalar.",
     pinnedStat: 'Proyectos fijados',
     contactTitle: 'Hablemos.',
+    projectForm: {"title": "O cuéntame aquí sobre el proyecto", "sub": "Cuatro campos. Respondo personalmente, normalmente en un día.", "name": "Tu nombre", "email": "Email", "company": "Empresa o URL del producto", "optional": "opcional", "brief": "¿Qué estás construyendo y qué necesitas de mí?", "briefPh": "El producto, para quién es, en qué punto está hoy y el plazo que tienes en mente.", "submit": "Enviar detalles del proyecto", "note": "Sin newsletter ni secuencias. Tus datos solo llegan a mi bandeja de entrada.", "sentTitle": "Recibido, gracias.", "sentBody": "Tu mensaje está en mi bandeja de entrada. Respondo personalmente, normalmente en un día."},
     brandsSub: 'Más productos y equipos reales para los que construí, además de los casos de arriba: desde un banco y una plataforma de e-learning hasta marcas de farmacia de EE. UU. y Reino Unido. Cada nombre abre su sitio en vivo.',
     addonsTitle: 'Proyectos acotados',
     toolbeltMore: ['Ver las 60+ herramientas', 'Ver menos'],
@@ -1990,6 +2058,7 @@ const HUMAN_COPY = {
     position: "Je traite un produit comme un seul système, pas comme un empilement de fonctionnalités. Je conçois la façon dont les pièces s’assemblent, je construis chaque couche et je reste responsable quand il faut passer à l’échelle.",
     pinnedStat: 'Projets épinglés',
     contactTitle: 'Parlons-en.',
+    projectForm: {"title": "Ou parlez-moi du projet ici", "sub": "Quatre champs. Je réponds personnellement, généralement sous un jour.", "name": "Votre nom", "email": "E-mail", "company": "Entreprise ou URL du produit", "optional": "facultatif", "brief": "Que construisez-vous, et qu’attendez-vous de moi ?", "briefPh": "Le produit, pour qui il est, où il en est aujourd’hui et le calendrier que vous visez.", "submit": "Envoyer les détails du projet", "note": "Pas de newsletter, pas de séquence. Vos informations n’arrivent que dans ma boîte mail.", "sentTitle": "Bien reçu, merci.", "sentBody": "Votre message est dans ma boîte mail. Je réponds personnellement, généralement sous un jour."},
     brandsSub: 'D’autres produits et équipes pour qui j’ai construit, au-delà des études de cas ci-dessus : d’une banque et d’une plateforme d’e-learning à des marques de pharmacies aux États-Unis et au Royaume-Uni. Chaque nom ouvre le site en ligne.',
     addonsTitle: 'Projets ciblés',
     toolbeltMore: ['Voir les 60+ outils', 'Voir moins'],
@@ -3266,6 +3335,59 @@ async function snapshotVariant({ page, spec, lang, locales }) {
       const t = document.querySelector('#connect .section-title');
       if (t && H2.contactTitle) t.textContent = H2.contactTitle;
       else warnings.push('contact: #connect title or contactTitle missing — heading left as exported');
+      // A short project form under the channels, for a visitor who would
+      // rather write than book a call or open a mail app. It posts through
+      // FormSubmit like the demo and checklist forms; FormSubmit sends the
+      // visitor back with ?sent=1, which swaps the form for a thank-you.
+      const f = H2.projectForm;
+      const grid = document.querySelector('#connect .connect-grid');
+      const wrap = grid && grid.closest('.wrap');
+      if (f && wrap) {
+        const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; };
+        const box = el('div', 'pf');
+        box.id = 'project';
+        box.append(el('h2', null, f.title), el('p', 'pf-sub', f.sub));
+        const form = el('form');
+        form.setAttribute('action', copy.formAction);
+        form.setAttribute('method', 'POST');
+        const hidden = { _subject: `Project enquiry (${document.documentElement.lang || 'en'}) — iamahmedfarid.com`, _template: 'table', _captcha: 'false', _next: `${copy.siteUrl}${localePrefix}contact/?sent=1#project` };
+        for (const [k, v] of Object.entries(hidden)) { const i = el('input'); i.type = 'hidden'; i.name = k; i.value = v; form.appendChild(i); }
+        const hp = el('input', 'hp');
+        Object.assign(hp, { type: 'text', name: '_honey', tabIndex: -1, autocomplete: 'off' });
+        hp.setAttribute('aria-hidden', 'true');
+        form.appendChild(hp);
+        const field = (id, label, input, full, optional) => {
+          const wrapF = el('div', full ? 'pf-field full' : 'pf-field');
+          const l = el('label', null, label);
+          l.htmlFor = id;
+          if (optional) l.append(' ', el('span', 'opt', `(${f.optional})`));
+          input.id = id;
+          wrapF.append(l, input);
+          form.appendChild(wrapF);
+        };
+        const inp = (type, name, attrs) => { const i = el('input'); i.type = type; i.name = name; for (const [k, v] of Object.entries(attrs)) i.setAttribute(k, v); return i; };
+        field('pf-name', f.name, inp('text', 'Name', { required: '', autocomplete: 'name' }));
+        field('pf-email', f.email, inp('email', 'Email', { required: '', autocomplete: 'email', dir: 'ltr' }));
+        field('pf-company', f.company, inp('text', 'Company or URL', { autocomplete: 'url', inputmode: 'url', dir: 'ltr' }), true, true);
+        const ta = el('textarea');
+        ta.name = 'Project';
+        ta.required = true;
+        ta.rows = 5;
+        ta.setAttribute('placeholder', f.briefPh);
+        field('pf-brief', f.brief, ta, true);
+        const btn = el('button', 'btn btn-primary', f.submit);
+        btn.type = 'submit';
+        btn.setAttribute('data-umami-event', 'project-form');
+        form.append(btn, el('p', 'pf-note', f.note));
+        const sent = el('div', 'pf-sent');
+        sent.setAttribute('role', 'status');
+        sent.append(el('h3', null, f.sentTitle), el('p', null, f.sentBody));
+        box.append(form, sent);
+        const flag = el('script');
+        flag.textContent = "if(/[?&]sent=1(&|$)/.test(location.search))document.getElementById('project').classList.add('is-sent')";
+        box.appendChild(flag);
+        wrap.appendChild(box);
+      } else warnings.push('contact: no projectForm copy or no #connect .connect-grid — no project form');
     }
     // /services/: what I build and the industries sit after the price list
     // (the export orders them before it).
@@ -3790,7 +3912,7 @@ async function snapshotVariant({ page, spec, lang, locales }) {
   }, spec, locales.map((l) => l.lang), FAQ_BUYER_KEYS[lang] || FAQ_BUYER_KEYS.en, prefix, PAGE_LAYOUT, SECTION_KEYS,
     { owner: LINK_OWNER, paths: Object.fromEntries(PAGE_SPECS.map((s) => [s.key, s.suffix])) },
     NAV[lang],
-    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en, conceptHosts: CONCEPT_HOSTS, caseShots: CASE_SHOTS, impact: IMPACT_PLAIN[lang] || IMPACT_PLAIN.en, aedRate: AED_PER_USD, priceLocale: PRICE_LOCALE[lang] || 'en-AE', moreRecs: MORE_RECS[lang] || MORE_RECS.en,
+    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en, conceptHosts: CONCEPT_HOSTS, caseShots: CASE_SHOTS, formAction: `https://formsubmit.co/${CONTACT.email}`, siteUrl: SITE_URL, impact: IMPACT_PLAIN[lang] || IMPACT_PLAIN.en, aedRate: AED_PER_USD, priceLocale: PRICE_LOCALE[lang] || 'en-AE', moreRecs: MORE_RECS[lang] || MORE_RECS.en,
       clientQuotes: CLIENT_QUOTES.map((q) => ({ name: q.name[lang] || q.name.en, initials: q.initials[lang] || q.initials.en, role: q.role[lang] || q.role.en, quote: q.quote[lang] || q.quote.en,
         caseStudy: q.caseStudy ? { slug: q.caseStudy, name: FLAGSHIP.find((f) => f.slug === q.caseStudy).name } : null })) }));
 
@@ -3941,8 +4063,11 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
   // square-avatar one from the export) and ensure og:url is present.
   // A project page shares its own card (generateCaseOgImages): the project's
   // name and screenshot, which is what a case-study link on LinkedIn should show.
-  const ogImg = spec.flagship ? `${SITE_URL}/og-${spec.flagship.slug}.png` : `${SITE_URL}/og.png`;
-  const ogAlt = spec.flagship ? `${spec.flagship.name} — case study by Ahmed Farid` : 'Ahmed Farid — Senior Software Engineer';
+  // Arabic pages share the Arabic cards (ogCardFor).
+  const ogImg = `${SITE_URL}/${ogCardFor(lang, spec.flagship && spec.flagship.slug).file}`;
+  const ogAlt = lang === 'ar'
+    ? (spec.flagship ? `${spec.flagship.name} — ${OG_MAIN.ar.caseAlt}` : OG_MAIN.ar.alt)
+    : (spec.flagship ? `${spec.flagship.name} — case study by Ahmed Farid` : OG_MAIN.en.alt);
 
   // Canonical Person structured data — used to inject a block if the export has
   // none, and to enrich an existing export block with fields it may lack.
@@ -4623,6 +4748,26 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
   .hero-stat .num{font-size:32px}
   .hero-stat .lbl{margin-top:8px;font-size:10px;letter-spacing:.08em}
 }
+/* /contact/: the short project form under the channels. */
+.pf{margin-top:64px;max-width:760px}
+.pf h2{margin:0;font-size:30px;font-weight:500;letter-spacing:-.02em;color:var(--ink)}
+.pf-sub{margin:10px 0 0;color:var(--ink-mute)}
+.pf form{margin-top:26px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.pf .full{grid-column:1 / -1}
+.pf label{display:block;margin-bottom:8px;font-size:13px;color:var(--ink-mute)}
+.pf label .opt{color:var(--ink-dim)}
+.pf input,.pf textarea{width:100%;padding:13px 14px;border:1px solid var(--line-strong);border-radius:10px;background:var(--bg-elev);color:var(--ink);font:inherit;font-size:15px}
+.pf textarea{min-height:140px;resize:vertical;line-height:1.5}
+.pf input:focus,.pf textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.pf form .btn{justify-self:start;grid-column:1 / -1}
+.pf-note{grid-column:1 / -1;margin:0;font-size:13px;color:var(--ink-dim)}
+.pf .hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+.pf-sent{display:none;margin-top:26px;padding:26px;border:1px solid var(--line-strong);border-radius:var(--radius);background:var(--bg-elev)}
+.pf-sent h3{margin:0 0 8px;font-size:22px;font-weight:500;color:var(--ink)}
+.pf-sent p{margin:0;color:var(--ink-mute)}
+.pf.is-sent form{display:none}
+.pf.is-sent .pf-sent{display:block}
+@media (max-width:640px){.pf form{grid-template-columns:1fr}}
 /* Testimonials: the link from a quote to its case study. */
 .test-case{align-self:flex-start;font-family:var(--mono);font-size:12px;color:var(--accent);text-decoration:none}
 .test-case:hover{text-decoration:underline;text-underline-offset:3px}
@@ -4833,8 +4978,9 @@ async function build() {
   console.log('→ Generating share cards…');
   try {
     const fontCss = await ogFontCss();
-    await generateOgImage(browser, fontCss);
-    await generateCaseOgImages(browser, fontCss, projects);
+    const arFontCss = await ogArabicFontCss();
+    await generateOgImage(browser, fontCss, arFontCss);
+    await generateCaseOgImages(browser, fontCss, projects, arFontCss);
   } catch (e) { e.fatal = true; e.message = `share cards could not be generated: ${e.message}`; throw e; }
   await browser.close();
 
