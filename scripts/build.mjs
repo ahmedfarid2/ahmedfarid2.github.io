@@ -1586,10 +1586,37 @@ async function ogFontCss() {
   return out.join('');
 }
 
-// The Arabic share cards: the site ships no Arabic web font (Arabic falls
-// back to the visitor's system face), so a card rendered on the build machine
-// would come out in whatever that machine has. IBM Plex Sans Arabic (SIL OFL,
-// scripts/fonts/) is bundled for the cards only; Latin stays in Geist.
+// Arabic pages: the site's faces (Geist, JetBrains Mono, Instrument Serif)
+// have no Arabic glyphs, so Arabic text fell back to whatever the visitor's
+// device had, which on Windows meant a mismatched face in the nav, buttons and
+// labels. IBM Plex Sans Arabic (SIL OFL, scripts/fonts/, also used for the
+// share cards) is declared under those same family names with an Arabic-only
+// unicode-range: every Arabic glyph renders in Plex, Latin keeps its own face,
+// and no other CSS changes. Inlined on Arabic pages only, so English visitors
+// never download it. Regular covers weights up to 449, Medium the rest.
+let arabicFontFiles = null;
+async function arabicWebFontHead() {
+  if (!arabicFontFiles) {
+    const { createHash } = await import('node:crypto');
+    arabicFontFiles = {};
+    for (const [w, file] of [['400', 'IBMPlexSansArabic-Regular.woff2'], ['500', 'IBMPlexSansArabic-Medium.woff2']]) {
+      const data = await readFile(path.join(ROOT, 'scripts', 'fonts', file));
+      const name = `/assets/plex-arabic-${w}-${createHash('sha1').update(data).digest('hex').slice(0, 10)}.woff2`;
+      await writeFile(path.join(DIST, name.slice(1)), data);
+      arabicFontFiles[w] = name;
+    }
+  }
+  const range = 'U+0600-06FF,U+0750-077F,U+08A0-08FF,U+FB50-FDFF,U+FE70-FEFF';
+  const faces = ['Geist', 'JetBrains Mono', 'Instrument Serif'].flatMap((fam) => [
+    `@font-face{font-family:"${fam}";font-style:normal;font-weight:100 449;font-display:swap;src:url(${arabicFontFiles['400']}) format("woff2");unicode-range:${range}}`,
+    `@font-face{font-family:"${fam}";font-style:normal;font-weight:450 900;font-display:swap;src:url(${arabicFontFiles['500']}) format("woff2");unicode-range:${range}}`,
+  ]).join('');
+  return `<link rel="preload" href="${arabicFontFiles['400']}" as="font" type="font/woff2" crossorigin><style>${faces}</style>`;
+}
+
+// The Arabic share cards: rendered on the build machine, they would otherwise
+// come out in whatever Arabic face that machine has. Same IBM Plex Sans
+// Arabic as the Arabic pages (arabicWebFontHead); Latin stays in Geist.
 async function ogArabicFontCss() {
   const face = async (file, weight) => {
     const data = (await readFile(path.join(ROOT, 'scripts', 'fonts', file))).toString('base64');
@@ -3334,10 +3361,10 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         fill(drawer, own, drawer.querySelector(':scope > .nav-mobile-cta'));
       } else warnings.push('nav: .nav-mobile not found — drawer left as exported');
     }
-    // The hero's scroll cue pointed at the Profile section, which now lives on
-    // /about/. "What I do" is what comes next on this page.
-    const scrollCue = document.querySelector('.hero-scroll');
-    if (scrollCue && document.getElementById('what-i-do')) scrollCue.setAttribute('href', '#what-i-do');
+    // The hero's animated "Scroll" cue sat about 1,000px down, below the first
+    // screen on every laptop, so it only appeared once the visitor was already
+    // scrolling. It goes.
+    document.querySelectorAll('.hero-scroll').forEach((e) => e.remove());
     // Home: the hero's second ghost button was "Download CV" — the hiring path.
     // A client's next question is what it costs and how it works, so it goes to
     // Services & pricing. The CV stays in the footer, on /about/ and in the
@@ -5016,6 +5043,17 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 .price-terms{margin-top:14px;font-size:13px;line-height:1.55;color:var(--ink-mute);text-align:start}
 /* Case page highlights: three columns are too narrow for a long word (ERP-synced) on a phone, so they stack. */
 @media (max-width:560px){#case .case-impact{grid-template-columns:1fr}}
+/* Home hero on short laptop screens (1280×720, 1366×768, 1536×864): the headline was sized by width alone and pushed the main button below the first screen. */
+@media (min-width:821px) and (max-height:960px){#root .hero{padding-top:112px}#root .hero-h1{font-size:min(clamp(56px,9vw,132px),11.5vh);margin-top:20px}[data-headline=mono] #root .hero-h1{font-size:min(clamp(44px,6vw,88px),9vh)}#root .hero-sub{margin-top:24px}#root .hero-meta{margin-top:28px}}
+/* Section heads: the label sat at the foot of the left column and was read after the heading; it now lines up with the heading’s first line. */
+@media (min-width:821px){#root .section-head{align-items:start}#root .section-head>:first-child{padding-top:18px}}
+/* Closing block on phones: the three contact buttons, stacked and centred at different widths, read as ragged; they share one width. */
+@media (max-width:560px){#root .contact-path>.btn{flex:1 1 100%;justify-content:center}}
+/* Footer: the location line had no size of its own and rendered larger than the links above it. */
+#root .foot-col li{font-size:14px}
+/* Back to top: smaller and quieter than the main button, which it outshone and, on phones, covered content with. */
+body .to-top{width:40px;height:40px;color:var(--ink-mute);background:var(--bg-elev);border:1px solid var(--line-strong);box-shadow:0 6px 18px rgba(0,0,0,.35)}
+body .to-top:hover{color:var(--accent);border-color:var(--accent);box-shadow:0 8px 22px rgba(0,0,0,.45)}
 /* /about/: the GitHub card on its own, full width, with the link to the live profile. */
 #github .gh.gh-solo{grid-template-columns:minmax(0,1fr)}
 #github .gh-profile-link{display:inline-block;margin-top:18px}
@@ -5273,6 +5311,10 @@ ${enhanceJS ? `<script>${enhanceForVariant(enhanceJS, spec)}</script>` : ''}
   }
 
   out = await externalizeCss(out);
+  if (lang === 'ar') {
+    const arFonts = await arabicWebFontHead();
+    out = out.replace('</head>', () => `${arFonts}</head>`);
+  }
   await writeFile(path.join(outDir, 'index.html'), out, 'utf8');
 
   const before = (await import('node:fs')).statSync(loc.src).size;
@@ -5313,6 +5355,16 @@ async function build() {
       /window\.matchMedia\(\s*(["'])\(prefers-color-scheme:\s*light\)\1\s*\)\.matches\s*\?\s*(["'])light\2\s*:\s*(["'])dark\3/g,
       '"dark"'
     );
+  }
+
+  // Numbers (home stats, case highlights, about facts) used to count up from
+  // zero, so a visitor or a screenshot caught "1+ yrs" or "2+ apps" on the
+  // way to the real figure. They now render as written; the selector is
+  // pointed at an attribute nothing carries.
+  if (enhanceJS) {
+    const COUNT_UP = /document\.querySelectorAll\((["'])\.hero-stat \.num,[^"']*\1\)/;
+    if (COUNT_UP.test(enhanceJS)) enhanceJS = enhanceJS.replace(COUNT_UP, 'document.querySelectorAll("[data-count-up]")');
+    else console.warn('  ⚠ enhancement layer changed shape; numbers may still count up');
   }
 
   // Same reasoning as the share cards (generated after the pages, below):

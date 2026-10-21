@@ -17,7 +17,7 @@ Personal portfolio site deployed to GitHub Pages. Claude Design exports (`index*
 - `scripts/build-cv.mjs`, `scripts/build-checklist.mjs` — render `cv/cv.html` and the lead magnet to the committed root PDFs (`npm run cv:build`, `npm run checklist:build`); `scripts/pdf-check.mjs` backs the public-PDF gate
 - `scripts/indexnow.mjs` + `.github/workflows/indexnow.yml` — after each successful deploy of `main`, submit the live sitemap to IndexNow (Bing and others; not Google). `npm run indexnow -- --dry-run` prints the payload from `dist/sitemap.xml` without sending
 - `.github/workflows/deploy.yml` — on pull requests to `main`: build only; on push to `main`: `npm ci` → `npm run copy:apply -- --soft` → `npm run build` → deploy `dist/` to Pages (with one retry)
-- `scripts/fonts/` — IBM Plex Sans Arabic (SIL OFL, license alongside), used only to render the Arabic share cards (`og-ar*.png`); the site itself ships no Arabic web font
+- `scripts/fonts/` — IBM Plex Sans Arabic (SIL OFL, license alongside): the Arabic glyphs on `/ar/` pages (copied to `dist/assets/plex-arabic-*.woff2` and declared under the site's own family names with an Arabic-only `unicode-range`, inlined on Arabic pages only) and the Arabic share cards (`og-ar*.png`)
 - Sitemap `<lastmod>` is honest: the build hashes each page's `<main>` text into `dist/lastmod.json` and keeps the previous date (read from the live `/lastmod.json`) while the hash is unchanged. If the live file can't be read (e.g. a sandbox without network) it warns and leaves `<lastmod>` out of that build rather than stamping today on every URL
 - `TRANSLATION-*.md` — translation sources; `docs/*.md` — marketing playbooks (not site content); `CNAME`; `google*.html` — Search Console verification files
 
