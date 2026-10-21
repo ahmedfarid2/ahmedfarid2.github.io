@@ -2351,82 +2351,117 @@ const IMPACT_PLAIN = {
   },
 };
 // /services/: each starting price also in dirhams (AED is pegged at 3.6725 to
-// the dollar, so this cannot drift), rounded to the nearest 50.
+// the dollar, so this cannot drift), rounded the way a person would price it.
 const AED_PER_USD = 3.6725;
 const PRICE_LOCALE = { en: 'en-AE', ar: 'ar-AE-u-nu-arab', de: 'de-DE', es: 'es-ES', fr: 'fr-FR' };
-// /services/ commercial terms (Oct 2026 sales review). The plans contradicted
-// each other: Partner said "Everything in Launchpad, plus", which read as a
-// $9k build for $3.5k a month; its note said "cancel anytime" over a "30 days'
-// notice" line; its "priority" reply matched the 24-hour reply everyone gets;
-// and the footer's "no hourly meter" sat next to a plan sold in hours. It also
-// never said when anyone pays.
-//   clinicCredit    new line on the Clinic card: the review counts toward a build
-//   milestone       Launchpad's stop-after-milestone-1 line, with what is owed
-//   partnerNote     Partner's note line: "no lock-in" in place of "cancel
-//                   anytime", which the 30-days'-notice item contradicted
-//   partnerHead     Partner's list heading, its own scope instead of Launchpad’s
-//   partnerPriority Partner's response line (3rd item), faster than the default
-//   addonDur        under each focused build: scope and duration, so a smaller
-//                   price reads as a smaller job, not a discount
-//   foot            the note under the plans, without the hourly contradiction
-//   terms           currency, invoicing currency, VAT and when each plan is paid
-//   capacity        how many builds run at once, in place of a dated "next
-//                   slot" that would go stale
+// /services/ commercial terms and layout (Oct 2026 sales reviews). The plans
+// first contradicted each other (Partner read as a $9k build for $3.5k a month,
+// "cancel anytime" sat over "30 days' notice", a "priority" reply matched the
+// default, and nothing said when anyone pays). Then, with those fixed, the page
+// was still hard for a client to read: seven offers, 27 bullets in engineer
+// language, plan names that don't say what you get, and nothing telling a
+// visitor which plan is theirs. Prices and terms are unchanged; the layout
+// leads with a plain chooser, plain plan names and four plain bullets per plan,
+// with the full lists one click away.
+//   clinicCredit    new line in the review's full list: it counts toward a build
+//   milestone       the build's stop-after-milestone-1 line, with what is owed
+//   partnerNote     the monthly plan's note line: "no lock-in", not "cancel anytime"
+//   partnerHead     the monthly plan's list heading, its own scope
+//   partnerPriority the monthly plan's response line (3rd item)
+//   guideTitle/picks  "Which one is for me?": one situation per plan, linking to it
+//   plain           each plan's plain name; the export's name (Architecture
+//                   Clinic, Launchpad, Partner) stays as a small label above it
+//   key             four plain bullets per plan; the full list moves behind `more`
+//   smallerLabel/smallerNames  the three focused builds as one line under the
+//                   plans, in plain names, prices read from the export
+//   steps           how a project starts, in place of the note under the plans
+//   fine            currency, VAT, when each plan is paid, one build at a time
+//   demoTitle       the free demo band, now below the plans: for the undecided
 const PRICING_TERMS = {
   en: {
-    clinicCredit: '100% credited against a Launchpad started within 30 days of the review',
+    clinicCredit: "100% credited against a build started within 30 days of the review",
     milestone: "Milestone 1 is week one. If you don't like the code, we stop there and you pay for that milestone only.",
-    partnerNote: 'per month · 40 hrs reserved · no lock-in',
-    partnerHead: 'What you get:',
-    partnerPriority: 'Same-business-day response (GMT+4)',
-    addonDur: ['Fixed scope · 2–3 weeks', 'Fixed scope · 1–2 weeks', 'Fixed scope · 1–2 weeks'],
-    foot: 'Fixed scope, fixed price. If the scope changes mid-build, we re-scope together. Builds are priced by scope, never by the hour; Partner reserves senior capacity each month. Every engagement starts with one 30-minute call.',
-    terms: 'Prices in USD, invoiced in USD or AED, excluding VAT where it applies. The Clinic is paid upfront, builds per milestone, Partner monthly in advance.',
-    capacity: 'I take on one new build at a time, so the start date is agreed on the scoping call.',
+    partnerNote: "per month · 40 hrs reserved · no lock-in",
+    partnerHead: "What you get:",
+    partnerPriority: "Same-business-day response (GMT+4)",
+    guideTitle: "Which one is for me?",
+    picks: ["I have a product and want a senior second opinion", "I need something built", "I need a senior engineer every month"],
+    plain: ["Code & architecture review", "Fixed-price build", "Monthly engineering"],
+    key: [["I read your code, database and setup", "A written report: what's risky and what to fix first", "A 45-minute call to go through it with your team", "Fully credited if you build with me within 30 days"], ["One clear part of your product, live in about 3 weeks", "Web, backend and hosting, handled end to end", "One fixed price, paid per milestone", "Not happy after week one? Stop, and pay only for that first milestone"], ["40 hours of senior engineering every month", "New features, fixes and scaling, in your order of priority", "Same-business-day replies (GMT+4)", "No lock-in: 30 days' notice"]],
+    more: "Full details",
+    smallerLabel: "Smaller fixed-price builds, 1–3 weeks each:",
+    smallerNames: ["Mobile app (iOS + Android)", "AI feature", "Real-time features"],
+    steps: ["A 30-minute call about your project", "One fixed price for your scope", "Work starts on an agreed date"],
+    fine: "Prices in USD, invoiced in USD or AED, excluding VAT where it applies. The review is paid upfront, builds per milestone, the monthly plan in advance. I take on one new build at a time.",
+    demoTitle: "Not sure yet? Get one screen built, free.",
   },
   ar: {
-    clinicCredit: 'تُخصم قيمتها بالكامل من منصّة الإطلاق إذا بدأنا خلال ٣٠ يومًا من المراجعة',
-    milestone: 'المرحلة الأولى في الأسبوع الأول. إن لم يعجبك الكود، نتوقّف هناك ولا تدفع إلا قيمة تلك المرحلة.',
-    partnerNote: 'شهريًّا · ٤٠ ساعة محجوزة · دون التزام',
-    partnerHead: 'ما تحصل عليه:',
-    partnerPriority: 'ردّ في يوم العمل نفسه (GMT+4)',
-    addonDur: ['نطاق ثابت · من أسبوعين إلى ٣ أسابيع', 'نطاق ثابت · من أسبوع إلى أسبوعين', 'نطاق ثابت · من أسبوع إلى أسبوعين'],
-    foot: 'نطاق ثابت، سعر ثابت. إذا تغيّر النطاق أثناء البناء، نُعيد تحديد نطاقه معًا. المشاريع تُسعَّر حسب النطاق لا بالساعة، وباقة الشريك تحجز لك طاقة عمل خبيرة كل شهر. كل تعاقد يبدأ بمكالمة ٣٠ دقيقة.',
-    terms: 'الأسعار بالدولار الأمريكي، والفوترة بالدولار أو الدرهم، ولا تشمل ضريبة القيمة المضافة حيث تنطبق. تُدفع العيادة مقدّمًا، والمشاريع على مراحل، وباقة الشريك شهريًّا مقدّمًا.',
-    capacity: 'أتولّى بناءً جديدًا واحدًا في كل مرة، لذا نتفق على موعد البدء في مكالمة تحديد النطاق.',
+    clinicCredit: "تُخصم قيمتها بالكامل من أي بناء يبدأ خلال ٣٠ يومًا من المراجعة",
+    milestone: "المرحلة الأولى في الأسبوع الأول. إن لم يعجبك الكود، نتوقّف هناك ولا تدفع إلا قيمة تلك المرحلة.",
+    partnerNote: "شهريًّا · ٤٠ ساعة محجوزة · دون التزام",
+    partnerHead: "ما تحصل عليه:",
+    partnerPriority: "ردّ في يوم العمل نفسه (GMT+4)",
+    guideTitle: "أيّها يناسبني؟",
+    picks: ["لديّ منتج وأريد رأيًا ثانيًا من خبير", "أحتاج إلى بناء شيء", "أحتاج مهندسًا خبيرًا كل شهر"],
+    plain: ["مراجعة الكود والمعمارية", "بناء بسعر ثابت", "دعم هندسي شهري"],
+    key: [["أقرأ الكود وقاعدة البيانات والبنية التحتية", "تقرير مكتوب: ما الخطر وما الذي يُصلح أولًا", "مكالمة ٤٥ دقيقة لمراجعته مع فريقك", "تُخصم قيمتها بالكامل إذا بدأنا البناء خلال ٣٠ يومًا"], ["جزء واضح من منتجك يعمل فعليًا خلال نحو ٣ أسابيع", "الويب والخادم والاستضافة من البداية للنهاية", "سعر ثابت واحد يُدفع على مراحل", "لم يعجبك الأسبوع الأول؟ نتوقّف ولا تدفع إلا قيمة المرحلة الأولى"], ["٤٠ ساعة من العمل الهندسي الخبير كل شهر", "ميزات جديدة وإصلاحات وتوسّع، بحسب أولوياتك", "ردّ في يوم العمل نفسه (GMT+4)", "دون التزام: إشعار ٣٠ يومًا"]],
+    more: "التفاصيل الكاملة",
+    smallerLabel: "مشاريع أصغر بسعر ثابت، من أسبوع إلى ٣ أسابيع لكلٍّ منها:",
+    smallerNames: ["تطبيق جوال (iOS وAndroid)", "ميزة ذكاء اصطناعي", "ميزات فورية"],
+    steps: ["مكالمة ٣٠ دقيقة عن مشروعك", "سعر ثابت واحد لنطاق العمل", "يبدأ العمل في موعد متفق عليه"],
+    fine: "الأسعار بالدولار الأمريكي، والفوترة بالدولار أو الدرهم، ولا تشمل ضريبة القيمة المضافة حيث تنطبق. المراجعة تُدفع مقدّمًا، والبناء على مراحل، والدعم الشهري مقدّمًا. أتولّى بناءً جديدًا واحدًا في كل مرة.",
+    demoTitle: "لم تقرّر بعد؟ احصل على شاشة واحدة مبنية مجانًا.",
   },
   de: {
-    clinicCredit: 'Voll angerechnet auf einen Launchpad-Build, der innerhalb von 30 Tagen nach dem Review startet',
-    milestone: 'Meilenstein 1 fällt in Woche eins. Wenn der Code nicht gefällt, hören wir dort auf, und Sie zahlen nur diesen Meilenstein.',
-    partnerNote: 'pro Monat · 40 Std. reserviert · keine Bindung',
-    partnerHead: 'Das bekommen Sie:',
-    partnerPriority: 'Antwort am selben Werktag (GMT+4)',
-    addonDur: ['Fester Umfang · 2–3 Wochen', 'Fester Umfang · 1–2 Wochen', 'Fester Umfang · 1–2 Wochen'],
-    foot: 'Fester Umfang, fester Preis. Ändert sich der Umfang während des Builds, kalkulieren wir gemeinsam neu. Builds werden nach Umfang berechnet, nie nach Stunden; Partner reserviert jeden Monat Senior-Kapazität. Jedes Engagement beginnt mit einem 30-minütigen Call.',
-    terms: 'Preise in USD, Rechnung in USD oder AED, zzgl. MwSt., sofern anwendbar. Die Klinik wird vorab bezahlt, Builds pro Meilenstein, Partner monatlich im Voraus.',
-    capacity: 'Ich nehme jeweils nur einen neuen Build an, deshalb vereinbaren wir den Starttermin im Scoping-Call.',
+    clinicCredit: "Voll angerechnet auf einen Build, der innerhalb von 30 Tagen nach dem Review startet",
+    milestone: "Meilenstein 1 fällt in Woche eins. Wenn der Code nicht gefällt, hören wir dort auf, und Sie zahlen nur diesen Meilenstein.",
+    partnerNote: "pro Monat · 40 Std. reserviert · keine Bindung",
+    partnerHead: "Das bekommen Sie:",
+    partnerPriority: "Antwort am selben Werktag (GMT+4)",
+    guideTitle: "Was passt zu mir?",
+    picks: ["Ich habe ein Produkt und will eine zweite Meinung von einem Senior", "Ich will etwas bauen lassen", "Ich brauche jeden Monat einen Senior-Entwickler"],
+    plain: ["Code- & Architektur-Review", "Entwicklung zum Festpreis", "Monatliche Entwicklung"],
+    key: [["Ich lese Ihren Code, Ihre Datenbank und Ihr Setup", "Ein schriftlicher Bericht: was riskant ist und was zuerst zu beheben ist", "Ein 45-minütiger Call, um ihn mit Ihrem Team durchzugehen", "Voll angerechnet, wenn wir innerhalb von 30 Tagen bauen"], ["Ein klar definierter Teil Ihres Produkts, live in etwa 3 Wochen", "Web, Backend und Hosting aus einer Hand", "Ein Festpreis, bezahlt pro Meilenstein", "Nach Woche eins nicht überzeugt? Wir hören auf, Sie zahlen nur den ersten Meilenstein"], ["40 Stunden Senior-Entwicklung pro Monat", "Neue Features, Fixes und Skalierung nach Ihrer Priorität", "Antwort am selben Werktag (GMT+4)", "Keine Bindung: 30 Tage Kündigungsfrist"]],
+    more: "Alle Details",
+    smallerLabel: "Kleinere Festpreis-Projekte, je 1–3 Wochen:",
+    smallerNames: ["Mobile App (iOS + Android)", "KI-Funktion", "Echtzeit-Funktionen"],
+    steps: ["Ein 30-minütiger Call zu Ihrem Projekt", "Ein Festpreis für Ihren Umfang", "Start zum vereinbarten Termin"],
+    fine: "Preise in USD, Rechnung in USD oder AED, zzgl. MwSt., sofern anwendbar. Das Review wird vorab bezahlt, Builds pro Meilenstein, der Monatsplan im Voraus. Ich nehme jeweils nur einen neuen Build an.",
+    demoTitle: "Noch unsicher? Ein Screen, kostenlos gebaut.",
   },
   es: {
-    clinicCredit: 'Se descuenta al 100 % de un Launchpad que empiece dentro de los 30 días siguientes a la revisión',
-    milestone: 'El hito 1 es la primera semana. Si no te convence el código, paramos ahí y solo pagas ese hito.',
-    partnerNote: 'por mes · 40 h reservadas · sin permanencia',
-    partnerHead: 'Qué incluye:',
-    partnerPriority: 'Respuesta el mismo día hábil (GMT+4)',
-    addonDur: ['Alcance cerrado · 2–3 semanas', 'Alcance cerrado · 1–2 semanas', 'Alcance cerrado · 1–2 semanas'],
-    foot: 'Alcance cerrado, precio cerrado. Si el alcance cambia a mitad del build, lo volvemos a acotar juntos. Los builds se presupuestan por alcance, nunca por hora; Partner reserva capacidad senior cada mes. Cada colaboración empieza con una llamada de 30 minutos.',
-    terms: 'Precios en USD, facturados en USD o AED, sin IVA cuando aplique. La Clínica se paga por adelantado, los builds por hitos y Partner cada mes por adelantado.',
-    capacity: 'Acepto un solo build nuevo a la vez, así que la fecha de inicio se acuerda en la llamada de alcance.',
+    clinicCredit: "Se descuenta al 100 % de un build que empiece dentro de los 30 días siguientes a la revisión",
+    milestone: "El hito 1 es la primera semana. Si no te convence el código, paramos ahí y solo pagas ese hito.",
+    partnerNote: "por mes · 40 h reservadas · sin permanencia",
+    partnerHead: "Qué incluye:",
+    partnerPriority: "Respuesta el mismo día hábil (GMT+4)",
+    guideTitle: "¿Cuál es para mí?",
+    picks: ["Tengo un producto y quiero una segunda opinión senior", "Necesito construir algo", "Necesito un ingeniero senior cada mes"],
+    plain: ["Revisión de código y arquitectura", "Desarrollo a precio cerrado", "Ingeniería mensual"],
+    key: [["Leo tu código, tu base de datos y tu infraestructura", "Un informe por escrito: qué es arriesgado y qué arreglar primero", "Una llamada de 45 minutos para revisarlo con tu equipo", "Se descuenta entero si construimos juntos en 30 días"], ["Una parte clara de tu producto, en producción en unas 3 semanas", "Web, backend y hosting, de principio a fin", "Un precio cerrado, pagado por hitos", "¿No te convence la primera semana? Paramos y solo pagas ese primer hito"], ["40 horas de ingeniería senior cada mes", "Nuevas funciones, correcciones y escalado, según tus prioridades", "Respuesta el mismo día hábil (GMT+4)", "Sin permanencia: 30 días de aviso"]],
+    more: "Todos los detalles",
+    smallerLabel: "Proyectos más pequeños a precio cerrado, de 1 a 3 semanas cada uno:",
+    smallerNames: ["App móvil (iOS + Android)", "Función de IA", "Funciones en tiempo real"],
+    steps: ["Una llamada de 30 minutos sobre tu proyecto", "Un precio cerrado para tu alcance", "El trabajo empieza en una fecha acordada"],
+    fine: "Precios en USD, facturados en USD o AED, sin IVA cuando aplique. La revisión se paga por adelantado, los builds por hitos y el plan mensual por adelantado. Acepto un solo build nuevo a la vez.",
+    demoTitle: "¿Aún no lo tienes claro? Te construyo una pantalla gratis.",
   },
   fr: {
-    clinicCredit: 'Déduite à 100 % d’un Launchpad démarré dans les 30 jours suivant la revue',
-    milestone: 'Le jalon 1 tombe la première semaine. Si le code ne convient pas, on s’arrête là et vous ne payez que ce jalon.',
-    partnerNote: 'par mois · 40 h réservées · sans engagement',
-    partnerHead: 'Ce que vous obtenez :',
-    partnerPriority: 'Réponse dans la journée ouvrée (GMT+4)',
-    addonDur: ['Périmètre fixe · 2 à 3 semaines', 'Périmètre fixe · 1 à 2 semaines', 'Périmètre fixe · 1 à 2 semaines'],
-    foot: 'Périmètre fixe, prix fixe. Si le périmètre bouge en cours de build, on le recadre ensemble. Les builds sont chiffrés au périmètre, jamais à l’heure ; Partner réserve de la capacité senior chaque mois. Chaque mission commence par un appel de 30 minutes.',
-    terms: 'Prix en USD, facturés en USD ou en AED, hors TVA le cas échéant. La Clinique se règle à l’avance, les builds par jalon, Partner chaque mois à l’avance.',
-    capacity: 'Je prends un seul nouveau build à la fois : la date de démarrage se fixe lors de l’appel de cadrage.',
+    clinicCredit: "Déduite à 100 % d’un build démarré dans les 30 jours suivant la revue",
+    milestone: "Le jalon 1 tombe la première semaine. Si le code ne convient pas, on s’arrête là et vous ne payez que ce jalon.",
+    partnerNote: "par mois · 40 h réservées · sans engagement",
+    partnerHead: "Ce que vous obtenez :",
+    partnerPriority: "Réponse dans la journée ouvrée (GMT+4)",
+    guideTitle: "Laquelle est pour moi ?",
+    picks: ["J’ai un produit et je veux un deuxième avis senior", "J’ai besoin de faire construire quelque chose", "J’ai besoin d’un ingénieur senior chaque mois"],
+    plain: ["Revue de code et d’architecture", "Développement au forfait", "Ingénierie au mois"],
+    key: [["Je lis votre code, votre base de données et votre infrastructure", "Un rapport écrit : ce qui est risqué et ce qu’il faut corriger en premier", "Un appel de 45 minutes pour le parcourir avec votre équipe", "Entièrement déduite si l’on construit ensemble sous 30 jours"], ["Une partie claire de votre produit, en ligne en 3 semaines environ", "Web, backend et hébergement, de bout en bout", "Un prix fixe, réglé par jalon", "Pas convaincu après la première semaine ? On s’arrête et vous ne payez que ce premier jalon"], ["40 heures d’ingénierie senior chaque mois", "Nouvelles fonctions, corrections et montée en charge, selon vos priorités", "Réponse dans la journée ouvrée (GMT+4)", "Sans engagement : préavis de 30 jours"]],
+    more: "Tous les détails",
+    smallerLabel: "Projets plus courts au forfait, 1 à 3 semaines chacun :",
+    smallerNames: ["Application mobile (iOS + Android)", "Fonction IA", "Fonctions temps réel"],
+    steps: ["Un appel de 30 minutes sur votre projet", "Un prix fixe pour votre périmètre", "Le travail démarre à une date convenue"],
+    fine: "Prix en USD, facturés en USD ou en AED, hors TVA le cas échéant. La revue se règle à l’avance, les builds par jalon, l’offre mensuelle à l’avance. Je prends un seul nouveau build à la fois.",
+    demoTitle: "Pas encore sûr ? Un écran construit gratuitement.",
   },
 };
 // Home on a phone: three recommendations, the rest behind this button.
@@ -3865,26 +3900,104 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         pHead.textContent = T.partnerHead;
         setLi(pt[2], T.partnerPriority);
       } else warnings.push(`services: Partner card not as expected (${pt.length} features) — left as exported`);
-      const addons = [...document.querySelectorAll('#pricing .addon-card')];
-      if (addons.length === T.addonDur.length) {
-        addons.forEach((c, i) => {
-          const d = document.createElement('p');
-          d.className = 'addon-dur';
-          d.textContent = T.addonDur[i];
-          (c.querySelector('.addon-p') || c.lastElementChild).after(d);
+      // Layout for a client, not an engineer (PRICING_TERMS doc): chooser,
+      // plain names, four plain bullets, full lists behind a toggle, the
+      // focused builds as one line, the free demo after the plans, and the
+      // note under the plans as three steps plus one line of terms.
+      const grid = document.querySelector('#pricing .price-grid');
+      const plans = [clinic, launch, partner];
+      const rtlArrow = document.documentElement.dir === 'rtl' ? '←' : '→';
+      if (grid && plans.every(Boolean)) {
+        const ids = ['plan-review', 'plan-build', 'plan-monthly'];
+        const amounts = plans.map((c) => [...(c.querySelector('.price-amount')?.childNodes || [])].map((n) => (n.textContent || '').trim()).filter(Boolean).join(' '));
+        plans.forEach((c, i) => {
+          c.id = ids[i];
+          const name = c.querySelector('.price-name');
+          const list = c.querySelector('.price-feats');
+          if (!name || !list) { warnings.push(`services: plan ${i + 1} has no name or list — left as exported`); return; }
+          const brand = document.createElement('span');
+          brand.className = 'price-brand';
+          brand.textContent = name.textContent.trim();
+          name.before(brand);
+          name.textContent = T.plain[i];
+          const head = c.querySelector('.price-feats-head');
+          const more = document.createElement('details');
+          more.className = 'price-more';
+          const sum = document.createElement('summary');
+          sum.textContent = T.more;
+          more.append(sum);
+          const key = list.cloneNode(false);
+          key.classList.add('price-key');
+          const tpl = list.querySelector(':scope > li');
+          T.key[i].forEach((t) => {
+            const li = tpl.cloneNode(true);
+            setLi(li, t);
+            key.append(li);
+          });
+          (head || list).before(key);
+          key.after(more);
+          if (head) more.append(head);
+          more.append(list);
         });
-      } else warnings.push(`services: ${addons.length} focused builds, expected ${T.addonDur.length} — no durations`);
+        // FAQ answer and llms.txt read these: plain name first, then the label.
+        priceCards.forEach((pc, i) => { if (T.plain[i]) pc.name = `${T.plain[i]} (${pc.name})`; });
+        const guide = document.createElement('nav');
+        guide.className = 'plan-guide';
+        guide.setAttribute('aria-label', T.guideTitle);
+        const gt = document.createElement('p');
+        gt.className = 'plan-guide-title';
+        gt.textContent = T.guideTitle;
+        guide.append(gt);
+        T.picks.forEach((q, i) => {
+          const a = document.createElement('a');
+          a.className = 'plan-pick';
+          a.href = `#${ids[i]}`;
+          const qs = document.createElement('span');
+          qs.className = 'plan-pick-q';
+          qs.textContent = q;
+          const as = document.createElement('span');
+          as.className = 'plan-pick-a';
+          as.textContent = `${T.plain[i]} · ${amounts[i]} ${rtlArrow}`;
+          a.append(qs, as);
+          guide.append(a);
+        });
+        // The free demo band sat above the plans; the chooser takes its place
+        // and the band moves below them.
+        const demo = grid.previousElementSibling && grid.previousElementSibling.querySelector('a[href="/demo.html"]') ? grid.previousElementSibling : null;
+        grid.before(guide);
+        const addonsTitle = document.querySelector('#pricing .addons-title');
+        const addonsGrid = document.querySelector('#pricing .addons-grid');
+        const addons = addonsGrid ? [...addonsGrid.querySelectorAll('.addon-card')] : [];
+        let after = grid;
+        if (addons.length === T.smallerNames.length) {
+          const line = document.createElement('p');
+          line.className = 'price-smaller';
+          const parts = addons.map((c, i) => `${T.smallerNames[i]} ${(c.querySelector('.addon-price')?.textContent || '').trim()}`);
+          line.textContent = `${T.smallerLabel} ${parts.join(' · ')}`;
+          grid.after(line);
+          after = line;
+          addonsTitle?.remove();
+          addonsGrid.remove();
+        } else warnings.push(`services: ${addons.length} focused builds, expected ${T.smallerNames.length} — left as exported`);
+        if (demo) {
+          const title = demo.querySelector('.price-name');
+          if (title) title.textContent = T.demoTitle;
+          demo.style.marginBottom = '';
+          demo.classList.add('price-demo');
+          after.after(demo);
+        } else warnings.push('services: free demo band not found above the plans — left in place');
+      } else warnings.push('services: price grid or plans not found — layout left as exported');
       const foot = document.querySelector('#pricing .price-foot');
       const footNote = foot && foot.querySelector('.price-foot-note');
       if (foot && footNote) {
-        footNote.textContent = T.foot;
+        const steps = document.createElement('ol');
+        steps.className = 'price-steps';
+        T.steps.forEach((t) => { const li = document.createElement('li'); li.textContent = t; steps.append(li); });
+        footNote.replaceWith(steps);
         const terms = document.createElement('p');
         terms.className = 'price-terms';
-        terms.textContent = T.terms;
+        terms.textContent = T.fine;
         foot.after(terms);
-        const cap = terms.cloneNode(false);
-        cap.textContent = T.capacity;
-        terms.after(cap);
       } else warnings.push('services: the note under the plans was not found — terms left out');
     }
     // /about/: the pinned-repo list (student projects and notebooks) goes; the
@@ -5038,8 +5151,28 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 @media (min-width:1101px){.tests.tests-many{grid-template-columns:repeat(3,1fr)}}
 /* /services/: the price in dirhams, under the dollar price. */
 .price-aed{margin-top:4px;font-family:var(--mono);font-size:12px;color:var(--ink-mute)}
-/* Focused builds: scope and duration under the description; the terms line under the plans’ footer. */
-.addon-dur{margin-top:10px;font-family:var(--mono);font-size:12px;color:var(--ink-mute)}
+/* Services, laid out for a client: the plan chooser, each plan’s small label over its plain name, four key bullets with the full list behind a toggle, the smaller builds as one line, the free demo below the plans, and three steps in the footer. */
+.plan-guide{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 28px}
+.plan-guide-title{grid-column:1/-1;margin:0 0 4px;font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-dim)}
+.plan-pick{display:flex;flex-direction:column;justify-content:space-between;gap:12px;padding:18px 20px;border:1px solid var(--line-strong);border-radius:14px;background:var(--bg-elev);color:var(--ink);text-decoration:none;transition:border-color .2s ease}
+.plan-pick:hover,.plan-pick:focus-visible{border-color:var(--accent)}
+.plan-pick-q{font-size:16px;line-height:1.4}
+.plan-pick-a{font-family:var(--mono);font-size:12.5px;color:var(--accent)}
+@media (max-width:820px){.plan-guide{grid-template-columns:1fr}}
+.price-brand{display:block;margin:0 0 6px;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-dim)}
+#root .price-more{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+#root .price-more>summary{cursor:pointer;list-style:none;font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--ink-mute)}
+#root .price-more>summary::-webkit-details-marker{display:none}
+#root .price-more>summary::after{content:" +"}
+#root .price-more[open]>summary::after{content:" −"}
+#root .price-more>summary:hover{color:var(--ink)}
+#root .price-more>.price-feats-head,#root .price-more>.price-feats{margin-top:14px}
+.price-smaller{margin:18px 0 0;font-size:14px;line-height:1.6;color:var(--ink-mute)}
+#root .price-demo{margin-top:34px;margin-bottom:0}
+@media (max-width:560px){#root #pricing .price-ico{display:none}#root #pricing .price-tag{min-height:0}#root .price-demo .price-feats{display:none}}
+.price-steps{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:10px 28px;counter-reset:step}
+.price-steps li{counter-increment:step;display:flex;align-items:center;gap:10px;font-size:15px;color:var(--ink)}
+.price-steps li::before{content:counter(step);display:grid;place-items:center;flex:0 0 24px;height:24px;border-radius:99px;border:1px solid var(--line-strong);font-family:var(--mono);font-size:12px;color:var(--accent)}
 .price-terms{margin-top:14px;font-size:13px;line-height:1.55;color:var(--ink-mute);text-align:start}
 /* Case page highlights: three columns are too narrow for a long word (ERP-synced) on a phone, so they stack. */
 @media (max-width:560px){#case .case-impact{grid-template-columns:1fr}}
