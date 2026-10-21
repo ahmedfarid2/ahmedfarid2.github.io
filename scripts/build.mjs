@@ -1864,6 +1864,10 @@ const HOME_COPY = {
 //   brandsSub     /work/'s name-list subtitle, once the carded names are gone
 //   existingQ/existingA  a services FAQ for a company with a product
 //             already in production; cloned from the rate question
+//   dataQ/dataA  a services FAQ on code and data handling: their repo for an
+//             existing product, paid milestones pushed to their org on a new
+//             build (IP moves on payment), prod data stays in their cloud,
+//             and the NDA and handoff cover the whole team, not just Ahmed
 //   rateQ     the services FAQ question about price; its answer is rebuilt
 //             from the price cards on the same page (rateIntro … rateOutro)
 //   outcomes  one plain line per flagship card (slug → text): what it changed
@@ -1876,6 +1880,8 @@ const HUMAN_COPY = {
     rateQ: "What's your rate?",
     existingQ: "Can you work on an existing codebase?",
     existingA: "Yes. Most Architecture Clinic reviews start from a repo that is already in production, and Recovery Advisers was rebuilt while the team kept using it every day. I read the code first, then we agree on what changes and in what order.",
+    dataQ: "How do you handle our code and data?",
+    dataA: "On an existing product I work in your repository, with access you grant and can revoke at any time. On a new build, each milestone is pushed to your own GitHub or GitLab organization once it is paid. Production data stays in your cloud account: development runs on seed or anonymized data, and your customers' data is not copied to anyone's own machines. Secrets go in your secret manager, never in the repo or in chat. The NDA is signed before the first call and covers anyone I bring in on a larger scope; at handoff all of our access is removed and any copies are deleted.",
     rateIntro: 'Starting points:',
     rateOutro: 'After a 30-minute scoping call you get one flat quote for your scope, never an hourly bill.',
     outcomes: {
@@ -1964,6 +1970,8 @@ const HUMAN_COPY = {
     rateQ: 'ما سعرك؟',
     existingQ: "هل يمكنك العمل على شيفرة قائمة؟",
     existingA: "نعم. معظم مراجعات عيادة المعمارية تبدأ من مستودع يعمل في الإنتاج بالفعل، وأُعيد بناء Recovery Advisers بينما ظلّ الفريق يستخدمه كل يوم. أقرأ الشيفرة أولًا، ثم نتّفق على ما يتغيّر وبأي ترتيب.",
+    dataQ: "كيف تتعامل مع الكود والبيانات الخاصة بنا؟",
+    dataA: "على منتج قائم أعمل داخل مستودعك بصلاحيات تمنحها أنت ويمكنك سحبها في أي وقت. وفي البناء الجديد تُرفع كل مرحلة إلى مؤسستك على GitHub أو GitLab بعد سدادها. تبقى بيانات الإنتاج في حسابك السحابي: التطوير يتم على بيانات تجريبية أو مُجهّلة، ولا تُنسخ بيانات عملائك إلى أجهزة أي أحد. تُحفظ الأسرار في مدير الأسرار لديك، لا في المستودع ولا في المحادثات. نوقّع اتفاقية السرّية قبل أول مكالمة، وتشمل كل من أستعين به في المشاريع الأكبر؛ وعند التسليم تُزال صلاحياتنا جميعًا وتُحذف أي نسخ.",
     rateIntro: 'نقاط البداية:',
     rateOutro: 'بعد مكالمة تحديد نطاق مدتها ٣٠ دقيقة تحصل على عرض سعر ثابت لنطاقك، لا فاتورة بالساعة.',
     outcomes: {
@@ -2041,6 +2049,8 @@ const HUMAN_COPY = {
     rateQ: 'Wie hoch ist Ihr Satz?',
     existingQ: "Können Sie an einer bestehenden Codebasis arbeiten?",
     existingA: "Ja. Die meisten Reviews der Architektur-Klinik beginnen mit einem Repo, das schon in Produktion läuft, und Recovery Advisers wurde umgebaut, während das Team täglich damit weiterarbeitete. Ich lese zuerst den Code, dann vereinbaren wir, was sich in welcher Reihenfolge ändert.",
+    dataQ: "Wie gehen Sie mit unserem Code und unseren Daten um?",
+    dataA: "Bei einem bestehenden Produkt arbeite ich in Ihrem Repository, mit Zugängen, die Sie vergeben und jederzeit entziehen können. Bei einem neuen Build wird jeder Meilenstein nach Bezahlung in Ihre eigene GitHub- oder GitLab-Organisation übertragen. Produktionsdaten bleiben in Ihrem Cloud-Konto: Entwickelt wird mit Seed- oder anonymisierten Daten, und Ihre Kundendaten werden auf keine privaten Geräte kopiert. Secrets liegen in Ihrem Secret Manager, nie im Repo oder im Chat. Die NDA wird vor dem ersten Gespräch unterschrieben und gilt für alle, die ich bei größeren Projekten hinzuziehe; bei der Übergabe werden alle unsere Zugänge entfernt und Kopien gelöscht.",
     rateIntro: 'Einstiegspreise:',
     rateOutro: 'Nach einem 30-minütigen Scoping-Call bekommen Sie ein Festpreisangebot für Ihren Umfang, keine Stundenrechnung.',
     outcomes: {
@@ -2116,6 +2126,8 @@ const HUMAN_COPY = {
     rateQ: '¿Cuál es tu tarifa?',
     existingQ: "¿Puedes trabajar sobre un código existente?",
     existingA: "Sí. La mayoría de las revisiones de la Clínica de Arquitectura parten de un repositorio que ya está en producción, y Recovery Advisers se reconstruyó mientras el equipo lo seguía usando cada día. Primero leo el código y después acordamos qué cambia y en qué orden.",
+    dataQ: "¿Cómo manejas nuestro código y nuestros datos?",
+    dataA: "En un producto existente trabajo en tu repositorio, con accesos que tú concedes y puedes retirar en cualquier momento. En un build nuevo, cada hito se sube a tu propia organización de GitHub o GitLab una vez pagado. Los datos de producción se quedan en tu cuenta en la nube: se desarrolla con datos de prueba o anonimizados, y los datos de tus clientes no se copian a los dispositivos de nadie. Los secretos van en tu gestor de secretos, nunca en el repositorio ni en el chat. El NDA se firma antes de la primera llamada y cubre a cualquiera que sume en un proyecto mayor; en la entrega se retiran todos nuestros accesos y se borra cualquier copia.",
     rateIntro: 'Precios de partida:',
     rateOutro: 'Tras una llamada de 30 minutos recibes un precio cerrado para tu alcance, nunca una factura por horas.',
     outcomes: {
@@ -2192,6 +2204,8 @@ const HUMAN_COPY = {
     rateQ: 'Quel est votre tarif ?',
     existingQ: "Pouvez-vous travailler sur une base de code existante ?",
     existingA: "Oui. La plupart des revues de la Clinique d’Architecture partent d’un dépôt déjà en production, et Recovery Advisers a été refondu pendant que l’équipe continuait à l’utiliser chaque jour. Je lis d’abord le code, puis nous convenons de ce qui change et dans quel ordre.",
+    dataQ: "Comment gérez-vous notre code et nos données ?",
+    dataA: "Sur un produit existant, je travaille dans votre dépôt, avec des accès que vous accordez et pouvez retirer à tout moment. Sur un nouveau build, chaque jalon est poussé dans votre propre organisation GitHub ou GitLab une fois payé. Les données de production restent dans votre compte cloud : le développement se fait sur des données de test ou anonymisées, et les données de vos clients ne sont copiées sur la machine de personne. Les secrets vont dans votre gestionnaire de secrets, jamais dans le dépôt ni dans une conversation. Le NDA est signé avant le premier appel et couvre toute personne que j’associe à un projet plus large ; à la livraison, tous nos accès sont retirés et toute copie est supprimée.",
     rateIntro: 'Tarifs de départ :',
     rateOutro: 'Après un appel de 30 minutes, vous recevez un devis forfaitaire pour votre périmètre, jamais une facture horaire.',
     outcomes: {
@@ -3762,6 +3776,14 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         cells.forEach((c, i) => { c.querySelector('.v').textContent = plain[i][0]; c.querySelector('.l').textContent = plain[i][1]; });
       } else warnings.push(`case: ${cells.length} highlight boxes, expected ${plain ? plain.length : 'a plain set'} — left as exported`);
     }
+    // Project pages: the terminal-style box ("→ Real-time WebSocket live
+    // bidding …") restated what the highlights and the Architecture section
+    // already say; /work/ hides it in its list, and the case page drops it.
+    if (pageSpec.work === 'single') {
+      const mock = document.querySelector('#case .case-mock');
+      if (mock) mock.remove();
+      else warnings.push('case: no terminal-style box found — nothing removed');
+    }
     // /services/: the starting price in dirhams too, under each dollar price.
     if (pageSpec.key === 'services') {
       const fmt = new Intl.NumberFormat(copy.priceLocale, { style: 'currency', currency: 'AED', currencyDisplay: 'code', maximumFractionDigits: 0, useGrouping: 'always' });
@@ -4010,6 +4032,22 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         tpl.before(item);
         humanHits.push('k:existingQ');
       } else warnings.push('services: no FAQ item to clone for the existing-codebase question');
+    }
+    // /services/: "How do you handle our code and data?", asked by any
+    // company before it grants repo or cloud access. Same clone, placed after
+    // the existing-codebase question.
+    if (pageSpec.key === 'services' && H2.dataQ) {
+      const tpl = [...document.querySelectorAll('.faq-item')].find((i) => norm(i.querySelector('.faq-q .text')?.textContent || '') === norm(H2.rateQ));
+      if (tpl && tpl.querySelector('.faq-q .text') && tpl.querySelector('.faq-a')) {
+        const item = tpl.cloneNode(true);
+        item.setAttribute('data-open', 'false');
+        item.querySelector('.faq-q .text').textContent = H2.dataQ;
+        const ans = item.querySelector('.faq-a');
+        ans.textContent = H2.dataA;
+        ans.removeAttribute('id');
+        tpl.before(item);
+        humanHits.push('k:dataQ');
+      } else warnings.push('services: no FAQ item to clone for the code-and-data question');
     }
 
     // Nav and footer links point at sections that may not be on this page.
@@ -4966,6 +5004,8 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 /* Focused builds: scope and duration under the description; the terms line under the plans’ footer. */
 .addon-dur{margin-top:10px;font-family:var(--mono);font-size:12px;color:var(--ink-mute)}
 .price-terms{margin-top:14px;font-size:13px;line-height:1.55;color:var(--ink-mute);text-align:start}
+/* Case page highlights: three columns are too narrow for a long word (ERP-synced) on a phone, so they stack. */
+@media (max-width:560px){#case .case-impact{grid-template-columns:1fr}}
 /* /about/: the GitHub card on its own, full width, with the link to the live profile. */
 #github .gh.gh-solo{grid-template-columns:minmax(0,1fr)}
 #github .gh-profile-link{display:inline-block;margin-top:18px}
@@ -5297,7 +5337,7 @@ async function build() {
   for (const [lang, c] of Object.entries(HUMAN_COPY)) {
     const hits = HUMAN_HITS.get(lang) || new Set();
     const unused = [...Object.keys(c.headings).map((k) => `h:${k}`), ...c.text.map(([f]) => `t:${f}`),
-      ...['recs', 'hireAsk', 'rateQ', 'existingQ'].filter((k) => c[k]).map((k) => `k:${k}`)].filter((k) => !hits.has(k));
+      ...['recs', 'hireAsk', 'rateQ', 'existingQ', 'dataQ'].filter((k) => c[k]).map((k) => `k:${k}`)].filter((k) => !hits.has(k));
     for (const k of unused) console.warn(`  [${lang}] ⚠ human copy not applied (export reworded?): ${k.slice(2)}`);
   }
 
