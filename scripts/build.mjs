@@ -2342,7 +2342,9 @@ const PRICE_LOCALE = { en: 'en-AE', ar: 'ar-AE-u-nu-arab', de: 'de-DE', es: 'es-
 //   addonDur        under each focused build: scope and duration, so a smaller
 //                   price reads as a smaller job, not a discount
 //   foot            the note under the plans, without the hourly contradiction
-//   terms           currency, VAT and when each plan is paid
+//   terms           currency, invoicing currency, VAT and when each plan is paid
+//   capacity        how many builds run at once, in place of a dated "next
+//                   slot" that would go stale
 const PRICING_TERMS = {
   en: {
     clinicCredit: '100% credited against a Launchpad started within 30 days of the review',
@@ -2352,7 +2354,8 @@ const PRICING_TERMS = {
     partnerPriority: 'Same-business-day response (GMT+4)',
     addonDur: ['Fixed scope · 2–3 weeks', 'Fixed scope · 1–2 weeks', 'Fixed scope · 1–2 weeks'],
     foot: 'Fixed scope, fixed price. If the scope changes mid-build, we re-scope together. Builds are priced by scope, never by the hour; Partner reserves senior capacity each month. Every engagement starts with one 30-minute call.',
-    terms: 'Prices in USD, excluding VAT where it applies. The Clinic is paid upfront, builds per milestone, Partner monthly in advance.',
+    terms: 'Prices in USD, invoiced in USD or AED, excluding VAT where it applies. The Clinic is paid upfront, builds per milestone, Partner monthly in advance.',
+    capacity: 'I take on one new build at a time, so the start date is agreed on the scoping call.',
   },
   ar: {
     clinicCredit: 'تُخصم قيمتها بالكامل من منصّة الإطلاق إذا بدأنا خلال ٣٠ يومًا من المراجعة',
@@ -2362,7 +2365,8 @@ const PRICING_TERMS = {
     partnerPriority: 'ردّ في يوم العمل نفسه (GMT+4)',
     addonDur: ['نطاق ثابت · من أسبوعين إلى ٣ أسابيع', 'نطاق ثابت · من أسبوع إلى أسبوعين', 'نطاق ثابت · من أسبوع إلى أسبوعين'],
     foot: 'نطاق ثابت، سعر ثابت. إذا تغيّر النطاق أثناء البناء، نُعيد تحديد نطاقه معًا. المشاريع تُسعَّر حسب النطاق لا بالساعة، وباقة الشريك تحجز لك طاقة عمل خبيرة كل شهر. كل تعاقد يبدأ بمكالمة ٣٠ دقيقة.',
-    terms: 'الأسعار بالدولار الأمريكي ولا تشمل ضريبة القيمة المضافة حيث تنطبق. تُدفع العيادة مقدّمًا، والمشاريع على مراحل، وباقة الشريك شهريًّا مقدّمًا.',
+    terms: 'الأسعار بالدولار الأمريكي، والفوترة بالدولار أو الدرهم، ولا تشمل ضريبة القيمة المضافة حيث تنطبق. تُدفع العيادة مقدّمًا، والمشاريع على مراحل، وباقة الشريك شهريًّا مقدّمًا.',
+    capacity: 'أتولّى بناءً جديدًا واحدًا في كل مرة، لذا نتفق على موعد البدء في مكالمة تحديد النطاق.',
   },
   de: {
     clinicCredit: 'Voll angerechnet auf einen Launchpad-Build, der innerhalb von 30 Tagen nach dem Review startet',
@@ -2372,7 +2376,8 @@ const PRICING_TERMS = {
     partnerPriority: 'Antwort am selben Werktag (GMT+4)',
     addonDur: ['Fester Umfang · 2–3 Wochen', 'Fester Umfang · 1–2 Wochen', 'Fester Umfang · 1–2 Wochen'],
     foot: 'Fester Umfang, fester Preis. Ändert sich der Umfang während des Builds, kalkulieren wir gemeinsam neu. Builds werden nach Umfang berechnet, nie nach Stunden; Partner reserviert jeden Monat Senior-Kapazität. Jedes Engagement beginnt mit einem 30-minütigen Call.',
-    terms: 'Preise in USD, zzgl. MwSt., sofern anwendbar. Die Klinik wird vorab bezahlt, Builds pro Meilenstein, Partner monatlich im Voraus.',
+    terms: 'Preise in USD, Rechnung in USD oder AED, zzgl. MwSt., sofern anwendbar. Die Klinik wird vorab bezahlt, Builds pro Meilenstein, Partner monatlich im Voraus.',
+    capacity: 'Ich nehme jeweils nur einen neuen Build an, deshalb vereinbaren wir den Starttermin im Scoping-Call.',
   },
   es: {
     clinicCredit: 'Se descuenta al 100 % de un Launchpad que empiece dentro de los 30 días siguientes a la revisión',
@@ -2382,7 +2387,8 @@ const PRICING_TERMS = {
     partnerPriority: 'Respuesta el mismo día hábil (GMT+4)',
     addonDur: ['Alcance cerrado · 2–3 semanas', 'Alcance cerrado · 1–2 semanas', 'Alcance cerrado · 1–2 semanas'],
     foot: 'Alcance cerrado, precio cerrado. Si el alcance cambia a mitad del build, lo volvemos a acotar juntos. Los builds se presupuestan por alcance, nunca por hora; Partner reserva capacidad senior cada mes. Cada colaboración empieza con una llamada de 30 minutos.',
-    terms: 'Precios en USD, sin IVA cuando aplique. La Clínica se paga por adelantado, los builds por hitos y Partner cada mes por adelantado.',
+    terms: 'Precios en USD, facturados en USD o AED, sin IVA cuando aplique. La Clínica se paga por adelantado, los builds por hitos y Partner cada mes por adelantado.',
+    capacity: 'Acepto un solo build nuevo a la vez, así que la fecha de inicio se acuerda en la llamada de alcance.',
   },
   fr: {
     clinicCredit: 'Déduite à 100 % d’un Launchpad démarré dans les 30 jours suivant la revue',
@@ -2392,7 +2398,8 @@ const PRICING_TERMS = {
     partnerPriority: 'Réponse dans la journée ouvrée (GMT+4)',
     addonDur: ['Périmètre fixe · 2 à 3 semaines', 'Périmètre fixe · 1 à 2 semaines', 'Périmètre fixe · 1 à 2 semaines'],
     foot: 'Périmètre fixe, prix fixe. Si le périmètre bouge en cours de build, on le recadre ensemble. Les builds sont chiffrés au périmètre, jamais à l’heure ; Partner réserve de la capacité senior chaque mois. Chaque mission commence par un appel de 30 minutes.',
-    terms: 'Prix en USD, hors TVA le cas échéant. La Clinique se règle à l’avance, les builds par jalon, Partner chaque mois à l’avance.',
+    terms: 'Prix en USD, facturés en USD ou en AED, hors TVA le cas échéant. La Clinique se règle à l’avance, les builds par jalon, Partner chaque mois à l’avance.',
+    capacity: 'Je prends un seul nouveau build à la fois : la date de démarrage se fixe lors de l’appel de cadrage.',
   },
 };
 // Home on a phone: three recommendations, the rest behind this button.
@@ -3848,6 +3855,9 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         terms.className = 'price-terms';
         terms.textContent = T.terms;
         foot.after(terms);
+        const cap = terms.cloneNode(false);
+        cap.textContent = T.capacity;
+        terms.after(cap);
       } else warnings.push('services: the note under the plans was not found — terms left out');
     }
     // /about/: the pinned-repo list (student projects and notebooks) goes; the
