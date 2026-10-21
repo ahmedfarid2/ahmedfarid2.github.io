@@ -4,7 +4,7 @@ Personal portfolio site deployed to GitHub Pages. Claude Design exports (`index*
 
 ## Repository facts
 
-**What it is.** Ahmed Farid's personal portfolio, published to GitHub Pages at the custom domain in `CNAME`, pitched at clients (projects and consulting; hiring/CV lives on `/about/`). Five locales (`en` at `/`, `ar` RTL, `de`, `es`, `fr` under `/<code>/`), each with 10 pages: home, `/work/`, `/work/<slug>/` for the 5 flagships, `/services/`, `/about/`, `/contact/` — 50 pages, 52 sitemap URLs. Plus `checklist.html`, `get-checklist.html`, `demo.html` and `lead-magnet/`.
+**What it is.** Ahmed Farid's personal portfolio, published to GitHub Pages at the custom domain in `CNAME`, pitched at clients (projects and consulting; hiring/CV lives on `/about/`). Five locales (`en` at `/`, `ar` RTL, `de`, `es`, `fr` under `/<code>/`), each with 10 pages: home, `/work/`, `/work/<slug>/` for the 5 flagships, `/services/`, `/about/`, `/contact/` — 50 pages. Plus English-only engineering write-ups at `/insights/` and `/insights/<slug>/` (55 sitemap URLs in all), `checklist.html`, `get-checklist.html`, `demo.html`, `404.html` and `lead-magnet/`.
 
 **Stack.** Static HTML produced from Claude Design exports by a Node 20 ESM build pipeline (`scripts/build.mjs`: puppeteer renders the export, snapshots the DOM, strips React/Babel, inlines fonts, adds a small vanilla-JS layer; `html-minifier-terser`). No framework at runtime.
 
@@ -12,10 +12,13 @@ Personal portfolio site deployed to GitHub Pages. Claude Design exports (`index*
 - `index*.html`, `checklist.html`, `get-checklist.html`, `demo.html`, `lead-magnet/*.html` — Claude Design exports (source of truth for the site). There is no per-page export: every page in a locale is cut from that locale's `index*.html`.
 - `scripts/build.mjs` — builds `dist/` (gitignored). Renders each locale once, then cuts every page from that render; `PAGE_SPECS` is the page map (which sections each page keeps, its JSON-LD, sitemap priority, verify floors). Runs build gates (page inventory/coverage, accessibility, forbidden strings, dead anchors, internal links, head limits + JSON-LD, page roles, locale routing, public PDFs). **Fails closed:** any error exits 1 and nothing is deployed, so the last good deploy stays live.
 - `scripts/site-facts.mjs` — single source of truth for location, contact links, proof metrics, per-page SEO titles/descriptions (`SEO`), localized nav labels (`NAV`), the flagship slugs (`FLAGSHIP`), the IndexNow key and the analytics switch (`ANALYTICS.umamiWebsiteId`: empty = no analytics script; the build always tags key clicks with `data-umami-event`; `ANALYTICS.adPixelId`: empty = no ChatGPT Ads pixel and no consent banner, held by a forbidden-string gate)
+- `scripts/insights.mjs` — the `/insights/` write-ups (`INSIGHTS`, `INSIGHTS_INDEX`); `writeInsights()` in `build.mjs` renders them with the site shell, and each article and its `related` case study link to each other. Facts only: client claims must already be on the case study or in `cv/cv.html`
 - `scripts/edit-copy.mjs` — applies idempotent copy edits inside the export's `__bundler/manifest` bundle; `npm run copy:apply` / `npm run copy:check`
 - `scripts/build-cv.mjs`, `scripts/build-checklist.mjs` — render `cv/cv.html` and the lead magnet to the committed root PDFs (`npm run cv:build`, `npm run checklist:build`); `scripts/pdf-check.mjs` backs the public-PDF gate
 - `scripts/indexnow.mjs` + `.github/workflows/indexnow.yml` — after each successful deploy of `main`, submit the live sitemap to IndexNow (Bing and others; not Google). `npm run indexnow -- --dry-run` prints the payload from `dist/sitemap.xml` without sending
 - `.github/workflows/deploy.yml` — on pull requests to `main`: build only; on push to `main`: `npm ci` → `npm run copy:apply -- --soft` → `npm run build` → deploy `dist/` to Pages (with one retry)
+- `scripts/fonts/` — IBM Plex Sans Arabic (SIL OFL, license alongside), used only to render the Arabic share cards (`og-ar*.png`); the site itself ships no Arabic web font
+- Sitemap `<lastmod>` is honest: the build hashes each page's `<main>` text into `dist/lastmod.json` and keeps the previous date (read from the live `/lastmod.json`) while the hash is unchanged. If the live file can't be read (e.g. a sandbox without network) it warns and leaves `<lastmod>` out of that build rather than stamping today on every URL
 - `TRANSLATION-*.md` — translation sources; `docs/*.md` — marketing playbooks (not site content); `CNAME`; `google*.html` — Search Console verification files
 
 **Conventions.**
@@ -40,7 +43,7 @@ Personal portfolio site deployed to GitHub Pages. Claude Design exports (`index*
 - `npm run copy:check` — reports whether each copy edit is applied; must not report a failed match
 - `npm run build` — produces `dist/`; needs a Chromium. In a sandbox where puppeteer cannot download one, set `PUPPETEER_EXECUTABLE_PATH` to an installed Chromium (this cloud environment provides `/opt/pw-browsers/chromium`)
 - Known sandbox quirk: the cloud sandbox has the Inter font installed, so Chromium renders the checklist's `system-ui`/`sans-serif` text in Inter instead of DejaVu Sans (what CI on ubuntu and the committed PDF use), and the last gate fails with `multi-tenant-saas-checklist.pdf: out of date with lead-magnet source (text differ)` even on an untouched `main`. Fix: hide Inter from fontconfig for both `checklist:build` and `build` — write a `fonts.conf` that includes `/etc/fonts/fonts.conf` and adds `<selectfont><rejectfont><glob>*/Inter*</glob></rejectfont></selectfont>`, then run with `FONTCONFIG_FILE=<that file>`. Verify with `pdffonts multi-tenant-saas-checklist.pdf` (DejaVuSans + LiberationSerif only, no Inter). Without that override, never commit a sandbox-rendered PDF; the PR's CI run stays the authoritative full pass
-- Inspect `dist/` — confirm React/Babel scripts are gone, the copy edits are present, and the gate lines report 50 pages / 52 sitemap URLs
+- Inspect `dist/` — confirm React/Babel scripts are gone, the copy edits are present, and the gate lines report 50 pages / 55 sitemap URLs
 
 ## Engineering orchestration
 

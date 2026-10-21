@@ -18,6 +18,7 @@ are **repo-only** (the build does not deploy `.md` files or the `docs/` and
 | [`COPY-POSITIONING.md`](COPY-POSITIONING.md) | Niche positioning copy. Hero, CTA and the lead-magnet card are **already live and self-healing**; the rest is optional. |
 | [`LEAD-MAGNET-SETUP.md`](LEAD-MAGNET-SETUP.md) | How to wire the lead magnet to an email pipeline (no backend needed). |
 | [`SETUP-EMAIL-AND-SEARCH-CONSOLE.md`](SETUP-EMAIL-AND-SEARCH-CONSOLE.md) | **Step-by-step** for the two account-side tasks: the email capture form, and a Search Console Domain property for `iamahmedfarid.com`. |
+| [`SEO-OFFSITE.md`](SEO-OFFSITE.md) | **The account-side SEO** — Search Console and Bing after each deploy, profile links, republishing the write-ups with a canonical, client credit links, Google Business Profile copy (EN/AR), and how to read the results. |
 | [`../lead-magnet/`](../lead-magnet/) | The lead magnet itself — "The Multi-Tenant SaaS Architecture Checklist": markdown source, branded HTML, and a **generated PDF** ready to hand out. |
 
 ## Live on the site
