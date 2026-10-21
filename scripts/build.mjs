@@ -1476,7 +1476,7 @@ async function writeSeoFiles(locales, specs, projects = null, prices = null) {
   if (!priced) console.warn('  ⚠ llms.txt: the /services/ price cards were not found — ways to work listed without prices');
   const waysBlock = priced
     ? prices.map((p) => `- ${p.name}: ${p.amount}${p.note ? ` (${p.note})` : ''}${p.tag ? `. ${p.tag}` : ''}`).join('\n') + '\n' +
-      `- Every project is quoted as a flat price after a 30-minute scoping call; no hourly billing\n` +
+      `- Every project is quoted after a 30-minute scoping call: builds as one fixed price, retainers as one flat monthly fee\n` +
       `- Free demo: one real screen of your product, built and deployed in five business days (${SITE_URL}/demo.html)\n\n`
     : `- Fixed-scope product build: a defined slice with a clear deliverable\n` +
       `- Ongoing engineering retainer\n` +
@@ -1799,7 +1799,7 @@ const HOME_COPY = {
     notReady: 'Not ready for a call?',
     checklist: 'Get the free multi-tenant SaaS architecture checklist →',
     recommended: 'Recommended',
-    terms: ['Reply within 24 hours', 'NDA before the first call', 'You own all code & IP once paid', 'Contract & invoice directly with me', 'Any size of project, with a vetted team', 'Same NDA and IP terms for the whole team'],
+    terms: ['Reply within 24 hours', 'NDA before the first call', 'You own all code & IP once paid', 'Contract & invoice directly with me', 'Larger scopes: a vetted team, quoted per scope', 'Same NDA and IP terms for the whole team'],
   },
   ar: {
     tag: { 'tag-full': 'بناء منصّات SaaS بـ Laravel وNext.js · دبي، الإمارات 🇦🇪', 'tag-short': 'بناء منصّات SaaS · دبي 🇦🇪', 'tag-tiny': 'SaaS · دبي 🇦🇪' },
@@ -1809,7 +1809,7 @@ const HOME_COPY = {
     notReady: 'هل الوقت مبكر لمكالمة؟',
     checklist: 'حمّل قائمة التحقق المجانية لمعمارية SaaS متعدّدة المستأجرين (بالإنجليزية) →',
     recommended: 'موصى به',
-    terms: ['ردّ خلال ٢٤ ساعة', 'اتفاقية سرّية قبل أول مكالمة', 'الكود والملكية الفكرية لك بعد السداد', 'العقد والفاتورة معي مباشرةً', 'مشاريع بأي حجم، مع فريق مؤهّل', 'الاتفاقية السرّية وملكية الكود تشملان الفريق كله'],
+    terms: ['ردّ خلال ٢٤ ساعة', 'اتفاقية سرّية قبل أول مكالمة', 'الكود والملكية الفكرية لك بعد السداد', 'العقد والفاتورة معي مباشرةً', 'المشاريع الأكبر: فريق مؤهّل وسعر حسب النطاق', 'الاتفاقية السرّية وملكية الكود تشملان الفريق كله'],
   },
   de: {
     tag: { 'tag-full': 'SaaS-Entwicklung mit Laravel & Next.js · Dubai, VAE 🇦🇪', 'tag-short': 'SaaS-Entwicklung · Dubai 🇦🇪', 'tag-tiny': 'SaaS · Dubai 🇦🇪' },
@@ -1819,7 +1819,7 @@ const HOME_COPY = {
     notReady: 'Noch nicht bereit für ein Gespräch?',
     checklist: 'Kostenlose Checkliste zur Multi-Tenant-SaaS-Architektur (Englisch) →',
     recommended: 'Empfohlen',
-    terms: ['Antwort innerhalb von 24 Stunden', 'NDA vor dem ersten Gespräch', 'Code und IP gehören Ihnen nach Zahlung', 'Vertrag und Rechnung direkt mit mir', 'Projekte jeder Größe, mit erprobtem Team', 'Gleiche NDA- und IP-Regeln für das ganze Team'],
+    terms: ['Antwort innerhalb von 24 Stunden', 'NDA vor dem ersten Gespräch', 'Code und IP gehören Ihnen nach Zahlung', 'Vertrag und Rechnung direkt mit mir', 'Größere Projekte: erprobtes Team, Preis nach Umfang', 'Gleiche NDA- und IP-Regeln für das ganze Team'],
   },
   es: {
     tag: { 'tag-full': 'Desarrollo SaaS con Laravel y Next.js · Dubái, EAU 🇦🇪', 'tag-short': 'Desarrollo SaaS · Dubái 🇦🇪', 'tag-tiny': 'SaaS · Dubái 🇦🇪' },
@@ -1829,7 +1829,7 @@ const HOME_COPY = {
     notReady: '¿Aún no estás listo para una llamada?',
     checklist: 'Descarga gratis la checklist de arquitectura SaaS multi-tenant (en inglés) →',
     recommended: 'Recomendado',
-    terms: ['Respuesta en menos de 24 horas', 'NDA antes de la primera llamada', 'Código y PI son tuyos tras el pago', 'Contrato y factura directamente conmigo', 'Proyectos de cualquier tamaño, con un equipo probado', 'Mismo NDA y misma PI para todo el equipo'],
+    terms: ['Respuesta en menos de 24 horas', 'NDA antes de la primera llamada', 'Código y PI son tuyos tras el pago', 'Contrato y factura directamente conmigo', 'Proyectos mayores: equipo probado, precio por alcance', 'Mismo NDA y misma PI para todo el equipo'],
   },
   fr: {
     tag: { 'tag-full': 'Développement SaaS Laravel & Next.js · Dubaï, EAU 🇦🇪', 'tag-short': 'Développement SaaS · Dubaï 🇦🇪', 'tag-tiny': 'SaaS · Dubaï 🇦🇪' },
@@ -1839,7 +1839,7 @@ const HOME_COPY = {
     notReady: 'Pas encore prêt pour un appel ?',
     checklist: 'Téléchargez la checklist gratuite d’architecture SaaS multi-tenant (en anglais) →',
     recommended: 'Recommandé',
-    terms: ['Réponse sous 24 heures', 'NDA avant le premier appel', 'Code et PI à vous après paiement', 'Contrat et facture directement avec moi', 'Projets de toute taille, avec une équipe éprouvée', 'Mêmes NDA et règles de PI pour toute l’équipe'],
+    terms: ['Réponse sous 24 heures', 'NDA avant le premier appel', 'Code et PI à vous après paiement', 'Contrat et facture directement avec moi', 'Projets plus larges : équipe éprouvée, prix au périmètre', 'Mêmes NDA et règles de PI pour toute l’équipe'],
   },
 };
 
@@ -1916,14 +1916,13 @@ const HUMAN_COPY = {
       ["Prefer a custom or longer-term setup? Here's how we can work together — every engagement starts with one 30-minute call.", "Want something custom or longer-term? Here's how we can work together. Every engagement starts with one 30-minute call."],
       ['Retainer for continuous delivery — new features, maintenance, and scaling — with the docs and runbooks your team can run on.', 'A monthly retainer for new features, maintenance and scaling, with docs and runbooks your team can use.'],
       ['Senior Software Engineer — real-time, multi-tenant SaaS and end-to-end product engineering. Fixed-scope builds, retainers and architecture consulting.', 'Senior software engineer in Dubai. I build real-time, multi-tenant SaaS end to end, as fixed-scope builds, retainers or architecture reviews.'],
-      ['Every project is quoted after a 30-minute scoping call — no surprises, no hourly drift.', 'Every project is quoted after a 30-minute scoping call, so there are no surprises and no hourly billing.'],
+      ['Every project is quoted after a 30-minute scoping call — no surprises, no hourly drift.', 'Every project is quoted after a 30-minute scoping call: a build as one fixed price, a retainer as one flat monthly fee.'],
       ['One real screen of your product, built and deployed — free.', 'One real screen of your product, built and deployed, for free.'],
       ['One screen or one page, genuinely built — not a mockup', 'One screen or one page, really built, not a mockup'],
       ['No obligation — stop there and you owe nothing', 'No obligation: stop there and you owe nothing'],
       ["One clearly defined slice — not 'the whole product'", "One clearly defined slice, not 'the whole product'"],
       ["No lock-in — 30 days' notice", "No lock-in, 30 days' notice"],
       ['RAG or LLM features in production — retrieval, evals', 'RAG or LLM features in production: retrieval, evals'],
-      ["we re-scope together — I don't run an hourly meter.", "we re-scope together. I don't run an hourly meter."],
       ["If yours isn't here, ask it directly — bottom of the page.", "If yours isn't here, ask me directly at the bottom of the page."],
       ['Most start as a 3-week scoped build — a defined slice', 'Most start as a 3-week scoped build: a defined slice'],
       ["What I actually reach for, and why. No frameworks-of-the-month — just the boring tools that survive contact with production.", "What I use, and why. Mostly proven tools that hold up in production."],
@@ -2014,7 +2013,7 @@ const HUMAN_COPY = {
       ["Backend، ويب، جوّال، بنية تحتية — يجمعها شخص واحد.", "الـ Backend والويب والجوّال والبنية التحتية، وشخص واحد مسؤول عنها كلها."],
       ["المحفظة الكاملة — منصّات SaaS الرئيسية أولًا، ثم البقية. كل مدخل يرتبط مباشرةً بالمنتج الحيّ أو صفحة المتجر أو لوحة الإدارة، مسحوبًا من ملفّي على GitHub.", "منصّات SaaS الرئيسية أولًا، ثم البقية. كل مدخل يرتبط بالمنتج الحيّ أو صفحة المتجر أو لوحة الإدارة."],
       ["تفضّل إعدادًا مخصّصًا أو أطول مدى؟ إليك كيف يمكننا العمل معًا — كل تعاقد يبدأ بمكالمة ٣٠ دقيقة.", "تريد شيئًا مخصّصًا أو أطول مدى؟ إليك كيف يمكننا العمل معًا. كل تعاقد يبدأ بمكالمة واحدة مدتها ٣٠ دقيقة."],
-      ["نقاط انطلاق شفّافة لأكثر التعاقدات شيوعًا. كل مشروع يُسعّر بعد مكالمة ٣٠ دقيقة — دون مفاجآت، دون انجراف بالساعة.", "نقاط انطلاق شفّافة لأكثر التعاقدات شيوعًا. كل مشروع يُسعَّر بعد مكالمة تحديد نطاق مدتها ٣٠ دقيقة، فلا مفاجآت ولا فوترة بالساعة."],
+      ["نقاط انطلاق شفّافة لأكثر التعاقدات شيوعًا. كل مشروع يُسعّر بعد مكالمة ٣٠ دقيقة — دون مفاجآت، دون انجراف بالساعة.", "نقاط انطلاق شفّافة لأكثر التعاقدات شيوعًا. كل مشروع يُسعَّر بعد مكالمة تحديد نطاق مدتها ٣٠ دقيقة: البناء بسعر ثابت واحد، والتعاقد المستمر برسوم شهرية ثابتة."],
       ["نطاق مهندس أوّل، مُضيَّق إلى ما أسلّمه فعلًا — لا ما هو مكتوب في السيرة الذاتية. معظم المشاريع تقع عبر اثنين أو ثلاثة منها في آنٍ واحد.", "ما أبنيه في أغلب الأحيان. معظم المشاريع تجمع اثنين أو ثلاثة منها."],
       ["إن لم يكن سؤالك هنا، فاطرحه مباشرةً — أسفل الصفحة.", "إن لم يكن سؤالك هنا، فاسألني مباشرةً أسفل الصفحة."],
       ["ما ألجأ إليه فعلًا، ولماذا. لا أطر «هذا الشهر» — بل الأدوات المملّة التي تنجو من ملامسة الإنتاج.", "ما أستخدمه، ولماذا. في الغالب أدوات مجرَّبة تصمد في الإنتاج."],
@@ -2087,7 +2086,7 @@ const HUMAN_COPY = {
       ["Das vollständige Portfolio — zuerst die Flaggschiff-SaaS, dann der Rest. Jeder Eintrag verlinkt direkt zum Live-Produkt, zum Store-Eintrag oder zur Admin-Oberfläche, gezogen aus meinem GitHub-Profil.", "Zuerst die Flaggschiff-SaaS, dann der Rest. Jeder Eintrag verlinkt auf das Live-Produkt, den Store-Eintrag oder das Admin-Panel."],
       ["Mein Prozess ist nicht proprietär — er ist einfach diszipliniert. Dieselbe Form, ob das Engagement sechs Wochen oder sechs Monate dauert.", "Nichts Geheimes: dieselben vier Schritte, ob die Arbeit sechs Wochen oder sechs Monate dauert."],
       ["Lieber ein individuelles oder längerfristiges Setup? So können wir zusammenarbeiten — jedes Engagement beginnt mit einem 30-minütigen Call.", "Etwas Individuelles oder Längerfristiges? So können wir zusammenarbeiten. Jede Zusammenarbeit beginnt mit einem 30-minütigen Gespräch."],
-      ["Jedes Projekt wird nach einem 30-minütigen Call kalkuliert — keine Überraschungen, kein Stunden-Drift.", "Jedes Projekt wird nach einem 30-minütigen Gespräch kalkuliert, ohne Überraschungen und ohne Stundenabrechnung."],
+      ["Jedes Projekt wird nach einem 30-minütigen Call kalkuliert — keine Überraschungen, kein Stunden-Drift.", "Jedes Projekt wird nach einem 30-minütigen Gespräch kalkuliert: ein Build zum Festpreis, ein Retainer zur festen Monatspauschale."],
       ["Die Bandbreite eines Senior-Entwicklers, eingegrenzt auf das, was ich tatsächlich liefere — nicht auf das, was im Lebenslauf steht. Die meisten Projekte liegen gleichzeitig über zwei oder drei davon.", "Was ich am häufigsten baue. Die meisten Projekte verbinden zwei oder drei davon."],
       ["Wenn Ihre nicht dabei ist, stellen Sie sie direkt — am Ende der Seite.", "Wenn Ihre Frage fehlt, stellen Sie sie mir direkt unten auf der Seite."],
       ["Wofür ich tatsächlich greife, und warum. Keine Frameworks-des-Monats — nur die langweiligen Werkzeuge, die den Kontakt mit der Produktion überleben.", "Was ich einsetze, und warum. Vor allem bewährte Werkzeuge, die im Produktivbetrieb halten."],
@@ -2162,7 +2161,7 @@ const HUMAN_COPY = {
       ["El portafolio completo — primero los SaaS insignia, luego el resto. Cada entrada enlaza directamente al producto en vivo, la ficha de la tienda o el panel de administración, extraído de mi perfil de GitHub.", "Primero los SaaS insignia, luego el resto. Cada entrada enlaza al producto en vivo, su ficha en la tienda o su panel de administración."],
       ["Mi proceso no es secreto — solo es disciplinado. La misma forma tanto si el encargo dura seis semanas como seis meses.", "Nada secreto: los mismos cuatro pasos, dure el trabajo seis semanas o seis meses."],
       ["¿Prefieres algo a medida o a más largo plazo? Así podemos trabajar juntos — cada colaboración empieza con una llamada de 30 minutos.", "¿Algo a medida o a más largo plazo? Así podemos trabajar juntos. Cada colaboración empieza con una llamada de 30 minutos."],
-      ["Cada proyecto se presupuesta tras una llamada de 30 minutos — sin sorpresas, sin desvíos por hora.", "Cada proyecto se presupuesta tras una llamada de 30 minutos, sin sorpresas y sin facturación por horas."],
+      ["Cada proyecto se presupuesta tras una llamada de 30 minutos — sin sorpresas, sin desvíos por hora.", "Cada proyecto se presupuesta tras una llamada de 30 minutos: un build a precio cerrado, un retainer con una cuota mensual fija."],
       ["El alcance de un ingeniero senior, reducido a lo que realmente entrego — no a lo que figura en el CV. La mayoría de proyectos abarcan dos o tres de estas a la vez.", "Lo que construyo con más frecuencia. La mayoría de proyectos combinan dos o tres de estas áreas."],
       ["Si la tuya no está aquí, pregúntala directamente — al final de la página.", "Si la tuya no está, pregúntame directamente al final de la página."],
       ["Lo que de verdad uso, y por qué. Nada de frameworks del mes — solo las herramientas aburridas que sobreviven al contacto con producción.", "Lo que uso, y por qué. Sobre todo herramientas probadas que aguantan en producción."],
@@ -2238,7 +2237,7 @@ const HUMAN_COPY = {
       ["Le portfolio complet — d'abord les SaaS phares, puis le reste. Chaque entrée renvoie directement au produit en ligne, à la fiche du store ou au panneau admin, extrait de mon profil GitHub.", "D’abord les SaaS phares, puis le reste. Chaque entrée renvoie au produit en ligne, à sa fiche sur les stores ou à son panneau d’administration."],
       ["Mon processus n'a rien de secret — il est juste discipliné. Même forme que la mission dure six semaines ou six mois.", "Rien de secret : les mêmes quatre étapes, que le travail dure six semaines ou six mois."],
       ["Vous préférez du sur-mesure ou du plus long terme ? Voici comment nous pouvons collaborer — chaque mission commence par un appel de 30 minutes.", "Du sur-mesure ou du plus long terme ? Voici comment nous pouvons collaborer. Chaque mission commence par un appel de 30 minutes."],
-      ["Chaque projet est chiffré après un appel de 30 minutes — sans surprises, sans dérive horaire.", "Chaque projet est chiffré après un appel de 30 minutes, sans surprise et sans facturation à l’heure."],
+      ["Chaque projet est chiffré après un appel de 30 minutes — sans surprises, sans dérive horaire.", "Chaque projet est chiffré après un appel de 30 minutes : un build au prix fixe, une régie au forfait mensuel."],
       ["L'étendue d'un ingénieur senior, réduite à ce que je livre réellement — pas à ce qui figure sur le CV. La plupart des projets en couvrent deux ou trois à la fois.", "Ce que je construis le plus souvent. La plupart des projets en combinent deux ou trois."],
       ["Si la vôtre n'y est pas, posez-la directement — en bas de la page.", "Si la vôtre n’y est pas, posez-la-moi directement en bas de la page."],
       ["Ce que j'utilise vraiment, et pourquoi. Pas de framework du mois — juste les outils ennuyeux qui survivent au contact de la production.", "Ce que j’utilise, et pourquoi. Surtout des outils éprouvés qui tiennent en production."],
@@ -2314,6 +2313,74 @@ const IMPACT_PLAIN = {
 // the dollar, so this cannot drift), rounded to the nearest 50.
 const AED_PER_USD = 3.6725;
 const PRICE_LOCALE = { en: 'en-AE', ar: 'ar-AE-u-nu-arab', de: 'de-DE', es: 'es-ES', fr: 'fr-FR' };
+// /services/ commercial terms (Oct 2026 sales review). The plans contradicted
+// each other: Partner said "Everything in Launchpad, plus", which read as a
+// $9k build for $3.5k a month; its note said "cancel anytime" over a "30 days'
+// notice" line; its "priority" reply matched the 24-hour reply everyone gets;
+// and the footer's "no hourly meter" sat next to a plan sold in hours. It also
+// never said when anyone pays.
+//   clinicCredit    new line on the Clinic card: the review counts toward a build
+//   milestone       Launchpad's stop-after-milestone-1 line, with what is owed
+//   partnerNote     Partner's note line: "no lock-in" in place of "cancel
+//                   anytime", which the 30-days'-notice item contradicted
+//   partnerHead     Partner's list heading, its own scope instead of Launchpad’s
+//   partnerPriority Partner's response line (3rd item), faster than the default
+//   addonDur        under each focused build: scope and duration, so a smaller
+//                   price reads as a smaller job, not a discount
+//   foot            the note under the plans, without the hourly contradiction
+//   terms           currency, VAT and when each plan is paid
+const PRICING_TERMS = {
+  en: {
+    clinicCredit: '100% credited against a Launchpad started within 30 days of the review',
+    milestone: "Milestone 1 is week one. If you don't like the code, we stop there and you pay for that milestone only.",
+    partnerNote: 'per month · 40 hrs reserved · no lock-in',
+    partnerHead: 'What you get:',
+    partnerPriority: 'Same-business-day response (GMT+4)',
+    addonDur: ['Fixed scope · 2–3 weeks', 'Fixed scope · 1–2 weeks', 'Fixed scope · 1–2 weeks'],
+    foot: 'Fixed scope, fixed price. If the scope changes mid-build, we re-scope together. Builds are priced by scope, never by the hour; Partner reserves senior capacity each month. Every engagement starts with one 30-minute call.',
+    terms: 'Prices in USD, excluding VAT where it applies. The Clinic is paid upfront, builds per milestone, Partner monthly in advance.',
+  },
+  ar: {
+    clinicCredit: 'تُخصم قيمتها بالكامل من منصّة الإطلاق إذا بدأنا خلال ٣٠ يومًا من المراجعة',
+    milestone: 'المرحلة الأولى في الأسبوع الأول. إن لم يعجبك الكود، نتوقّف هناك ولا تدفع إلا قيمة تلك المرحلة.',
+    partnerNote: 'شهريًّا · ٤٠ ساعة محجوزة · دون التزام',
+    partnerHead: 'ما تحصل عليه:',
+    partnerPriority: 'ردّ في يوم العمل نفسه (GMT+4)',
+    addonDur: ['نطاق ثابت · من أسبوعين إلى ٣ أسابيع', 'نطاق ثابت · من أسبوع إلى أسبوعين', 'نطاق ثابت · من أسبوع إلى أسبوعين'],
+    foot: 'نطاق ثابت، سعر ثابت. إذا تغيّر النطاق أثناء البناء، نُعيد تحديد نطاقه معًا. المشاريع تُسعَّر حسب النطاق لا بالساعة، وباقة الشريك تحجز لك طاقة عمل خبيرة كل شهر. كل تعاقد يبدأ بمكالمة ٣٠ دقيقة.',
+    terms: 'الأسعار بالدولار الأمريكي ولا تشمل ضريبة القيمة المضافة حيث تنطبق. تُدفع العيادة مقدّمًا، والمشاريع على مراحل، وباقة الشريك شهريًّا مقدّمًا.',
+  },
+  de: {
+    clinicCredit: 'Voll angerechnet auf einen Launchpad-Build, der innerhalb von 30 Tagen nach dem Review startet',
+    milestone: 'Meilenstein 1 fällt in Woche eins. Wenn der Code nicht gefällt, hören wir dort auf, und Sie zahlen nur diesen Meilenstein.',
+    partnerNote: 'pro Monat · 40 Std. reserviert · keine Bindung',
+    partnerHead: 'Das bekommen Sie:',
+    partnerPriority: 'Antwort am selben Werktag (GMT+4)',
+    addonDur: ['Fester Umfang · 2–3 Wochen', 'Fester Umfang · 1–2 Wochen', 'Fester Umfang · 1–2 Wochen'],
+    foot: 'Fester Umfang, fester Preis. Ändert sich der Umfang während des Builds, kalkulieren wir gemeinsam neu. Builds werden nach Umfang berechnet, nie nach Stunden; Partner reserviert jeden Monat Senior-Kapazität. Jedes Engagement beginnt mit einem 30-minütigen Call.',
+    terms: 'Preise in USD, zzgl. MwSt., sofern anwendbar. Die Klinik wird vorab bezahlt, Builds pro Meilenstein, Partner monatlich im Voraus.',
+  },
+  es: {
+    clinicCredit: 'Se descuenta al 100 % de un Launchpad que empiece dentro de los 30 días siguientes a la revisión',
+    milestone: 'El hito 1 es la primera semana. Si no te convence el código, paramos ahí y solo pagas ese hito.',
+    partnerNote: 'por mes · 40 h reservadas · sin permanencia',
+    partnerHead: 'Qué incluye:',
+    partnerPriority: 'Respuesta el mismo día hábil (GMT+4)',
+    addonDur: ['Alcance cerrado · 2–3 semanas', 'Alcance cerrado · 1–2 semanas', 'Alcance cerrado · 1–2 semanas'],
+    foot: 'Alcance cerrado, precio cerrado. Si el alcance cambia a mitad del build, lo volvemos a acotar juntos. Los builds se presupuestan por alcance, nunca por hora; Partner reserva capacidad senior cada mes. Cada colaboración empieza con una llamada de 30 minutos.',
+    terms: 'Precios en USD, sin IVA cuando aplique. La Clínica se paga por adelantado, los builds por hitos y Partner cada mes por adelantado.',
+  },
+  fr: {
+    clinicCredit: 'Déduite à 100 % d’un Launchpad démarré dans les 30 jours suivant la revue',
+    milestone: 'Le jalon 1 tombe la première semaine. Si le code ne convient pas, on s’arrête là et vous ne payez que ce jalon.',
+    partnerNote: 'par mois · 40 h réservées · sans engagement',
+    partnerHead: 'Ce que vous obtenez :',
+    partnerPriority: 'Réponse dans la journée ouvrée (GMT+4)',
+    addonDur: ['Périmètre fixe · 2 à 3 semaines', 'Périmètre fixe · 1 à 2 semaines', 'Périmètre fixe · 1 à 2 semaines'],
+    foot: 'Périmètre fixe, prix fixe. Si le périmètre bouge en cours de build, on le recadre ensemble. Les builds sont chiffrés au périmètre, jamais à l’heure ; Partner réserve de la capacité senior chaque mois. Chaque mission commence par un appel de 30 minutes.',
+    terms: 'Prix en USD, hors TVA le cas échéant. La Clinique se règle à l’avance, les builds par jalon, Partner chaque mois à l’avance.',
+  },
+};
 // Home on a phone: three recommendations, the rest behind this button.
 const MORE_RECS = {
   en: ['More recommendations', 'Show fewer'], ar: ['توصيات أخرى', 'عرض أقل'], de: ['Weitere Empfehlungen', 'Weniger anzeigen'],
@@ -3697,7 +3764,7 @@ async function snapshotVariant({ page, spec, lang, locales }) {
     }
     // /services/: the starting price in dirhams too, under each dollar price.
     if (pageSpec.key === 'services') {
-      const fmt = new Intl.NumberFormat(copy.priceLocale, { style: 'currency', currency: 'AED', currencyDisplay: 'code', maximumFractionDigits: 0 });
+      const fmt = new Intl.NumberFormat(copy.priceLocale, { style: 'currency', currency: 'AED', currencyDisplay: 'code', maximumFractionDigits: 0, useGrouping: 'always' });
       const amounts = [...document.querySelectorAll('#pricing .price-grid > .price-card .price-amount')];
       amounts.forEach((a) => {
         const digits = (a.textContent || '').replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[^0-9]/g, '');
@@ -3705,10 +3772,61 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         if (!usd) { warnings.push('services: a price card amount has no number — no AED line'); return; }
         const line = document.createElement('div');
         line.className = 'price-aed';
-        line.textContent = `≈ ${fmt.format(Math.round(usd * copy.aedRate / 50) * 50)}`;
+        // A round number reads as a price someone set; 33,050 reads as a
+        // currency widget. Nearest 100 under 10,000, nearest 500 above.
+        const aed = usd * copy.aedRate;
+        const step = aed < 10000 ? 100 : 500;
+        line.textContent = `≈ ${fmt.format(Math.round(aed / step) * step)}`;
         a.after(line);
       });
       if (amounts.length !== 3) warnings.push(`services: expected 3 price cards for the AED line, found ${amounts.length}`);
+      // Commercial terms (PRICING_TERMS). Each piece is found by position in
+      // its card, behind a count check; the two lines that get overwritten
+      // (Launchpad’s milestone, Partner’s response time) are also matched by
+      // content, so a re-export that reorders a list warns instead of
+      // replacing the wrong line.
+      const T = copy.pricing;
+      const [clinic, launch, partner] = [...document.querySelectorAll('#pricing .price-grid > .price-card')];
+      const feats = (card) => (card ? [...card.querySelectorAll('.price-feats > li')] : []);
+      const setLi = (li, text) => {
+        const tick = li.querySelector('.price-check');
+        li.replaceChildren(...(tick ? [tick] : []), document.createTextNode(text));
+      };
+      const cl = feats(clinic);
+      if (cl.length === 6) {
+        const li = cl[5].cloneNode(true);
+        setLi(li, T.clinicCredit);
+        cl[5].after(li);
+      } else warnings.push(`services: Clinic has ${cl.length} features, expected 6 — no credit line`);
+      const lp = feats(launch);
+      if (lp.length === 9 && /[1١]|الأولى/.test(lp[8].textContent)) setLi(lp[8], T.milestone);
+      else warnings.push('services: Launchpad milestone line not found — left as exported');
+      const pt = feats(partner);
+      const pNote = partner && partner.querySelector('.price-note');
+      const pHead = partner && partner.querySelector('.price-feats-head');
+      if (pt.length === 7 && pNote && pHead && /[1١]|واحد/.test(pt[2].textContent)) {
+        pNote.textContent = T.partnerNote;
+        pHead.textContent = T.partnerHead;
+        setLi(pt[2], T.partnerPriority);
+      } else warnings.push(`services: Partner card not as expected (${pt.length} features) — left as exported`);
+      const addons = [...document.querySelectorAll('#pricing .addon-card')];
+      if (addons.length === T.addonDur.length) {
+        addons.forEach((c, i) => {
+          const d = document.createElement('p');
+          d.className = 'addon-dur';
+          d.textContent = T.addonDur[i];
+          (c.querySelector('.addon-p') || c.lastElementChild).after(d);
+        });
+      } else warnings.push(`services: ${addons.length} focused builds, expected ${T.addonDur.length} — no durations`);
+      const foot = document.querySelector('#pricing .price-foot');
+      const footNote = foot && foot.querySelector('.price-foot-note');
+      if (foot && footNote) {
+        footNote.textContent = T.foot;
+        const terms = document.createElement('p');
+        terms.className = 'price-terms';
+        terms.textContent = T.terms;
+        foot.after(terms);
+      } else warnings.push('services: the note under the plans was not found — terms left out');
     }
     // /about/: the pinned-repo list (student projects and notebooks) goes; the
     // profile card stays and takes the link to the live profile.
@@ -4127,7 +4245,7 @@ async function snapshotVariant({ page, spec, lang, locales }) {
   }, spec, locales.map((l) => l.lang), FAQ_BUYER_KEYS[lang] || FAQ_BUYER_KEYS.en, prefix, PAGE_LAYOUT, SECTION_KEYS,
     { owner: LINK_OWNER, paths: Object.fromEntries(PAGE_SPECS.map((s) => [s.key, s.suffix])) },
     NAV[lang],
-    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en, conceptHosts: CONCEPT_HOSTS, insights: INSIGHTS.map(({ slug, title, related }) => ({ slug, title, related })), caseShots: CASE_SHOTS, formAction: `https://formsubmit.co/${CONTACT.email}`, siteUrl: SITE_URL, impact: IMPACT_PLAIN[lang] || IMPACT_PLAIN.en, aedRate: AED_PER_USD, priceLocale: PRICE_LOCALE[lang] || 'en-AE', moreRecs: MORE_RECS[lang] || MORE_RECS.en,
+    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en, conceptHosts: CONCEPT_HOSTS, insights: INSIGHTS.map(({ slug, title, related }) => ({ slug, title, related })), caseShots: CASE_SHOTS, formAction: `https://formsubmit.co/${CONTACT.email}`, siteUrl: SITE_URL, impact: IMPACT_PLAIN[lang] || IMPACT_PLAIN.en, aedRate: AED_PER_USD, priceLocale: PRICE_LOCALE[lang] || 'en-AE', pricing: PRICING_TERMS[lang] || PRICING_TERMS.en, moreRecs: MORE_RECS[lang] || MORE_RECS.en,
       clientQuotes: CLIENT_QUOTES.map((q) => ({ name: q.name[lang] || q.name.en, initials: q.initials[lang] || q.initials.en, role: q.role[lang] || q.role.en, quote: q.quote[lang] || q.quote.en,
         caseStudy: q.caseStudy ? { slug: q.caseStudy, name: FLAGSHIP.find((f) => f.slug === q.caseStudy).name } : null })) }));
 
@@ -4845,6 +4963,9 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 @media (min-width:1101px){.tests.tests-many{grid-template-columns:repeat(3,1fr)}}
 /* /services/: the price in dirhams, under the dollar price. */
 .price-aed{margin-top:4px;font-family:var(--mono);font-size:12px;color:var(--ink-mute)}
+/* Focused builds: scope and duration under the description; the terms line under the plans’ footer. */
+.addon-dur{margin-top:10px;font-family:var(--mono);font-size:12px;color:var(--ink-mute)}
+.price-terms{margin-top:14px;font-size:13px;line-height:1.55;color:var(--ink-mute);text-align:start}
 /* /about/: the GitHub card on its own, full width, with the link to the live profile. */
 #github .gh.gh-solo{grid-template-columns:minmax(0,1fr)}
 #github .gh-profile-link{display:inline-block;margin-top:18px}
