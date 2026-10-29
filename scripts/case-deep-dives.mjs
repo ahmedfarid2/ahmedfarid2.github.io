@@ -269,7 +269,7 @@ export const CASE_DEEP_DIVES = {
         ['Webhook push instead of polling', 'Changes are pushed to client environments as events. Per-case sequence numbers stop late or duplicated deliveries from moving a case backwards.'],
         ['Access enforced in the data layer', 'Role-based access lives in the data layer, not the UI, and tenant-resolve middleware isolates every tenant.'],
         ['Company sign-in and finance tools', 'Microsoft 365 / Entra ID single sign-on (OAuth 2.0 / OIDC), Zoho Books and Teams integration.'],
-        ['A mobile app for the team', 'RAS Mobile puts cases, activities and recoveries on iPhone and Android, with the same Microsoft work sign-in as the web app.'],
+        ['A mobile app for the team', 'RAS Mobile (React Native, Expo, TypeScript) puts cases, activities and recoveries on iPhone and Android in four languages, Arabic RTL included, with the same Microsoft sign-in as the web app. Work done offline queues on the phone and syncs when the API answers again.'],
         ['Commissions and HR in the same system', 'An affiliate commission engine with per-agreement schedules, plus contracts and goals.'],
       ],
       outcome: [
@@ -286,7 +286,7 @@ export const CASE_DEEP_DIVES = {
         ['دفع عبر webhooks بدل الاستطلاع', 'تُدفع التغييرات إلى بيئات العملاء كأحداث، وأرقام تسلسل لكل قضية تمنع التسليم المتأخّر أو المكرّر من إعادتها إلى الخلف.'],
         ['الصلاحيات في طبقة البيانات', 'التحكّم في الوصول حسب الدور يُطبَّق في طبقة البيانات لا في الواجهة، ووسيط تحديد المستأجر يعزل كل مستأجر.'],
         ['دخول بحساب الشركة وأدوات مالية', 'دخول موحّد عبر Microsoft 365 / Entra ID بمعيار OAuth 2.0 / OIDC، وتكامل مع Zoho Books وTeams.'],
-        ['تطبيق جوّال للفريق', 'يضع RAS Mobile القضايا والأنشطة والتحصيلات على iPhone وAndroid، بنفس دخول Microsoft المستخدم في تطبيق الويب.'],
+        ['تطبيق جوّال للفريق', 'يضع RAS Mobile (React Native وExpo وTypeScript) القضايا والأنشطة والتحصيلات على iPhone وAndroid بأربع لغات منها العربية من اليمين إلى اليسار، بنفس دخول Microsoft المستخدم في تطبيق الويب. وما يُنجَز دون اتصال يُحفَظ على الهاتف ويُرسَل حين تعود الواجهة البرمجية.'],
         ['العمولات والموارد البشرية في النظام نفسه', 'محرّك عمولات للشركاء بجداول خاصة بكل اتفاقية، إلى جانب العقود والأهداف.'],
       ],
       outcome: [
@@ -303,7 +303,7 @@ export const CASE_DEEP_DIVES = {
         ['Webhook-Push statt Polling', 'Änderungen gehen als Events an die Mandantenumgebungen. Sequenznummern je Fall verhindern, dass verspätete oder doppelte Zustellungen einen Fall zurücksetzen.'],
         ['Rechte in der Datenschicht', 'Rollenbasierte Rechte sitzen in der Datenschicht, nicht in der Oberfläche, und eine Tenant-Resolve-Middleware trennt jeden Mandanten.'],
         ['Firmen-Login und Finanz-Tools', 'Single Sign-on über Microsoft 365 / Entra ID (OAuth 2.0 / OIDC), Anbindung an Zoho Books und Teams.'],
-        ['Eine Mobile-App für das Team', 'RAS Mobile bringt Fälle, Aktivitäten und Beitreibungen auf iPhone und Android, mit demselben Microsoft-Firmenlogin wie die Web-App.'],
+        ['Eine Mobile-App für das Team', 'RAS Mobile (React Native, Expo, TypeScript) bringt Fälle, Aktivitäten und Beitreibungen auf iPhone und Android, in vier Sprachen inklusive Arabisch (RTL) und mit demselben Microsoft-Login wie die Web-App. Offline Erledigtes wartet auf dem Telefon und wird gesendet, sobald die API wieder antwortet.'],
         ['Provisionen und HR im selben System', 'Eine Provisions-Engine für Partner mit Zeitplänen je Vereinbarung, dazu Verträge und Ziele.'],
       ],
       outcome: [
@@ -320,7 +320,7 @@ export const CASE_DEEP_DIVES = {
         ['Webhooks en lugar de sondeo', 'Los cambios se envían como eventos a los entornos de los clientes. Números de secuencia por caso impiden que una entrega tardía o duplicada haga retroceder un caso.'],
         ['Permisos en la capa de datos', 'El acceso por rol vive en la capa de datos, no en la interfaz, y un middleware de resolución de inquilino aísla a cada uno.'],
         ['Acceso corporativo y herramientas financieras', 'Inicio de sesión único con Microsoft 365 / Entra ID (OAuth 2.0 / OIDC), integración con Zoho Books y Teams.'],
-        ['Una app móvil para el equipo', 'RAS Mobile lleva casos, actividades y cobros al iPhone y a Android, con el mismo acceso de Microsoft de la empresa que la app web.'],
+        ['Una app móvil para el equipo', 'RAS Mobile (React Native, Expo, TypeScript) lleva casos, actividades y cobros al iPhone y a Android en cuatro idiomas, árabe RTL incluido, con el mismo acceso de Microsoft que la app web. Lo hecho sin conexión queda en el teléfono y se envía cuando la API vuelve a responder.'],
         ['Comisiones y RR. HH. en el mismo sistema', 'Un motor de comisiones para afiliados con calendarios por acuerdo, además de contratos y objetivos.'],
       ],
       outcome: [
@@ -337,7 +337,7 @@ export const CASE_DEEP_DIVES = {
         ['Des webhooks plutôt que du polling', 'Les changements sont poussés vers les environnements clients sous forme d’événements. Des numéros de séquence par dossier empêchent une livraison tardive ou en double de faire reculer un dossier.'],
         ['Les droits dans la couche de données', 'L’accès par rôle est appliqué dans la couche de données, pas dans l’interface, et un middleware de résolution du locataire isole chacun.'],
         ['Connexion d’entreprise et outils financiers', 'Authentification unique Microsoft 365 / Entra ID (OAuth 2.0 / OIDC), intégration Zoho Books et Teams.'],
-        ['Une app mobile pour l’équipe', 'RAS Mobile met dossiers, activités et recouvrements sur iPhone et Android, avec la même connexion Microsoft d’entreprise que l’app web.'],
+        ['Une app mobile pour l’équipe', 'RAS Mobile (React Native, Expo, TypeScript) met dossiers, activités et recouvrements sur iPhone et Android en quatre langues, dont l’arabe en RTL, avec la même connexion Microsoft que l’app web. Ce qui est fait hors ligne attend sur le téléphone et part dès que l’API répond à nouveau.'],
         ['Commissions et RH dans le même système', 'Un moteur de commissions pour les partenaires avec des échéanciers par accord, plus les contrats et les objectifs.'],
       ],
       outcome: [

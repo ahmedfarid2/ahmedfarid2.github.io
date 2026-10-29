@@ -2740,24 +2740,38 @@ const CALENDLY_EDITS = LOCALES.map((loc) => ({
   transform: (text) => text.replace(CALENDLY_LINK, CONTACT.calendly),
 }));
 
-// ── Recovery Advisers: RAS Mobile on Google Play ───────────────────────────
+// ── Recovery Advisers: RAS Mobile store links ──────────────────────────────
 // Owner-confirmed (Oct 2026): the team app RAS Mobile is live on iPhone and
-// Android. Only the Play listing is linked: the company announcement marks the
-// App Store link as internal-only, so it stays off this public site until that
-// changes. Store names stay in English, as on Yelo Sale. Not critical: a
-// re-export that drops it loses a link, not a fact.
+// Android, and both store links may be public (the App Store one was first
+// held back as internal-only; the owner cleared it). Store names stay in
+// English and in Yelo Sale’s order. The prior is the Play-only first version.
+// Not critical: a re-export that drops it loses links, not a fact.
 const RAS_PLAY = 'https://play.google.com/store/apps/details?id=com.recoveryadvisers.mobile';
-const rasPlayRow = (label) => [
-  `{ label: "${label}", href: "https://css.recoveryadvisers.com/" },\n    ],`,
-  `{ label: "${label}", href: "https://css.recoveryadvisers.com/" },\n      { label: "Google Play", href: "${RAS_PLAY}" },\n    ],`,
-];
-const RAS_PLAY_EDITS = factEdits('Recovery Advisers: RAS Mobile Play link', {
-  en: rasPlayRow('Client Self-Service'),
-  ar: rasPlayRow('خدمة ذاتية للعملاء'),
-  de: rasPlayRow('Kunden-Self-Service'),
-  es: rasPlayRow('Autoservicio de cliente'),
-  fr: rasPlayRow('Libre-service client'),
+const RAS_IOS = 'https://apps.apple.com/us/app/ras-mobile/id6818612310';
+const rasStoreRows = (label) => {
+  const css = `{ label: "${label}", href: "https://css.recoveryadvisers.com/" },`;
+  const play = `{ label: "Google Play", href: "${RAS_PLAY}" },`;
+  return [
+    `${css}\n    ],`,
+    `${css}\n      ${play}\n      { label: "App Store", href: "${RAS_IOS}" },\n    ],`,
+    `${css}\n      ${play}\n    ],`,
+  ];
+};
+const RAS_STORE_EDITS = factEdits('Recovery Advisers: RAS Mobile store links', {
+  en: rasStoreRows('Client Self-Service'),
+  ar: rasStoreRows('خدمة ذاتية للعملاء'),
+  de: rasStoreRows('Kunden-Self-Service'),
+  es: rasStoreRows('Autoservicio de cliente'),
+  fr: rasStoreRows('Libre-service client'),
 }, { critical: false });
+
+// The stack chips gain React Native: RAS Mobile is Expo + React Native +
+// TypeScript (owner-confirmed, read from the app’s repo, Oct 2026). The chip
+// list is identical in all five exports. Not critical, as above.
+const RAS_STACK = '["Laravel 13", "Next.js 15", "MySQL", "Octane", "Reverb"]';
+const RAS_STACK_EDITS = factEdits('Recovery Advisers: React Native in stack', Object.fromEntries(
+  LOCALES.map((loc) => [loc, [`stack: ${RAS_STACK},`, 'stack: ["Laravel 13", "Next.js 15", "React Native", "MySQL", "Octane", "Reverb"],']]),
+), { critical: false });
 
 // ── Footer tagline: spearhead + what a client can buy ──────────────────────
 // "multi-tenant platforms, B2B/B2C systems, and the mobile apps" read as a
@@ -3154,7 +3168,8 @@ const EDITS = [
   ...COMPASS_ROLE_EDITS,
   // After every edit that writes a booking link, so it rewrites their output.
   ...CALENDLY_EDITS,
-  ...RAS_PLAY_EDITS,
+  ...RAS_STORE_EDITS,
+  ...RAS_STACK_EDITS,
 ];
 
 // Locate the `__bundler/template` line: the document shell, stored as a single
