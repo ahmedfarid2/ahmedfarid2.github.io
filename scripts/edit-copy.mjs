@@ -2740,6 +2740,25 @@ const CALENDLY_EDITS = LOCALES.map((loc) => ({
   transform: (text) => text.replace(CALENDLY_LINK, CONTACT.calendly),
 }));
 
+// ── Recovery Advisers: RAS Mobile on Google Play ───────────────────────────
+// Owner-confirmed (Oct 2026): the team app RAS Mobile is live on iPhone and
+// Android. Only the Play listing is linked: the company announcement marks the
+// App Store link as internal-only, so it stays off this public site until that
+// changes. Store names stay in English, as on Yelo Sale. Not critical: a
+// re-export that drops it loses a link, not a fact.
+const RAS_PLAY = 'https://play.google.com/store/apps/details?id=com.recoveryadvisers.mobile';
+const rasPlayRow = (label) => [
+  `{ label: "${label}", href: "https://css.recoveryadvisers.com/" },\n    ],`,
+  `{ label: "${label}", href: "https://css.recoveryadvisers.com/" },\n      { label: "Google Play", href: "${RAS_PLAY}" },\n    ],`,
+];
+const RAS_PLAY_EDITS = factEdits('Recovery Advisers: RAS Mobile Play link', {
+  en: rasPlayRow('Client Self-Service'),
+  ar: rasPlayRow('خدمة ذاتية للعملاء'),
+  de: rasPlayRow('Kunden-Self-Service'),
+  es: rasPlayRow('Autoservicio de cliente'),
+  fr: rasPlayRow('Libre-service client'),
+}, { critical: false });
+
 // ── Footer tagline: spearhead + what a client can buy ──────────────────────
 // "multi-tenant platforms, B2B/B2C systems, and the mobile apps" read as a
 // generalist list. It now states the spearhead, then closes on what a client
@@ -3135,6 +3154,7 @@ const EDITS = [
   ...COMPASS_ROLE_EDITS,
   // After every edit that writes a booking link, so it rewrites their output.
   ...CALENDLY_EDITS,
+  ...RAS_PLAY_EDITS,
 ];
 
 // Locate the `__bundler/template` line: the document shell, stored as a single
