@@ -2778,6 +2778,36 @@ const CONSULTANT_ROLE_EDITS = factEdits('experience: freelance role adds Consult
   fr: ['role: "Ingénieur logiciel senior", type: "Freelance", co: "Clients indépendants"', 'role: "Ingénieur logiciel senior · Consultant", type: "Freelance", co: "Clients indépendants"'],
 }, { critical: false });
 
+// ── Experience: Qoralia · Proven Management, Dec 2025 – now ────────────────
+// Owner-confirmed (Oct 2026): an ongoing role with Qoralia and Proven
+// Management since Dec 2025, shown first. No type badge, on purpose. Both
+// companies leave the freelance row’s client list, so neither is listed
+// twice; that removal is anchored on the PhonicMaps chip before them, which
+// the new row does not carry, so it can never strip the new row’s chips.
+const QORALIA = '{ name: "Qoralia", href: "https://www.linkedin.com/company/qoralia/" },';
+const PROVEN = '{ name: "Proven Management", href: "https://www.linkedin.com/company/provenmanagement/" },';
+const PHONIC = '{ name: "PhonicMaps", href: "https://www.linkedin.com/company/phonic-maps/" },';
+const QP_ROW = {
+  en: ['Dec 2025 — Now', 'Senior Software Engineer · Consultant', 'Dubai, UAE · Remote', 'Jul 2025 — Now'],
+  ar: ['ديسمبر ٢٠٢٥ — حتى الآن', 'مهندس برمجيات أول · مستشار', 'دبي، الإمارات · عن بُعد', 'يوليو ٢٠٢٥ — حتى الآن'],
+  de: ['Dez. 2025 — Heute', 'Senior-Softwareentwickler · Berater', 'Dubai, VAE · Remote', 'Juli 2025 — Heute'],
+  es: ['Dic 2025 — Actualidad', 'Ingeniero de Software Senior · Consultor', 'Dubái, EAU · Remoto', 'Jul 2025 — Actualidad'],
+  fr: ['Déc. 2025 — Aujourd\'hui', 'Ingénieur logiciel senior · Consultant', 'Dubaï, EAU · Distanciel', 'Juil. 2025 — Aujourd\'hui'],
+};
+const QP_ROW_EDITS = factEdits('experience: Qoralia · Proven Management row', Object.fromEntries(
+  LOCALES.map((loc) => {
+    const [yr, role, place, raYr] = QP_ROW[loc];
+    const at = `const rows = [\n    { yr: ${JSON.stringify(raYr)},`;
+    return [loc, [at,
+      `const rows = [\n    { yr: ${JSON.stringify(yr)}, role: ${JSON.stringify(role)}, co: "Qoralia · Proven Management", companies: [\n` +
+      `        ${QORALIA}\n        ${PROVEN}\n      ], logo: null, loc: ${JSON.stringify(place)} },\n` +
+      `    { yr: ${JSON.stringify(raYr)},`]];
+  }),
+), { critical: false });
+const QP_CHIP_EDITS = factEdits('experience: Qoralia and Proven leave the freelance list',
+  Object.fromEntries(LOCALES.map((loc) => [loc, [`${PHONIC}\n        ${QORALIA}\n        ${PROVEN}`, PHONIC]])),
+  { critical: false });
+
 // The stack chips gain React Native: RAS Mobile is Expo + React Native +
 // TypeScript (owner-confirmed, read from the app’s repo, Oct 2026). The chip
 // list is identical in all five exports. Not critical, as above.
@@ -3184,6 +3214,8 @@ const EDITS = [
   ...RAS_STORE_EDITS,
   ...RAS_STACK_EDITS,
   ...CONSULTANT_ROLE_EDITS,
+  ...QP_ROW_EDITS,
+  ...QP_CHIP_EDITS,
 ];
 
 // Locate the `__bundler/template` line: the document shell, stored as a single
