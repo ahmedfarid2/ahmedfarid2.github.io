@@ -2778,9 +2778,10 @@ const CONSULTANT_ROLE_EDITS = factEdits('experience: freelance role adds Consult
   fr: ['role: "Ingénieur logiciel senior", type: "Freelance", co: "Clients indépendants"', 'role: "Ingénieur logiciel senior · Consultant", type: "Freelance", co: "Clients indépendants"'],
 }, { critical: false });
 
-// ── Experience: Qoralia · Proven Management, Dec 2025 – now ────────────────
-// Owner-confirmed (Oct 2026): an ongoing role with Qoralia and Proven
-// Management since Dec 2025, shown first. No type badge, on purpose. Both
+// ── Experience: Qoralia and Proven Management, Dec 2025 – now ──────────────
+// Owner-confirmed (Oct 2026): ongoing roles with Qoralia and with Proven
+// Management since Dec 2025, one row each, shown first. No type badge, on
+// purpose. Both
 // companies leave the freelance row’s client list, so neither is listed
 // twice; that removal is anchored on the PhonicMaps chip before them, which
 // the new row does not carry, so it can never strip the new row’s chips.
@@ -2788,20 +2789,27 @@ const QORALIA = '{ name: "Qoralia", href: "https://www.linkedin.com/company/qora
 const PROVEN = '{ name: "Proven Management", href: "https://www.linkedin.com/company/provenmanagement/" },';
 const PHONIC = '{ name: "PhonicMaps", href: "https://www.linkedin.com/company/phonic-maps/" },';
 const QP_ROW = {
-  en: ['Dec 2025 — Now', 'Senior Software Engineer · Consultant', 'Dubai, UAE · Remote', 'Jul 2025 — Now'],
-  ar: ['ديسمبر ٢٠٢٥ — حتى الآن', 'مهندس برمجيات أول · مستشار', 'دبي، الإمارات · عن بُعد', 'يوليو ٢٠٢٥ — حتى الآن'],
-  de: ['Dez. 2025 — Heute', 'Senior-Softwareentwickler · Berater', 'Dubai, VAE · Remote', 'Juli 2025 — Heute'],
-  es: ['Dic 2025 — Actualidad', 'Ingeniero de Software Senior · Consultor', 'Dubái, EAU · Remoto', 'Jul 2025 — Actualidad'],
-  fr: ['Déc. 2025 — Aujourd\'hui', 'Ingénieur logiciel senior · Consultant', 'Dubaï, EAU · Distanciel', 'Juil. 2025 — Aujourd\'hui'],
+  en: ['Dec 2025 — Now', 'Senior Software Engineer · Consultant', 'Madrid, Spain · Remote', 'Jul 2025 — Now', 'Dubai, UAE · Remote'],
+  ar: ['ديسمبر ٢٠٢٥ — حتى الآن', 'مهندس برمجيات أول · مستشار', 'مدريد، إسبانيا · عن بُعد', 'يوليو ٢٠٢٥ — حتى الآن', 'دبي، الإمارات · عن بُعد'],
+  de: ['Dez. 2025 — Heute', 'Senior-Softwareentwickler · Berater', 'Madrid, Spanien · Remote', 'Juli 2025 — Heute', 'Dubai, VAE · Remote'],
+  es: ['Dic 2025 — Actualidad', 'Ingeniero de Software Senior · Consultor', 'Madrid, España · Remoto', 'Jul 2025 — Actualidad', 'Dubái, EAU · Remoto'],
+  fr: ['Déc. 2025 — Aujourd\'hui', 'Ingénieur logiciel senior · Consultant', 'Madrid, Espagne · Distanciel', 'Juil. 2025 — Aujourd\'hui', 'Dubaï, EAU · Distanciel'],
 };
-const QP_ROW_EDITS = factEdits('experience: Qoralia · Proven Management row', Object.fromEntries(
+const QP_ROW_EDITS = factEdits('experience: Qoralia and Proven Management rows', Object.fromEntries(
   LOCALES.map((loc) => {
-    const [yr, role, place, raYr] = QP_ROW[loc];
-    const at = `const rows = [\n    { yr: ${JSON.stringify(raYr)},`;
-    return [loc, [at,
-      `const rows = [\n    { yr: ${JSON.stringify(yr)}, role: ${JSON.stringify(role)}, co: "Qoralia · Proven Management", companies: [\n` +
-      `        ${QORALIA}\n        ${PROVEN}\n      ], logo: null, loc: ${JSON.stringify(place)} },\n` +
-      `    { yr: ${JSON.stringify(raYr)},`]];
+    const [yr, role, place, raYr, dubai] = QP_ROW[loc];
+    const head = `{ yr: ${JSON.stringify(yr)}, role: ${JSON.stringify(role)}, `;
+    const ra = `    { yr: ${JSON.stringify(raYr)},`;
+    const at = `const rows = [\n${ra}`;
+    // One row per company, as LinkedIn lists them, located in Madrid. The
+    // priors are the earlier outputs (one combined row, then two rows, both
+    // placed in Dubai), so a committed export migrates.
+    const oneRow = (where) => `const rows = [\n    ${head}co: "Qoralia · Proven Management", companies: [\n` +
+      `        ${QORALIA}\n        ${PROVEN}\n      ], logo: null, loc: ${JSON.stringify(where)} },\n${ra}`;
+    const twoRows = (where) => `const rows = [\n` +
+      `    ${head}co: "Qoralia", logo: null, href: "https://www.linkedin.com/company/qoralia/", loc: ${JSON.stringify(where)} },\n` +
+      `    ${head}co: "Proven Management", logo: null, href: "https://www.linkedin.com/company/provenmanagement/", loc: ${JSON.stringify(where)} },\n${ra}`;
+    return [loc, [at, twoRows(place), oneRow(dubai), twoRows(dubai)]];
   }),
 ), { critical: false });
 const QP_CHIP_EDITS = factEdits('experience: Qoralia and Proven leave the freelance list',
