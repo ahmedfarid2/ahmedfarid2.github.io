@@ -2767,8 +2767,8 @@ const RAS_STORE_EDITS = factEdits('Recovery Advisers: RAS Mobile store links', {
 
 // ── Freelance row: Senior Software Engineer · Consultant ───────────────────
 // Owner-confirmed (Oct 2026): the ongoing independent role is engineering and
-// consulting, as the CV already says (“Independent Consultant — Senior
-// Software Engineer”). Anchored on the row’s type and client label so the
+// consulting; the CV carries the same title (“Independent clients — Senior
+// Software Engineer · Consultant”). Anchored on the row’s type and client label so the
 // full-time Recovery Advisers row, which shares the role text, never matches.
 const CONSULTANT_ROLE_EDITS = factEdits('experience: freelance role adds Consultant', {
   en: ['role: "Senior Software Engineer", type: "Freelance", co: "Independent clients"', 'role: "Senior Software Engineer · Consultant", type: "Freelance", co: "Independent clients"'],
