@@ -2765,6 +2765,19 @@ const RAS_STORE_EDITS = factEdits('Recovery Advisers: RAS Mobile store links', {
   fr: rasStoreRows('Libre-service client'),
 }, { critical: false });
 
+// ── Freelance row: Senior Software Engineer · Consultant ───────────────────
+// Owner-confirmed (Oct 2026): the ongoing independent role is engineering and
+// consulting, as the CV already says (“Independent Consultant — Senior
+// Software Engineer”). Anchored on the row’s type and client label so the
+// full-time Recovery Advisers row, which shares the role text, never matches.
+const CONSULTANT_ROLE_EDITS = factEdits('experience: freelance role adds Consultant', {
+  en: ['role: "Senior Software Engineer", type: "Freelance", co: "Independent clients"', 'role: "Senior Software Engineer · Consultant", type: "Freelance", co: "Independent clients"'],
+  ar: ['role: "مهندس برمجيات أول", type: "عمل حرّ", co: "عملاء مستقلّون"', 'role: "مهندس برمجيات أول · مستشار", type: "عمل حرّ", co: "عملاء مستقلّون"'],
+  de: ['role: "Senior-Softwareentwickler", type: "Freiberuflich", co: "Unabhängige Kunden"', 'role: "Senior-Softwareentwickler · Berater", type: "Freiberuflich", co: "Unabhängige Kunden"'],
+  es: ['role: "Ingeniero de Software Senior", type: "Freelance", co: "Clientes independientes"', 'role: "Ingeniero de Software Senior · Consultor", type: "Freelance", co: "Clientes independientes"'],
+  fr: ['role: "Ingénieur logiciel senior", type: "Freelance", co: "Clients indépendants"', 'role: "Ingénieur logiciel senior · Consultant", type: "Freelance", co: "Clients indépendants"'],
+}, { critical: false });
+
 // The stack chips gain React Native: RAS Mobile is Expo + React Native +
 // TypeScript (owner-confirmed, read from the app’s repo, Oct 2026). The chip
 // list is identical in all five exports. Not critical, as above.
@@ -3170,6 +3183,7 @@ const EDITS = [
   ...CALENDLY_EDITS,
   ...RAS_STORE_EDITS,
   ...RAS_STACK_EDITS,
+  ...CONSULTANT_ROLE_EDITS,
 ];
 
 // Locate the `__bundler/template` line: the document shell, stored as a single
