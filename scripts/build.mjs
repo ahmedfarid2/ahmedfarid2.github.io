@@ -1635,13 +1635,13 @@ async function ogArabicFontCss() {
 const OG_MAIN = {
   en: {
     file: 'og.png', dir: 'ltr', eyebrow: `Senior software engineer · ${LOCATION.city}`,
-    h1: 'I build the systems<br>other teams <span>depend on.</span>',
+    h1: 'Building scalable products<br>and real-world <span>systems.</span>',
     sub: 'Real-time, multi-tenant SaaS, AI tools and mobile apps, shipped across the Gulf, the US and the UK.',
     alt: 'Ahmed Farid — Senior Software Engineer',
   },
   ar: {
     file: 'og-ar.png', dir: 'rtl', eyebrow: 'مهندس برمجيات أول · دبي',
-    h1: 'أبني الأنظمة<br>التي تعتمد عليها <span>الفِرَق الأخرى.</span>',
+    h1: 'أبني منتجات قابلة للتوسّع<br>وأنظمةً <span>للعالم الحقيقي.</span>',
     sub: 'منصّات SaaS فورية متعدّدة المستأجرين، وأدوات ذكاء اصطناعي وتطبيقات جوّال، أُطلقت في الخليج والولايات المتحدة والمملكة المتحدة.',
     alt: 'Ahmed Farid — مهندس برمجيات أول',
     caseEyebrow: 'دراسة حالة', caseAlt: 'دراسة حالة من Ahmed Farid',
@@ -1684,13 +1684,13 @@ const ogEscape = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').r
 
 // The 1200×630 card every page but the project pages shares (LinkedIn, X,
 // WhatsApp, Slack previews). Same type as the site: Geist, the gold accent
-// on "depend on." without the old serif italic.
+// on the hero’s last word without the old serif italic.
 async function generateOgImage(browser, fontCss = '', arFontCss = '') {
   for (const c of [OG_MAIN.en, OG_MAIN.ar]) {
   const rtl = c.dir === 'rtl';
   const card = `<!doctype html><html dir="${c.dir}"><head><meta charset="utf-8"><style>${fontCss}${OG_BASE_CSS}${rtl ? arFontCss : ''}
     .main{position:absolute;left:90px;right:90px;top:92px}
-    h1{margin-top:34px;font-size:94px;line-height:1.02;letter-spacing:-.045em;font-weight:500}
+    h1{margin-top:34px;font-size:82px;line-height:1.04;letter-spacing:-.045em;font-weight:500}
     h1 span{color:#E6C8A0}
     .sub{margin-top:30px;font-size:27px;color:#c9c3b8;max-width:900px;line-height:1.42}
     .tags{position:absolute;right:90px;bottom:66px;font-size:19px;color:#8b857b;letter-spacing:.04em}
@@ -1819,7 +1819,7 @@ const HOME_SERVICE_ORDER = {
 //                project contact path on every page that leads with it
 const HOME_COPY = {
   en: {
-    tag: { 'tag-full': 'Laravel & Next.js SaaS builds · Dubai, UAE 🇦🇪', 'tag-short': 'SaaS builds · Dubai 🇦🇪', 'tag-tiny': 'SaaS · Dubai 🇦🇪' },
+    tag: { 'tag-full': 'Senior Software Engineer · SaaS, Mobile & AI · Dubai 🇦🇪', 'tag-short': 'SaaS, Mobile & AI 🇦🇪', 'tag-tiny': 'SaaS, Mobile & AI 🇦🇪' },
     trust: 'Products<br>I\'ve shipped',
     svcHeading: ['Four ways', 'Three ways'],
     direct: 'You talk to me directly. No account managers, no middlemen.',
@@ -1829,7 +1829,7 @@ const HOME_COPY = {
     terms: ['Reply within 24 hours', 'NDA before the first call', 'You own all code & IP once paid', 'Contract & invoice directly with me', 'Larger scopes: a vetted team, quoted per scope', 'Same NDA and IP terms for the whole team'],
   },
   ar: {
-    tag: { 'tag-full': 'بناء منصّات SaaS بـ Laravel وNext.js · دبي، الإمارات 🇦🇪', 'tag-short': 'بناء منصّات SaaS · دبي 🇦🇪', 'tag-tiny': 'SaaS · دبي 🇦🇪' },
+    tag: { 'tag-full': 'مهندس برمجيات أول · SaaS والجوّال والذكاء الاصطناعي · دبي 🇦🇪', 'tag-short': 'SaaS والجوّال والذكاء الاصطناعي 🇦🇪', 'tag-tiny': 'SaaS والجوّال والذكاء الاصطناعي 🇦🇪' },
     trust: 'منتجات<br>أطلقتُها',
     svcHeading: ['أربع طرق', 'ثلاث طرق'],
     direct: 'ستتحدث معي مباشرةً — بلا وسطاء.',
@@ -1839,7 +1839,7 @@ const HOME_COPY = {
     terms: ['ردّ خلال ٢٤ ساعة', 'اتفاقية سرّية قبل أول مكالمة', 'الكود والملكية الفكرية لك بعد السداد', 'العقد والفاتورة معي مباشرةً', 'المشاريع الأكبر: فريق مؤهّل وسعر حسب النطاق', 'الاتفاقية السرّية وملكية الكود تشملان الفريق كله'],
   },
   de: {
-    tag: { 'tag-full': 'SaaS-Entwicklung mit Laravel & Next.js · Dubai, VAE 🇦🇪', 'tag-short': 'SaaS-Entwicklung · Dubai 🇦🇪', 'tag-tiny': 'SaaS · Dubai 🇦🇪' },
+    tag: { 'tag-full': 'Senior-Softwareentwickler · SaaS, Mobile & KI · Dubai 🇦🇪', 'tag-short': 'SaaS, Mobile & KI 🇦🇪', 'tag-tiny': 'SaaS, Mobile & KI 🇦🇪' },
     trust: 'Produkte, die<br>ich gebaut habe',
     svcHeading: ['Vier Wege', 'Drei Wege'],
     direct: 'Sie sprechen direkt mit mir — ohne Account-Manager, ohne Zwischenstellen.',
@@ -1849,7 +1849,7 @@ const HOME_COPY = {
     terms: ['Antwort innerhalb von 24 Stunden', 'NDA vor dem ersten Gespräch', 'Code und IP gehören Ihnen nach Zahlung', 'Vertrag und Rechnung direkt mit mir', 'Größere Projekte: erprobtes Team, Preis nach Umfang', 'Gleiche NDA- und IP-Regeln für das ganze Team'],
   },
   es: {
-    tag: { 'tag-full': 'Desarrollo SaaS con Laravel y Next.js · Dubái, EAU 🇦🇪', 'tag-short': 'Desarrollo SaaS · Dubái 🇦🇪', 'tag-tiny': 'SaaS · Dubái 🇦🇪' },
+    tag: { 'tag-full': 'Ingeniero de Software Senior · SaaS, móvil e IA · Dubái 🇦🇪', 'tag-short': 'SaaS, móvil e IA 🇦🇪', 'tag-tiny': 'SaaS, móvil e IA 🇦🇪' },
     trust: 'Productos que<br>he lanzado',
     svcHeading: ['Cuatro formas', 'Tres formas'],
     direct: 'Hablas directamente conmigo, sin gestores de cuenta ni intermediarios.',
@@ -1859,7 +1859,7 @@ const HOME_COPY = {
     terms: ['Respuesta en menos de 24 horas', 'NDA antes de la primera llamada', 'Código y PI son tuyos tras el pago', 'Contrato y factura directamente conmigo', 'Proyectos mayores: equipo probado, precio por alcance', 'Mismo NDA y misma PI para todo el equipo'],
   },
   fr: {
-    tag: { 'tag-full': 'Développement SaaS Laravel & Next.js · Dubaï, EAU 🇦🇪', 'tag-short': 'Développement SaaS · Dubaï 🇦🇪', 'tag-tiny': 'SaaS · Dubaï 🇦🇪' },
+    tag: { 'tag-full': 'Ingénieur logiciel senior · SaaS, mobile et IA · Dubaï 🇦🇪', 'tag-short': 'SaaS, mobile et IA 🇦🇪', 'tag-tiny': 'SaaS, mobile et IA 🇦🇪' },
     trust: 'Produits que<br>j’ai livrés',
     svcHeading: ['Quatre façons', 'Trois façons'],
     direct: 'Vous parlez directement avec moi — sans chef de projet ni intermédiaire.',
@@ -1948,7 +1948,6 @@ const HUMAN_COPY = {
       ['Docs, runbooks, and a clean README. Whether your team takes it from v2 or I stay on retainer — handoff is part of the work.', 'Docs, runbooks and a clean README. Whether your team takes over or I stay on retainer, handoff is part of the job.'],
       ["Prefer a custom or longer-term setup? Here's how we can work together — every engagement starts with one 30-minute call.", "Want something custom or longer-term? Here's how we can work together. Every engagement starts with one 30-minute call."],
       ['Retainer for continuous delivery — new features, maintenance, and scaling — with the docs and runbooks your team can run on.', 'A monthly retainer for new features, maintenance and scaling, with docs and runbooks your team can use.'],
-      ['Senior Software Engineer — real-time, multi-tenant SaaS and end-to-end product engineering. Fixed-scope builds, retainers and architecture consulting.', 'Senior software engineer in Dubai. I build real-time, multi-tenant SaaS end to end, as fixed-scope builds, retainers or architecture reviews.'],
       ['Every project is quoted after a 30-minute scoping call — no surprises, no hourly drift.', 'Every project is quoted after a 30-minute scoping call: a build as one fixed price, a retainer as one flat monthly fee.'],
       ['One real screen of your product, built and deployed — free.', 'One real screen of your product, built and deployed, for free.'],
       ['One screen or one page, genuinely built — not a mockup', 'One screen or one page, really built, not a mockup'],
@@ -5074,9 +5073,9 @@ ${jsonLd}
 .nav-links a[aria-current="page"]{color:var(--ink)}
 .nav-links a[aria-current="page"] span.idx{color:var(--accent)}
 .nav-links a[aria-current="page"]::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:1px;background:var(--accent);box-shadow:0 0 8px var(--accent-glow)}
-/* Hero: keep "depend on." together so "on." never ends up alone on a line.
-   Not in Arabic: its two-word phrase is wider than a 320px phone and has no
-   one-word widow to prevent. */
+/* Hero: keep the accented last phrase on one line so its final word never
+   ends up alone. Not in Arabic: its two-word phrase is wider than a 320px
+   phone and has no one-word widow to prevent. */
 html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 /* Product strip: the letter placeholders read as stand-in client logos. */
 .trust .trust-mark{display:none}
