@@ -286,6 +286,37 @@ export const CLIENT_QUOTES = [
   },
 ];
 
+// Who each case study was built for (owner-confirmed, Nov 2026). `employment`:
+// a role Ahmed held at that company; `client`: work delivered to a client.
+// Every case on /work/ carries one label (docs/STUDIO-SPEC.md, rule R1: a
+// role is never shown as clientele). Keyed by the export's case name; the
+// build fails if a case on the page has no entry here.
+export const CASE_PROVENANCE = {
+  'Yelo Sale': 'employment',
+  'Recovery Advisers': 'employment',
+  'RevealSite': 'employment',
+  'Compass Med': 'employment',
+  'Qoralia': 'client',
+  'KhebraOS': 'client',
+  'Phonic Maps': 'client',
+  'Fixawy': 'client',
+  'Proven Group': 'client',
+  'Ibdaa Course': 'client',
+  'Applyni': 'client',
+  'Ezhal': 'client',
+};
+export const PROVENANCE_LABEL = {
+  en: { client: 'Client project', employment: 'In-house role' },
+  ar: { client: 'مشروع لعميل', employment: 'دور داخلي' },
+  de: { client: 'Kundenprojekt', employment: 'Interne Rolle' },
+  es: { client: 'Proyecto para cliente', employment: 'Puesto en plantilla' },
+  fr: { client: 'Projet client', employment: 'Poste en interne' },
+};
+
+// Client projects taken per quarter (owner-confirmed, Nov 2026), stated on
+// /services/ under the plans. One number, never hard-coded in copy.
+export const CAPACITY = { projectsPerQuarter: 4 };
+
 export const FLAGSHIP = [
   { name: 'Yelo Sale', slug: 'yelo-sale' },
   { name: 'Qoralia', slug: 'qoralia' },

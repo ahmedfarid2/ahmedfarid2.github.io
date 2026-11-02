@@ -24,7 +24,7 @@ import { mkdir, writeFile, copyFile, rm, readdir, readFile } from 'node:fs/promi
 import { existsSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { SITE_URL, LOCATION, LOCATION_LABEL, CONTACT, YEARS_PROSE, SEO, NAV, FLAGSHIP, DRIFT_GUARDS, ANALYTICS, METRICS, CLIENT_QUOTES } from './site-facts.mjs';
+import { SITE_URL, LOCATION, LOCATION_LABEL, CONTACT, YEARS_PROSE, SEO, NAV, FLAGSHIP, DRIFT_GUARDS, ANALYTICS, METRICS, CLIENT_QUOTES, CASE_PROVENANCE, PROVENANCE_LABEL, CAPACITY } from './site-facts.mjs';
 import { inspectPdf, pdfProblems, textFingerprint, PDF_REQUIRED_URIS } from './pdf-check.mjs';
 import { faviconSvg, appleIconSvg, badgeSvg, ICON_LINKS } from './brand-mark.mjs';
 import { renderChecklist, CHECKLIST_PDF, CHECKLIST_REQUIRED_URIS, CHECKLIST_REQUIRED_TEXT } from './build-checklist.mjs';
@@ -936,6 +936,16 @@ async function assertPageRoles(locales) {
           bad.push(`${urlPath}: no card linking to ${loc.urlPath}work/${f.slug}/`);
       }
     }
+    // Every case says who it was built for (CASE_PROVENANCE): one label per
+    // case number, and one per project card.
+    if (spec.work) {
+      const nums = (masked.match(/class="case-num"/g) || []).length;
+      const provs = (masked.match(/class="case-prov"/g) || []).length;
+      if (nums !== provs) bad.push(`${urlPath}: ${nums} case(s) but ${provs} provenance label(s) — add the missing case to CASE_PROVENANCE`);
+      const cards = (masked.match(/data-flagship="/g) || []).length;
+      const cardProvs = (masked.match(/class="writing-card-prov"/g) || []).length;
+      if (cards !== cardProvs) bad.push(`${urlPath}: ${cards} project card(s) but ${cardProvs} provenance label(s)`);
+    }
     // A project page's one h1 is the case name.
     if (spec.work === 'single') {
       const h1 = ((masked.match(/<h1[^>]*>([\s\S]*?)<\/h1>/) || [])[1] || '').replace(/<[^>]+>/g, '').trim();
@@ -958,7 +968,7 @@ async function assertPageRoles(locales) {
     err.fatal = true;
     throw err;
   }
-  console.log(`  ✓ page roles: ${pages.length} pages — four-link nav, contact order, project cards, one h1, JSON-LD types`);
+  console.log(`  ✓ page roles: ${pages.length} pages — four-link nav, contact order, project cards, provenance labels, one h1, JSON-LD types`);
 }
 
 // What search engines and share cards read: the title and description of every
@@ -1945,7 +1955,7 @@ const HUMAN_COPY = {
       ['Tenant isolation, role boundaries, billing-aware data — I build platforms', 'Tenant isolation, role boundaries and billing-aware data. I build platforms'],
       ['The full portfolio — flagship SaaS first, then the rest. Each entry links straight to the live product, store listing, or admin surface, pulled from my GitHub profile.', 'Flagship SaaS first, then the rest. Every entry links to the live product, its store listing or its admin panel.'],
       ["My process isn't proprietary — it's just disciplined. Same shape whether the engagement is six weeks or six months.", 'Nothing proprietary: the same four steps whether the work takes six weeks or six months.'],
-      ['Docs, runbooks, and a clean README. Whether your team takes it from v2 or I stay on retainer — handoff is part of the work.', 'Docs, runbooks and a clean README. Whether your team takes over or I stay on retainer, handoff is part of the job.'],
+      ['Docs, runbooks, and a clean README. Whether your team takes it from v2 or I stay on retainer — handoff is part of the work.', "Docs, runbook and deploy access, with code in your repository from day one and yours once paid. Then 30 days of fixes, whether your team takes over or I stay on retainer."],
       ["Prefer a custom or longer-term setup? Here's how we can work together — every engagement starts with one 30-minute call.", "Want something custom or longer-term? Here's how we can work together. Every engagement starts with one 30-minute call."],
       ['Retainer for continuous delivery — new features, maintenance, and scaling — with the docs and runbooks your team can run on.', 'A monthly retainer for new features, maintenance and scaling, with docs and runbooks your team can use.'],
       ['Every project is quoted after a 30-minute scoping call — no surprises, no hourly drift.', 'Every project is quoted after a 30-minute scoping call: a build as one fixed price, a retainer as one flat monthly fee.'],
@@ -1975,7 +1985,8 @@ const HUMAN_COPY = {
       [" public repos spanning TypeScript tooling, PHP, and ML notebooks. Most client work lives behind NDAs.", " public repos. Most of my client work is private, under NDA."],
       ["Source, pinned projects & ML notebooks.", "My public code. Client work stays private."],
       ["ElastiCache, PayFort.", "ElastiCache."],
-      ["Two calls, a shared doc, and a clear definition of done before code.", "The 30-minute scoping call, then a working session, a shared doc and a clear definition of done before any code."],
+      ["Two calls, a shared doc, and a clear definition of done before code.", "The 30-minute scoping call, then a written scope and a fixed price within 2 business days, and a clear definition of done before any code."],
+      ["You see real software inside two weeks, not a Gantt chart.", "You see real software inside two weeks, then a demo every week on a staging URL you can open."],
       ["B2B2C vehicle auction & sales platform — real-time live bidding across web and mobile.", "B2B2C vehicle auction and sales platform with real-time bidding on web, iOS and Android."],
       ["Decarbonization planning platform for municipalities — AI-assisted climate intervention & funding.", "Decarbonization planning platform for municipalities, with AI-assisted search for grants and interventions."],
       ["Arabic-first all-in-one academy platform — launch a branded school at username.khebraos.com.", "Arabic-first academy platform where every school gets its own branded subdomain."],
@@ -2054,7 +2065,9 @@ const HUMAN_COPY = {
       ["خمسة مبادئ أطبّقها في كل مشروع. ليست قوانين — بل افتراضات مستعدّ لكسرها أمام الأدلّة.", "خمسة مبادئ أطبّقها في كل مشروع، وأتخلّى عنها حين تقول الأدلّة غير ذلك."],
       ["دوام كامل وعمل حرّ، في الموقع وعن بُعد. الخيط الناظم ليس المسمّى — بل العمل المُسلَّم.", "أدوار بدوام كامل وعمل حرّ، في الموقع وعن بُعد."],
       ["ليست قائمة تباهٍ — بل مواصفات. إن شعرت أن أيًّا من هذه ناقص في مشروعك الحالي، فهناك أساعد.", "ما يمكنك توقّعه حين نعمل معًا."],
-      ["مكالمتان، ومستند مشترك، وتعريف واضح لـ«المُنجَز» قبل الشيفرة.", "مكالمة تحديد النطاق (٣٠ دقيقة)، ثم جلسة عمل، ومستند مشترك، وتعريف واضح لـ«المُنجَز» قبل أي شيفرة."],
+      ["مكالمتان، ومستند مشترك، وتعريف واضح لـ«المُنجَز» قبل الشيفرة.", "مكالمة تحديد النطاق (٣٠ دقيقة)، ثم نطاق مكتوب وسعر ثابت خلال يومَي عمل، وتعريف واضح لـ«المُنجَز» قبل أي شيفرة."],
+      ["ترى برمجيات حقيقية خلال أسبوعين، لا مخطّط Gantt.", "ترى برمجيات حقيقية خلال أسبوعين، ثم عرضًا كل أسبوع على رابط تجريبي يمكنك فتحه."],
+      ["مستندات، وكتب تشغيل، وملف README نظيف. سواء استلم فريقك من الإصدار الثاني أو بقيتُ على تعاقد — التسليم جزء من العمل.", "مستندات وكتاب تشغيل وصلاحيات النشر، والشيفرة في مستودعك من اليوم الأول وملكك بعد الدفع. ثم ٣٠ يومًا من الإصلاحات، سواء استلم فريقك أو بقيتُ على تعاقد."],
       ["منصّة B2B2C لمزادات وبيع المركبات — مزايدة حيّة فورية عبر الويب والجوّال.", "منصّة B2B2C لمزادات وبيع المركبات، بمزايدة فورية على الويب وiOS وAndroid."],
       ["منصّة تخطيط إزالة الكربون للبلديات — تدخّل مناخي وتمويل مدعومان بالذكاء الاصطناعي.", "منصّة لتخطيط إزالة الكربون للبلديات، مع بحث عن المنح والتدخّلات بمساعدة الذكاء الاصطناعي."],
       ["منصّة أكاديمية متكاملة عربية أولًا — أطلق مدرسة بعلامتك على username.khebraos.com.", "منصّة أكاديميات عربية أولًا، لكل مدرسة فيها نطاق فرعي بعلامتها الخاصة."],
@@ -2131,7 +2144,9 @@ const HUMAN_COPY = {
       ["Keine Angeberliste — eine Spezifikation. Wenn sich etwas davon in Ihrem aktuellen Projekt vermisst anfühlt, dort helfe ich.", "Was Sie von der Zusammenarbeit erwarten können."],
       ["Architektur, Backend, Web, Mobile und Infrastruktur — ein Entwickler, der das ganze Seil halten kann.", "Architektur, Backend, Web, Mobile und Infrastruktur, mit einem Senior-Entwickler, der für alles verantwortlich ist."],
       ["Backend, Web, Mobile, Infra — von einer Person zusammengehalten.", "Backend, Web, Mobile und Infra, mit einer Person, die für alles verantwortlich ist."],
-      ["Zwei Calls, ein gemeinsames Dokument und eine klare Definition von „fertig“ vor dem Code.", "Der 30-minütige Scoping-Call, dann eine Arbeitssitzung, ein gemeinsames Dokument und eine klare Definition von „fertig“, bevor Code entsteht."],
+      ["Zwei Calls, ein gemeinsames Dokument und eine klare Definition von „fertig“ vor dem Code.", "Der 30-minütige Scoping-Call, dann innerhalb von 2 Werktagen ein schriftlicher Umfang mit Festpreis und eine klare Definition von „fertig“, bevor Code entsteht."],
+      ["Sie sehen echte Software in zwei Wochen, kein Gantt-Diagramm.", "Sie sehen echte Software in zwei Wochen, danach jede Woche eine Demo auf einer Staging-URL, die Sie selbst öffnen können."],
+      ["Docs, Runbooks und ein sauberes README. Ob Ihr Team ab v2 übernimmt oder ich auf Retainer bleibe — die Übergabe gehört zur Arbeit.", "Docs, Runbook und Deploy-Zugang; der Code liegt ab Tag eins in Ihrem Repository und gehört Ihnen nach Zahlung. Danach 30 Tage Fehlerbehebung, ob Ihr Team übernimmt oder ich auf Retainer bleibe."],
       ["B2B2C-Plattform für Fahrzeugauktionen und -verkauf — Echtzeit-Live-Gebote über Web und Mobile.", "B2B2C-Plattform für Fahrzeugauktionen und -verkauf mit Echtzeit-Geboten auf Web, iOS und Android."],
       ["Dekarbonisierungs-Planungsplattform für Kommunen — KI-gestützte Klimaintervention & Finanzierung.", "Dekarbonisierungs-Planungsplattform für Kommunen, mit KI-gestützter Suche nach Fördermitteln und Maßnahmen."],
       ["Arabisch-zuerst All-in-One-Akademieplattform — starte eine Marken-Schule unter benutzer.khebraos.com.", "Arabisch-zuerst-Akademieplattform, in der jede Schule eine eigene Marken-Subdomain bekommt."],
@@ -2209,7 +2224,9 @@ const HUMAN_COPY = {
       ["Cada marca es un producto real que construí o en el que contribuí — desde plataformas SaaS del Golfo hasta una flota de marcas de farmacia de EE. UU. y Reino Unido. Cada nombre abre su sitio en vivo.", "Cada nombre es un producto real que construí o en el que contribuí, desde plataformas SaaS del Golfo hasta marcas de farmacia de EE. UU. y Reino Unido. Cada uno abre su sitio en vivo."],
       ["Arquitectura, backend, web, móvil e infraestructura — un solo ingeniero que sostiene toda la cuerda.", "Arquitectura, backend, web, móvil e infraestructura, con un ingeniero sénior responsable de todo."],
       ["Backend, web, móvil, infra — sostenidos por una sola persona.", "Backend, web, móvil e infra, con una sola persona responsable de todo."],
-      ["Dos llamadas, un documento compartido y una definición clara de \"hecho\" antes de programar.", "La llamada de alcance de 30 minutos, luego una sesión de trabajo, un documento compartido y una definición clara de \"hecho\" antes de programar."],
+      ["Dos llamadas, un documento compartido y una definición clara de \"hecho\" antes de programar.", "La llamada de alcance de 30 minutos, luego un alcance por escrito y un precio cerrado en 2 días hábiles, y una definición clara de \"hecho\" antes de programar."],
+      ["Ves software real en dos semanas, no un diagrama de Gantt.", "Ves software real en dos semanas y, después, una demo cada semana en una URL de staging que puedes abrir."],
+      ["Documentación, runbooks y un README limpio. Tanto si tu equipo lo retoma desde la v2 como si sigo en retainer — el traspaso es parte del trabajo.", "Documentación, runbook y acceso al despliegue, con el código en tu repositorio desde el primer día y tuyo una vez pagado. Después, 30 días de correcciones, tanto si tu equipo lo retoma como si sigo en retainer."],
       ["Plataforma B2B2C de subastas y venta de vehículos — pujas en vivo en tiempo real en web y móvil.", "Plataforma B2B2C de subastas y venta de vehículos con pujas en tiempo real en web, iOS y Android."],
       ["Plataforma de planificación de descarbonización para municipios — intervención climática y financiación asistidas por IA.", "Plataforma de planificación de descarbonización para municipios, con búsqueda de subvenciones e intervenciones asistida por IA."],
       ["Plataforma de academia todo-en-uno árabe-primero — lanza una escuela de marca en usuario.khebraos.com.", "Plataforma de academias árabe-primero donde cada escuela tiene su propio subdominio de marca."],
@@ -2286,7 +2303,9 @@ const HUMAN_COPY = {
       ["Pas une liste pour se vanter — un cahier des charges. Si l'un de ces points manque sur votre projet actuel, c'est là que j'interviens.", "Ce à quoi vous pouvez vous attendre en travaillant avec moi."],
       ["Architecture, backend, web, mobile et infra — un seul ingénieur qui tient toute la corde.", "Architecture, backend, web, mobile et infra, avec un ingénieur senior responsable de l’ensemble."],
       ["Backend, web, mobile, infra — tenus ensemble par une seule personne.", "Backend, web, mobile et infra, avec une seule personne responsable de l’ensemble."],
-      ["Deux appels, un document partagé et une définition claire du « terminé » avant de coder.", "L’appel de cadrage de 30 minutes, puis une séance de travail, un document partagé et une définition claire du « terminé » avant de coder."],
+      ["Deux appels, un document partagé et une définition claire du « terminé » avant de coder.", "L’appel de cadrage de 30 minutes, puis un périmètre écrit et un prix ferme sous 2 jours ouvrés, et une définition claire du « terminé » avant de coder."],
+      ["Vous voyez un vrai logiciel en deux semaines, pas un diagramme de Gantt.", "Vous voyez un vrai logiciel en deux semaines, puis une démo chaque semaine sur une URL de préproduction que vous pouvez ouvrir."],
+      ["Docs, runbooks et un README propre. Que votre équipe reprenne à la v2 ou que je reste en régie — la passation fait partie du travail.", "Docs, runbook et accès au déploiement, avec le code dans votre dépôt dès le premier jour et à vous une fois payé. Puis 30 jours de corrections, que votre équipe reprenne ou que je reste en régie."],
       ["Plateforme B2B2C d'enchères et de vente de véhicules — enchères en direct en temps réel sur web et mobile.", "Plateforme B2B2C d’enchères et de vente de véhicules, avec enchères en temps réel sur web, iOS et Android."],
       ["Plateforme de planification de décarbonation pour les municipalités — intervention climatique et financement assistés par IA.", "Plateforme de planification de décarbonation pour les municipalités, avec recherche de subventions et d’actions assistée par IA."],
       ["Plateforme d'académie tout-en-un arabe d'abord — lancez une école de marque sur utilisateur.khebraos.com.", "Plateforme d’académies arabe d’abord, où chaque école a son propre sous-domaine à sa marque."],
@@ -2389,6 +2408,7 @@ const PRICING_TERMS = {
     key: [["I read your code, database and setup", "A written report: what's risky and what to fix first", "A 45-minute call to go through it with your team", "Fully credited if you build with me within 30 days"], ["One clear part of your product, live in about 3 weeks", "Web, backend and hosting, handled end to end", "One fixed price, paid per milestone", "Not happy after week one? Stop, and pay only for that first milestone"], ["40 hours of senior engineering every month", "New features, fixes and scaling, in your order of priority", "Same-business-day replies (GMT+4)", "No lock-in: 30 days' notice"]],
     more: "Full details",
     smallerLabel: "Smaller fixed-price builds, 1–3 weeks each:",
+    capacity: `I take ${CAPACITY.projectsPerQuarter} client projects per quarter, so each one gets a senior engineer’s full attention.`,
     smallerNames: ["Mobile app (iOS + Android)", "AI feature", "Real-time features"],
     steps: ["A 30-minute call about your project", "One fixed price for your scope", "Work starts on an agreed date"],
     fine: "Prices in USD, invoiced in USD or AED, excluding VAT where it applies. The review is paid upfront, builds per milestone, the monthly plan in advance. I take on one new build at a time.",
@@ -2406,6 +2426,7 @@ const PRICING_TERMS = {
     key: [["أقرأ الكود وقاعدة البيانات والبنية التحتية", "تقرير مكتوب: ما الخطر وما الذي يُصلح أولًا", "مكالمة ٤٥ دقيقة لمراجعته مع فريقك", "تُخصم قيمتها بالكامل إذا بدأنا البناء خلال ٣٠ يومًا"], ["جزء واضح من منتجك يعمل فعليًا خلال نحو ٣ أسابيع", "الويب والخادم والاستضافة من البداية للنهاية", "سعر ثابت واحد يُدفع على مراحل", "لم يعجبك الأسبوع الأول؟ نتوقّف ولا تدفع إلا قيمة المرحلة الأولى"], ["٤٠ ساعة من العمل الهندسي الخبير كل شهر", "ميزات جديدة وإصلاحات وتوسّع، بحسب أولوياتك", "ردّ في يوم العمل نفسه (GMT+4)", "دون التزام: إشعار ٣٠ يومًا"]],
     more: "التفاصيل الكاملة",
     smallerLabel: "مشاريع أصغر بسعر ثابت، من أسبوع إلى ٣ أسابيع لكلٍّ منها:",
+    capacity: `أقبل ${CAPACITY.projectsPerQuarter.toLocaleString('ar-EG')} مشاريع لعملاء كل ربع سنة، ليحصل كلٌّ منها على اهتمام كامل من مهندس أول.`,
     smallerNames: ["تطبيق جوال (iOS وAndroid)", "ميزة ذكاء اصطناعي", "ميزات فورية"],
     steps: ["مكالمة ٣٠ دقيقة عن مشروعك", "سعر ثابت واحد لنطاق العمل", "يبدأ العمل في موعد متفق عليه"],
     fine: "الأسعار بالدولار الأمريكي، والفوترة بالدولار أو الدرهم، ولا تشمل ضريبة القيمة المضافة حيث تنطبق. المراجعة تُدفع مقدّمًا، والبناء على مراحل، والدعم الشهري مقدّمًا. أتولّى بناءً جديدًا واحدًا في كل مرة.",
@@ -2423,6 +2444,7 @@ const PRICING_TERMS = {
     key: [["Ich lese Ihren Code, Ihre Datenbank und Ihr Setup", "Ein schriftlicher Bericht: was riskant ist und was zuerst zu beheben ist", "Ein 45-minütiger Call, um ihn mit Ihrem Team durchzugehen", "Voll angerechnet, wenn wir innerhalb von 30 Tagen bauen"], ["Ein klar definierter Teil Ihres Produkts, live in etwa 3 Wochen", "Web, Backend und Hosting aus einer Hand", "Ein Festpreis, bezahlt pro Meilenstein", "Nach Woche eins nicht überzeugt? Wir hören auf, Sie zahlen nur den ersten Meilenstein"], ["40 Stunden Senior-Entwicklung pro Monat", "Neue Features, Fixes und Skalierung nach Ihrer Priorität", "Antwort am selben Werktag (GMT+4)", "Keine Bindung: 30 Tage Kündigungsfrist"]],
     more: "Alle Details",
     smallerLabel: "Kleinere Festpreis-Projekte, je 1–3 Wochen:",
+    capacity: `Ich übernehme ${CAPACITY.projectsPerQuarter} Kundenprojekte pro Quartal, damit jedes die volle Aufmerksamkeit eines Senior Engineers bekommt.`,
     smallerNames: ["Mobile App (iOS + Android)", "KI-Funktion", "Echtzeit-Funktionen"],
     steps: ["Ein 30-minütiger Call zu Ihrem Projekt", "Ein Festpreis für Ihren Umfang", "Start zum vereinbarten Termin"],
     fine: "Preise in USD, Rechnung in USD oder AED, zzgl. MwSt., sofern anwendbar. Das Review wird vorab bezahlt, Builds pro Meilenstein, der Monatsplan im Voraus. Ich nehme jeweils nur einen neuen Build an.",
@@ -2440,6 +2462,7 @@ const PRICING_TERMS = {
     key: [["Leo tu código, tu base de datos y tu infraestructura", "Un informe por escrito: qué es arriesgado y qué arreglar primero", "Una llamada de 45 minutos para revisarlo con tu equipo", "Se descuenta entero si construimos juntos en 30 días"], ["Una parte clara de tu producto, en producción en unas 3 semanas", "Web, backend y hosting, de principio a fin", "Un precio cerrado, pagado por hitos", "¿No te convence la primera semana? Paramos y solo pagas ese primer hito"], ["40 horas de ingeniería senior cada mes", "Nuevas funciones, correcciones y escalado, según tus prioridades", "Respuesta el mismo día hábil (GMT+4)", "Sin permanencia: 30 días de aviso"]],
     more: "Todos los detalles",
     smallerLabel: "Proyectos más pequeños a precio cerrado, de 1 a 3 semanas cada uno:",
+    capacity: `Acepto ${CAPACITY.projectsPerQuarter} proyectos de clientes por trimestre, para que cada uno tenga toda la atención de un ingeniero senior.`,
     smallerNames: ["App móvil (iOS + Android)", "Función de IA", "Funciones en tiempo real"],
     steps: ["Una llamada de 30 minutos sobre tu proyecto", "Un precio cerrado para tu alcance", "El trabajo empieza en una fecha acordada"],
     fine: "Precios en USD, facturados en USD o AED, sin IVA cuando aplique. La revisión se paga por adelantado, los builds por hitos y el plan mensual por adelantado. Acepto un solo build nuevo a la vez.",
@@ -2457,6 +2480,7 @@ const PRICING_TERMS = {
     key: [["Je lis votre code, votre base de données et votre infrastructure", "Un rapport écrit : ce qui est risqué et ce qu’il faut corriger en premier", "Un appel de 45 minutes pour le parcourir avec votre équipe", "Entièrement déduite si l’on construit ensemble sous 30 jours"], ["Une partie claire de votre produit, en ligne en 3 semaines environ", "Web, backend et hébergement, de bout en bout", "Un prix fixe, réglé par jalon", "Pas convaincu après la première semaine ? On s’arrête et vous ne payez que ce premier jalon"], ["40 heures d’ingénierie senior chaque mois", "Nouvelles fonctions, corrections et montée en charge, selon vos priorités", "Réponse dans la journée ouvrée (GMT+4)", "Sans engagement : préavis de 30 jours"]],
     more: "Tous les détails",
     smallerLabel: "Projets plus courts au forfait, 1 à 3 semaines chacun :",
+    capacity: `J’accepte ${CAPACITY.projectsPerQuarter} projets clients par trimestre, pour que chacun bénéficie de toute l’attention d’un ingénieur senior.`,
     smallerNames: ["Application mobile (iOS + Android)", "Fonction IA", "Fonctions temps réel"],
     steps: ["Un appel de 30 minutes sur votre projet", "Un prix fixe pour votre périmètre", "Le travail démarre à une date convenue"],
     fine: "Prix en USD, facturés en USD ou en AED, hors TVA le cas échéant. La revue se règle à l’avance, les builds par jalon, l’offre mensuelle à l’avance. Je prends un seul nouveau build à la fois.",
@@ -3219,6 +3243,19 @@ async function snapshotVariant({ page, spec, lang, locales }) {
       if (shot) { shot.setAttribute('src', src); shot.removeAttribute('srcset'); }
       else warnings.push(`case shot: no screenshot to replace in ${src}'s case — left as exported`);
     });
+    // Who the work was for, next to each case's number: a client project or a
+    // role held there (CASE_PROVENANCE). Cards copy it below; a case without
+    // an entry gets no label, and the page-roles gate fails the build.
+    document.querySelectorAll('article.case').forEach((art) => {
+      const kind = copy.provenance[(art.querySelector('.case-name')?.textContent || '').trim()];
+      const num = art.querySelector('.case-num');
+      if (!kind || !num || art.querySelector('.case-prov')) return;
+      const tag = document.createElement('span');
+      tag.className = 'case-prov';
+      tag.setAttribute('data-prov', kind);
+      tag.textContent = copy.provLabel[kind];
+      num.after(tag);
+    });
     // ── Case studies: cards and project pages ───────────────────────────
     // The five flagships are written up in full on a page each. Where the long
     // write-ups sat, a card per flagship links to its page (home, /work/); on a
@@ -3260,6 +3297,8 @@ async function snapshotVariant({ page, spec, lang, locales }) {
           }
           const head = el('div', 'writing-card-head');
           head.appendChild(el('span', 'writing-card-cat', (art.querySelector('.case-num')?.textContent || '').trim()));
+          const prov = art.querySelector('.case-prov');
+          if (prov) { const p = el('span', 'writing-card-prov', prov.textContent); p.setAttribute('data-prov', prov.getAttribute('data-prov')); head.appendChild(p); }
           a.append(head, el('h3', 'writing-card-title', f.name),
             el('p', 'writing-card-desc', (art.querySelector('.case-tagline')?.textContent || '').trim()));
           // What it changed for the people using it, in plain words
@@ -3978,6 +4017,14 @@ async function snapshotVariant({ page, spec, lang, locales }) {
           addonsTitle?.remove();
           addonsGrid.remove();
         } else warnings.push(`services: ${addons.length} focused builds, expected ${T.smallerNames.length} — left as exported`);
+        // How many projects a quarter (CAPACITY), under the plans.
+        if (T.capacity) {
+          const cap = document.createElement('p');
+          cap.className = 'price-smaller price-capacity';
+          cap.textContent = T.capacity;
+          after.after(cap);
+          after = cap;
+        }
         if (demo) {
           const title = demo.querySelector('.price-name');
           if (title) title.textContent = T.demoTitle;
@@ -4432,7 +4479,7 @@ async function snapshotVariant({ page, spec, lang, locales }) {
   }, spec, locales.map((l) => l.lang), FAQ_BUYER_KEYS[lang] || FAQ_BUYER_KEYS.en, prefix, PAGE_LAYOUT, SECTION_KEYS,
     { owner: LINK_OWNER, paths: Object.fromEntries(PAGE_SPECS.map((s) => [s.key, s.suffix])) },
     NAV[lang],
-    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en, conceptHosts: CONCEPT_HOSTS, insights: INSIGHTS.map(({ slug, title, related }) => ({ slug, title, related })), caseShots: CASE_SHOTS, formAction: `https://formsubmit.co/${CONTACT.email}`, siteUrl: SITE_URL, impact: IMPACT_PLAIN[lang] || IMPACT_PLAIN.en, aedRate: AED_PER_USD, priceLocale: PRICE_LOCALE[lang] || 'en-AE', pricing: PRICING_TERMS[lang] || PRICING_TERMS.en, moreRecs: MORE_RECS[lang] || MORE_RECS.en,
+    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en, conceptHosts: CONCEPT_HOSTS, insights: INSIGHTS.map(({ slug, title, related }) => ({ slug, title, related })), caseShots: CASE_SHOTS, provenance: CASE_PROVENANCE, provLabel: PROVENANCE_LABEL[lang] || PROVENANCE_LABEL.en, formAction: `https://formsubmit.co/${CONTACT.email}`, siteUrl: SITE_URL, impact: IMPACT_PLAIN[lang] || IMPACT_PLAIN.en, aedRate: AED_PER_USD, priceLocale: PRICE_LOCALE[lang] || 'en-AE', pricing: PRICING_TERMS[lang] || PRICING_TERMS.en, moreRecs: MORE_RECS[lang] || MORE_RECS.en,
       clientQuotes: CLIENT_QUOTES.map((q) => ({ name: q.name[lang] || q.name.en, initials: q.initials[lang] || q.initials.en, role: q.role[lang] || q.role.en, quote: q.quote[lang] || q.quote.en,
         caseStudy: q.caseStudy ? { slug: q.caseStudy, name: FLAGSHIP.find((f) => f.slug === q.caseStudy).name } : null })) }));
 
@@ -5083,6 +5130,12 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 .writing-card .wc-shot{aspect-ratio:16/9;border-radius:10px;overflow:hidden;margin:0 0 16px;border:1px solid var(--line);background:var(--bg-elev)}
 .writing-card .wc-shot img{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 0}
 .writing-card .wc-impact{margin:2px 0 12px;font-size:13px;color:var(--ink-mute)}
+/* Who a case was built for: a client, or a role held there. Client work in
+   the accent, a role in the quieter ink. */
+.case-prov,.writing-card-prov{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;padding:3px 10px;border-radius:999px;border:1px solid var(--line-strong);color:var(--ink-mute);align-self:flex-start;}
+.case-prov[data-prov="client"],.writing-card-prov[data-prov="client"]{color:var(--accent);border-color:var(--accent);}
+.writing-card-head{flex-wrap:wrap;justify-content:flex-start;}
+[lang="ar"] .case-prov,[lang="ar"] .writing-card-prov{letter-spacing:0;}
 .writing-card .wc-impact strong{color:var(--accent);font-weight:600}
 /* Closing block: who you will talk to, and a step for visitors not ready to call. */
 .cta-person{display:flex;align-items:center;justify-content:center;gap:12px;margin:22px auto 6px;color:var(--ink-mute);font-size:14px;max-width:560px}
