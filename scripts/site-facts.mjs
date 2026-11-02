@@ -364,4 +364,13 @@ export const DRIFT_GUARDS = [
   { re: /(?<![Mm]ás de )[Ss]eis años/g, max: 0 },
   { re: /(?<![Pp]lus de )[Ss]ix ans/g, max: 0 },
   { re: /\b6 (years|Jahre|años|ans)\b/g, max: 0 },
+  // Studio claims the site can't back yet (docs/STUDIO-SPEC.md R1–R3). Narrow
+  // on purpose: "Agency-ready" (a Phonic Maps feature) and a client's own
+  // "our clients" in a testimonial are fine. Lift the team guards only when a
+  // named, consenting member is on the site (spec 2.2–2.3).
+  { re: /\b(our|my) agency\b|وكالتنا|unsere Agentur|nuestra agencia|notre agence/gi, max: 0 },
+  { re: /\bour (team|engineers|developers)\b|فريقنا|unser(?:em)? Team|nuestro equipo|notre équipe/gi, max: 0 },
+  { re: /\b(team of \d+|dedicated team|offices in)\b|24\/7/gi, max: 0 },
+  // A role Ahmed held is never presented as a client (R1).
+  { re: /\bour clients?\b[^.<]{0,80}\b(Yelo|Recovery Advisers|RevealSite|Arab Bank|Compass Med)\b/gi, max: 0 },
 ];
