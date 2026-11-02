@@ -28,7 +28,7 @@ Until **I2** exists, the site must not say "team", "we" or "our engineers" about
 
 These are build-enforced where possible (see Enforcement). They exist because the strongest proof on the site is from employment, and a studio framing makes misattribution easy.
 
-- **R1, employment vs studio work.** Yelo Sale, Recovery Advisers, RevealSite, Arab Bank and Compass Med were roles Ahmed held. They are labelled *"Built as [role] at [company]"*, never "client", "our client" or "studio project". Studio or freelance engagements (Qoralia, Phonic Maps, KhebraOS, Ibdaa Course, Applyni, Ezhal, Alnaimi Studios, Proven Management …) are labelled *"Client project"*. Every case study carries exactly one of the two labels.
+- **R1, employment vs studio work.** Yelo Sale, Recovery Advisers, RevealSite, Arab Bank and Compass Med were roles Ahmed held. They are labelled *"Built as [role] at [company]"*, never "client", "our client" or "studio project". Studio or freelance engagements (Qoralia, Phonic Maps, KhebraOS, Fixawy, Proven Group, Ibdaa Course, Applyni, Ezhal, Alnaimi Studios …) are labelled *"Client project"*. Every case study carries exactly one of the two labels.
 - **R2, "we".** "We" is allowed only in delivery contexts *and* only after Phase 2 ships with ≥1 named team member. Founder statements stay "I" (hero, About, testimonials, "you talk to me directly").
 - **R3, no inflated scale.** No headcount, office, "agency", "offices in", "24/7" or "dedicated team of N" unless N named people are on the page. "Vetted engineers" without names is not allowed after Phase 2 (names or nothing).
 - **R4, availability.** Nothing implies Ahmed is available full time. Capacity is stated as studio slots per quarter (I4), never as personal hours "around the clock".
@@ -38,6 +38,8 @@ These are build-enforced where possible (see Enforcement). They exist because th
 ---
 
 ## Phase 1: studio-ready without new claims (inputs: I4, I5)
+
+> **Status (Nov 2026): shipped** except 1.3's "who" and "next start" fields. Owner inputs: Fixawy = client project; I4 = 4 client projects per quarter; I5 = all segments (tier order unchanged); delivery steps confirmed: written scope + price in 2 business days, weekly staging demo, code in the client's repo and owned once paid, handover + 30 days of fixes. Labels shipped as the short forms "Client project" / "In-house role" (the role itself is already on each case's role line).
 
 Ships first. It needs no team and no entity, and makes the site read like a studio's because of how the work is explained.
 
