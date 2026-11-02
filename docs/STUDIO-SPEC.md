@@ -76,6 +76,8 @@ The existing tiers stay: Architecture Clinic $1,200 · Launchpad $9,000 · Partn
 
 ## Phase 2: the named studio (inputs: I1, I2, plus I4 and I5)
 
+> **Status (Nov 2026):** 2.1 shipped as **Ahmed Farid Studio** (owner delegated the name: the person's name leads for search and trust; "Studio" signals a practice). Nav and footer lockup, home titles. I2 = not yet, so 2.2–2.4 (team, "we", Studio Build) stay off. Availability: the owner can start any time, so the capacity line opens with "Available to start now" (`CAPACITY.availableNow`).
+
 ### 2.1 Brand lockup
 - Nav brand: "Ahmed Farid" plus a small secondary line "[I1]" (desktop only; phones keep "Ahmed Farid"). Footer brand same.
 - Page `<title>` patterns keep "Ahmed Farid" first (name-search SEO). Home title becomes `Ahmed Farid — [I1] · Senior Software Engineer · SaaS, Mobile & AI` if ≤ 80 chars (`HEAD_LIMITS.title`); otherwise keep the current title and put I1 in the description.

@@ -83,23 +83,23 @@ export const SEO = {
   // Home speaks to a client first; the CV and the hiring pitch are on /about/.
   home: {
     en: {
-      title: 'Ahmed Farid — Senior Software Engineer · SaaS, Mobile & AI · Dubai',
+      title: 'Ahmed Farid Studio — Senior Software Engineer · SaaS, Mobile & AI · Dubai',
       description: 'Dubai-based senior software engineer (6+ years) building real-time, multi-tenant SaaS end to end — Laravel, Next.js, Flutter. Fixed-scope builds and consulting.',
     },
     ar: {
-      title: 'Ahmed Farid — مهندس برمجيات أول · SaaS والجوّال والذكاء الاصطناعي · دبي',
+      title: 'Ahmed Farid Studio — مهندس برمجيات أول · SaaS والجوّال والذكاء الاصطناعي · دبي',
       description: 'مهندس برمجيات أول مقيم في دبي (أكثر من ٦ سنوات): منصّات SaaS فورية متعدّدة المستأجرين من البداية إلى النهاية — Laravel وNext.js وFlutter. مشاريع محدّدة النطاق واستشارات.',
     },
     de: {
-      title: 'Ahmed Farid — Senior-Softwareentwickler · SaaS, Mobile & KI · Dubai',
+      title: 'Ahmed Farid Studio — Senior-Softwareentwickler · SaaS, Mobile & KI · Dubai',
       description: 'Senior-Softwareentwickler in Dubai (6+ Jahre): Echtzeit-Multi-Tenant-SaaS, end to end — Laravel, Next.js, Flutter. Festpreis-Projekte und Beratung.',
     },
     es: {
-      title: 'Ahmed Farid — Ingeniero de Software Senior · SaaS, móvil e IA · Dubái',
+      title: 'Ahmed Farid Studio — Ingeniero de Software Senior · SaaS, móvil e IA · Dubái',
       description: 'Ingeniero de Software Senior en Dubái (6+ años): SaaS multi-tenant en tiempo real, de punta a punta — Laravel, Next.js, Flutter. Proyectos cerrados y consultoría.',
     },
     fr: {
-      title: 'Ahmed Farid — Ingénieur logiciel senior · SaaS, mobile et IA · Dubaï',
+      title: 'Ahmed Farid Studio — Ingénieur logiciel senior · SaaS, mobile et IA · Dubaï',
       description: 'Ingénieur logiciel senior à Dubaï (6+ ans) : SaaS multi-tenant temps réel, de bout en bout — Laravel, Next.js, Flutter. Projets au forfait et conseil.',
     },
   },
@@ -315,7 +315,13 @@ export const PROVENANCE_LABEL = {
 
 // Client projects taken per quarter (owner-confirmed, Nov 2026), stated on
 // /services/ under the plans. One number, never hard-coded in copy.
-export const CAPACITY = { projectsPerQuarter: 4 };
+export const CAPACITY = { projectsPerQuarter: 4, availableNow: true };
+
+// The practice's name (owner-confirmed, Nov 2026; docs/STUDIO-SPEC.md 2.1):
+// founder-led, so the person's name leads. It sits next to the name in the
+// nav, the footer and the home title. A brand name, never translated. No
+// "we" or team copy goes with it until a named member is on the site (R2).
+export const STUDIO = { name: 'Ahmed Farid Studio', suffix: 'Studio' };
 
 export const FLAGSHIP = [
   { name: 'Yelo Sale', slug: 'yelo-sale' },
