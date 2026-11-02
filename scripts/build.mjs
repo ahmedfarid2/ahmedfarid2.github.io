@@ -1929,6 +1929,8 @@ const HUMAN_COPY = {
       'recovery-advisers': 'Clients follow their case live in their own portal',
     },
     hi: "Hi, I'm Ahmed. You'll work with me directly, from the first call to launch.",
+    heroSub: "I design, build and ship your product end to end: web, mobile and AI, as one fixed price or a monthly retainer. Real-time and multi-tenant systems are my specialty, with over six years in production across the Gulf, the US and the UK.",
+    proof: "Recommended by clients and managers at Recovery Advisers, Yelo Sale, Phonic Maps, Compass Med and Ibdaa Course. Read what they say ↓",
     caseCta: 'Need something like this built?',
     headings: {
       'Every system, shipped & linked.': "Live products I've built.",
@@ -2019,6 +2021,8 @@ const HUMAN_COPY = {
       'recovery-advisers': 'يتابع العملاء قضاياهم مباشرةً من بوابتهم الخاصة',
     },
     hi: 'أهلًا، أنا أحمد. ستعمل معي مباشرةً، من أول مكالمة حتى الإطلاق.',
+    heroSub: "أصمّم منتجك وأبنيه وأطلقه من البداية إلى النهاية: الويب والجوّال والذكاء الاصطناعي، بسعر ثابت أو بعقد شهري. تخصّصي الأنظمة الفورية ومتعدّدة المستأجرين، مع أكثر من ست سنوات في الإنتاج عبر الخليج والولايات المتحدة والمملكة المتحدة.",
+    proof: "موصًى بي من عملاء ومديرين في Recovery Advisers وYelo Sale وPhonic Maps وCompass Med وIbdaa Course. اقرأ ما قالوه ↓",
     caseCta: 'تحتاج إلى نظام مثل هذا؟',
     headings: {
       'كل نظام، سُلّم ورُبط.': 'منتجات بنيتها وتعمل الآن.',
@@ -2100,6 +2104,8 @@ const HUMAN_COPY = {
       'recovery-advisers': 'Mandanten verfolgen ihren Fall live im eigenen Portal',
     },
     hi: 'Hallo, ich bin Ahmed. Sie arbeiten direkt mit mir, vom ersten Gespräch bis zum Launch.',
+    heroSub: "Ich konzipiere, baue und liefere Ihr Produkt end to end: Web, Mobile und KI, zum Festpreis oder als monatlicher Retainer. Mein Schwerpunkt sind Echtzeit- und Multi-Tenant-Systeme, mit über sechs Jahren in Produktion im Golfraum, in den USA und in Großbritannien.",
+    proof: "Empfohlen von Kunden und Vorgesetzten bei Recovery Advisers, Yelo Sale, Phonic Maps, Compass Med und Ibdaa Course. Was sie sagen ↓",
     caseCta: 'Sie brauchen etwas Ähnliches?',
     headings: {
       "Jedes System, geliefert & verlinkt.": "Live-Produkte, die ich gebaut habe.",
@@ -2179,6 +2185,8 @@ const HUMAN_COPY = {
       'recovery-advisers': 'Los clientes siguen su caso en vivo desde su propio portal',
     },
     hi: 'Hola, soy Ahmed. Trabajarás directamente conmigo, desde la primera llamada hasta el lanzamiento.',
+    heroSub: "Diseño, construyo y lanzo tu producto de principio a fin: web, móvil e IA, a precio cerrado o con un retainer mensual. Mi especialidad son los sistemas en tiempo real y multi-tenant, con más de seis años en producción en el Golfo, EE. UU. y el Reino Unido.",
+    proof: "Recomendado por clientes y responsables de Recovery Advisers, Yelo Sale, Phonic Maps, Compass Med e Ibdaa Course. Lee lo que dicen ↓",
     caseCta: '¿Necesitas algo parecido?',
     headings: {
       "Cada sistema, entregado y enlazado.": "Productos en vivo que he construido.",
@@ -2259,6 +2267,8 @@ const HUMAN_COPY = {
       'recovery-advisers': 'Les clients suivent leur dossier en direct dans leur propre portail',
     },
     hi: 'Bonjour, je suis Ahmed. Vous travaillez directement avec moi, du premier appel au lancement.',
+    heroSub: "Je conçois, construis et livre votre produit de bout en bout : web, mobile et IA, au forfait ou en régie mensuelle. Ma spécialité : les systèmes temps réel et multi-tenant, avec plus de six ans en production dans le Golfe, aux États-Unis et au Royaume-Uni.",
+    proof: "Recommandé par des clients et des responsables chez Recovery Advisers, Yelo Sale, Phonic Maps, Compass Med et Ibdaa Course. Lire leurs avis ↓",
     caseCta: 'Besoin de quelque chose de similaire ?',
     headings: {
       "Chaque système, livré et lié.": "Des produits en ligne que j’ai construits.",
@@ -3643,6 +3653,21 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         span.textContent = H2.hi;
         hi.appendChild(span);
         sub.after(hi);
+        // Buyer-first copy under the headline: what is delivered and how it is
+        // bought, then the specialty (HUMAN_COPY.heroSub).
+        if (H2.heroSub) sub.textContent = H2.heroSub;
+        // Proof right under the buttons: who recommends him, linked to the
+        // recommendations further down. Below the buttons, not above, so the
+        // call button stays where it was on a phone's first screen.
+        if (H2.proof && document.getElementById('testimonials')) {
+          const proof = document.createElement('a');
+          proof.className = 'hero-proof';
+          proof.href = '#testimonials';
+          proof.setAttribute('data-umami-event', 'hero-proof');
+          proof.textContent = H2.proof;
+          const meta = document.querySelector('#top .hero-meta');
+          (meta || hi).after(proof);
+        }
       } else warnings.push('hero: .hero-sub or the portrait not found — no hero portrait');
     }
     // Project pages: the short "Problem" repeats the write-up's first block,
@@ -5205,6 +5230,11 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 /* Home hero: a face and a first name before the buttons. */
 .hero-person{display:flex;align-items:center;gap:12px;margin-top:22px;max-width:560px;color:var(--ink-mute);font-size:15px;line-height:1.45}
 .hero-person img{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid var(--line-strong)}
+.hero-proof{display:block;margin-top:16px;max-width:560px;font-size:13.5px;line-height:1.5;color:var(--ink-mute);text-decoration:none;border-bottom:0;}
+.hero-proof:hover{color:var(--accent);}
+/* Hero label: the long form (role · focus · city) wraps on any phone; phones
+   get the short form, not only screens under 380px. */
+@media (max-width:480px){.hero-tag .tag-full{display:none;}.hero-tag .tag-short{display:inline;}}
 /* Project pages: the call button in the side column, which stays in view
    while the write-up scrolls on desktop. */
 .case-cta{display:flex;flex-direction:column;align-items:flex-start;gap:12px;margin-top:6px;padding-top:20px;border-top:1px solid var(--line)}
