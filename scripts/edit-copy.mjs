@@ -2824,7 +2824,35 @@ const RAS_STACK_EDITS = factEdits('Recovery Advisers: React Native in stack', Ob
   LOCALES.map((loc) => [loc, [`stack: ${RAS_STACK},`, 'stack: ["Laravel 13", "Next.js 15", "React Native", "MySQL", "Octane", "Reverb"],']]),
 ), { critical: false });
 
-// ── Footer tagline: spearhead + what a client can buy ──────────────────────
+// ── Home hero: the LinkedIn headline ───────────────────────────────────────
+// Owner-confirmed (Nov 2026): the home headline carries the second half of
+// the LinkedIn headline (“Building scalable products and real-world
+// systems”); the label above it carries the first half (HOME_COPY.tag in
+// build.mjs). Explicit breaks give three balanced lines on desktop (two
+// left “products” or “Praxis.” alone); the accented last word stays short
+// enough for the no-wrap rule on a 320px phone. The two-line version of the
+// first pass is kept as a prior.
+const HERO_H1_EDITS = factEdits('home hero: LinkedIn headline', {
+  en: ['I build the systems<br/>\n            other teams <span className="it">depend on.</span>',
+       'Building scalable<br/>\n            products and<br/>\n            real-world <span className="it">systems.</span>',
+       'Building scalable products<br/>\n            and real-world <span className="it">systems.</span>'],
+  ar: ['أبني الأنظمة<br/>\n            التي تعتمد عليها <span className="it">الفِرَق الأخرى.</span>',
+       'أبني منتجات قابلة للتوسّع<br/>\n            وأنظمةً <span className="it">للعالم الحقيقي.</span>'],
+  de: ['Ich baue die Systeme,<br/>\n            auf die sich andere Teams <span className="it">verlassen.</span>',
+       'Skalierbare<br/>\n            Produkte und Systeme<br/>\n            für die <span className="it">Praxis.</span>',
+       'Skalierbare Produkte<br/>\n            und Systeme für die <span className="it">Praxis.</span>'],
+  es: ['Construyo los sistemas<br/>\n            de los que otros equipos <span className="it">dependen.</span>',
+       'Productos<br/>\n            escalables y sistemas<br/>\n            del mundo <span className="it">real.</span>',
+       'Productos escalables<br/>\n            y sistemas del mundo <span className="it">real.</span>'],
+  fr: ['Je construis les systèmes<br/>\n            dont les autres équipes <span className="it">dépendent.</span>',
+       'Des produits<br/>\n            évolutifs et des<br/>\n            systèmes <span className="it">concrets.</span>',
+       'Des produits évolutifs<br/>\n            et des systèmes <span className="it">concrets.</span>'],
+}, { critical: false });
+
+// ── Footer tagline: the LinkedIn headline + what a client can buy ─────────
+// Owner-confirmed (Nov 2026): the footer opens with the LinkedIn headline,
+// word for word in English and translated per locale, so the site and the
+// profile introduce him the same way. Earlier outputs are kept as priors.
 // "multi-tenant platforms, B2B/B2C systems, and the mobile apps" read as a
 // generalist list. It now states the spearhead, then closes on what a client
 // can hire (fixed-scope builds, retainers, architecture consulting): the site
@@ -2832,20 +2860,25 @@ const RAS_STACK_EDITS = factEdits('Recovery Advisers: React Native in stack', Ob
 // sentence moved on from "Open to senior roles and selected consulting."; the
 // whole earlier output is the prior so a committed export migrates. Cosmetic,
 // so not critical.
-const FOOTER_TAG_EDITS = factEdits('footer tagline: spearhead + what a client can buy', {
+const FOOTER_TAG_EDITS = factEdits('footer tagline: LinkedIn headline + what a client can buy', {
   en: ['Senior Software Engineer building multi-tenant platforms, B2B/B2C systems, and the mobile apps that ride on top.',
+       'Senior Software Engineer · SaaS, Mobile & AI · Building scalable products and real-world systems. Fixed-scope builds, retainers and architecture reviews.',
        'Senior Software Engineer — real-time, multi-tenant SaaS and end-to-end product engineering. Fixed-scope builds, retainers and architecture consulting.',
        'Senior Software Engineer — real-time, multi-tenant SaaS and end-to-end product engineering. Open to senior roles and selected consulting.'],
   ar: ['مهندس برمجيات أول يبني منصّات متعدّدة المستأجرين وأنظمة B2B/B2C وتطبيقات الجوّال التي تعمل فوقها.',
+       'مهندس برمجيات أول · SaaS والجوّال والذكاء الاصطناعي · أبني منتجات قابلة للتوسّع وأنظمة للعالم الحقيقي. مشاريع محدّدة النطاق، وعقود دعم مستمر، ومراجعات معمارية.',
        'مهندس برمجيات أول — منصّات SaaS فورية متعدّدة المستأجرين وهندسة المنتجات من البداية إلى النهاية. مشاريع محدّدة النطاق، وعقود دعم مستمر، واستشارات معمارية.',
        'مهندس برمجيات أول — منصّات SaaS فورية متعدّدة المستأجرين وهندسة المنتجات من البداية إلى النهاية. متاح لأدوار أولى واستشارات مختارة.'],
   de: ['Senior-Softwareentwickler, der Multi-Tenant-Plattformen, B2B/B2C-Systeme und die mobilen Apps baut, die obendrauf laufen.',
+       'Senior-Softwareentwickler · SaaS, Mobile & KI · Skalierbare Produkte und Systeme für die Praxis. Festpreis-Projekte, Retainer und Architektur-Reviews.',
        'Senior-Softwareentwickler — Echtzeit-Multi-Tenant-SaaS und Produktentwicklung end to end. Festpreis-Projekte, Retainer und Architekturberatung.',
        'Senior-Softwareentwickler — Echtzeit-Multi-Tenant-SaaS und Produktentwicklung end to end. Offen für Senior-Rollen und ausgewählte Beratung.'],
   es: ['Ingeniero de Software Senior que construye plataformas multi-tenant, sistemas B2B/B2C y las apps móviles que se montan encima.',
+       'Ingeniero de Software Senior · SaaS, móvil e IA · Productos escalables y sistemas del mundo real. Proyectos cerrados, retainers y revisiones de arquitectura.',
        'Ingeniero de Software Senior — SaaS multi-tenant en tiempo real e ingeniería de producto de principio a fin. Proyectos cerrados, retainers y consultoría de arquitectura.',
        'Ingeniero de Software Senior — SaaS multi-tenant en tiempo real e ingeniería de producto de principio a fin. Abierto a roles senior y consultoría selecta.'],
   fr: ['Ingénieur logiciel senior, je construis des plateformes multi-tenant, des systèmes B2B/B2C et les applications mobiles qui les accompagnent.',
+       'Ingénieur logiciel senior · SaaS, mobile et IA · Des produits évolutifs et des systèmes concrets. Projets au forfait, retainers et revues d’architecture.',
        'Ingénieur logiciel senior — SaaS multi-tenant temps réel et ingénierie produit de bout en bout. Projets au forfait, retainers et conseil en architecture.',
        'Ingénieur logiciel senior — SaaS multi-tenant temps réel et ingénierie produit de bout en bout. Ouvert aux postes senior et à des missions de conseil choisies.'],
 }, { critical: false });
@@ -3212,6 +3245,7 @@ const EDITS = [
   ...REVEALSITE_EDITS,
   ...FREELANCE_LOC_EDITS,
   ...FOOTER_TAG_EDITS,
+  ...HERO_H1_EDITS,
   // Last on purpose — see the comment on BRAND_EDITS.
   ...BRAND_EDITS,
   ...CONTACT_PATHS_EDITS,
