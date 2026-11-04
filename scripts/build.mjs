@@ -24,7 +24,7 @@ import { mkdir, writeFile, copyFile, rm, readdir, readFile } from 'node:fs/promi
 import { existsSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { SITE_URL, LOCATION, LOCATION_LABEL, CONTACT, YEARS_PROSE, SEO, NAV, FLAGSHIP, DRIFT_GUARDS, ANALYTICS, METRICS, CLIENT_QUOTES, CASE_PROVENANCE, PROVENANCE_LABEL, CAPACITY, STUDIO } from './site-facts.mjs';
+import { SITE_URL, LOCATION, LOCATION_LABEL, CONTACT, YEARS_PROSE, SEO, NAV, FLAGSHIP, DRIFT_GUARDS, ANALYTICS, METRICS, CLIENT_QUOTES, CASE_PROVENANCE, PROVENANCE_LABEL, CAPACITY, STUDIO, STUDIO_FOOT } from './site-facts.mjs';
 import { inspectPdf, pdfProblems, textFingerprint, PDF_REQUIRED_URIS } from './pdf-check.mjs';
 import { faviconSvg, appleIconSvg, badgeSvg, ICON_LINKS } from './brand-mark.mjs';
 import { renderChecklist, CHECKLIST_PDF, CHECKLIST_REQUIRED_URIS, CHECKLIST_REQUIRED_TEXT } from './build-checklist.mjs';
@@ -327,7 +327,7 @@ async function applyShellToStandalonePages() {
     SKIP_CSS +
     '</style>';
 
-  const PAGES = ['demo.html', 'checklist.html', 'get-checklist.html', '404.html',
+  const PAGES = ['demo.html', 'checklist.html', 'get-checklist.html', '404.html', 'privacy/index.html',
     'insights/index.html', ...INSIGHTS.map((a) => `insights/${a.slug}/index.html`)];
   for (const name of PAGES) {
     const file = path.join(DIST, name);
@@ -1231,6 +1231,7 @@ const EXTRA_PAGES = [
   { path: '/demo.html', priority: '0.9', changefreq: 'monthly' },
   { path: '/checklist.html', priority: '0.8', changefreq: 'yearly' },
   { path: '/insights/', priority: '0.7', changefreq: 'monthly' },
+  { path: '/privacy/', priority: '0.2', changefreq: 'yearly' },
   ...INSIGHTS.map((a) => ({ path: `/insights/${a.slug}/`, priority: '0.7', changefreq: 'yearly' })),
 ];
 
@@ -1390,6 +1391,46 @@ async function writeInsights() {
     ogImage: `${SITE_URL}/og.png`, ogAlt: OG_MAIN.en.alt, type: 'website', published: null, ld, main,
   }), 'utf8');
   console.log(`  wrote /insights/ + ${INSIGHTS.length} write-up(s)`);
+}
+
+// ── /privacy/: what the site collects (English only, like /insights/) ───────
+// Written from what the build actually ships: FormSubmit forms, Umami
+// (cookieless), the Calendly widget, Google’s favicon service for client
+// logos, GitHub Pages hosting, and two browser-storage keys (af_theme,
+// af_intro_done). Change a third party in the build, change this page.
+const PRIVACY_UPDATED = '2026-11-04';
+async function writePrivacy() {
+  const url = `${SITE_URL}/privacy/`;
+  const title = `Privacy · ${STUDIO.name}`;
+  const description = `What ${STUDIO.name} collects through this site, who handles it, and how to have it corrected or deleted.`;
+  const mail = `<a href="mailto:${CONTACT.email}">${CONTACT.email}</a>`;
+  const ld = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage', '@id': `${url}#page`, url, name: title, description, inLanguage: 'en',
+    dateModified: PRIVACY_UPDATED, publisher: { '@id': `${SITE_URL}/#service` },
+  };
+  const main = [
+    `<nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="/">${insightEsc(STUDIO.name)}</a></li><li aria-current="page">Privacy</li></ol></nav>`,
+    `<p class="eyebrow"><span class="dot"></span>Privacy</p>`,
+    `<h1>What this site collects</h1>`,
+    `<p class="lede">Very little. Here is all of it, who handles it, and how to have it removed.</p>`,
+    `<p class="byline">${insightEsc(STUDIO.name)} · Dubai, UAE · Last updated <time datetime="${PRIVACY_UPDATED}">${insightDate(PRIVACY_UPDATED)}</time></p>`,
+    `<article class="prose">`,
+    `<h2>Who we are</h2><p>${insightEsc(STUDIO.name)} is the software practice of Ahmed Farid, based in Dubai, UAE. For anything on this page, write to ${mail}.</p>`,
+    `<h2>What you send us</h2><p>The contact, free demo and checklist forms ask for your name, email, phone, company and a message. A form service, <b>FormSubmit</b> (formsubmit.co), delivers it to our inbox. We use it to reply to you and, if we work together, to run the project. We never sell it, never share it for marketing and never add you to a newsletter.</p>`,
+    `<h2>Analytics</h2><p>We count visits with <b>Umami</b>, a privacy-focused analytics tool. It sets no cookies and stores no personal data: it records pages viewed, the site you came from, your country, your device type and clicks on a few key buttons, all in aggregate.</p>`,
+    `<h2>Services you choose to use</h2><ul><li><b>Calendly</b> handles call bookings. Its widget loads on some pages, and its own privacy policy and cookies apply when you book.</li><li><b>WhatsApp</b>, <b>LinkedIn</b> and email links open those services, under their own policies.</li><li>Client logos are fetched from <b>Google’s</b> favicon service, which sees your IP address like any image request.</li></ul>`,
+    `<h2>Hosting</h2><p>The site is hosted on <b>GitHub Pages</b>. GitHub may log IP addresses for security, as its own privacy statement describes.</p>`,
+    `<h2>Stored in your browser</h2><p>Two small settings: your light or dark theme choice, and whether the opening animation already played in this visit. We set no cookies of our own and run no advertising pixels.</p>`,
+    `<h2>Project work</h2><p>What you share with us about your product is covered by the NDA we sign before the first call.</p>`,
+    `<h2>Keeping and deleting</h2><p>We keep your messages for as long as we need them to answer you and, for clients, for as long as the project and tax records require. To see, correct or delete what we hold about you, email ${mail}. We act on it within 30 days.</p>`,
+    `</article>`,
+  ].join('\n');
+  await mkdir(path.join(DIST, 'privacy'), { recursive: true });
+  await writeFile(path.join(DIST, 'privacy', 'index.html'), insightPage({
+    url, title, description, ogImage: `${SITE_URL}/og.png`, ogAlt: OG_MAIN.en.alt, type: 'website', published: null, ld, main,
+  }), 'utf8');
+  console.log('  wrote /privacy/');
 }
 
 // A sitemap <lastmod> is only worth sending if it is true: a date that moves
@@ -1843,7 +1884,7 @@ const HOME_COPY = {
     demoTag: "Start free",
     checklist: 'Get the free multi-tenant SaaS architecture checklist →',
     recommended: 'Recommended',
-    terms: ['Reply within 24 hours', 'NDA before the first call', 'You own all code & IP once paid', 'Contract & invoice directly with me', 'Larger scopes: a vetted team, quoted per scope', 'Same NDA and IP terms for the whole team'],
+    terms: ['Reply within 24 hours', 'NDA before the first call', 'You own all code & IP once paid', 'Written contract & invoice, signed by the founder', 'Larger scopes: a vetted team, quoted per scope', 'Same NDA and IP terms for the whole team'],
   },
   ar: {
     tag: { 'tag-full': 'مهندس برمجيات أول · SaaS والجوّال والذكاء الاصطناعي · دبي 🇦🇪', 'tag-short': 'SaaS والجوّال والذكاء الاصطناعي 🇦🇪', 'tag-tiny': 'SaaS والجوّال والذكاء الاصطناعي 🇦🇪' },
@@ -1856,7 +1897,7 @@ const HOME_COPY = {
     demoTag: "ابدأ مجانًا",
     checklist: 'حمّل قائمة التحقق المجانية لمعمارية SaaS متعدّدة المستأجرين (بالإنجليزية) →',
     recommended: 'موصى به',
-    terms: ['ردّ خلال ٢٤ ساعة', 'اتفاقية سرّية قبل أول مكالمة', 'الكود والملكية الفكرية لك بعد السداد', 'العقد والفاتورة معي مباشرةً', 'المشاريع الأكبر: فريق مؤهّل وسعر حسب النطاق', 'الاتفاقية السرّية وملكية الكود تشملان الفريق كله'],
+    terms: ['ردّ خلال ٢٤ ساعة', 'اتفاقية سرّية قبل أول مكالمة', 'الكود والملكية الفكرية لك بعد السداد', 'عقد مكتوب وفاتورة بتوقيع المؤسس', 'المشاريع الأكبر: فريق مؤهّل وسعر حسب النطاق', 'الاتفاقية السرّية وملكية الكود تشملان الفريق كله'],
   },
   de: {
     tag: { 'tag-full': 'Senior-Softwareentwickler · SaaS, Mobile & KI · Dubai 🇦🇪', 'tag-short': 'SaaS, Mobile & KI 🇦🇪', 'tag-tiny': 'SaaS, Mobile & KI 🇦🇪' },
@@ -1869,7 +1910,7 @@ const HOME_COPY = {
     demoTag: "Kostenlos starten",
     checklist: 'Kostenlose Checkliste zur Multi-Tenant-SaaS-Architektur (Englisch) →',
     recommended: 'Empfohlen',
-    terms: ['Antwort innerhalb von 24 Stunden', 'NDA vor dem ersten Gespräch', 'Code und IP gehören Ihnen nach Zahlung', 'Vertrag und Rechnung direkt mit mir', 'Größere Projekte: erprobtes Team, Preis nach Umfang', 'Gleiche NDA- und IP-Regeln für das ganze Team'],
+    terms: ['Antwort innerhalb von 24 Stunden', 'NDA vor dem ersten Gespräch', 'Code und IP gehören Ihnen nach Zahlung', 'Schriftlicher Vertrag und Rechnung, vom Gründer unterschrieben', 'Größere Projekte: erprobtes Team, Preis nach Umfang', 'Gleiche NDA- und IP-Regeln für das ganze Team'],
   },
   es: {
     tag: { 'tag-full': 'Ingeniero de Software Senior · SaaS, móvil e IA · Dubái 🇦🇪', 'tag-short': 'SaaS, móvil e IA 🇦🇪', 'tag-tiny': 'SaaS, móvil e IA 🇦🇪' },
@@ -1882,7 +1923,7 @@ const HOME_COPY = {
     demoTag: "Empieza gratis",
     checklist: 'Descarga gratis la checklist de arquitectura SaaS multi-tenant (en inglés) →',
     recommended: 'Recomendado',
-    terms: ['Respuesta en menos de 24 horas', 'NDA antes de la primera llamada', 'Código y PI son tuyos tras el pago', 'Contrato y factura directamente conmigo', 'Proyectos mayores: equipo probado, precio por alcance', 'Mismo NDA y misma PI para todo el equipo'],
+    terms: ['Respuesta en menos de 24 horas', 'NDA antes de la primera llamada', 'Código y PI son tuyos tras el pago', 'Contrato escrito y factura, firmados por el fundador', 'Proyectos mayores: equipo probado, precio por alcance', 'Mismo NDA y misma PI para todo el equipo'],
   },
   fr: {
     tag: { 'tag-full': 'Ingénieur logiciel senior · SaaS, mobile et IA · Dubaï 🇦🇪', 'tag-short': 'SaaS, mobile et IA 🇦🇪', 'tag-tiny': 'SaaS, mobile et IA 🇦🇪' },
@@ -1895,7 +1936,7 @@ const HOME_COPY = {
     demoTag: "Commencer gratuitement",
     checklist: 'Téléchargez la checklist gratuite d’architecture SaaS multi-tenant (en anglais) →',
     recommended: 'Recommandé',
-    terms: ['Réponse sous 24 heures', 'NDA avant le premier appel', 'Code et PI à vous après paiement', 'Contrat et facture directement avec moi', 'Projets plus larges : équipe éprouvée, prix au périmètre', 'Mêmes NDA et règles de PI pour toute l’équipe'],
+    terms: ['Réponse sous 24 heures', 'NDA avant le premier appel', 'Code et PI à vous après paiement', 'Contrat écrit et facture, signés par le fondateur', 'Projets plus larges : équipe éprouvée, prix au périmètre', 'Mêmes NDA et règles de PI pour toute l’équipe'],
   },
 };
 
@@ -3652,7 +3693,24 @@ async function snapshotVariant({ page, spec, lang, locales }) {
     document.querySelectorAll('.foot-bottom > span').forEach((s) => {
       const t = (s.textContent || '').trim();
       if (/^v\.\d{4}\.\d{1,2}$/.test(t)) s.remove();
-      else if (t.startsWith('©')) s.textContent = t.split(' · ').slice(0, 2).join(' · ');
+      else if (t.startsWith('©')) {
+        // The business line: studio, place, since when, privacy. The year is
+        // the export's own (it moves with each re-export).
+        const year = (t.match(/\d{4}/) || [String(new Date().getFullYear())])[0];
+        const F = copy.foot;
+        s.textContent = `© ${year} ${F.name}`;
+        // Latin name inside an RTL footer: without this the © and the year
+        // swap ends ("Ahmed Farid Studio 2026 ©").
+        if (localePrefix === '/ar/') s.setAttribute('dir', 'ltr');
+        const facts = document.createElement('span');
+        facts.textContent = `${F.place} · ${F.since} ${F.founded}`;
+        const priv = document.createElement('a');
+        priv.setAttribute('href', '/privacy/');
+        priv.className = 'foot-privacy';
+        priv.textContent = F.privacy;
+        if (localePrefix !== '/') priv.setAttribute('hreflang', 'en');
+        s.after(facts, priv);
+      }
     });
     // The footer's services link said "Freelance & consulting"; it is the
     // same page the nav calls Services.
@@ -4581,7 +4639,7 @@ async function snapshotVariant({ page, spec, lang, locales }) {
   }, spec, locales.map((l) => l.lang), FAQ_BUYER_KEYS[lang] || FAQ_BUYER_KEYS.en, prefix, PAGE_LAYOUT, SECTION_KEYS,
     { owner: LINK_OWNER, paths: Object.fromEntries(PAGE_SPECS.map((s) => [s.key, s.suffix])) },
     NAV[lang],
-    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en, conceptHosts: CONCEPT_HOSTS, insights: INSIGHTS.map(({ slug, title, related }) => ({ slug, title, related })), caseShots: CASE_SHOTS, studio: STUDIO.suffix, voice: STUDIO_VOICE[lang] || [], provenance: CASE_PROVENANCE, provLabel: PROVENANCE_LABEL[lang] || PROVENANCE_LABEL.en, formAction: `https://formsubmit.co/${CONTACT.email}`, siteUrl: SITE_URL, impact: IMPACT_PLAIN[lang] || IMPACT_PLAIN.en, aedRate: AED_PER_USD, priceLocale: PRICE_LOCALE[lang] || 'en-AE', pricing: PRICING_TERMS[lang] || PRICING_TERMS.en, moreRecs: MORE_RECS[lang] || MORE_RECS.en,
+    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en, conceptHosts: CONCEPT_HOSTS, insights: INSIGHTS.map(({ slug, title, related }) => ({ slug, title, related })), caseShots: CASE_SHOTS, studio: STUDIO.suffix, foot: { name: STUDIO.name, founded: STUDIO.since, ...(STUDIO_FOOT[lang] || STUDIO_FOOT.en) }, voice: STUDIO_VOICE[lang] || [], provenance: CASE_PROVENANCE, provLabel: PROVENANCE_LABEL[lang] || PROVENANCE_LABEL.en, formAction: `https://formsubmit.co/${CONTACT.email}`, siteUrl: SITE_URL, impact: IMPACT_PLAIN[lang] || IMPACT_PLAIN.en, aedRate: AED_PER_USD, priceLocale: PRICE_LOCALE[lang] || 'en-AE', pricing: PRICING_TERMS[lang] || PRICING_TERMS.en, moreRecs: MORE_RECS[lang] || MORE_RECS.en,
       clientQuotes: CLIENT_QUOTES.map((q) => ({ name: q.name[lang] || q.name.en, initials: q.initials[lang] || q.initials.en, role: q.role[lang] || q.role.en, quote: q.quote[lang] || q.quote.en,
         caseStudy: q.caseStudy ? { slug: q.caseStudy, name: FLAGSHIP.find((f) => f.slug === q.caseStudy).name } : null })) }));
 
@@ -4945,7 +5003,7 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
     spec.ld.includes('service')
       ? {
           '@context': 'https://schema.org', '@type': 'ProfessionalService', '@id': `${SITE_URL}/#service`,
-          name: 'Ahmed Farid — software engineering and consulting', url: `${SITE_URL}/`, description: seo.description,
+          name: STUDIO.name, alternateName: 'Ahmed Farid', foundingDate: String(STUDIO.since), url: `${SITE_URL}/`, description: seo.description,
           founder: { '@id': `${SITE_URL}/#person` }, address: personLd.address, email: CONTACT.email,
           sameAs: [CONTACT.linkedin, CONTACT.github], makesOffer: personLd.makesOffer,
         }
@@ -5235,6 +5293,9 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 /* The practice name beside the person’s: quieter than the name itself. */
 .brand-studio{color:var(--ink-mute);font-weight:400;}
 .foot-studio{font-family:var(--mono);font-style:normal;font-size:.36em;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-mute);vertical-align:middle;}
+.foot-bottom{flex-wrap:wrap;gap:6px 24px;}
+.foot-privacy{color:inherit;text-decoration:underline;text-underline-offset:3px;padding:12px 0;}
+.foot-privacy:hover{color:var(--ink);}
 @media (max-width:359px){.brand-studio{display:none;}}
 /* Who a case was built for: a client, or a role held there. Client work in
    the accent, a role in the quieter ink. */
@@ -5734,6 +5795,7 @@ async function build() {
   await browser.close();
 
   await writeInsights();
+  await writePrivacy();
   await writeSeoFiles(locales, PAGE_SPECS, projects, prices);
 
   // ── Verify each built page actually renders ───────────────────────────────
