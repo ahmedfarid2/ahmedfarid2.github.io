@@ -321,7 +321,18 @@ export const CAPACITY = { projectsPerQuarter: 4, availableNow: true };
 // founder-led, so the person's name leads. It sits next to the name in the
 // nav, the footer and the home title. A brand name, never translated. No
 // "we" or team copy goes with it until a named member is on the site (R2).
-export const STUDIO = { name: 'Ahmed Farid Studio', suffix: 'Studio' };
+// since: the year the independent practice started (CV: freelance, Jan 2022).
+export const STUDIO = { name: 'Ahmed Farid Studio', suffix: 'Studio', since: 2022 };
+
+// The footer's bottom line on every page: the studio, where it is, since
+// when, and the privacy page (English only, like /insights/).
+export const STUDIO_FOOT = {
+  en: { place: 'Dubai, UAE', since: 'Since', privacy: 'Privacy' },
+  ar: { place: 'دبي، الإمارات', since: 'منذ', privacy: 'الخصوصية' },
+  de: { place: 'Dubai, VAE', since: 'Seit', privacy: 'Datenschutz' },
+  es: { place: 'Dubái, EAU', since: 'Desde', privacy: 'Privacidad' },
+  fr: { place: 'Dubaï, EAU', since: 'Depuis', privacy: 'Confidentialité' },
+};
 
 export const FLAGSHIP = [
   { name: 'Yelo Sale', slug: 'yelo-sale' },
@@ -371,6 +382,10 @@ export const DRIFT_GUARDS = [
   // round-the-clock support are not claims the practice makes.
   { re: /\b(our|my) agency\b|وكالتنا|unsere Agentur|nuestra agencia|notre agence/gi, max: 0 },
   { re: /\b(dedicated team|offices in)\b|24\/7/gi, max: 0 },
+  // No legal entity exists yet (owner, Nov 2026): the studio works and
+  // invoices through Ahmed personally. Nothing may claim a registered
+  // company, a company suffix or a trade licence until the papers exist.
+  { re: /\b(LLC|L\.L\.C\.?|FZ-?LLC|FZE|FZCO|Ltd\.?|registered (company|business)|trade licen[cs]e)\b|ذ\.م\.م|شركة مسجّ?لة|رخصة تجارية|eingetragene Firma|empresa registrada|société immatriculée/gi, max: 0 },
   // A role Ahmed held is never presented as a client (R1).
   { re: /\bour clients?\b[^.<]{0,80}\b(Yelo|Recovery Advisers|RevealSite|Arab Bank|Compass Med)\b/gi, max: 0 },
 ];

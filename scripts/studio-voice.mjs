@@ -5,8 +5,8 @@
 // Delivery copy says "we"; what is about Ahmed himself stays "I": the hero's
 // "Hi, I'm Ahmed", testimonials, "Products I've shipped" and the other lists of
 // roles he held (spec R1: employment is never shown as studio work), his own
-// products, the hiring path, GitHub, and "Contract & invoice directly with me"
-// (personal invoicing until the company exists).
+// products, the hiring path, GitHub, and "Written contract & invoice, signed
+// by the founder" (personal invoicing until the company exists).
 //
 // Applied by build.mjs as the last copy pass on every page, so it sees the
 // final text whatever layer produced it (export, edit-copy.mjs, HUMAN_COPY).
