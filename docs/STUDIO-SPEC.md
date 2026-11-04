@@ -26,6 +26,8 @@ Until **I2** exists, the site must not say "team", "we" or "our engineers" about
 
 ## Honesty rules (enforced, every phase)
 
+> **Update (Nov 2026):** owner confirmed a delivery team of 7+ and chose a founder-led studio voice. Delivery copy now says "we" (`scripts/studio-voice.mjs`, the build's last copy pass); what is about Ahmed stays "I" (R1 still holds: roles he held are never studio work). "A team of 7+" is allowed; R3's agency / offices / 24-7 guards stay. Invoicing stays personal until the company exists (R5).
+
 These are build-enforced where possible (see Enforcement). They exist because the strongest proof on the site is from employment, and a studio framing makes misattribution easy.
 
 - **R1, employment vs studio work.** Yelo Sale, Recovery Advisers, RevealSite, Arab Bank and Compass Med were roles Ahmed held. They are labelled *"Built as [role] at [company]"*, never "client", "our client" or "studio project". Studio or freelance engagements (Qoralia, Phonic Maps, KhebraOS, Fixawy, Proven Group, Ibdaa Course, Applyni, Ezhal, Alnaimi Studios …) are labelled *"Client project"*. Every case study carries exactly one of the two labels.
