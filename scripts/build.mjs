@@ -143,6 +143,7 @@ const CLICK_EVENTS = [
   [/linkedin\.com\/in\//, 'linkedin'],
   [/\/services\/(#[\w-]*)?$/, 'services'],
   [/checklist/, 'checklist'],
+  [/\/demo\.html$/, 'demo'],
 ];
 const PROJECT_HREF = /^(?:\/[a-z]{2})?\/work\/([a-z0-9]+(?:-[a-z0-9]+)*)\/$/;
 // The nav badge's text "AF" becomes the drawn monogram (scripts/brand-mark.mjs),
@@ -583,12 +584,14 @@ const FORBIDDEN = [
   { s: 'Discuss retainer', max: 0, except: 'services/index.html' },
   { s: 'Scope a build', max: 0, except: 'services/index.html' },
   { s: 'Book a free demo', max: 0, except: 'services/index.html', alsoExcept: ['demo.html'] },
-  // /demo.html is the freelance landing page. It stays live and indexable, but
-  // no page may route anyone to it except /services/ (home included: its hero
-  // books the scoping call and links to /services/ instead). The crawler files
-  // (sitemap.xml, lastmod.json, llms.txt) list it without routing anyone.
+  // /demo.html (the free one-screen demo) is routed to from /services/ and,
+  // since Nov 2026 (owner decision: most visitors land on home and never
+  // reach /services/), from home's offers and closing block. Nowhere else:
+  // /about/, /work/ and the project pages stay on their own jobs. The crawler
+  // files (sitemap.xml, lastmod.json, llms.txt) list it without routing anyone.
   { s: 'demo.html', max: 0, except: 'services/index.html',
-    alsoExcept: ['demo.html', 'get-checklist.html', 'checklist.html', 'sitemap.xml', 'lastmod.json', 'llms.txt', '404.html'] },
+    alsoExcept: ['demo.html', 'get-checklist.html', 'checklist.html', 'sitemap.xml', 'lastmod.json', 'llms.txt', '404.html',
+      'index.html', 'ar/index.html', 'de/index.html', 'es/index.html', 'fr/index.html'] },
   { s: 'fast learner', max: 0 },
   { s: 'adapt to whatever stack', max: 0 },
   { s: 'Available now', max: 0 },
@@ -1835,6 +1838,9 @@ const HOME_COPY = {
     svcHeading: ['Four ways', 'Three ways'],
     direct: 'You talk to me directly. No account managers, no middlemen.',
     notReady: 'Not ready for a call?',
+    demo: "Get one screen of your product built, free →",
+    demoBand: "Not sure yet? We'll build one real screen of your product, free, in five business days →",
+    demoTag: "Start free",
     checklist: 'Get the free multi-tenant SaaS architecture checklist →',
     recommended: 'Recommended',
     terms: ['Reply within 24 hours', 'NDA before the first call', 'You own all code & IP once paid', 'Contract & invoice directly with me', 'Larger scopes: a vetted team, quoted per scope', 'Same NDA and IP terms for the whole team'],
@@ -1845,6 +1851,9 @@ const HOME_COPY = {
     svcHeading: ['أربع طرق', 'ثلاث طرق'],
     direct: 'ستتحدث معي مباشرةً — بلا وسطاء.',
     notReady: 'هل الوقت مبكر لمكالمة؟',
+    demo: "احصل على شاشة واحدة من منتجك مبنية مجانًا (بالإنجليزية) →",
+    demoBand: "لست متأكدًا بعد؟ نبني لك شاشة حقيقية واحدة من منتجك مجانًا خلال خمسة أيام عمل (الصفحة بالإنجليزية) →",
+    demoTag: "ابدأ مجانًا",
     checklist: 'حمّل قائمة التحقق المجانية لمعمارية SaaS متعدّدة المستأجرين (بالإنجليزية) →',
     recommended: 'موصى به',
     terms: ['ردّ خلال ٢٤ ساعة', 'اتفاقية سرّية قبل أول مكالمة', 'الكود والملكية الفكرية لك بعد السداد', 'العقد والفاتورة معي مباشرةً', 'المشاريع الأكبر: فريق مؤهّل وسعر حسب النطاق', 'الاتفاقية السرّية وملكية الكود تشملان الفريق كله'],
@@ -1855,6 +1864,9 @@ const HOME_COPY = {
     svcHeading: ['Vier Wege', 'Drei Wege'],
     direct: 'Sie sprechen direkt mit mir — ohne Account-Manager, ohne Zwischenstellen.',
     notReady: 'Noch nicht bereit für ein Gespräch?',
+    demo: "Einen Screen Ihres Produkts kostenlos bauen lassen (Englisch) →",
+    demoBand: "Noch unsicher? Wir bauen einen echten Screen Ihres Produkts kostenlos, in fünf Werktagen (Seite auf Englisch) →",
+    demoTag: "Kostenlos starten",
     checklist: 'Kostenlose Checkliste zur Multi-Tenant-SaaS-Architektur (Englisch) →',
     recommended: 'Empfohlen',
     terms: ['Antwort innerhalb von 24 Stunden', 'NDA vor dem ersten Gespräch', 'Code und IP gehören Ihnen nach Zahlung', 'Vertrag und Rechnung direkt mit mir', 'Größere Projekte: erprobtes Team, Preis nach Umfang', 'Gleiche NDA- und IP-Regeln für das ganze Team'],
@@ -1865,6 +1877,9 @@ const HOME_COPY = {
     svcHeading: ['Cuatro formas', 'Tres formas'],
     direct: 'Hablas directamente conmigo, sin gestores de cuenta ni intermediarios.',
     notReady: '¿Aún no estás listo para una llamada?',
+    demo: "Consigue una pantalla de tu producto construida gratis (en inglés) →",
+    demoBand: "¿Aún no lo tienes claro? Construimos una pantalla real de tu producto gratis, en cinco días hábiles (página en inglés) →",
+    demoTag: "Empieza gratis",
     checklist: 'Descarga gratis la checklist de arquitectura SaaS multi-tenant (en inglés) →',
     recommended: 'Recomendado',
     terms: ['Respuesta en menos de 24 horas', 'NDA antes de la primera llamada', 'Código y PI son tuyos tras el pago', 'Contrato y factura directamente conmigo', 'Proyectos mayores: equipo probado, precio por alcance', 'Mismo NDA y misma PI para todo el equipo'],
@@ -1875,6 +1890,9 @@ const HOME_COPY = {
     svcHeading: ['Quatre façons', 'Trois façons'],
     direct: 'Vous parlez directement avec moi — sans chef de projet ni intermédiaire.',
     notReady: 'Pas encore prêt pour un appel ?',
+    demo: "Faites construire un écran de votre produit gratuitement (en anglais) →",
+    demoBand: "Pas encore sûr ? Nous construisons gratuitement un vrai écran de votre produit, en cinq jours ouvrés (page en anglais) →",
+    demoTag: "Commencer gratuitement",
     checklist: 'Téléchargez la checklist gratuite d’architecture SaaS multi-tenant (en anglais) →',
     recommended: 'Recommandé',
     terms: ['Réponse sous 24 heures', 'NDA avant le premier appel', 'Code et PI à vous après paiement', 'Contrat et facture directement avec moi', 'Projets plus larges : équipe éprouvée, prix au périmètre', 'Mêmes NDA et règles de PI pour toute l’équipe'],
@@ -3565,12 +3583,35 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         const alt = document.createElement('p');
         alt.className = 'contact-alt';
         alt.appendChild(document.createTextNode(`${H.notReady} `));
+        // The free demo first (the strongest low-commitment step), then the
+        // checklist.
+        if (H.demo) {
+          const dm = document.createElement('a');
+          dm.setAttribute('href', '/demo.html');
+          dm.textContent = H.demo;
+          alt.append(dm, ' · ');
+        }
         const lm = document.createElement('a');
         lm.setAttribute('href', '/checklist.html');
         lm.textContent = H.checklist;
         alt.appendChild(lm);
         paths.after(alt);
       } else warnings.push('contact: .contact-paths not found — no portrait or checklist line');
+      // The free demo under the three ways to work: most visitors land on
+      // home and never reach /services/, where the offer is laid out.
+      const svcGrid = document.querySelector('#services .services-grid');
+      if (svcGrid && H.demoBand) {
+        const band = document.createElement('p');
+        band.className = 'svc-demo';
+        const tag = document.createElement('span');
+        tag.className = 'svc-demo-tag';
+        tag.textContent = H.demoTag;
+        const a = document.createElement('a');
+        a.setAttribute('href', '/demo.html');
+        a.textContent = H.demoBand;
+        band.append(tag, a);
+        svcGrid.after(band);
+      } else warnings.push('home: #services grid not found — free demo band not added');
     }
     document.querySelectorAll('.is-popular .price-badge').forEach((b) => { b.textContent = copy.home.recommended; });
 
@@ -5207,6 +5248,11 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 .cta-person img{width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid var(--line-strong)}
 .contact-alt{margin:22px 0 0;text-align:center;font-size:14px;color:var(--ink-dim)}
 .contact-alt a{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+.svc-demo{display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;margin:20px 0 0;font-size:15px;line-height:1.5;}
+.svc-demo-tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;padding:3px 10px;border-radius:999px;border:1px solid var(--accent);color:var(--accent);background:var(--accent-soft);}
+.svc-demo a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:4px;}
+.svc-demo a:hover{color:var(--accent);}
+[lang="ar"] .svc-demo-tag{letter-spacing:0;}
 /* Home shows three service cards in what the export draws as a 2-up grid,
    which would leave an empty fourth cell; three across on desktop instead. */
 @media (min-width:761px){#services .services-grid:has(> .service-card:nth-child(3):last-child){grid-template-columns:repeat(3,1fr)}}
