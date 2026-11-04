@@ -204,11 +204,12 @@ if(v==='yes'){load();}
     <li>Not a whole product, and not a free MVP. One screen means one screen.</li>
     <li>Not a design mockup. If you want visuals only, you want a designer, not me.</li>
     <li>Not unlimited revisions: one build, one round of notes.</li>
+    <li>Not repeatable. One demo per company, and only from a written brief: the form below is that brief.</li>
     <li>Not a race. Two slots a month, so if both are taken you'll go on the list and I'll tell you when.</li>
   </ul>
 
   <h2><span class="num">03</span>Tell me what to build</h2>
-  <p class="sub">Six fields, one of them optional. I reply personally, usually within a day.</p>
+  <p class="sub">Six fields, all required. The last one is your brief: a few lines on what the product does and which screen matters. No brief, no demo. I reply personally, usually within a day.</p>
 
   <!-- Success state. The form posts away and returns here with ?sent=1, so the
        confirmation survives without a backend or any client-side state. -->
@@ -264,8 +265,10 @@ if(v==='yes'){load();}
           <input type="tel" name="Phone" required autocomplete="tel" placeholder="+ country code and number" inputmode="tel">
         </label>
         <label class="field">
-          <span>Company or product URL</span>
-          <input type="url" name="Company or URL" autocomplete="url" placeholder="https://">
+          <span>Company or product <i class="req">*</i></span>
+          <!-- Required: one demo per company, so the request has to name one.
+               Text, not type=url: a founder before launch has a name, not a site. -->
+          <input type="text" name="Company or URL" required autocomplete="organization" placeholder="Company name or website">
         </label>
       </div>
 
@@ -286,7 +289,7 @@ if(v==='yes'){load();}
 
       <label class="field">
         <span>What should I build, and which screen matters most? <i class="req">*</i></span>
-        <textarea name="What to build" required placeholder="What the product does, who it's for, and the one screen that would convince you: a dashboard, a booking flow, an onboarding step, whatever carries the most weight."></textarea>
+        <textarea name="What to build" required minlength="80" placeholder="What the product does, who it's for, and the one screen that would convince you: a dashboard, a booking flow, an onboarding step, whatever carries the most weight."></textarea>
       </label>
 
       <button type="submit">Request my free demo</button>
