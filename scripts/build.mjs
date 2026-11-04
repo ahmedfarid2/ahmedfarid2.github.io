@@ -1882,6 +1882,8 @@ const HOME_COPY = {
     demo: "Get one screen of your product built, free →",
     demoBand: "Not sure yet? We'll build one real screen of your product, free, in five business days →",
     demoTag: "Start free",
+    heroDemo: "Request a free demo",
+    heroDemoNote: "Free: one real screen of your product, live on a URL in five business days. No obligation.",
     checklist: 'Get the free multi-tenant SaaS architecture checklist →',
     recommended: 'Recommended',
     terms: ['Reply within 24 hours', 'NDA before the first call', 'You own all code & IP once paid', 'Written contract & invoice, signed by the founder', 'Larger scopes: a vetted team, quoted per scope', 'Same NDA and IP terms for the whole team'],
@@ -1895,6 +1897,8 @@ const HOME_COPY = {
     demo: "احصل على شاشة واحدة من منتجك مبنية مجانًا (بالإنجليزية) →",
     demoBand: "لست متأكدًا بعد؟ نبني لك شاشة حقيقية واحدة من منتجك مجانًا خلال خمسة أيام عمل (الصفحة بالإنجليزية) →",
     demoTag: "ابدأ مجانًا",
+    heroDemo: "اطلب نموذجًا مجانيًا",
+    heroDemoNote: "مجانًا: شاشة حقيقية واحدة من منتجك على رابط مباشر خلال خمسة أيام عمل، بدون أي التزام (الصفحة بالإنجليزية).",
     checklist: 'حمّل قائمة التحقق المجانية لمعمارية SaaS متعدّدة المستأجرين (بالإنجليزية) →',
     recommended: 'موصى به',
     terms: ['ردّ خلال ٢٤ ساعة', 'اتفاقية سرّية قبل أول مكالمة', 'الكود والملكية الفكرية لك بعد السداد', 'عقد مكتوب وفاتورة بتوقيع المؤسس', 'المشاريع الأكبر: فريق مؤهّل وسعر حسب النطاق', 'الاتفاقية السرّية وملكية الكود تشملان الفريق كله'],
@@ -1908,6 +1912,8 @@ const HOME_COPY = {
     demo: "Einen Screen Ihres Produkts kostenlos bauen lassen (Englisch) →",
     demoBand: "Noch unsicher? Wir bauen einen echten Screen Ihres Produkts kostenlos, in fünf Werktagen (Seite auf Englisch) →",
     demoTag: "Kostenlos starten",
+    heroDemo: "Kostenlose Demo anfragen",
+    heroDemoNote: "Kostenlos: ein echter Screen Ihres Produkts, in fünf Werktagen live unter einer URL. Unverbindlich (Seite auf Englisch).",
     checklist: 'Kostenlose Checkliste zur Multi-Tenant-SaaS-Architektur (Englisch) →',
     recommended: 'Empfohlen',
     terms: ['Antwort innerhalb von 24 Stunden', 'NDA vor dem ersten Gespräch', 'Code und IP gehören Ihnen nach Zahlung', 'Schriftlicher Vertrag und Rechnung, vom Gründer unterschrieben', 'Größere Projekte: erprobtes Team, Preis nach Umfang', 'Gleiche NDA- und IP-Regeln für das ganze Team'],
@@ -1921,6 +1927,8 @@ const HOME_COPY = {
     demo: "Consigue una pantalla de tu producto construida gratis (en inglés) →",
     demoBand: "¿Aún no lo tienes claro? Construimos una pantalla real de tu producto gratis, en cinco días hábiles (página en inglés) →",
     demoTag: "Empieza gratis",
+    heroDemo: "Pide una demo gratis",
+    heroDemoNote: "Gratis: una pantalla real de tu producto, publicada en una URL en cinco días hábiles. Sin compromiso (página en inglés).",
     checklist: 'Descarga gratis la checklist de arquitectura SaaS multi-tenant (en inglés) →',
     recommended: 'Recomendado',
     terms: ['Respuesta en menos de 24 horas', 'NDA antes de la primera llamada', 'Código y PI son tuyos tras el pago', 'Contrato escrito y factura, firmados por el fundador', 'Proyectos mayores: equipo probado, precio por alcance', 'Mismo NDA y misma PI para todo el equipo'],
@@ -1934,6 +1942,8 @@ const HOME_COPY = {
     demo: "Faites construire un écran de votre produit gratuitement (en anglais) →",
     demoBand: "Pas encore sûr ? Nous construisons gratuitement un vrai écran de votre produit, en cinq jours ouvrés (page en anglais) →",
     demoTag: "Commencer gratuitement",
+    heroDemo: "Demander une démo gratuite",
+    heroDemoNote: "Gratuit : un vrai écran de votre produit, en ligne sur une URL en cinq jours ouvrés. Sans engagement (page en anglais).",
     checklist: 'Téléchargez la checklist gratuite d’architecture SaaS multi-tenant (en anglais) →',
     recommended: 'Recommandé',
     terms: ['Réponse sous 24 heures', 'NDA avant le premier appel', 'Code et PI à vous après paiement', 'Contrat écrit et facture, signés par le fondateur', 'Projets plus larges : équipe éprouvée, prix au périmètre', 'Mêmes NDA et règles de PI pour toute l’équipe'],
@@ -3605,6 +3615,32 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         label.textContent = `${callText} `;
         heroBtns.querySelectorAll('a[href="#work"]').forEach((a) => a.remove());
       } else warnings.push('hero: primary button or the scoping-call link not found — hero buttons left as exported');
+      // The free demo leads the hero (owner decision, Nov 2026): the step that
+      // costs a visitor nothing comes first, the call second as the ghost
+      // button, and Services stays in the nav. The promise sits right under
+      // the buttons so the offer reads in one glance.
+      if (H.heroDemo && heroBtns && primary) {
+        const demo = document.createElement('a');
+        demo.className = 'btn btn-primary hero-demo-btn';
+        demo.setAttribute('href', '/demo.html');
+        demo.setAttribute('data-umami-event', 'hero-demo');
+        demo.append(`${H.heroDemo} `);
+        const arrow = primary.querySelector('svg');
+        if (arrow) demo.appendChild(arrow.cloneNode(true));
+        primary.classList.remove('btn-primary');
+        primary.classList.add('btn-ghost');
+        heroBtns.querySelectorAll('a[href$="services/"]').forEach((a) => a.remove());
+        heroBtns.prepend(demo);
+        const note = document.createElement('p');
+        note.className = 'hero-demo-note';
+        note.textContent = H.heroDemoNote;
+        heroBtns.after(note);
+        // Named blocks so phones can lift the buttons above the long
+        // paragraph (CSS order below): on a 390px screen they sat under the fold.
+        heroBtns.parentElement.classList.add('hero-cta-block');
+        const subBlock = document.querySelector('#top .hero-sub');
+        if (subBlock && subBlock.parentElement !== heroBtns.parentElement) subBlock.parentElement.classList.add('hero-sub-block');
+      } else warnings.push('hero: no free-demo button (HOME_COPY.heroDemo or the hero buttons missing)');
       const trustLabel = document.querySelector('.trust .trust-label');
       if (trustLabel) trustLabel.innerHTML = H.trust;
       else warnings.push('trust: .trust-label not found — left as exported');
@@ -3765,7 +3801,7 @@ async function snapshotVariant({ page, spec, lang, locales }) {
           proof.href = '#testimonials';
           proof.setAttribute('data-umami-event', 'hero-proof');
           proof.textContent = H2.proof;
-          const meta = document.querySelector('#top .hero-meta');
+          const meta = document.querySelector('#top .hero-demo-note') || document.querySelector('#top .hero-meta');
           (meta || hi).after(proof);
         }
       } else warnings.push('hero: .hero-sub or the portrait not found — no hero portrait');
@@ -5357,6 +5393,8 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 .hero-person img{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid var(--line-strong)}
 .hero-proof{display:block;margin-top:16px;max-width:560px;font-size:13.5px;line-height:1.5;color:var(--ink-mute);text-decoration:none;border-bottom:0;}
 .hero-proof:hover{color:var(--accent);}
+.hero-demo-note{margin:14px 0 0;max-width:560px;font-size:14px;line-height:1.5;color:var(--ink-dim);}
+@media (max-width:600px){#root .hero-inner{display:flex;flex-direction:column}#root .hero-cta-block{order:2}#root .hero-sub-block{order:3;margin-top:32px}#root .hero-inner>.reveal:has(.hero-stats){order:4}#root .hero-cta-block .hero-meta{margin-top:28px}#root .hero-sub-block .hero-sub{margin-top:0}}
 /* Hero label: the long form (role · focus · city) wraps on any phone; phones
    get the short form, not only screens under 380px. */
 @media (max-width:480px){.hero-tag .tag-full{display:none;}.hero-tag .tag-short{display:inline;}}
