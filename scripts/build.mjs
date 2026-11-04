@@ -29,6 +29,7 @@ import { inspectPdf, pdfProblems, textFingerprint, PDF_REQUIRED_URIS } from './p
 import { faviconSvg, appleIconSvg, badgeSvg, ICON_LINKS } from './brand-mark.mjs';
 import { renderChecklist, CHECKLIST_PDF, CHECKLIST_REQUIRED_URIS, CHECKLIST_REQUIRED_TEXT } from './build-checklist.mjs';
 import { INSIGHTS, INSIGHTS_INDEX } from './insights.mjs';
+import { STUDIO_VOICE } from './studio-voice.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = path.join(ROOT, 'index.html');
@@ -4492,6 +4493,23 @@ async function snapshotVariant({ page, spec, lang, locales }) {
       }
     }
 
+    // Studio voice (studio-voice.mjs): the last copy pass, so it sees each
+    // line in its final form whichever layer wrote it. Whole text nodes by
+    // default; a 'part' row replaces inside a longer one.
+    if (copy.voice.length) {
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        const tag = n.parentElement && n.parentElement.tagName;
+        if (tag === 'SCRIPT' || tag === 'STYLE') continue;
+        for (const [from, to, mode] of copy.voice) {
+          if (mode === 'part' ? n.nodeValue.includes(from) : n.nodeValue.trim() === from) {
+            n.nodeValue = mode === 'part' ? n.nodeValue.split(from).join(to) : n.nodeValue.replace(from, to);
+            humanHits.push(`v:${from}`);
+          }
+        }
+      }
+    }
+
     // The FAQ accordion toggled a data attribute nothing but CSS could see, so
     // a screen reader announced every question as a plain button with no state.
     document.querySelectorAll('.faq-item').forEach((item, i) => {
@@ -4522,7 +4540,7 @@ async function snapshotVariant({ page, spec, lang, locales }) {
   }, spec, locales.map((l) => l.lang), FAQ_BUYER_KEYS[lang] || FAQ_BUYER_KEYS.en, prefix, PAGE_LAYOUT, SECTION_KEYS,
     { owner: LINK_OWNER, paths: Object.fromEntries(PAGE_SPECS.map((s) => [s.key, s.suffix])) },
     NAV[lang],
-    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en, conceptHosts: CONCEPT_HOSTS, insights: INSIGHTS.map(({ slug, title, related }) => ({ slug, title, related })), caseShots: CASE_SHOTS, studio: STUDIO.suffix, provenance: CASE_PROVENANCE, provLabel: PROVENANCE_LABEL[lang] || PROVENANCE_LABEL.en, formAction: `https://formsubmit.co/${CONTACT.email}`, siteUrl: SITE_URL, impact: IMPACT_PLAIN[lang] || IMPACT_PLAIN.en, aedRate: AED_PER_USD, priceLocale: PRICE_LOCALE[lang] || 'en-AE', pricing: PRICING_TERMS[lang] || PRICING_TERMS.en, moreRecs: MORE_RECS[lang] || MORE_RECS.en,
+    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en, conceptHosts: CONCEPT_HOSTS, insights: INSIGHTS.map(({ slug, title, related }) => ({ slug, title, related })), caseShots: CASE_SHOTS, studio: STUDIO.suffix, voice: STUDIO_VOICE[lang] || [], provenance: CASE_PROVENANCE, provLabel: PROVENANCE_LABEL[lang] || PROVENANCE_LABEL.en, formAction: `https://formsubmit.co/${CONTACT.email}`, siteUrl: SITE_URL, impact: IMPACT_PLAIN[lang] || IMPACT_PLAIN.en, aedRate: AED_PER_USD, priceLocale: PRICE_LOCALE[lang] || 'en-AE', pricing: PRICING_TERMS[lang] || PRICING_TERMS.en, moreRecs: MORE_RECS[lang] || MORE_RECS.en,
       clientQuotes: CLIENT_QUOTES.map((q) => ({ name: q.name[lang] || q.name.en, initials: q.initials[lang] || q.initials.en, role: q.role[lang] || q.role.en, quote: q.quote[lang] || q.quote.en,
         caseStudy: q.caseStudy ? { slug: q.caseStudy, name: FLAGSHIP.find((f) => f.slug === q.caseStudy).name } : null })) }));
 
@@ -5638,6 +5656,10 @@ async function build() {
     const unused = [...Object.keys(c.headings).map((k) => `h:${k}`), ...c.text.map(([f]) => `t:${f}`),
       ...['recs', 'hireAsk', 'rateQ', 'existingQ', 'dataQ'].filter((k) => c[k]).map((k) => `k:${k}`)].filter((k) => !hits.has(k));
     for (const k of unused) console.warn(`  [${lang}] ⚠ human copy not applied (export reworded?): ${k.slice(2)}`);
+  }
+  for (const [lang, rows] of Object.entries(STUDIO_VOICE)) {
+    const hits = HUMAN_HITS.get(lang) || new Set();
+    for (const [from] of rows) if (!hits.has(`v:${from}`)) console.warn(`  [${lang}] ⚠ studio voice not applied (text changed?): ${from.slice(0, 70)}`);
   }
 
   // METRICS.caseStudies must still be what /work/ carries (the flagship
