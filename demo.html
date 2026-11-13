@@ -74,6 +74,9 @@ if(v==='yes'){load();}
   .field{display:block;margin-top:16px}
   .field > span{display:block;font-size:13px;letter-spacing:.02em;color:var(--muted);margin-bottom:7px}
   .field > span .req{color:var(--accent)}
+  .field > span .opt{color:var(--muted);font-style:normal}
+  .sub a{color:var(--accent)}
+  .sub.fit{margin-top:28px;color:var(--ink)}
   input,select,textarea{
     width:100%;padding:13px 14px;background:var(--field);color:var(--ink);
     border:1px solid var(--line);border-radius:10px;font:inherit;font-size:16px;
@@ -208,8 +211,18 @@ if(v==='yes'){load();}
     <li>Not a race. Two slots a month, so if both are taken you'll go on the list and I'll tell you when.</li>
   </ul>
 
+  <!-- Who the two slots go to. Said before the form so a visitor who is not
+       there yet finds out now, not a week later from a polite no. -->
+  <p class="sub fit"><strong>It fits best if all three are true:</strong></p>
+  <ul class="ticks">
+    <li><b>You make the call on the build</b>, or work next to whoever does: a founder, a business owner, a CTO or a product owner.</li>
+    <li><b>There's a real product behind it</b>: live, in progress, or a plan with a budget set aside.</li>
+    <li><b>If the screen convinces you</b>, you'd want to talk about building the rest within the next few months.</li>
+  </ul>
+  <p class="sub">Not there yet? Read the <a href="/checklist.html">free multi-tenant SaaS architecture checklist</a>, or <a href="https://calendly.com/iamahmedfarid/30min" target="_blank" rel="noreferrer">book a 30-minute scoping call</a>.</p>
+
   <h2><span class="num">03</span>Tell me what to build</h2>
-  <p class="sub">Six fields, all required. The last one is your brief: a few lines on what the product does and which screen matters. No brief, no demo. I reply personally, usually within a day.</p>
+  <p class="sub">Six required fields and one optional. The last one is your brief: a few lines on what the product does and which screen matters. No brief, no demo. I reply personally, usually within a day.</p>
 
   <!-- Success state. The form posts away and returns here with ?sent=1, so the
        confirmation survives without a backend or any client-side state. -->
@@ -239,6 +252,9 @@ if(v==='yes'){load();}
       <input type="hidden" name="_next" value="https://iamahmedfarid.com/demo.html?sent=1">
       <!-- Honeypot: bots fill every field they find, people never see this one. -->
       <input class="hp" type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <!-- How the visitor found the site, filled in by the site's attribution
+           script (build.mjs ATTRIBUTION_JS). Goes to the inbox, not to analytics. -->
+      <input type="hidden" name="Source" value="">
 
       <div class="grid2">
         <label class="field">
@@ -287,12 +303,31 @@ if(v==='yes'){load();}
         </div>
       </div>
 
+      <!-- Optional on purpose: a founder who has not priced the build yet can
+           still apply. The bands start at the fixed-price build's floor.
+           "Not decided yet" has a value so the custom list keeps it (it drops
+           empty-value placeholders) and a chosen band can be taken back. -->
+      <div class="field">
+        <span id="budget-label">Rough budget for the full build <i class="opt">(optional)</i></span>
+        <div class="sel" data-select>
+          <select name="Budget" aria-labelledby="budget-label">
+            <option>Not decided yet</option>
+            <option>Under $9,000</option>
+            <option>$9,000 to $20,000</option>
+            <option>$20,000 to $50,000</option>
+            <option>Over $50,000</option>
+          </select>
+        </div>
+      </div>
+
       <label class="field">
         <span>What should I build, and which screen matters most? <i class="req">*</i></span>
         <textarea name="What to build" required minlength="80" placeholder="What the product does, who it's for, and the one screen that would convince you: a dashboard, a booking flow, an onboarding step, whatever carries the most weight."></textarea>
       </label>
 
-      <button type="submit">Request my free demo</button>
+      <!-- A click is an attempt, not a request: the confirmed one is demo-sent,
+           counted on the ?sent=1 return (docs/MEASUREMENT.md). -->
+      <button type="submit" data-umami-event="demo-submit">Request my free demo</button>
 
       <p class="formnote">
         No newsletter, no sequence, no sharing your details. If you'd rather just
