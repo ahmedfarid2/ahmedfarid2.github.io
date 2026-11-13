@@ -123,7 +123,7 @@ The existing tiers stay: Architecture Clinic $1,200 · Launchpad $9,000 · Partn
 
 ## Enforcement (build gates)
 
-> **Status (Nov 2026):** shipped. Provenance gate in `assertPageRoles`; studio-claim guards in `DRIFT_GUARDS`, narrowed so the Phonic Maps "Agency-ready" feature and a client's own "our clients" in a testimonial pass. `vetted team` is not guarded yet: it stays until the team section ships (2.3).
+> **Status (Nov 2026):** shipped. Provenance gate in `assertPageRoles`; studio-claim guards in `DRIFT_GUARDS`, narrowed so the Phonic Maps "Agency-ready" feature and a client's own "our clients" in a testimonial pass. `vetted team` (and its de/es/fr/ar forms) is guarded since Nov 2026: the owner asked for the contact terms, the About FAQ and llms.txt to say "a senior-led team of 7+" instead, ahead of the named team section (2.2).
 
 Add to `DRIFT_GUARDS` in `scripts/site-facts.mjs` (`max: 0` across `dist/`):
 - `{ re: /\bagency\b/gi }`, `{ re: /offices in/gi }`, `{ re: /24\/7/g }`
