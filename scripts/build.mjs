@@ -1605,7 +1605,7 @@ async function writeSeoFiles(locales, specs, projects = null, prices = null) {
     `- Role: Senior Software Engineer\n` +
     `- Location: ${LOCATION_LABEL} — remote and on-site\n` +
     `- Currently: full-time at Recovery Advisers (Dubai)\n` +
-    `- Availability: client projects of any size alongside the full-time role; larger builds run with a vetted team of engineers, with Ahmed as the single point of contact\n\n` +
+    `- Availability: client projects of any size alongside the full-time role; larger builds run with the studio's senior-led team of 7+, with Ahmed as the single point of contact\n\n` +
     `## Core skills\n\n` +
     `Laravel, PHP, Next.js, React, React Native, TypeScript, FastAPI, Python, Flutter, AWS, ` +
     `PostgreSQL, multi-tenant SaaS architecture, real-time systems, AI integration.\n\n` +
@@ -1940,7 +1940,7 @@ const HOME_COPY = {
     heroDemoNote: "Free: one real screen of your product, live on a URL in five business days. No obligation.",
     checklist: 'Get the free multi-tenant SaaS architecture checklist →',
     recommended: 'Recommended',
-    terms: ['Reply within 24 hours', 'NDA before the first call', 'You own all code & IP once paid', 'Written contract & invoice, signed by the founder', 'Larger scopes: a vetted team, quoted per scope', 'Same NDA and IP terms for the whole team'],
+    terms: ['Reply within 24 hours', 'NDA before the first call', 'You own all code & IP once paid', 'Written contract & invoice, signed by the founder', 'Larger scopes: a senior-led team of 7+, quoted per scope', 'Same NDA and IP terms for the whole team'],
   },
   ar: {
     tag: { 'tag-full': 'مهندس برمجيات أول · SaaS والجوّال والذكاء الاصطناعي · دبي 🇦🇪', 'tag-short': 'SaaS والجوّال والذكاء الاصطناعي 🇦🇪', 'tag-tiny': 'SaaS والجوّال والذكاء الاصطناعي 🇦🇪' },
@@ -1955,7 +1955,7 @@ const HOME_COPY = {
     heroDemoNote: "مجانًا: شاشة حقيقية واحدة من منتجك على رابط مباشر خلال خمسة أيام عمل، بدون أي التزام (الصفحة بالإنجليزية).",
     checklist: 'حمّل قائمة التحقق المجانية لمعمارية SaaS متعدّدة المستأجرين (بالإنجليزية) →',
     recommended: 'موصى به',
-    terms: ['ردّ خلال ٢٤ ساعة', 'اتفاقية سرّية قبل أول مكالمة', 'الكود والملكية الفكرية لك بعد السداد', 'عقد مكتوب وفاتورة بتوقيع المؤسس', 'المشاريع الأكبر: فريق مؤهّل وسعر حسب النطاق', 'الاتفاقية السرّية وملكية الكود تشملان الفريق كله'],
+    terms: ['ردّ خلال ٢٤ ساعة', 'اتفاقية سرّية قبل أول مكالمة', 'الكود والملكية الفكرية لك بعد السداد', 'عقد مكتوب وفاتورة بتوقيع المؤسس', 'المشاريع الأكبر: فريق من أكثر من ٧ أشخاص بقيادة مهندس أول، وسعر حسب النطاق', 'الاتفاقية السرّية وملكية الكود تشملان الفريق كله'],
   },
   de: {
     tag: { 'tag-full': 'Senior-Softwareentwickler · SaaS, Mobile & KI · Dubai 🇦🇪', 'tag-short': 'SaaS, Mobile & KI 🇦🇪', 'tag-tiny': 'SaaS, Mobile & KI 🇦🇪' },
@@ -1970,7 +1970,7 @@ const HOME_COPY = {
     heroDemoNote: "Kostenlos: ein echter Screen Ihres Produkts, in fünf Werktagen live unter einer URL. Unverbindlich (Seite auf Englisch).",
     checklist: 'Kostenlose Checkliste zur Multi-Tenant-SaaS-Architektur (Englisch) →',
     recommended: 'Empfohlen',
-    terms: ['Antwort innerhalb von 24 Stunden', 'NDA vor dem ersten Gespräch', 'Code und IP gehören Ihnen nach Zahlung', 'Schriftlicher Vertrag und Rechnung, vom Gründer unterschrieben', 'Größere Projekte: erprobtes Team, Preis nach Umfang', 'Gleiche NDA- und IP-Regeln für das ganze Team'],
+    terms: ['Antwort innerhalb von 24 Stunden', 'NDA vor dem ersten Gespräch', 'Code und IP gehören Ihnen nach Zahlung', 'Schriftlicher Vertrag und Rechnung, vom Gründer unterschrieben', 'Größere Projekte: Team aus 7+ Personen unter Senior-Leitung, Preis nach Umfang', 'Gleiche NDA- und IP-Regeln für das ganze Team'],
   },
   es: {
     tag: { 'tag-full': 'Ingeniero de Software Senior · SaaS, móvil e IA · Dubái 🇦🇪', 'tag-short': 'SaaS, móvil e IA 🇦🇪', 'tag-tiny': 'SaaS, móvil e IA 🇦🇪' },
@@ -1985,7 +1985,7 @@ const HOME_COPY = {
     heroDemoNote: "Gratis: una pantalla real de tu producto, publicada en una URL en cinco días hábiles. Sin compromiso (página en inglés).",
     checklist: 'Descarga gratis la checklist de arquitectura SaaS multi-tenant (en inglés) →',
     recommended: 'Recomendado',
-    terms: ['Respuesta en menos de 24 horas', 'NDA antes de la primera llamada', 'Código y PI son tuyos tras el pago', 'Contrato escrito y factura, firmados por el fundador', 'Proyectos mayores: equipo probado, precio por alcance', 'Mismo NDA y misma PI para todo el equipo'],
+    terms: ['Respuesta en menos de 24 horas', 'NDA antes de la primera llamada', 'Código y PI son tuyos tras el pago', 'Contrato escrito y factura, firmados por el fundador', 'Proyectos mayores: equipo de más de 7 personas con liderazgo sénior, precio por alcance', 'Mismo NDA y misma PI para todo el equipo'],
   },
   fr: {
     tag: { 'tag-full': 'Ingénieur logiciel senior · SaaS, mobile et IA · Dubaï 🇦🇪', 'tag-short': 'SaaS, mobile et IA 🇦🇪', 'tag-tiny': 'SaaS, mobile et IA 🇦🇪' },
@@ -2000,7 +2000,7 @@ const HOME_COPY = {
     heroDemoNote: "Gratuit : un vrai écran de votre produit, en ligne sur une URL en cinq jours ouvrés. Sans engagement (page en anglais).",
     checklist: 'Téléchargez la checklist gratuite d’architecture SaaS multi-tenant (en anglais) →',
     recommended: 'Recommandé',
-    terms: ['Réponse sous 24 heures', 'NDA avant le premier appel', 'Code et PI à vous après paiement', 'Contrat écrit et facture, signés par le fondateur', 'Projets plus larges : équipe éprouvée, prix au périmètre', 'Mêmes NDA et règles de PI pour toute l’équipe'],
+    terms: ['Réponse sous 24 heures', 'NDA avant le premier appel', 'Code et PI à vous après paiement', 'Contrat écrit et facture, signés par le fondateur', 'Projets plus larges : équipe de plus de 7 personnes encadrée par Ahmed Farid, prix au périmètre', 'Mêmes NDA et règles de PI pour toute l’équipe'],
   },
 };
 
@@ -2121,7 +2121,7 @@ const HUMAN_COPY = {
       ["Quotes business outcomes — and the trade-offs to get there.", "Talks in business outcomes, and the trade-offs behind them."],
       ["Every mark is a real product I built or contributed to — from Gulf SaaS platforms to a fleet of US & UK pharmacy brands. Hover to pause; click any logo to open its live site.", "Every name here is a real product I built or contributed to, from Gulf SaaS platforms to US and UK pharmacy brands. Each one opens its live site."],
       ["A senior engineer's range, narrowed to what I actually ship — not what's on the résumé. Most projects sit across two or three of these at once.", "What I build most often. Most projects combine two or three of these."],
-      ["I'm open to full-time senior engineering roles in Dubai — that's what I'm looking for now. I'm currently full-time at Recovery Advisers (remote) and take a small number of freelance engagements alongside it; those are on the services page.", "Both. I'm full-time at Recovery Advisers (remote), and I take on client projects of any size alongside it: larger builds run with a vetted team of engineers I work with, and you deal with me throughout. Packages and prices are on the services page."],
+      ["I'm open to full-time senior engineering roles in Dubai — that's what I'm looking for now. I'm currently full-time at Recovery Advisers (remote) and take a small number of freelance engagements alongside it; those are on the services page.", "Both. I'm full-time at Recovery Advisers (remote), and I take on client projects of any size alongside it: larger builds run with the studio's senior-led team of 7+, and you deal with me throughout. Packages and prices are on the services page."],
       ['UAE, Saudi Arabia, the United States, and Egypt.', 'UAE, Saudi Arabia, the United States, the UK, Spain and Egypt.'],
       ['Design concepts, client demos and smaller builds — all live on my own domain, so you can click through them instead of taking my word for it. Each one is labelled for what it actually is.', 'Client work and client demos, live on my own domain so you can click through them. Each one is labelled for what it is.'],
       ['Concepts & builds', 'Client builds'],
@@ -2190,7 +2190,7 @@ const HUMAN_COPY = {
     },
     text: [
       ["مرّر للإيقاف المؤقّت؛ انقر أي شعار لفتح موقعه الحيّ.", "كل اسم يفتح موقعه الحيّ."],
-      ['أبحث عن أدوار هندسية أولى بدوام كامل في دبي — هذا ما أسعى إليه الآن. أعمل حاليًا بدوام كامل لدى Recovery Advisers (عن بُعد) وآخذ إلى جانبها عددًا محدودًا من التعاقدات الحرّة، وهي معروضة في صفحة الخدمات.', 'كلاهما. أعمل بدوام كامل لدى Recovery Advisers (عن بُعد)، وأتولّى إلى جانبها مشاريع العملاء بأي حجم: المشاريع الأكبر تُنفَّذ مع فريق مؤهّل من المهندسين أعمل معهم، وتبقى أنت تتعامل معي مباشرةً طوال الوقت. الباقات والأسعار في صفحة الخدمات.'],
+      ['أبحث عن أدوار هندسية أولى بدوام كامل في دبي — هذا ما أسعى إليه الآن. أعمل حاليًا بدوام كامل لدى Recovery Advisers (عن بُعد) وآخذ إلى جانبها عددًا محدودًا من التعاقدات الحرّة، وهي معروضة في صفحة الخدمات.', 'كلاهما. أعمل بدوام كامل لدى Recovery Advisers (عن بُعد)، وأتولّى إلى جانبها مشاريع العملاء بأي حجم: المشاريع الأكبر تُنفَّذ مع فريق الاستوديو المكوّن من أكثر من ٧ أشخاص بقيادة مهندس أول، وتبقى أنت تتعامل معي مباشرةً طوال الوقت. الباقات والأسعار في صفحة الخدمات.'],
       ['الإمارات والسعودية والولايات المتحدة ومصر.', 'الإمارات والسعودية والولايات المتحدة والمملكة المتحدة وإسبانيا ومصر.'],
       ['مفاهيم تصميمية وعروض تجريبية لعملاء وأعمال أصغر — جميعها منشورة على نطاقي الخاص، لتتصفّحها بنفسك بدل أن تأخذ كلامي. وكلٌّ منها موسوم بما هو عليه فعلًا.', 'أعمال وعروض تجريبية لعملاء، منشورة على نطاقي الخاص لتتصفّحها بنفسك. وكلٌّ منها موسوم بما هو عليه.'],
       ['مفاهيم وأعمال', 'أعمال لعملاء'],
@@ -2274,7 +2274,7 @@ const HUMAN_COPY = {
     },
     text: [
       ["Every mark is a real product I built or contributed to — from Gulf SaaS platforms to a fleet of US & UK pharmacy brands. Hover to pause; click any logo to open its live site.", "Jeder Name ist ein echtes Produkt, das ich gebaut oder mitentwickelt habe, von SaaS-Plattformen am Golf bis zu Apothekenmarken in den USA und Großbritannien. Jeder Link öffnet die Live-Website."],
-      ['Ich suche eine Senior-Engineering-Festanstellung in Dubai — das ist mein Ziel. Derzeit bin ich Vollzeit bei Recovery Advisers (remote) und nehme daneben einige wenige freiberufliche Projekte an; die stehen auf der Services-Seite.', 'Beides. Ich bin Vollzeit bei Recovery Advisers (remote) und übernehme daneben Kundenprojekte jeder Größe: Größere Projekte setze ich mit einem erprobten Team von Entwicklern um, mit denen ich arbeite, und Ihr Ansprechpartner bleibe durchgehend ich. Pakete und Preise stehen auf der Services-Seite.'],
+      ['Ich suche eine Senior-Engineering-Festanstellung in Dubai — das ist mein Ziel. Derzeit bin ich Vollzeit bei Recovery Advisers (remote) und nehme daneben einige wenige freiberufliche Projekte an; die stehen auf der Services-Seite.', 'Beides. Ich bin Vollzeit bei Recovery Advisers (remote) und übernehme daneben Kundenprojekte jeder Größe: Größere Projekte setze ich mit dem Studio-Team aus 7+ Personen unter Senior-Leitung um, und Ihr Ansprechpartner bleibe durchgehend ich. Pakete und Preise stehen auf der Services-Seite.'],
       ['VAE, Saudi-Arabien, die Vereinigten Staaten und Ägypten.', 'VAE, Saudi-Arabien, die USA, Großbritannien, Spanien und Ägypten.'],
       ['Designkonzepte, Kunden-Demos und kleinere Builds — alle live auf meiner eigenen Domain, damit Sie durchklicken können, statt mir zu glauben. Jedes ist als das gekennzeichnet, was es wirklich ist.', 'Kundenarbeiten und Kunden-Demos, live auf meiner eigenen Domain zum Durchklicken. Jede ist als das gekennzeichnet, was sie ist.'],
       ['Konzepte & Builds', 'Kundenprojekte'],
@@ -2356,7 +2356,7 @@ const HUMAN_COPY = {
     },
     text: [
       ["Pasa el cursor para pausar; haz clic en cualquier logo para abrir su sitio en vivo.", "Cada nombre abre su sitio en vivo."],
-      ['Busco un puesto senior de ingeniería a jornada completa en Dubái — es lo que quiero ahora. Actualmente estoy a jornada completa en Recovery Advisers (remoto) y acepto algunos encargos freelance en paralelo; están en la página de servicios.', 'Ambos. Estoy a jornada completa en Recovery Advisers (remoto) y acepto proyectos de clientes de cualquier tamaño: los más grandes se hacen con un equipo probado de ingenieros con el que trabajo, y tu interlocutor sigo siendo yo de principio a fin. Los paquetes y precios están en la página de servicios.'],
+      ['Busco un puesto senior de ingeniería a jornada completa en Dubái — es lo que quiero ahora. Actualmente estoy a jornada completa en Recovery Advisers (remoto) y acepto algunos encargos freelance en paralelo; están en la página de servicios.', 'Ambos. Estoy a jornada completa en Recovery Advisers (remoto) y acepto proyectos de clientes de cualquier tamaño: los más grandes se hacen con el equipo del estudio, de más de 7 personas con liderazgo sénior, y tu interlocutor sigo siendo yo de principio a fin. Los paquetes y precios están en la página de servicios.'],
       ['EAU, Arabia Saudí, Estados Unidos y Egipto.', 'EAU, Arabia Saudí, Estados Unidos, Reino Unido, España y Egipto.'],
       ['Conceptos de diseño, demos para clientes y trabajos más pequeños — todos publicados en mi propio dominio, para que los recorras en vez de creerme. Cada uno está etiquetado por lo que realmente es.', 'Trabajos y demos para clientes, publicados en mi propio dominio para que los recorras. Cada uno está etiquetado por lo que es.'],
       ['Conceptos y builds', 'Proyectos de clientes'],
@@ -2439,7 +2439,7 @@ const HUMAN_COPY = {
     },
     text: [
       ["Every mark is a real product I built or contributed to — from Gulf SaaS platforms to a fleet of US & UK pharmacy brands. Hover to pause; click any logo to open its live site.", "Chaque nom est un vrai produit que j’ai construit ou auquel j’ai contribué, des plateformes SaaS du Golfe aux marques de pharmacies aux États-Unis et au Royaume-Uni. Chaque lien ouvre le site en ligne."],
-      ["Je cherche un poste senior en ingénierie à temps plein à Dubaï — c'est mon objectif aujourd'hui. Je suis actuellement à temps plein chez Recovery Advisers (à distance) et je prends quelques missions freelance en parallèle ; elles sont sur la page services.", 'Les deux. Je suis à temps plein chez Recovery Advisers (à distance) et je prends des projets clients de toute taille : les plus importants sont menés avec une équipe éprouvée d’ingénieurs avec qui je travaille, et votre interlocuteur reste moi du début à la fin. Les forfaits et les tarifs sont sur la page services.'],
+      ["Je cherche un poste senior en ingénierie à temps plein à Dubaï — c'est mon objectif aujourd'hui. Je suis actuellement à temps plein chez Recovery Advisers (à distance) et je prends quelques missions freelance en parallèle ; elles sont sur la page services.", 'Les deux. Je suis à temps plein chez Recovery Advisers (à distance) et je prends des projets clients de toute taille : les plus importants sont menés avec l’équipe du studio, plus de 7 personnes que j’encadre, et votre interlocuteur reste moi du début à la fin. Les forfaits et les tarifs sont sur la page services.'],
       ['EAU, Arabie saoudite, États-Unis et Égypte.', 'EAU, Arabie saoudite, États-Unis, Royaume-Uni, Espagne et Égypte.'],
       ['Concepts de design, démos client et réalisations plus courtes — tous en ligne sur mon propre domaine, pour que vous cliquiez plutôt que de me croire sur parole. Chacun est étiqueté pour ce qu’il est vraiment.', 'Réalisations et démos client, en ligne sur mon propre domaine pour que vous cliquiez dessus. Chacune est étiquetée pour ce qu’elle est.'],
       ['Concepts & réalisations', 'Projets clients'],

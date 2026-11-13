@@ -386,6 +386,9 @@ export const DRIFT_GUARDS = [
   // invoices through Ahmed personally. Nothing may claim a registered
   // company, a company suffix or a trade licence until the papers exist.
   { re: /\b(LLC|L\.L\.C\.?|FZ-?LLC|FZE|FZCO|Ltd\.?|registered (company|business)|trade licen[cs]e)\b|ذ\.م\.م|شركة مسجّ?لة|رخصة تجارية|eingetragene Firma|empresa registrada|société immatriculée/gi, max: 0 },
+  // The team is described as it is (owner, Nov 2026: a senior-led team of
+  // 7+), never as an unnamed "vetted team" (docs/STUDIO-SPEC.md 2.3).
+  { re: /vetted team|erprobtes Team|erprobten Team|equipo probado|équipe éprouvée|فريق مؤهّل/gi, max: 0 },
   // A role Ahmed held is never presented as a client (R1).
   { re: /\bour clients?\b[^.<]{0,80}\b(Yelo|Recovery Advisers|RevealSite|Arab Bank|Compass Med)\b/gi, max: 0 },
 ];
