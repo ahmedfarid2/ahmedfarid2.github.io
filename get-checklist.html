@@ -72,6 +72,13 @@ if(v==='yes'){load();}
   button:hover{filter:brightness(1.06);transform:translateY(-1px)}
   .formnote{margin-top:14px;font-size:13px;color:var(--muted);text-align:center}
   .formnote a{color:var(--accent)}
+  .sent{margin-top:28px;padding:24px;border:1px solid var(--line);border-radius:14px;background:var(--field)}
+  .sent h2{margin:0 0 8px;font-size:22px;color:var(--ink)}
+  .sent h2:focus{outline:none}
+  .sent p{margin:0 0 16px;color:var(--muted);font-size:15px}
+  .sent p:last-child{margin:16px 0 0}
+  .sent a{color:var(--accent)}
+  .sent a.dl{display:block;padding:16px 22px;border-radius:99px;background:var(--accent);color:#0B0D10;font-weight:600;text-align:center;text-decoration:none}
   .alt{margin-top:30px;padding-top:20px;border-top:1px solid var(--line);font-size:14px;color:var(--muted)}
   .alt a{color:var(--accent);text-decoration:none}
   footer{margin-top:44px;padding-top:20px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
@@ -102,10 +109,14 @@ if(v==='yes'){load();}
     <input type="hidden" name="_subject" value="Checklist download — iamahmedfarid.com">
     <input type="hidden" name="_template" value="table">
     <input type="hidden" name="_captcha" value="false">
-    <!-- Straight to the PDF on success: the download IS the confirmation, so
-         there is no thank-you page to bounce through. -->
-    <input type="hidden" name="_next" value="https://iamahmedfarid.com/multi-tenant-saas-checklist.pdf">
+    <!-- Back here with ?sent=1 on success: the page swaps the form for the
+         download link, and that return is the only place a sent request can be
+         counted (checklist-sent, docs/MEASUREMENT.md). Going straight to the
+         PDF left the visitor on a file with no way back to the site. -->
+    <input type="hidden" name="_next" value="https://iamahmedfarid.com/get-checklist.html?sent=1">
     <input class="hp" type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <!-- How the visitor found the site (build.mjs ATTRIBUTION_JS); inbox only. -->
+    <input type="hidden" name="Source" value="">
 
     <label class="field">
       <span>Email <i class="req">*</i></span>
@@ -117,13 +128,20 @@ if(v==='yes'){load();}
       <input type="text" name="Name" autocomplete="name" placeholder="Optional">
     </label>
 
-    <button type="submit">Send me the PDF</button>
+    <button type="submit" data-umami-event="checklist-submit">Get the PDF</button>
 
     <p class="formnote">
       One email address, one PDF. No newsletter and no follow-up sequence.
       If you want to talk, <a href="/demo.html">book a free demo</a> instead.
     </p>
   </form>
+
+  <div class="sent" id="sent" role="status" hidden>
+    <h2 tabindex="-1">Here's your checklist.</h2>
+    <p>Thanks. No email will follow unless you write to us.</p>
+    <a class="dl" href="/multi-tenant-saas-checklist.pdf">Download the checklist (PDF) ↓</a>
+    <p>Working through one of these decisions now? <a href="/demo.html">Get one real screen built, free</a>, or <a href="https://calendly.com/iamahmedfarid/30min" target="_blank" rel="noreferrer">book a 30-minute scoping call</a>.</p>
+  </div>
 
   <p class="alt">
     Rather not hand over an email? <a href="/checklist.html">Read the whole thing
@@ -134,5 +152,15 @@ if(v==='yes'){load();}
     © 2026 <a href="https://iamahmedfarid.com/">Ahmed Farid</a> · Senior Software Engineer · Dubai
   </footer>
 </main>
+<script>
+  // FormSubmit returns here with ?sent=1 once the request went through. With
+  // JS off the form still posts and FormSubmit shows its own page instead.
+  if (/[?&]sent=1(&|$)/.test(location.search)) {
+    document.getElementById('sent').hidden = false;
+    document.querySelector('main form').hidden = true;
+    document.getElementById('sent').scrollIntoView({ block: 'center' });
+    document.querySelector('#sent h2').focus({ preventScroll: true });
+  }
+</script>
 </body>
 </html>

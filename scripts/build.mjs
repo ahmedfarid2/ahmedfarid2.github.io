@@ -131,6 +131,59 @@ const analyticsTag = UMAMI_ID
   ? `<script defer src="https://cloud.umami.is/script.js" data-website-id="${UMAMI_ID}" data-domains="${new URL(SITE_URL).hostname}"></script>`
   : '';
 
+// Source attribution and confirmed-submission events (docs/MEASUREMENT.md),
+// on every page, with or without Umami. No cookies and no new service:
+//  - The page a visitor arrives on records its campaign tags (utm_*), the
+//    referring site and the landing path in sessionStorage (af_src), which
+//    the browser clears when the tab closes. A later arrival from outside
+//    (tagged link or another site) replaces it; moving between the site's
+//    own pages never does, and neither does coming back from FormSubmit or
+//    Calendly, which would otherwise overwrite the real source on ?sent=1.
+//  - Booking links get those as Calendly's own utm_* parameters (plus where
+//    the link sat, from data-umami-event-where), so a booked call shows its
+//    source in Calendly. Changed at runtime only: the HTML keeps the plain
+//    link the gates check.
+//  - Each FormSubmit form's hidden "Source" field gets a one-line summary,
+//    which arrives in the enquiry email. It never goes to analytics.
+//  - FormSubmit only sends a visitor back to ?sent=1 once it has accepted
+//    the message, so that landing is the confirmed submission: it counts
+//    once (project-form-sent, demo-sent, checklist-sent), and a reload of
+//    the thank-you within 30 minutes does not count again. Analytics gets
+//    the event name, the page language and the source label, never a name,
+//    an address or a message.
+// Values are cut to letters, digits and . _ / - so a tag cannot carry
+// anything else into Calendly or the email.
+const ATTRIBUTION_JS = `(function(){
+var K='af_src',s=null,q=new URLSearchParams(location.search);
+function c(v){return String(v||'').replace(/[^A-Za-z0-9._\\/-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60)}
+try{s=JSON.parse(sessionStorage.getItem(K)||'null')}catch(e){}
+var r='';try{var h=document.referrer&&new URL(document.referrer).hostname;if(h&&h!==location.hostname&&!/(^|\\.)(formsubmit\\.co|calendly\\.com)$/.test(h))r=h.replace(/^www\\./,'')}catch(e){}
+var tagged=['utm_source','utm_medium','utm_campaign','utm_content'].some(function(k){return q.get(k)});
+if(!s||typeof s!=='object'||tagged||r){
+s={src:c(q.get('utm_source')),med:c(q.get('utm_medium')),cmp:c(q.get('utm_campaign')),cnt:c(q.get('utm_content')),ref:c(r),land:c(location.pathname)};
+try{sessionStorage.setItem(K,JSON.stringify(s))}catch(e){}
+}
+var label=s.src||s.ref||'direct';
+function track(n,d,done,t){t=t||0;if(window.umami&&typeof window.umami.track==='function'){try{window.umami.track(n,d);if(done)done()}catch(e){}return}if(t<40)setTimeout(function(){track(n,d,done,t+1)},250)}
+function run(){
+document.querySelectorAll('a[href*="calendly.com/"]').forEach(function(a){
+try{var u=new URL(a.getAttribute('href'));
+var p={utm_source:label,utm_medium:s.med||(s.src?'':(s.ref?'referral':'none')),utm_campaign:s.cmp,utm_content:c(a.getAttribute('data-umami-event-where')),utm_term:s.land};
+for(var k in p)if(p[k])u.searchParams.set(k,p[k]);
+a.setAttribute('href',u.toString())}catch(e){}
+});
+var line=['source: '+label,s.med&&'medium: '+s.med,s.cmp&&'campaign: '+s.cmp,s.cnt&&'content: '+s.cnt,s.ref&&'referrer: '+s.ref,'landed on: '+(s.land||'/'),'sent from: '+c(location.pathname)].filter(Boolean).join(' · ');
+document.querySelectorAll('form input[name="Source"]').forEach(function(i){i.value=line});
+if(/[?&]sent=1(&|$)/.test(location.search)){
+var path=location.pathname,n=/\\/contact\\/$/.test(path)?'project-form-sent':/\\/demo\\.html$/.test(path)?'demo-sent':/\\/get-checklist\\.html$/.test(path)?'checklist-sent':'';
+if(n){var key='af_sent:'+n,now=Date.now(),last=0;try{last=+sessionStorage.getItem(key)||0}catch(e){}
+if(now-last>18e5)track(n,{source:label,lang:document.documentElement.lang||'en'},function(){try{sessionStorage.setItem(key,String(now))}catch(e){}})}
+}
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
+})();`;
+const attributionTag = `<script>${ATTRIBUTION_JS}</script>`;
+
 // Names the clicks that matter, so analytics can count them: every way to
 // book, message or hire, and every project card. Umami reads data-umami-event
 // on click; without the script the attributes are inert. Matched on the link
@@ -348,7 +401,7 @@ async function applyShellToStandalonePages() {
       if (stripped === doc && doc.includes(AD_PIXEL_SRC)) console.warn(`  ⚠ ${name}: pixel loader found but not stripped (its comment changed?)`);
       doc = stripped;
     }
-    doc = doc.replace('</head>', `${ICON_LINKS}<style data-site-shell>${shellCss}</style>${extra}${analyticsTag}</head>`);
+    doc = doc.replace('</head>', `${ICON_LINKS}<style data-site-shell>${shellCss}</style>${extra}${analyticsTag}${attributionTag}</head>`);
     // Skip link first, so it is the first tab stop; its target is each page's
     // own <main class="wrap" id="main">.
     doc = doc.replace(/<body([^>]*)>/, `<body$1>${skipLink('en')}<div class="site-shell">${nav}</div>`);
@@ -1396,9 +1449,10 @@ async function writeInsights() {
 // ── /privacy/: what the site collects (English only, like /insights/) ───────
 // Written from what the build actually ships: FormSubmit forms, Umami
 // (cookieless), the Calendly widget, Google’s favicon service for client
-// logos, GitHub Pages hosting, and two browser-storage keys (af_theme,
-// af_intro_done). Change a third party in the build, change this page.
-const PRIVACY_UPDATED = '2026-11-04';
+// logos, GitHub Pages hosting, and three browser-storage keys (af_theme,
+// af_intro_done, and ATTRIBUTION_JS’s af_src and af_sent:* for one visit). Change a third party or
+// what a form sends in the build, change this page.
+const PRIVACY_UPDATED = '2026-11-14';
 async function writePrivacy() {
   const url = `${SITE_URL}/privacy/`;
   const title = `Privacy · ${STUDIO.name}`;
@@ -1417,11 +1471,11 @@ async function writePrivacy() {
     `<p class="byline">${insightEsc(STUDIO.name)} · Dubai, UAE · Last updated <time datetime="${PRIVACY_UPDATED}">${insightDate(PRIVACY_UPDATED)}</time></p>`,
     `<article class="prose">`,
     `<h2>Who we are</h2><p>${insightEsc(STUDIO.name)} is the software practice of Ahmed Farid, based in Dubai, UAE. For anything on this page, write to ${mail}.</p>`,
-    `<h2>What you send us</h2><p>The contact, free demo and checklist forms ask for your name, email, phone, company and a message. A form service, <b>FormSubmit</b> (formsubmit.co), delivers it to our inbox. We use it to reply to you and, if we work together, to run the project. We never sell it, never share it for marketing and never add you to a newsletter.</p>`,
-    `<h2>Analytics</h2><p>We count visits with <b>Umami</b>, a privacy-focused analytics tool. It sets no cookies and stores no personal data: it records pages viewed, the site you came from, your country, your device type and clicks on a few key buttons, all in aggregate.</p>`,
-    `<h2>Services you choose to use</h2><ul><li><b>Calendly</b> handles call bookings. Its widget loads on some pages, and its own privacy policy and cookies apply when you book.</li><li><b>WhatsApp</b>, <b>LinkedIn</b> and email links open those services, under their own policies.</li><li>Client logos are fetched from <b>Google’s</b> favicon service, which sees your IP address like any image request.</li></ul>`,
+    `<h2>What you send us</h2><p>The contact, free demo and checklist forms ask for your name, email, phone, company and a message, and optionally for project details such as a budget range or the service you need. A form service, <b>FormSubmit</b> (formsubmit.co), delivers it to our inbox. With it comes one line on how you found the site: the campaign tag of the link you followed, if it had one, the site that referred you, and the first page you opened. We use all of it to reply to you and, if we work together, to run the project. We never sell it, never share it for marketing and never add you to a newsletter.</p>`,
+    `<h2>Analytics</h2><p>We count visits with <b>Umami</b>, a privacy-focused analytics tool. It sets no cookies and stores no personal data: it records pages viewed, the site you came from, your country, your device type clicks on a few key buttons and whether a form was sent, all in aggregate. It never receives what you type into a form.</p>`,
+    `<h2>Services you choose to use</h2><ul><li><b>Calendly</b> handles call bookings. Its widget loads on some pages, and its own privacy policy and cookies apply when you book. The booking link tells Calendly the same campaign tag, referring site and first page, so we know which page led to the call.</li><li><b>WhatsApp</b>, <b>LinkedIn</b> and email links open those services, under their own policies.</li><li>Client logos are fetched from <b>Google’s</b> favicon service, which sees your IP address like any image request.</li></ul>`,
     `<h2>Hosting</h2><p>The site is hosted on <b>GitHub Pages</b>. GitHub may log IP addresses for security, as its own privacy statement describes.</p>`,
-    `<h2>Stored in your browser</h2><p>Two small settings: your light or dark theme choice, and whether the opening animation already played in this visit. We set no cookies of our own and run no advertising pixels.</p>`,
+    `<h2>Stored in your browser</h2><p>Three small items: your light or dark theme choice, whether the opening animation already played in this visit, and, for this visit only, how you arrived (the campaign tag, referring site and first page above) and whether a sent form was already counted, which your browser deletes when you close the tab. We set no cookies of our own and run no advertising pixels.</p>`,
     `<h2>Project work</h2><p>What you share with us about your product is covered by the NDA we sign before the first call.</p>`,
     `<h2>Keeping and deleting</h2><p>We keep your messages for as long as we need them to answer you and, for clients, for as long as the project and tax records require. To see, correct or delete what we hold about you, email ${mail}. We act on it within 30 days.</p>`,
     `</article>`,
@@ -1957,6 +2011,8 @@ const HOME_COPY = {
 // sentence a re-export rewords is reported once per locale, never fatal.
 //   hi        next to a small portrait in the home hero
 //   caseCta   above the call button in a project page's side column
+//   caseService  under it: the plan that fits a visitor in the same situation
+//             (CASE_SERVICE picks build / review / monthly per flagship)
 //   headings  section heading text → plain replacement (every locale)
 //   text      exact sentence fragments → rewrites without the em dashes (en)
 //   position  the home position statement, rewritten without metaphors
@@ -1966,6 +2022,7 @@ const HOME_COPY = {
 //             hire; dropped on every page but /about/ and /contact/
 //   contactTitle  /contact/'s h1, in place of "Find me online."
 //   projectForm   the short project form on /contact/ (labels, hint, the
+//                 optional closest-service select: need/choose/notSure,
 //                 thank-you shown after FormSubmit sends the visitor back)
 //   addonsTitle   the heading over /services/' three focused builds
 //   brandsSub     /work/'s name-list subtitle, once the carded names are gone
@@ -1979,6 +2036,22 @@ const HOME_COPY = {
 //             from the price cards on the same page (rateIntro … rateOutro)
 //   outcomes  one plain line per flagship card (slug → text): what it changed
 //             for the people using it, in place of an engineering metric
+// Which plan a visitor reading each flagship would most likely start with,
+// judged by the visitor's situation (a new build, a live system to review,
+// a live product to keep developing), not by how the case was commissioned.
+// One id per FLAGSHIP slug: build → #plan-build, review → #plan-review,
+// monthly → #plan-monthly on /services/.
+const CASE_SERVICE = {
+  'yelo-sale': 'build',
+  'qoralia': 'monthly',
+  'khebraos': 'build',
+  'phonic-maps': 'build',
+  'recovery-advisers': 'review',
+};
+for (const f of FLAGSHIP) {
+  if (!['build', 'review', 'monthly'].includes(CASE_SERVICE[f.slug])) throw new Error(`[build] CASE_SERVICE has no plan for flagship "${f.slug}"`);
+}
+
 const HUMAN_COPY = {
   en: {
     navCta: 'Book a call',
@@ -2002,6 +2075,7 @@ const HUMAN_COPY = {
     heroSub: "I design, build and ship your product end to end: web, mobile and AI, as one fixed price or a monthly retainer. Real-time and multi-tenant systems are my specialty, with over six years in production across the Gulf, the US and the UK.",
     proof: "Recommended by clients and managers at Recovery Advisers, Yelo Sale, Phonic Maps, Compass Med and Ibdaa Course. Read what they say ↓",
     caseCta: 'Need something like this built?',
+    caseService: {"build":"Planning something similar? Start with a fixed-price build","review":"Running a system like this already? Start with a code & architecture review","monthly":"Have a live product that needs steady senior work? See monthly engineering"},
     headings: {
       'Every system, shipped & linked.': "Live products I've built.",
       'Four steps, then we ship.': 'How a project runs.',
@@ -2067,7 +2141,7 @@ const HUMAN_COPY = {
     position: 'I treat a product as one system, not a pile of features. I design how the parts fit together, build every layer, and stay on the hook when it has to scale.',
     pinnedStat: 'Pinned projects',
     contactTitle: 'Let’s talk.',
-    projectForm: {"title": "Or tell me about the project here", "sub": "Four fields. I reply personally, usually within a day.", "name": "Your name", "email": "Email", "company": "Company or product URL", "optional": "optional", "brief": "What are you building, and what do you need from me?", "briefPh": "The product, who it is for, where it stands today, and the timeline you have in mind.", "submit": "Send project details", "note": "No newsletter, no sequence. Your details go to my inbox and nowhere else.", "sentTitle": "Got it, thank you.", "sentBody": "Your message is in my inbox. I'll reply personally, usually within a day."},
+    projectForm: {"title": "Or tell me about the project here", "sub": "Two minutes to fill in. I reply personally, usually within a day.", "need": "Which service is closest?", "choose": "Choose one…", "notSure": "Not sure yet", "name": "Your name", "email": "Email", "company": "Company or product URL", "optional": "optional", "brief": "What are you building, and what do you need from me?", "briefPh": "The product, who it is for, where it stands today, and the timeline you have in mind.", "submit": "Send project details", "note": "No newsletter, no sequence. Your details go to my inbox and nowhere else.", "sentTitle": "Got it, thank you.", "sentBody": "Your message is in my inbox. I'll reply personally, usually within a day."},
     brandsSub: 'More real products and teams I built for, beyond the case studies above: from a bank and an e-learning platform to US and UK pharmacy brands. Each name opens its live site.',
     addonsTitle: 'Focused builds',
     toolbeltMore: ['Show all 60+ tools', 'Show fewer'],
@@ -2094,6 +2168,7 @@ const HUMAN_COPY = {
     heroSub: "أصمّم منتجك وأبنيه وأطلقه من البداية إلى النهاية: الويب والجوّال والذكاء الاصطناعي، بسعر ثابت أو بعقد شهري. تخصّصي الأنظمة الفورية ومتعدّدة المستأجرين، مع أكثر من ست سنوات في الإنتاج عبر الخليج والولايات المتحدة والمملكة المتحدة.",
     proof: "موصًى بي من عملاء ومديرين في Recovery Advisers وYelo Sale وPhonic Maps وCompass Med وIbdaa Course. اقرأ ما قالوه ↓",
     caseCta: 'تحتاج إلى نظام مثل هذا؟',
+    caseService: {"build":"تخطّط لشيء مشابه؟ ابدأ ببناء بسعر ثابت","review":"لديك نظام مشابه قيد التشغيل؟ ابدأ بمراجعة الكود والمعمارية","monthly":"لديك منتج قائم يحتاج إلى خبرة هندسية منتظمة؟ اطّلع على الدعم الهندسي الشهري"},
     headings: {
       'كل نظام، سُلّم ورُبط.': 'منتجات بنيتها وتعمل الآن.',
       'أربع خطوات، ثم نُطلق.': 'كيف يسير المشروع.',
@@ -2150,7 +2225,7 @@ const HUMAN_COPY = {
     position: 'أتعامل مع المنتج كنظام واحد، لا كمجموعة مزايا متفرّقة. أصمّم كيف تترابط أجزاؤه، وأبني كل طبقاته، وأبقى مسؤولًا عنه حين يكبر.',
     pinnedStat: 'مشاريع مثبّتة',
     contactTitle: 'لنتحدّث.',
-    projectForm: {"title": "أو أخبرني عن مشروعك هنا", "sub": "أربعة حقول. أردّ بنفسي، عادةً خلال يوم.", "name": "اسمك", "email": "البريد الإلكتروني", "company": "الشركة أو رابط المنتج", "optional": "اختياري", "brief": "ماذا تبني، وما الذي تحتاجه مني؟", "briefPh": "المنتج، ولمن هو، وأين وصل اليوم، والجدول الزمني الذي تفكّر فيه.", "submit": "أرسل تفاصيل المشروع", "note": "لا نشرات بريدية ولا رسائل متتابعة. تصل بياناتك إلى بريدي فقط.", "sentTitle": "وصلتني رسالتك، شكرًا لك.", "sentBody": "رسالتك في بريدي الآن. سأردّ بنفسي، عادةً خلال يوم."},
+    projectForm: {"title": "أو أخبرني عن مشروعك هنا", "sub": "تعبئة النموذج تستغرق دقيقتين. أردّ بنفسي، عادةً خلال يوم.", "need": "أيّ خدمة أقرب لما تحتاجه؟", "choose": "اختر واحدة…", "notSure": "لم أحدّد بعد", "name": "اسمك", "email": "البريد الإلكتروني", "company": "الشركة أو رابط المنتج", "optional": "اختياري", "brief": "ماذا تبني، وما الذي تحتاجه مني؟", "briefPh": "المنتج، ولمن هو، وأين وصل اليوم، والجدول الزمني الذي تفكّر فيه.", "submit": "أرسل تفاصيل المشروع", "note": "لا نشرات بريدية ولا رسائل متتابعة. تصل بياناتك إلى بريدي فقط.", "sentTitle": "وصلت رسالتك، شكرًا لك.", "sentBody": "رسالتك في بريدي الآن. سأردّ بنفسي، عادةً خلال يوم."},
     brandsSub: 'منتجات وفرق حقيقية أخرى بنيت لها، غير دراسات الحالة أعلاه: من بنك ومنصّة تعليم إلى علامات صيدليات أمريكية وبريطانية. كل اسم يفتح موقعه الحيّ.',
     addonsTitle: 'مشاريع مركّزة',
     toolbeltMore: ['عرض كل الأدوات (٦٠+)', 'عرض أقل'],
@@ -2177,6 +2252,7 @@ const HUMAN_COPY = {
     heroSub: "Ich konzipiere, baue und liefere Ihr Produkt end to end: Web, Mobile und KI, zum Festpreis oder als monatlicher Retainer. Mein Schwerpunkt sind Echtzeit- und Multi-Tenant-Systeme, mit über sechs Jahren in Produktion im Golfraum, in den USA und in Großbritannien.",
     proof: "Empfohlen von Kunden und Vorgesetzten bei Recovery Advisers, Yelo Sale, Phonic Maps, Compass Med und Ibdaa Course. Was sie sagen ↓",
     caseCta: 'Sie brauchen etwas Ähnliches?',
+    caseService: {"build":"Sie planen etwas Ähnliches? Starten Sie mit der Entwicklung zum Festpreis","review":"Sie betreiben schon ein solches System? Starten Sie mit einem Code- & Architektur-Review","monthly":"Ein Live-Produkt, das laufend Senior-Arbeit braucht? Zur monatlichen Entwicklung"},
     headings: {
       "Jedes System, geliefert & verlinkt.": "Live-Produkte, die ich gebaut habe.",
       "Vier Schritte, dann liefern wir.": "So läuft ein Projekt ab.",
@@ -2231,7 +2307,7 @@ const HUMAN_COPY = {
     position: "Ich behandle ein Produkt als ein System, nicht als Sammlung von Features. Ich entwerfe, wie die Teile zusammenspielen, baue jede Schicht und bleibe verantwortlich, wenn es wachsen muss.",
     pinnedStat: 'Angepinnte Projekte',
     contactTitle: 'Sprechen wir.',
-    projectForm: {"title": "Oder erzählen Sie mir hier vom Projekt", "sub": "Vier Felder. Ich antworte persönlich, meist innerhalb eines Tages.", "name": "Ihr Name", "email": "E-Mail", "company": "Firma oder Produkt-URL", "optional": "optional", "brief": "Was bauen Sie, und was brauchen Sie von mir?", "briefPh": "Das Produkt, für wen es ist, wo es heute steht und welchen Zeitrahmen Sie im Kopf haben.", "submit": "Projektdetails senden", "note": "Kein Newsletter, keine Mail-Sequenz. Ihre Angaben landen nur in meinem Postfach.", "sentTitle": "Angekommen, danke.", "sentBody": "Ihre Nachricht ist in meinem Postfach. Ich antworte persönlich, meist innerhalb eines Tages."},
+    projectForm: {"title": "Oder erzählen Sie mir hier vom Projekt", "sub": "In zwei Minuten ausgefüllt. Ich antworte persönlich, meist innerhalb eines Tages.", "need": "Welche Leistung passt am ehesten?", "choose": "Bitte wählen…", "notSure": "Noch unklar", "name": "Ihr Name", "email": "E-Mail", "company": "Firma oder Produkt-URL", "optional": "optional", "brief": "Was bauen Sie, und was brauchen Sie von mir?", "briefPh": "Das Produkt, für wen es ist, wo es heute steht und welchen Zeitrahmen Sie im Kopf haben.", "submit": "Projektdetails senden", "note": "Kein Newsletter, keine Mail-Sequenz. Ihre Angaben landen nur in meinem Postfach.", "sentTitle": "Angekommen, danke.", "sentBody": "Ihre Nachricht ist in meinem Postfach. Ich antworte persönlich, meist innerhalb eines Tages."},
     brandsSub: 'Weitere echte Produkte und Teams, für die ich gebaut habe, über die Fallstudien oben hinaus: von einer Bank und einer E-Learning-Plattform bis zu Apothekenmarken in den USA und Großbritannien. Jeder Name öffnet die Live-Website.',
     addonsTitle: 'Fokussierte Projekte',
     toolbeltMore: ['Alle 60+ Tools zeigen', 'Weniger anzeigen'],
@@ -2258,6 +2334,7 @@ const HUMAN_COPY = {
     heroSub: "Diseño, construyo y lanzo tu producto de principio a fin: web, móvil e IA, a precio cerrado o con un retainer mensual. Mi especialidad son los sistemas en tiempo real y multi-tenant, con más de seis años en producción en el Golfo, EE. UU. y el Reino Unido.",
     proof: "Recomendado por clientes y responsables de Recovery Advisers, Yelo Sale, Phonic Maps, Compass Med e Ibdaa Course. Lee lo que dicen ↓",
     caseCta: '¿Necesitas algo parecido?',
+    caseService: {"build":"¿Planeas algo parecido? Empieza con un desarrollo a precio cerrado","review":"¿Ya tienes un sistema así en marcha? Empieza con una revisión de código y arquitectura","monthly":"¿Tienes un producto en marcha que necesita trabajo senior constante? Conoce la ingeniería mensual"},
     headings: {
       "Cada sistema, entregado y enlazado.": "Productos en vivo que he construido.",
       "Cuatro pasos, y entregamos.": "Cómo funciona un proyecto.",
@@ -2313,7 +2390,7 @@ const HUMAN_COPY = {
     position: "Trato un producto como un solo sistema, no como un montón de funciones. Diseño cómo encajan las piezas, construyo cada capa y sigo respondiendo cuando tiene que escalar.",
     pinnedStat: 'Proyectos fijados',
     contactTitle: 'Hablemos.',
-    projectForm: {"title": "O cuéntame aquí sobre el proyecto", "sub": "Cuatro campos. Respondo personalmente, normalmente en un día.", "name": "Tu nombre", "email": "Email", "company": "Empresa o URL del producto", "optional": "opcional", "brief": "¿Qué estás construyendo y qué necesitas de mí?", "briefPh": "El producto, para quién es, en qué punto está hoy y el plazo que tienes en mente.", "submit": "Enviar detalles del proyecto", "note": "Sin newsletter ni secuencias. Tus datos solo llegan a mi bandeja de entrada.", "sentTitle": "Recibido, gracias.", "sentBody": "Tu mensaje está en mi bandeja de entrada. Respondo personalmente, normalmente en un día."},
+    projectForm: {"title": "O cuéntame aquí sobre el proyecto", "sub": "Se rellena en dos minutos. Respondo personalmente, normalmente en un día.", "need": "¿Qué servicio encaja mejor contigo?", "choose": "Elige uno…", "notSure": "Aún no lo sé", "name": "Tu nombre", "email": "Email", "company": "Empresa o URL del producto", "optional": "opcional", "brief": "¿Qué estás construyendo y qué necesitas de mí?", "briefPh": "El producto, para quién es, en qué punto está hoy y el plazo que tienes en mente.", "submit": "Enviar detalles del proyecto", "note": "Sin newsletter ni secuencias. Tus datos solo llegan a mi bandeja de entrada.", "sentTitle": "Recibido, gracias.", "sentBody": "Tu mensaje está en mi bandeja de entrada. Respondo personalmente, normalmente en un día."},
     brandsSub: 'Más productos y equipos reales para los que construí, además de los casos de arriba: desde un banco y una plataforma de e-learning hasta marcas de farmacia de EE. UU. y Reino Unido. Cada nombre abre su sitio en vivo.',
     addonsTitle: 'Proyectos acotados',
     toolbeltMore: ['Ver las 60+ herramientas', 'Ver menos'],
@@ -2340,6 +2417,7 @@ const HUMAN_COPY = {
     heroSub: "Je conçois, construis et livre votre produit de bout en bout : web, mobile et IA, au forfait ou en régie mensuelle. Ma spécialité : les systèmes temps réel et multi-tenant, avec plus de six ans en production dans le Golfe, aux États-Unis et au Royaume-Uni.",
     proof: "Recommandé par des clients et des responsables chez Recovery Advisers, Yelo Sale, Phonic Maps, Compass Med et Ibdaa Course. Lire leurs avis ↓",
     caseCta: 'Besoin de quelque chose de similaire ?',
+    caseService: {"build":"Vous prévoyez quelque chose de similaire ? Commencez par un développement au forfait","review":"Vous faites déjà tourner un système de ce type ? Commencez par une revue de code et d’architecture","monthly":"Un produit en ligne qui demande un renfort senior régulier ? Découvrir l’ingénierie au mois"},
     headings: {
       "Chaque système, livré et lié.": "Des produits en ligne que j’ai construits.",
       "Quatre étapes, puis on livre.": "Comment se déroule un projet.",
@@ -2394,7 +2472,7 @@ const HUMAN_COPY = {
     position: "Je traite un produit comme un seul système, pas comme un empilement de fonctionnalités. Je conçois la façon dont les pièces s’assemblent, je construis chaque couche et je reste responsable quand il faut passer à l’échelle.",
     pinnedStat: 'Projets épinglés',
     contactTitle: 'Parlons-en.',
-    projectForm: {"title": "Ou parlez-moi du projet ici", "sub": "Quatre champs. Je réponds personnellement, généralement sous un jour.", "name": "Votre nom", "email": "E-mail", "company": "Entreprise ou URL du produit", "optional": "facultatif", "brief": "Que construisez-vous, et qu’attendez-vous de moi ?", "briefPh": "Le produit, pour qui il est, où il en est aujourd’hui et le calendrier que vous visez.", "submit": "Envoyer les détails du projet", "note": "Pas de newsletter, pas de séquence. Vos informations n’arrivent que dans ma boîte mail.", "sentTitle": "Bien reçu, merci.", "sentBody": "Votre message est dans ma boîte mail. Je réponds personnellement, généralement sous un jour."},
+    projectForm: {"title": "Ou parlez-moi du projet ici", "sub": "Se remplit en deux minutes. Je réponds personnellement, généralement sous un jour.", "need": "Quel service correspond le mieux à votre besoin ?", "choose": "Choisissez…", "notSure": "Je ne sais pas encore", "name": "Votre nom", "email": "E-mail", "company": "Entreprise ou URL du produit", "optional": "facultatif", "brief": "Que construisez-vous, et qu’attendez-vous de moi ?", "briefPh": "Le produit, pour qui il est, où il en est aujourd’hui et le calendrier que vous visez.", "submit": "Envoyer les détails du projet", "note": "Pas de newsletter, pas de séquence. Vos informations n’arrivent que dans ma boîte mail.", "sentTitle": "Bien reçu, merci.", "sentBody": "Votre message est dans ma boîte mail. Je réponds personnellement, généralement sous un jour."},
     brandsSub: 'D’autres produits et équipes pour qui j’ai construit, au-delà des études de cas ci-dessus : d’une banque et d’une plateforme d’e-learning à des marques de pharmacies aux États-Unis et au Royaume-Uni. Chaque nom ouvre le site en ligne.',
     addonsTitle: 'Projets ciblés',
     toolbeltMore: ['Voir les 60+ outils', 'Voir moins'],
@@ -3821,6 +3899,19 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         p.textContent = H2.caseCta;
         box.appendChild(p);
         box.appendChild(call.cloneNode(true));
+        // The plan a visitor in the same situation would start with, so a
+        // case study leads to an offer and not only to a call. Worded about
+        // the visitor, never about the case: an in-house role is not a
+        // studio engagement (docs/STUDIO-SPEC.md R1).
+        const plan = copy.caseService[pageSpec.flagship.slug];
+        const svcText = plan && H2.caseService && H2.caseService[plan];
+        if (svcText) {
+          const svc = document.createElement('a');
+          svc.className = 'case-service';
+          svc.setAttribute('href', `${localePrefix}services/#plan-${plan}`);
+          svc.textContent = `${svcText} ${document.documentElement.dir === 'rtl' ? '←' : '→'}`;
+          box.appendChild(svc);
+        } else warnings.push(`case: no CASE_SERVICE plan or caseService copy for ${pageSpec.flagship.slug} — no service link`);
         meta.appendChild(box);
       } else warnings.push('case: .case-meta or the scoping-call link not found — no side-column call button');
     }
@@ -3938,6 +4029,21 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         field('pf-name', f.name, inp('text', 'Name', { required: '', autocomplete: 'name' }));
         field('pf-email', f.email, inp('email', 'Email', { required: '', autocomplete: 'email', dir: 'ltr' }));
         field('pf-company', f.company, inp('text', 'Company or URL', { autocomplete: 'url', inputmode: 'url', dir: 'ltr' }), true, true);
+        // Optional: which plan is closest, in the plan names /services/ uses,
+        // so an enquiry arrives already sorted. Never required.
+        const need = el('select');
+        need.name = 'Closest service';
+        for (const [v, t] of [['', f.choose], ...copy.pricing.plain.map((p) => [p, p]), [f.notSure, f.notSure]]) {
+          const o = el('option', null, t);
+          o.value = v;
+          need.appendChild(o);
+        }
+        field('pf-need', f.need, need, true, true);
+        // Where the visitor came from (first page, campaign tag, referring
+        // site), filled in by the attribution script; it travels with the
+        // message to the inbox and never to analytics (docs/MEASUREMENT.md).
+        const src = inp('hidden', 'Source', {});
+        form.appendChild(src);
         const ta = el('textarea');
         ta.name = 'Project';
         ta.required = true;
@@ -4645,6 +4751,40 @@ async function snapshotVariant({ page, spec, lang, locales }) {
       }
     }
 
+    // Analytics (docs/MEASUREMENT.md). The offer buttons all point at
+    // #contact, which no CLICK_EVENTS pattern matches, so they counted
+    // nothing; each now says which plan it was for. Booking links say where
+    // they sit, which the attribution script also passes to Calendly. The
+    // event name is set here with its property because tagClicks skips any
+    // tag that already carries a data-umami-event attribute.
+    const PLAN_BY_PRICE = [['1200', 'review'], ['9000', 'build'], ['3500', 'monthly']];
+    const digitsOf = (t) => (t || '').replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))).replace(/\D/g, '');
+    const planCta = (a, plan) => { a.setAttribute('data-umami-event', 'plan'); a.setAttribute('data-umami-event-plan', plan); };
+    document.querySelectorAll('#services .service-card').forEach((card) => {
+      const a = card.querySelector('a.service-link[href="#contact"]');
+      const hit = PLAN_BY_PRICE.find(([p]) => digitsOf(card.querySelector('.service-pkg')?.textContent).includes(p));
+      if (a && hit) planCta(a, hit[1]);
+      else warnings.push('home: a service card has no recognised price or no #contact link — its click is not tagged');
+    });
+    if (pageSpec.key === 'services') {
+      for (const plan of ['review', 'build', 'monthly']) {
+        const a = document.querySelector(`#plan-${plan} a.price-cta`);
+        if (a) planCta(a, plan);
+        else warnings.push(`services: #plan-${plan} has no .price-cta — its click is not tagged`);
+      }
+    }
+    document.querySelectorAll('a[href*="calendly.com"]').forEach((a) => {
+      const where = a.closest('.case-cta') ? 'case'
+        : a.closest('.nav, .nav-mobile') || a.matches('.nav-cta, .nav-mobile-avail') ? 'nav'
+        : a.closest('#top') ? 'hero'
+        : a.closest('#pricing') ? 'pricing'
+        : a.closest('#contact') ? 'contact'
+        : a.closest('#connect') ? 'connect'
+        : 'other';
+      a.setAttribute('data-umami-event', 'book-call');
+      a.setAttribute('data-umami-event-where', where);
+    });
+
     // The FAQ accordion toggled a data attribute nothing but CSS could see, so
     // a screen reader announced every question as a plain button with no state.
     document.querySelectorAll('.faq-item').forEach((item, i) => {
@@ -4675,7 +4815,7 @@ async function snapshotVariant({ page, spec, lang, locales }) {
   }, spec, locales.map((l) => l.lang), FAQ_BUYER_KEYS[lang] || FAQ_BUYER_KEYS.en, prefix, PAGE_LAYOUT, SECTION_KEYS,
     { owner: LINK_OWNER, paths: Object.fromEntries(PAGE_SPECS.map((s) => [s.key, s.suffix])) },
     NAV[lang],
-    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en, conceptHosts: CONCEPT_HOSTS, insights: INSIGHTS.map(({ slug, title, related }) => ({ slug, title, related })), caseShots: CASE_SHOTS, studio: STUDIO.suffix, foot: { name: STUDIO.name, founded: STUDIO.since, ...(STUDIO_FOOT[lang] || STUDIO_FOOT.en) }, voice: STUDIO_VOICE[lang] || [], provenance: CASE_PROVENANCE, provLabel: PROVENANCE_LABEL[lang] || PROVENANCE_LABEL.en, formAction: `https://formsubmit.co/${CONTACT.email}`, siteUrl: SITE_URL, impact: IMPACT_PLAIN[lang] || IMPACT_PLAIN.en, aedRate: AED_PER_USD, priceLocale: PRICE_LOCALE[lang] || 'en-AE', pricing: PRICING_TERMS[lang] || PRICING_TERMS.en, moreRecs: MORE_RECS[lang] || MORE_RECS.en,
+    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en, conceptHosts: CONCEPT_HOSTS, insights: INSIGHTS.map(({ slug, title, related }) => ({ slug, title, related })), caseShots: CASE_SHOTS, studio: STUDIO.suffix, foot: { name: STUDIO.name, founded: STUDIO.since, ...(STUDIO_FOOT[lang] || STUDIO_FOOT.en) }, voice: STUDIO_VOICE[lang] || [], caseService: CASE_SERVICE, provenance: CASE_PROVENANCE, provLabel: PROVENANCE_LABEL[lang] || PROVENANCE_LABEL.en, formAction: `https://formsubmit.co/${CONTACT.email}`, siteUrl: SITE_URL, impact: IMPACT_PLAIN[lang] || IMPACT_PLAIN.en, aedRate: AED_PER_USD, priceLocale: PRICE_LOCALE[lang] || 'en-AE', pricing: PRICING_TERMS[lang] || PRICING_TERMS.en, moreRecs: MORE_RECS[lang] || MORE_RECS.en,
       clientQuotes: CLIENT_QUOTES.map((q) => ({ name: q.name[lang] || q.name.en, initials: q.initials[lang] || q.initials.en, role: q.role[lang] || q.role.en, quote: q.quote[lang] || q.quote.en,
         caseStudy: q.caseStudy ? { slug: q.caseStudy, name: FLAGSHIP.find((f) => f.slug === q.caseStudy).name } : null })) }));
 
@@ -5234,6 +5374,7 @@ ${redirectScript}
 ${PINTEREST_VERIFY_TAG}
 ${adPixel(lang)}
 ${analyticsTag}
+${attributionTag}
 <title>${esc(seo.title)}</title>
 ${headMeta}
 ${ICON_LINKS}
@@ -5402,6 +5543,8 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
    while the write-up scrolls on desktop. */
 .case-cta{display:flex;flex-direction:column;align-items:flex-start;gap:12px;margin-top:6px;padding-top:20px;border-top:1px solid var(--line)}
 .case-cta p{margin:0;color:var(--ink);font-size:16px}
+.case-service{color:var(--accent);font-size:14px;line-height:1.45;text-decoration:none}
+.case-service:hover{text-decoration:underline}
 @media (min-width:901px){#case .case-meta{position:sticky;top:96px}}
 /* Drawn AF badge: the SVG fills the 26px badge; its letters already carry
    their own inset, so the badge’s text padding goes. */
@@ -5583,9 +5726,10 @@ body .to-top:hover{color:var(--accent);border-color:var(--accent);box-shadow:0 8
 .pf .full{grid-column:1 / -1}
 .pf label{display:block;margin-bottom:8px;font-size:13px;color:var(--ink-mute)}
 .pf label .opt{color:var(--ink-dim)}
-.pf input,.pf textarea{width:100%;padding:13px 14px;border:1px solid var(--line-strong);border-radius:10px;background:var(--bg-elev);color:var(--ink);font:inherit;font-size:15px}
+.pf input,.pf textarea,.pf select{width:100%;padding:13px 14px;border:1px solid var(--line-strong);border-radius:10px;background:var(--bg-elev);color:var(--ink);font:inherit;font-size:15px}
+.pf select{min-height:48px}
 .pf textarea{min-height:140px;resize:vertical;line-height:1.5}
-.pf input:focus,.pf textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.pf input:focus,.pf textarea:focus,.pf select:focus{outline:2px solid var(--accent);outline-offset:1px}
 .pf form .btn{justify-self:start;grid-column:1 / -1}
 .pf-note{grid-column:1 / -1;margin:0;font-size:13px;color:var(--ink-dim)}
 .pf .hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
