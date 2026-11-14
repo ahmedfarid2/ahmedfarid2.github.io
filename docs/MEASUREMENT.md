@@ -43,9 +43,12 @@ is always available.
 `source` on the `-sent` events is the visit's source label (below). `project-form`
 keeps its old name so its history stays comparable; read it as "attempts".
 
-A `-sent` event counts once per tab per 30 minutes, so reloading the thank-you
-page doesn't add a second one. Someone typing `?sent=1` by hand would add one;
-at this traffic that is noise, and the inbox is the real count anyway.
+A `-sent` event counts only when this tab sent that form in the last two
+hours: the form's submit event (it fires only after the browser's validation
+passes) leaves a note in `sessionStorage` (`af_pending`), and the return to
+`?sent=1` uses it up. So reloading the thank-you, opening a bookmarked or
+shared `?sent=1` URL, or a form that failed validation counts nothing. The
+inbox is still the real count.
 
 ## Verify it yourself
 
@@ -63,9 +66,14 @@ at this traffic that is noise, and the inbox is the real count anyway.
 6. In a browser with JS off the forms still post, and FormSubmit shows its own
    confirmation. Nothing is counted then; the email still arrives.
 
+Test submissions show up in Umami as real conversions: filter them out by
+their `source` (`test`), or exclude your browser first with
+`localStorage.setItem('umami.disabled', 1)` in the console on the live site.
+
 Local builds can't complete a submission, because `_next` points at the live
 site. To check the thank-you states, open `dist/contact/index.html?sent=1`,
-`dist/demo.html?sent=1` and `dist/get-checklist.html?sent=1`.
+`dist/demo.html?sent=1` and `dist/get-checklist.html?sent=1` (they show the
+thank-you but count nothing, since no form was sent from that tab).
 
 ## Source attribution
 
