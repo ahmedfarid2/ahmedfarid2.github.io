@@ -147,10 +147,14 @@ const analyticsTag = UMAMI_ID
 //    which arrives in the enquiry email. It never goes to analytics.
 //  - FormSubmit only sends a visitor back to ?sent=1 once it has accepted
 //    the message, so that landing is the confirmed submission: it counts
-//    once (project-form-sent, demo-sent, checklist-sent), and a reload of
-//    the thank-you within 30 minutes does not count again. Analytics gets
-//    the event name, the page language and the source label, never a name,
-//    an address or a message.
+//    once (project-form-sent, demo-sent, checklist-sent), and only if this
+//    tab sent that form in the last two hours: the form's submit event
+//    (fired only once the browser's validation passes) leaves a note in
+//    sessionStorage (af_pending) naming the event, and the return uses it
+//    up. Opening a ?sent=1 link directly (a bookmark, a shared thank-you
+//    URL) or reloading the thank-you counts nothing. Analytics gets the
+//    event name, the page language and the source label, never a name, an
+//    address or a message.
 // Values are cut to letters, digits and . _ / - so a tag cannot carry
 // anything else into Calendly or the email.
 const ATTRIBUTION_JS = `(function(){
@@ -174,10 +178,12 @@ a.setAttribute('href',u.toString())}catch(e){}
 });
 var line=['source: '+label,s.med&&'medium: '+s.med,s.cmp&&'campaign: '+s.cmp,s.cnt&&'content: '+s.cnt,s.ref&&'referrer: '+s.ref,'landed on: '+(s.land||'/'),'sent from: '+c(location.pathname)].filter(Boolean).join(' · ');
 document.querySelectorAll('form input[name="Source"]').forEach(function(i){i.value=line});
-if(/[?&]sent=1(&|$)/.test(location.search)){
 var path=location.pathname,n=/\\/contact\\/$/.test(path)?'project-form-sent':/\\/demo\\.html$/.test(path)?'demo-sent':/\\/get-checklist\\.html$/.test(path)?'checklist-sent':'';
-if(n){var key='af_sent:'+n,now=Date.now(),last=0;try{last=+sessionStorage.getItem(key)||0}catch(e){}
-if(now-last>18e5)track(n,{source:label,lang:document.documentElement.lang||'en'},function(){try{sessionStorage.setItem(key,String(now))}catch(e){}})}
+if(n)document.querySelectorAll('form').forEach(function(f){if(f.querySelector('input[name="Source"]'))f.addEventListener('submit',function(){try{sessionStorage.setItem('af_pending',n+'|'+Date.now())}catch(e){}})});
+if(n&&/[?&]sent=1(&|$)/.test(location.search)){
+var pend='';try{pend=sessionStorage.getItem('af_pending')||''}catch(e){}
+var pp=pend.split('|');
+if(pp[0]===n&&Date.now()-(+pp[1]||0)<72e5)track(n,{source:label,lang:document.documentElement.lang||'en'},function(){try{sessionStorage.removeItem('af_pending')}catch(e){}});
 }
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
@@ -1450,7 +1456,7 @@ async function writeInsights() {
 // Written from what the build actually ships: FormSubmit forms, Umami
 // (cookieless), the Calendly widget, Google’s favicon service for client
 // logos, GitHub Pages hosting, and three browser-storage keys (af_theme,
-// af_intro_done, and ATTRIBUTION_JS’s af_src and af_sent:* for one visit). Change a third party or
+// af_intro_done, and ATTRIBUTION_JS’s af_src and af_pending for one visit). Change a third party or
 // what a form sends in the build, change this page.
 const PRIVACY_UPDATED = '2026-11-14';
 async function writePrivacy() {
@@ -1475,7 +1481,7 @@ async function writePrivacy() {
     `<h2>Analytics</h2><p>We count visits with <b>Umami</b>, a privacy-focused analytics tool. It sets no cookies and stores no personal data: it records pages viewed, the site you came from, your country, your device type clicks on a few key buttons and whether a form was sent, all in aggregate. It never receives what you type into a form.</p>`,
     `<h2>Services you choose to use</h2><ul><li><b>Calendly</b> handles call bookings. Its widget loads on some pages, and its own privacy policy and cookies apply when you book. The booking link tells Calendly the same campaign tag, referring site and first page, so we know which page led to the call.</li><li><b>WhatsApp</b>, <b>LinkedIn</b> and email links open those services, under their own policies.</li><li>Client logos are fetched from <b>Google’s</b> favicon service, which sees your IP address like any image request.</li></ul>`,
     `<h2>Hosting</h2><p>The site is hosted on <b>GitHub Pages</b>. GitHub may log IP addresses for security, as its own privacy statement describes.</p>`,
-    `<h2>Stored in your browser</h2><p>Three small items: your light or dark theme choice, whether the opening animation already played in this visit, and, for this visit only, how you arrived (the campaign tag, referring site and first page above) and whether a sent form was already counted, which your browser deletes when you close the tab. We set no cookies of our own and run no advertising pixels.</p>`,
+    `<h2>Stored in your browser</h2><p>Three small items: your light or dark theme choice, whether the opening animation already played in this visit, and, for this visit only, how you arrived (the campaign tag, referring site and first page above) and, between sending a form and its confirmation, which form you sent, which your browser deletes when you close the tab. We set no cookies of our own and run no advertising pixels.</p>`,
     `<h2>Project work</h2><p>What you share with us about your product is covered by the NDA we sign before the first call.</p>`,
     `<h2>Keeping and deleting</h2><p>We keep your messages for as long as we need them to answer you and, for clients, for as long as the project and tax records require. To see, correct or delete what we hold about you, email ${mail}. We act on it within 30 days.</p>`,
     `</article>`,
@@ -5732,7 +5738,7 @@ body .to-top:hover{color:var(--accent);border-color:var(--accent);box-shadow:0 8
 .pf input:focus,.pf textarea:focus,.pf select:focus{outline:2px solid var(--accent);outline-offset:1px}
 .pf form .btn{justify-self:start;grid-column:1 / -1}
 .pf-note{grid-column:1 / -1;margin:0;font-size:13px;color:var(--ink-dim)}
-.pf .hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+.pf .hp{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0,0,0,0);clip-path:inset(50%);opacity:0}
 .pf-sent{display:none;margin-top:26px;padding:26px;border:1px solid var(--line-strong);border-radius:var(--radius);background:var(--bg-elev)}
 .pf-sent h3{margin:0 0 8px;font-size:22px;font-weight:500;color:var(--ink)}
 .pf-sent p{margin:0;color:var(--ink-mute)}
