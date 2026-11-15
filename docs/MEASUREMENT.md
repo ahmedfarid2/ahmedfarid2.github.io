@@ -24,6 +24,7 @@ is always available.
 | Event | Properties | Fires when | Means | Kind |
 |---|---|---|---|---|
 | `book-call` | `where`: `nav` · `hero` · `case` · `pricing` · `contact` · `connect` · `other` | Click on any Calendly link | Opened the booking widget | Interest |
+| `call-booked` | `source`, `where`, `lang` | Calendly's popup reports `calendly.event_scheduled` to the page | **A call was booked** in the popup | Success |
 | `plan` | `plan`: `review` · `build` · `monthly` | Click on "Talk about this" (home offers) or "Book a review" / "Scope a build" / "Discuss retainer" (/services/) | Interested in that offer (Architecture Clinic, Launchpad, Partner) | Interest |
 | `services` | | Click on any link to `/services/` (nav, chooser, case-study service line) | Went to look at offers | Interest |
 | `hero-demo` | | Home hero "Request a free demo" | Free demo interest from the hero | Interest |
@@ -149,7 +150,10 @@ the `channel` and `notes` columns when you add the lead.
 1. Umami, last 30 days: `book-call` by `where`, `plan` by `plan`, and the three
    `-sent` events. Compare `project-form` (attempts) with `project-form-sent`:
    a big gap means the form is losing people.
-2. Calendly: bookings by `utm_source`, against `book-call` clicks.
+2. `call-booked` against `book-call` (how many who open the calendar book),
+   and Calendly's own list by `utm_source`. Calendly's list is the full count:
+   `call-booked` misses bookings made on calendly.com in a new tab (a click
+   before the popup had loaded, or JS blocked).
 3. leads.csv: calls held, proposals, won, by channel. This is the number that
    matters; the rest explains it.
 4. Change one thing at a time, and note the date so next month's numbers can

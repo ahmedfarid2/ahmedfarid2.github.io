@@ -8,6 +8,7 @@ are **repo-only** (the build does not deploy `.md` files or the `docs/` and
 |---|---|
 | [`BUSINESS-NUMBERS.md`](BUSINESS-NUMBERS.md) | **The scoreboard.** Benchmarked funnel math for one client a month, the weekly quota, and the 4-week review rules. Tracking templates in [`tracking/`](tracking/) — import into Google Sheets, never commit real names. |
 | [`MEASUREMENT.md`](MEASUREMENT.md) | **What the site counts.** Every Umami event (interest vs. confirmed submission), how to verify each, the UTM convention for LinkedIn, referrals and outbound, and which outcomes only `tracking/leads.csv` can record. |
+| [`CONVERSION-EXPERIMENTS.md`](CONVERSION-EXPERIMENTS.md) | **What needs real data or the owner.** FormSubmit verification steps, before/after experiments (demo phone field, Arabic demo page, hero order), business outcomes to collect per case study, and studio proof gaps. |
 | [`30-DAY-CLIENT-SPRINT.md`](30-DAY-CLIENT-SPRINT.md) | **The execution layer — start here.** Day-by-day for 30 days, every message written out, plus the verdict on paid ads and what to spend money on instead. |
 | [`TESTIMONIAL-REQUESTS.md`](TESTIMONIAL-REQUESTS.md) | **Three messages, ready to send** — Compass Med, Khebra, Proven. Plus the follow-up, a drafting template for when they ask you to write it, and the line not to cross. |
 | [`COLD-EMAIL-AND-PAID-ADS.md`](COLD-EMAIL-AND-PAID-ADS.md) | The two paid channels: cold-email deliverability setup + a 4-email sequence built on the "they're hiring" signal, and where to put a $200/month ad budget (and why not TikTok). |
