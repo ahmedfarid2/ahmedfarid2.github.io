@@ -223,6 +223,9 @@ if(v==='yes'){load();}
 
   <h2><span class="num">03</span>Tell me what to build</h2>
   <p class="sub">Six required fields and one optional. The last one is your brief: a few lines on what the product does and which screen matters. No brief, no demo. I reply personally, usually within a day.</p>
+  <!-- Arabic-speaking visitors arrive here from the /ar/ pages (the link says
+       the page is in English); the form itself takes either language. -->
+  <p class="sub">Write in English or Arabic, whichever is easier. <span lang="ar" dir="rtl">يمكنك كتابة الطلب بالعربية.</span></p>
 
   <!-- Success state. The form posts away and returns here with ?sent=1, so the
        confirmation survives without a backend or any client-side state. -->
@@ -261,7 +264,7 @@ if(v==='yes'){load();}
           <span>Your name <i class="req">*</i></span>
           <!-- Not "Ahmed Farid": using the site owner's own name as the sample
                in a field asking for the visitor's name reads as pre-filled. -->
-          <input type="text" name="Name" required autocomplete="name" placeholder="First and last name">
+          <input type="text" name="Name" required autocomplete="name" dir="auto" placeholder="First and last name">
         </label>
         <label class="field">
           <span>Email <i class="req">*</i></span>
@@ -284,7 +287,7 @@ if(v==='yes'){load();}
           <span>Company or product <i class="req">*</i></span>
           <!-- Required: one demo per company, so the request has to name one.
                Text, not type=url: a founder before launch has a name, not a site. -->
-          <input type="text" name="Company or URL" required autocomplete="organization" placeholder="Company name or website">
+          <input type="text" name="Company or URL" required autocomplete="organization" dir="auto" placeholder="Company name or website">
         </label>
       </div>
 
@@ -322,7 +325,7 @@ if(v==='yes'){load();}
 
       <label class="field">
         <span>What should I build, and which screen matters most? <i class="req">*</i></span>
-        <textarea name="What to build" required minlength="80" placeholder="What the product does, who it's for, and the one screen that would convince you: a dashboard, a booking flow, an onboarding step, whatever carries the most weight."></textarea>
+        <textarea name="What to build" required minlength="80" dir="auto" placeholder="What the product does, who it's for, and the one screen that would convince you: a dashboard, a booking flow, an onboarding step, whatever carries the most weight."></textarea>
       </label>
 
       <!-- A click is an attempt, not a request: the confirmed one is demo-sent,

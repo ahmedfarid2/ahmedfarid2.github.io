@@ -155,6 +155,13 @@ const analyticsTag = UMAMI_ID
 //    URL) or reloading the thank-you counts nothing. Analytics gets the
 //    event name, the page language and the source label, never a name, an
 //    address or a message.
+//  - A booking made in the Calendly popup is confirmed by the widget itself:
+//    it posts calendly.event_scheduled to this page (origin calendly.com
+//    only). That counts call-booked with the source label and where the
+//    booking link sat. Calendly's payload (event and invitee URIs) is never
+//    read or forwarded. A booking made on calendly.com in a new tab (the
+//    click before the widget loaded) can't report back; Calendly's own UTM
+//    details cover those.
 // Values are cut to letters, digits and . _ / - so a tag cannot carry
 // anything else into Calendly or the email.
 const ATTRIBUTION_JS = `(function(){
@@ -186,6 +193,12 @@ var pp=pend.split('|');
 if(pp[0]===n&&Date.now()-(+pp[1]||0)<72e5)track(n,{source:label,lang:document.documentElement.lang||'en'},function(){try{sessionStorage.removeItem('af_pending')}catch(e){}});
 }
 }
+var bookedFrom='';
+document.addEventListener('click',function(e){var a=e.target&&e.target.closest&&e.target.closest('a[href*="calendly.com/"]');if(a)bookedFrom=c(a.getAttribute('data-umami-event-where'))},true);
+addEventListener('message',function(e){
+if(e.origin!=='https://calendly.com'||!e.data||e.data.event!=='calendly.event_scheduled')return;
+track('call-booked',{source:label,where:bookedFrom||'other',lang:document.documentElement.lang||'en'});
+});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
 })();`;
 const attributionTag = `<script>${ATTRIBUTION_JS}</script>`;
@@ -1478,7 +1491,7 @@ async function writePrivacy() {
     `<article class="prose">`,
     `<h2>Who we are</h2><p>${insightEsc(STUDIO.name)} is the software practice of Ahmed Farid, based in Dubai, UAE. For anything on this page, write to ${mail}.</p>`,
     `<h2>What you send us</h2><p>The contact, free demo and checklist forms ask for your name, email, phone, company and a message, and optionally for project details such as a budget range or the service you need. A form service, <b>FormSubmit</b> (formsubmit.co), delivers it to our inbox. With it comes one line on how you found the site: the campaign tag of the link you followed, if it had one, the site that referred you, and the first page you opened. We use all of it to reply to you and, if we work together, to run the project. We never sell it, never share it for marketing and never add you to a newsletter.</p>`,
-    `<h2>Analytics</h2><p>We count visits with <b>Umami</b>, a privacy-focused analytics tool. It sets no cookies and stores no personal data: it records pages viewed, the site you came from, your country, your device type clicks on a few key buttons and whether a form was sent, all in aggregate. It never receives what you type into a form.</p>`,
+    `<h2>Analytics</h2><p>We count visits with <b>Umami</b>, a privacy-focused analytics tool. It sets no cookies and stores no personal data: it records pages viewed, the site you came from, your country, your device type, clicks on a few key buttons, and whether a form was sent or a call was booked, all in aggregate. It never receives what you type into a form.</p>`,
     `<h2>Services you choose to use</h2><ul><li><b>Calendly</b> handles call bookings. Its widget loads on some pages, and its own privacy policy and cookies apply when you book. The booking link tells Calendly the same campaign tag, referring site and first page, so we know which page led to the call.</li><li><b>WhatsApp</b>, <b>LinkedIn</b> and email links open those services, under their own policies.</li><li>Client logos are fetched from <b>Google’s</b> favicon service, which sees your IP address like any image request.</li></ul>`,
     `<h2>Hosting</h2><p>The site is hosted on <b>GitHub Pages</b>. GitHub may log IP addresses for security, as its own privacy statement describes.</p>`,
     `<h2>Stored in your browser</h2><p>Three small items: your light or dark theme choice, whether the opening animation already played in this visit, and, for this visit only, how you arrived (the campaign tag, referring site and first page above) and, between sending a form and its confirmation, which form you sent, which your browser deletes when you close the tab. We set no cookies of our own and run no advertising pixels.</p>`,
@@ -2547,6 +2560,10 @@ const PRICE_LOCALE = { en: 'en-AE', ar: 'ar-AE-u-nu-arab', de: 'de-DE', es: 'es-
 // with the full lists one click away.
 //   clinicCredit    new line in the review's full list: it counts toward a build
 //   milestone       the build's stop-after-milestone-1 line, with what is owed
+//   handover        the build's handoff line, merged with its "2 weeks
+//                   post-launch support" line: the delivery step everywhere
+//                   else promises 30 days of fixes after handover (owner,
+//                   docs/STUDIO-SPEC.md 1.2), and the card said two weeks
 //   partnerNote     the monthly plan's note line: "no lock-in", not "cancel anytime"
 //   partnerHead     the monthly plan's list heading, its own scope
 //   partnerPriority the monthly plan's response line (3rd item)
@@ -2562,6 +2579,7 @@ const PRICE_LOCALE = { en: 'en-AE', ar: 'ar-AE-u-nu-arab', de: 'de-DE', es: 'es-
 const PRICING_TERMS = {
   en: {
     clinicCredit: "100% credited against a build started within 30 days of the review",
+    handover: "Docs, runbook and handover, then 30 days of fixes",
     milestone: "Milestone 1 is week one. If you don't like the code, we stop there and you pay for that milestone only.",
     partnerNote: "per month · 40 hrs reserved · no lock-in",
     partnerHead: "What you get:",
@@ -2580,6 +2598,7 @@ const PRICING_TERMS = {
   },
   ar: {
     clinicCredit: "تُخصم قيمتها بالكامل من أي بناء يبدأ خلال ٣٠ يومًا من المراجعة",
+    handover: "مستندات وكتاب تشغيل وتسليم، ثم ٣٠ يومًا من الإصلاحات",
     milestone: "المرحلة الأولى في الأسبوع الأول. إن لم يعجبك الكود، نتوقّف هناك ولا تدفع إلا قيمة تلك المرحلة.",
     partnerNote: "شهريًّا · ٤٠ ساعة محجوزة · دون التزام",
     partnerHead: "ما تحصل عليه:",
@@ -2598,6 +2617,7 @@ const PRICING_TERMS = {
   },
   de: {
     clinicCredit: "Voll angerechnet auf einen Build, der innerhalb von 30 Tagen nach dem Review startet",
+    handover: "Docs, Runbook und Übergabe, danach 30 Tage Fehlerbehebung",
     milestone: "Meilenstein 1 fällt in Woche eins. Wenn der Code nicht gefällt, hören wir dort auf, und Sie zahlen nur diesen Meilenstein.",
     partnerNote: "pro Monat · 40 Std. reserviert · keine Bindung",
     partnerHead: "Das bekommen Sie:",
@@ -2616,6 +2636,7 @@ const PRICING_TERMS = {
   },
   es: {
     clinicCredit: "Se descuenta al 100 % de un build que empiece dentro de los 30 días siguientes a la revisión",
+    handover: "Documentación, runbook y entrega, y después 30 días de correcciones",
     milestone: "El hito 1 es la primera semana. Si no te convence el código, paramos ahí y solo pagas ese hito.",
     partnerNote: "por mes · 40 h reservadas · sin permanencia",
     partnerHead: "Qué incluye:",
@@ -2634,6 +2655,7 @@ const PRICING_TERMS = {
   },
   fr: {
     clinicCredit: "Déduite à 100 % d’un build démarré dans les 30 jours suivant la revue",
+    handover: "Docs, runbook et passation, puis 30 jours de corrections",
     milestone: "Le jalon 1 tombe la première semaine. Si le code ne convient pas, on s’arrête là et vous ne payez que ce jalon.",
     partnerNote: "par mois · 40 h réservées · sans engagement",
     partnerHead: "Ce que vous obtenez :",
@@ -4221,6 +4243,14 @@ async function snapshotVariant({ page, spec, lang, locales }) {
       const lp = feats(launch);
       if (lp.length === 9 && /[1١]|الأولى/.test(lp[8].textContent)) setLi(lp[8], T.milestone);
       else warnings.push('services: Launchpad milestone line not found — left as exported');
+      // "Docs, runbooks and a clean handoff" + "2 weeks post-launch support"
+      // become one line that says what the process step says: 30 days of
+      // fixes. Matched on the "2" (or "أسبوعان") so a re-export that changes
+      // the list warns instead of overwriting the wrong line.
+      if (lp.length === 9 && /\b2\b|[٢]|أسبوعان/.test(lp[6].textContent) && T.handover) {
+        setLi(lp[5], T.handover);
+        lp[6].remove();
+      } else warnings.push('services: Launchpad support line not found — left as exported');
       const pt = feats(partner);
       const pNote = partner && partner.querySelector('.price-note');
       const pHead = partner && partner.querySelector('.price-feats-head');
