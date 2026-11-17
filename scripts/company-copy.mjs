@@ -21,6 +21,10 @@
 //     owner supplies them (DRIFT_GUARDS refuse the build otherwise).
 //
 //   navCta      the phone menu's contact button (said "contact me")
+//   introRole   the first-visit intro splash under the name (said
+//               "Senior Software Engineer")
+//   countriesLabel  the hero's 17+ stat: countries the shipped products reach
+//               (founder-wide, employment included), not "countries served"
 //   heroH1      home hero heading (HTML: <br> and the gold <span class="it">,
 //               which does not wrap: keep it to a word or two, or it
 //               overflows a 320px phone; the tag and sub say SaaS/mobile/AI)
@@ -42,6 +46,8 @@
 export const COMPANY = {
   en: {
     navCta: 'Get in touch →',
+    introRole: 'Software development studio',
+    countriesLabel: 'Countries reached',
     heroH1: 'Custom software,<br>built <span class="it">end to end.</span>',
     hi: 'Led by founder Ahmed Farid, who is on every project: you talk to the engineer in charge, from the first call to launch.',
     proof: 'Recommended by clients at Phonic Maps and Ibdaa Course, and by leaders at companies where Ahmed held a role. Read what they say ↓',
@@ -60,7 +66,7 @@ export const COMPANY = {
     },
     builds: { sub: 'Client work and client demos, live on the studio’s domain so you can click through them. Each one is labelled for what it is.' },
     brands: {
-      h2: 'Teams and products Ahmed and the studio have shipped for.',
+      h2: 'Client teams and the companies Ahmed has worked in.',
       sub: 'More real products and teams, client and in-house, beyond the case studies above: from a bank and an e-learning platform to US and UK pharmacy brands. Each name opens its live site.',
     },
     regions: { h2: 'Products and teams in 17+ countries.' },
@@ -77,7 +83,7 @@ export const COMPANY = {
         'Ahmed Farid Studio designs, builds and runs custom software for founders, CTOs and growing businesses: multi-tenant SaaS platforms, web and mobile apps, AI features and internal tools, from the first architecture decision to production and the support after launch. We work from Dubai, on Gulf time, with clients in the region and abroad.',
         'Ahmed founded the studio in 2022 and leads every engagement: he scopes the work, owns the architecture and stays your single point of contact. He has spent over six years shipping production systems, including engineering roles at product companies in the Gulf and the US; case studies from those roles are labelled as in-house work, never as studio clients. Larger builds are delivered with the studio’s senior-led team of 7+.',
       ],
-      facts: [['2022', 'Studio founded, Dubai'], ['7+', 'People on the senior-led team'], ['4', 'Client projects a quarter'], ['6+ yrs', 'Founder in production software']],
+      facts: [['2022', 'Studio founded'], ['7+', 'People on the senior-led team'], ['4', 'Client projects a quarter'], ['6+ yrs', 'Founder in production software']],
       portraitAlt: 'Ahmed Farid, founder of Ahmed Farid Studio',
     },
     depth: { eyebrow: 'Capabilities', h2: 'What we build with.', sub: 'What we use, and why. Mostly proven tools that hold up in production.', toolbelt: 'Everything we ship with: the languages, frameworks and platforms we work in every day.' },
@@ -99,6 +105,8 @@ export const COMPANY = {
   },
   ar: {
     navCta: 'تواصل معنا ←',
+    introRole: 'استوديو تطوير برمجيات',
+    countriesLabel: 'دولة وصلت إليها المنتجات',
     heroH1: 'برمجيات مخصّصة،<br><span class="it">من الفكرة إلى الإنتاج.</span>',
     hi: 'بقيادة المؤسّس أحمد فريد، الحاضر في كل مشروع: تتحدّث مع المهندس المسؤول من أول مكالمة حتى الإطلاق.',
     proof: 'موصى بنا من عملاء في Phonic Maps وIbdaa Course، ومن قادة في شركات شغل فيها أحمد أدوارًا داخلية. اقرأ ما قالوه ↓',
@@ -112,12 +120,13 @@ export const COMPANY = {
       sub: 'مشاريع العملاء أولًا. الآراء من شركات شغل فيها أحمد دورًا داخليًا مُعلَّمة بذلك، والتوصية الموثّقة على LinkedIn مُشار إليها.',
     },
     products: {
+      eyebrow: 'منتجاتنا الخاصة',
       h2: 'منتجات بنيناها ونديرها بأنفسنا.',
       sub: 'أعمال العملاء تُظهر ما نسلّمه وفق متطلبات غيرنا. أمّا هذه فمنتجاتنا: اخترنا المشكلة، وأطلقنا المنتج، ونستضيفه على نطاق الاستوديو.',
     },
     builds: { sub: 'أعمال وعروض لعملاء، منشورة على نطاق الاستوديو لتتصفّحها بنفسك. كلٌّ منها مُعلَّم بما هو عليه.' },
     brands: {
-      h2: 'فِرق ومنتجات عمل لها أحمد والاستوديو.',
+      h2: 'فِرق العملاء والشركات التي عمل فيها أحمد.',
       sub: 'منتجات وفِرق حقيقية أخرى، لعملاء وفي أدوار داخلية، إلى جانب دراسات الحالة أعلاه: من بنك ومنصّة تعليم إلكتروني إلى علامات صيدليات في الولايات المتحدة والمملكة المتحدة. كل اسم يفتح موقعه الحيّ.',
     },
     regions: { h2: 'منتجات وفِرق في أكثر من ١٧ دولة.' },
@@ -134,7 +143,7 @@ export const COMPANY = {
         'يصمّم Ahmed Farid Studio برمجيات مخصّصة ويبنيها ويشغّلها للمؤسّسين والمديرين التقنيين والشركات النامية: منصّات SaaS متعدّدة المستأجرين، وتطبيقات ويب وجوّال، ومزايا ذكاء اصطناعي، وأدوات داخلية، من أول قرار معماري حتى الإنتاج والدعم بعد الإطلاق. نعمل من دبي بتوقيت الخليج، مع عملاء في المنطقة وخارجها.',
         'أسّس أحمد الاستوديو عام ٢٠٢٢ ويقود كل تعاقد بنفسه: يحدّد النطاق، ويتولّى المعمارية، ويبقى نقطة تواصلك الوحيدة. أمضى أكثر من ست سنوات في إطلاق أنظمة إلى الإنتاج، منها أدوار هندسية في شركات منتجات في الخليج والولايات المتحدة؛ ودراسات الحالة من تلك الأدوار مُعلَّمة كعمل داخلي، لا كعملاء للاستوديو. أمّا المشاريع الأكبر فيسلّمها فريق الاستوديو من أكثر من ٧ أشخاص بقيادة مهندس أول.',
       ],
-      facts: [['٢٠٢٢', 'تأسيس الاستوديو في دبي'], ['٧+', 'فريق بقيادة كبار المهندسين'], ['٤', 'مشاريع عملاء كل ربع سنة'], ['+٦ سنوات', 'خبرة المؤسّس في الإنتاج']],
+      facts: [['٢٠٢٢', 'تأسيس الاستوديو'], ['٧+', 'فريق بقيادة كبار المهندسين'], ['٤', 'مشاريع عملاء كل ربع سنة'], ['+٦ سنوات', 'خبرة المؤسّس في الإنتاج']],
       portraitAlt: 'أحمد فريد، مؤسّس Ahmed Farid Studio',
     },
     depth: { eyebrow: 'القدرات', h2: 'ما نبني به.', sub: 'ما نستخدمه، ولماذا. في الغالب أدوات مجرَّبة تصمد في الإنتاج.', toolbelt: 'كل ما نسلّم به: اللغات والأُطر والمنصّات التي نعمل بها يوميًّا.' },
@@ -156,6 +165,8 @@ export const COMPANY = {
   },
   de: {
     navCta: 'Kontakt aufnehmen →',
+    introRole: 'Softwareentwicklungsstudio',
+    countriesLabel: 'Länder erreicht',
     heroH1: 'Software nach Maß,<br>gebaut <span class="it">end to end.</span>',
     hi: 'Geführt von Gründer Ahmed Farid, der in jedem Projekt dabei ist: Sie sprechen vom ersten Gespräch bis zum Launch mit dem verantwortlichen Engineer.',
     proof: 'Empfohlen von Kunden bei Phonic Maps und Ibdaa Course sowie von Führungskräften in Unternehmen, in denen Ahmed eine Rolle innehatte. Was sie sagen ↓',
@@ -175,7 +186,7 @@ export const COMPANY = {
     },
     builds: { sub: 'Kundenarbeiten und Kunden-Demos, live auf der Domain des Studios, damit Sie sie selbst ausprobieren können. Jede ist als das gekennzeichnet, was sie ist.' },
     brands: {
-      h2: 'Teams und Produkte, für die Ahmed und das Studio gearbeitet haben.',
+      h2: 'Kundenteams und die Unternehmen, in denen Ahmed gearbeitet hat.',
       sub: 'Weitere echte Produkte und Teams, als Kunde oder intern, über die Fallstudien oben hinaus: von einer Bank und einer E-Learning-Plattform bis zu Apotheken-Marken in den USA und Großbritannien. Jeder Name öffnet die Live-Seite.',
     },
     regions: { h2: 'Produkte und Teams in 17+ Ländern.' },
@@ -192,7 +203,7 @@ export const COMPANY = {
         'Ahmed Farid Studio konzipiert, baut und betreibt Individualsoftware für Gründer, CTOs und wachsende Unternehmen: Multi-Tenant-SaaS-Plattformen, Web- und Mobile-Apps, KI-Funktionen und interne Tools, von der ersten Architekturentscheidung bis zum Produktivbetrieb und dem Support nach dem Launch. Wir arbeiten aus Dubai, in Golf-Zeit, mit Kunden in der Region und darüber hinaus.',
         'Ahmed hat das Studio 2022 gegründet und leitet jedes Projekt selbst: Er legt den Umfang fest, verantwortet die Architektur und bleibt Ihr einziger Ansprechpartner. Er bringt über sechs Jahre mit Produktionssystemen mit, darunter Engineering-Rollen bei Produktfirmen am Golf und in den USA; Fallstudien aus diesen Rollen sind als interne Arbeit gekennzeichnet, nie als Studio-Kunden. Größere Projekte liefert das Studio-Team aus 7+ Personen unter Senior-Leitung.',
       ],
-      facts: [['2022', 'Studio gegründet, Dubai'], ['7+', 'Personen im Team unter Senior-Leitung'], ['4', 'Kundenprojekte pro Quartal'], ['6+ Jahre', 'Gründer in Produktions-Software']],
+      facts: [['2022', 'Studio gegründet'], ['7+', 'Personen im Team unter Senior-Leitung'], ['4', 'Kundenprojekte pro Quartal'], ['6+ Jahre', 'Gründer in Produktions-Software']],
       portraitAlt: 'Ahmed Farid, Gründer von Ahmed Farid Studio',
     },
     depth: { eyebrow: 'Kompetenzen', h2: 'Womit wir bauen.', sub: 'Was wir einsetzen, und warum. Vor allem bewährte Werkzeuge, die im Produktivbetrieb halten.', toolbelt: 'Alles, womit wir liefern: die Sprachen, Frameworks und Plattformen, mit denen wir täglich arbeiten.' },
@@ -214,6 +225,8 @@ export const COMPANY = {
   },
   es: {
     navCta: 'Ponte en contacto →',
+    introRole: 'Estudio de desarrollo de software',
+    countriesLabel: 'Países alcanzados',
     heroH1: 'Software a medida,<br>de principio <span class="it">a fin.</span>',
     hi: 'Dirigido por su fundador, Ahmed Farid, presente en cada proyecto: hablas con el ingeniero responsable desde la primera llamada hasta el lanzamiento.',
     proof: 'Recomendados por clientes de Phonic Maps e Ibdaa Course, y por responsables de empresas donde Ahmed ocupó un puesto. Lee lo que dicen ↓',
@@ -232,7 +245,7 @@ export const COMPANY = {
     },
     builds: { sub: 'Trabajos y demos para clientes, publicados en el dominio del estudio para que puedas probarlos. Cada uno está señalado como lo que es.' },
     brands: {
-      h2: 'Equipos y productos para los que han trabajado Ahmed y el estudio.',
+      h2: 'Equipos de clientes y empresas donde ha trabajado Ahmed.',
       sub: 'Más productos y equipos reales, de clientes y en plantilla, además de los casos de arriba: de un banco y una plataforma de e-learning a marcas de farmacias de EE. UU. y Reino Unido. Cada nombre abre su web.',
     },
     regions: { h2: 'Productos y equipos en más de 17 países.' },
@@ -249,7 +262,7 @@ export const COMPANY = {
         'Ahmed Farid Studio diseña, construye y opera software a medida para fundadores, CTO y empresas en crecimiento: plataformas SaaS multi-tenant, apps web y móviles, funciones de IA y herramientas internas, desde la primera decisión de arquitectura hasta producción y el soporte tras el lanzamiento. Trabajamos desde Dubái, en horario del Golfo, con clientes en la región y fuera de ella.',
         'Ahmed fundó el estudio en 2022 y dirige cada proyecto: define el alcance, se encarga de la arquitectura y sigue siendo tu único interlocutor. Lleva más de seis años lanzando sistemas a producción, incluidos puestos de ingeniería en empresas de producto del Golfo y de EE. UU.; los casos de esos puestos están señalados como trabajo en plantilla, nunca como clientes del estudio. Los proyectos más grandes los entrega el equipo del estudio, de más de 7 personas con liderazgo sénior.',
       ],
-      facts: [['2022', 'Estudio fundado, Dubái'], ['7+', 'Personas en el equipo, con liderazgo sénior'], ['4', 'Proyectos de clientes por trimestre'], ['6+ años', 'Del fundador en software en producción']],
+      facts: [['2022', 'Estudio fundado'], ['7+', 'Personas en el equipo, con liderazgo sénior'], ['4', 'Proyectos de clientes por trimestre'], ['6+ años', 'Del fundador en software en producción']],
       portraitAlt: 'Ahmed Farid, fundador de Ahmed Farid Studio',
     },
     depth: { eyebrow: 'Capacidades', h2: 'Con qué construimos.', sub: 'Lo que usamos y por qué. Sobre todo herramientas probadas que aguantan en producción.', toolbelt: 'Todo con lo que entregamos: los lenguajes, frameworks y plataformas con los que trabajamos a diario.' },
@@ -271,6 +284,8 @@ export const COMPANY = {
   },
   fr: {
     navCta: 'Nous contacter →',
+    introRole: 'Studio de développement logiciel',
+    countriesLabel: 'Pays atteints',
     heroH1: 'Logiciel sur mesure,<br>de bout <span class="it">en bout.</span>',
     hi: 'Dirigé par son fondateur, Ahmed Farid, présent sur chaque projet : vous échangez avec l’ingénieur responsable, du premier appel au lancement.',
     proof: 'Recommandé par des clients chez Phonic Maps et Ibdaa Course, et par des responsables d’entreprises où Ahmed a occupé un poste. Lire leurs avis ↓',
@@ -284,12 +299,13 @@ export const COMPANY = {
       sub: 'Les projets clients d’abord. Les avis venant d’entreprises où Ahmed occupait un poste en interne sont signalés comme tels ; celui vérifié sur LinkedIn est marqué.',
     },
     products: {
+      eyebrow: 'Nos propres produits',
       h2: 'Nos propres produits, que nous exploitons.',
       sub: 'Le travail client montre ce que nous livrons sur le brief d’un autre. Ceux-ci sont à nous : nous avons choisi le problème, livré le produit et l’hébergeons sur le domaine du studio.',
     },
     builds: { sub: 'Travaux et démos pour des clients, en ligne sur le domaine du studio pour que vous puissiez les essayer. Chacun est signalé pour ce qu’il est.' },
     brands: {
-      h2: 'Équipes et produits pour lesquels Ahmed et le studio ont travaillé.',
+      h2: 'Équipes clientes et entreprises où Ahmed a travaillé.',
       sub: 'D’autres produits et équipes réels, en client ou en interne, au-delà des études de cas ci-dessus : d’une banque et d’une plateforme d’e-learning à des marques de pharmacies aux États-Unis et au Royaume-Uni. Chaque nom ouvre son site.',
     },
     regions: { h2: 'Produits et équipes dans plus de 17 pays.' },
@@ -306,7 +322,7 @@ export const COMPANY = {
         'Ahmed Farid Studio conçoit, construit et fait tourner des logiciels sur mesure pour fondateurs, CTO et entreprises en croissance : plateformes SaaS multi-tenant, applications web et mobiles, fonctions IA et outils internes, de la première décision d’architecture à la production et au support après le lancement. Nous travaillons depuis Dubaï, à l’heure du Golfe, avec des clients dans la région et au-delà.',
         'Ahmed a fondé le studio en 2022 et dirige chaque mission : il cadre le travail, porte l’architecture et reste votre unique interlocuteur. Il a plus de six ans de systèmes livrés en production, dont des postes d’ingénieur dans des entreprises produit du Golfe et des États-Unis ; les études de cas issues de ces postes sont signalées comme travail en interne, jamais comme clients du studio. Les projets plus larges sont livrés par l’équipe du studio, plus de 7 personnes encadrées par des seniors.',
       ],
-      facts: [['2022', 'Studio fondé, Dubaï'], ['7+', 'Personnes dans l’équipe, encadrée par des seniors'], ['4', 'Projets clients par trimestre'], ['6+ ans', 'Du fondateur en logiciel de production']],
+      facts: [['2022', 'Studio fondé'], ['7+', 'Personnes dans l’équipe, encadrée par des seniors'], ['4', 'Projets clients par trimestre'], ['6+ ans', 'Du fondateur en logiciel de production']],
       portraitAlt: 'Ahmed Farid, fondateur d’Ahmed Farid Studio',
     },
     depth: { eyebrow: 'Compétences', h2: 'Avec quoi nous construisons.', sub: 'Ce que nous utilisons, et pourquoi. Surtout des outils éprouvés qui tiennent en production.', toolbelt: 'Tout ce avec quoi nous livrons : les langages, frameworks et plateformes que nous utilisons au quotidien.' },

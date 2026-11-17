@@ -411,4 +411,6 @@ export const DRIFT_GUARDS = [
   { s: 'Ahmed-Farid-CV.pdf', max: 0 },
   { re: /\bsenior roles?\b|Senior-Rolle|puesto senior|poste senior|دور (هندسي )?أول/gi, max: 0 },
   { re: /\bfull-time (senior )?(engineering )?roles?\b|\bopen to (senior|full-time)\b|Senior Software Engineer role/gi, max: 0 },
+  // The first-visit intro splash names the studio, not a job title.
+  { re: /class="intro-role">[^<]*(Senior|Engineer|مهندس|Entwickler|Ingeniero|Ingénieur)/g, max: 0 },
 ];

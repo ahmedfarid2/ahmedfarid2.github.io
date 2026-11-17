@@ -2687,8 +2687,12 @@ const PACKAGED_ABOVE = {
 // tolerant of whitespace and quote style.
 const ENHANCE_READY = /document\.querySelector\((['"])\.hero-stats\1\)\s*&&\s*(document\.querySelector\((['"])\.nav-links a\3\))/;
 const ENHANCE_INTRO_SEEN = /if\s*\(\s*sessionStorage\.getItem\((['"])af_intro_done\1\)\s*\)\s*return/;
-function enhanceForVariant(js, spec) {
+function enhanceForVariant(js, spec, lang) {
   if (!js) return js;
+  // The intro splash never runs (below), but its markup ships in the script:
+  // it names the studio, not a job title (company-only decision; a
+  // DRIFT_GUARDS row refuses the old line).
+  js = js.replace(/(class="intro-role">)[^<]*(<)/g, (m, a, b) => `${a}${(COMPANY[lang] || COMPANY.en).introRole}${b}`);
   const count = (rx) => (js.match(new RegExp(rx.source, 'g')) || []).length;
   if (spec.key === 'home') {
     if (count(ENHANCE_INTRO_SEEN) === 1) return js.replace(ENHANCE_INTRO_SEEN, 'return');
@@ -2798,7 +2802,7 @@ const PAGE_SPECS = [
     sections: ['pricing', 'build', 'domains', 'faq', 'contact'],
     keepUnknown: false, faq: 'buyer', anchors: 'resolve', renumber: true,
     sortWriting: false, foldCases: false, contactFirst: 'project', promoteH1: true,
-    ld: ['faq', 'breadcrumb'], priority: '0.8',
+    ld: ['service', 'faq', 'breadcrumb'], priority: '0.8',
     verify: { minText: 3865, minSections: 2 },     // measured 5522 chars, 4 sections
   },
   {
@@ -2806,7 +2810,7 @@ const PAGE_SPECS = [
     sections: ['work', 'products', 'builds', 'brands', 'regions', 'contact'],
     keepUnknown: false, faq: null, anchors: 'resolve', renumber: true, work: 'teaser',
     sortWriting: false, foldCases: true, contactFirst: 'project', promoteH1: true,
-    ld: ['collection', 'breadcrumb'], priority: '0.8',
+    ld: ['service', 'collection', 'breadcrumb'], priority: '0.8',
     verify: { minText: 5642, minSections: 4 },      // measured 8060 chars, 6 sections (Oct 2026: "What I build" and Industries moved to /services/, the further case studies became compact cards)
   },
   {
@@ -2829,7 +2833,7 @@ const PAGE_SPECS = [
     sections: ['connect', 'contact'],
     keepUnknown: false, faq: null, anchors: 'resolve', renumber: true,
     sortWriting: false, foldCases: false, contactFirst: 'project', promoteH1: true,
-    ld: ['contactpage', 'breadcrumb'], priority: '0.6',
+    ld: ['service', 'contactpage', 'breadcrumb'], priority: '0.6',
     verify: { minText: 1318, minSections: 1 },        // measured 1883 chars, 2 sections
   },
   // One page per flagship case study, cut from the same #work section.
@@ -2838,7 +2842,7 @@ const PAGE_SPECS = [
     sections: ['work', 'contact'],
     keepUnknown: false, faq: null, anchors: 'resolve', renumber: true,
     sortWriting: false, foldCases: false, contactFirst: 'project', promoteH1: false,
-    ld: ['project', 'breadcrumb'], priority: '0.7',
+    ld: ['service', 'project', 'breadcrumb'], priority: '0.7',
     verify: PROJECT_VERIFY[f.slug],
   })),
 ];
@@ -4833,10 +4837,17 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         if (h1) h1.innerHTML = C.heroH1; else missing('.hero-h1');
         setText('.hero-person span', C.hi);
         setText('.hero-proof', C.proof);
+        const stats = [...document.querySelectorAll('.hero-stats .hero-stat')];
+        const countries = stats.find((st) => /17|١٧/.test(st.querySelector('.num')?.textContent || ''));
+        const lbl = countries && countries.querySelector('.lbl');
+        if (lbl) lbl.textContent = C.countriesLabel; else missing('.hero-stat 17+ label');
       }
       if (has('work')) head('work', C.work.h2, C.work.sub);
       if (has('testimonials')) head('testimonials', C.tests.h2, C.tests.sub);
-      if (has('products')) head('products', C.products.h2, C.products.sub);
+      if (has('products')) {
+        head('products', C.products.h2, C.products.sub);
+        if (C.products.eyebrow) eyebrowOf('products', C.products.eyebrow);
+      }
       if (has('builds')) head('builds', null, C.builds.sub);
       if (has('brands')) head('brands', C.brands.h2, C.brands.sub);
       if (has('regions')) head('regions', C.regions.h2);
@@ -5136,22 +5147,11 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
       'Flutter', 'AWS', 'PostgreSQL', 'Multi-tenant SaaS', 'Real-time systems',
       'AI integration', 'Software Architecture',
     ],
-    hasOccupation: {
-      '@type': 'Occupation',
-      name: 'Software Engineer',
-      occupationalCategory: '15-1252.00',
-      skills:
-        'Laravel, PHP, Next.js, React, React Native, TypeScript, FastAPI, Python, Flutter, ' +
-        'AWS, PostgreSQL, multi-tenant SaaS architecture, real-time systems, AI integration',
-    },
+    // The founder's professional profiles only (company-only decision): the
+    // personal social accounts left the footer and llms.txt too.
     sameAs: [
       CONTACT.linkedin,
       CONTACT.github,
-      'https://www.instagram.com/iamahmedfarid',
-      'https://x.com/iamahmedfarid',
-      'https://www.youtube.com/@iamahmedfarid',
-      'https://www.tiktok.com/@iamahmedfarid',
-      'https://www.behance.net/ahmedfarid20',
     ],
   };
 
@@ -5171,10 +5171,11 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
         }
         // Facts owned by site-facts.mjs win over whatever the export says, so
         // a stale years/location claim in the export cannot reach JSON-LD.
-        for (const k of ['description', 'address', 'homeLocation', 'jobTitle']) obj[k] = personLd[k];
+        for (const k of ['description', 'address', 'homeLocation', 'jobTitle', 'sameAs']) obj[k] = personLd[k];
         // A candidate's fields never reach a company page, whatever the export ships.
         delete obj.seeks;
         delete obj.makesOffer;
+        delete obj.hasOccupation;
         return `${mm[1]}${ldJson(obj)}${mm[3]}`;
       }
     } catch { /* leave malformed ld+json untouched */ }
@@ -5304,6 +5305,8 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
       : null,
     // The studio: a business name, not a registered company (no legalName
     // until docs/STUDIO-SPEC.md I3 exists; DRIFT_GUARDS refuse LLC & co.).
+    // On every page, so each page's #service reference (WebSite.publisher,
+    // ContactPage/CollectionPage/AboutPage) resolves on that page.
     spec.ld.includes('service')
       ? {
           '@context': 'https://schema.org', '@type': 'ProfessionalService', '@id': `${SITE_URL}/#service`,
@@ -5895,7 +5898,7 @@ ${switcherCss}
 ${skipLink(lang)}
 ${switcher}
 <div id="root">${tagClicks(drawBrandMark(result.body, lang, spec.key))}</div>
-${enhanceJS ? `<script>${enhanceForVariant(enhanceJS, spec)}</script>` : ''}
+${enhanceJS ? `<script>${enhanceForVariant(enhanceJS, spec, lang)}</script>` : ''}
 <script>${interactivity}</script>
 </body>
 </html>`;
