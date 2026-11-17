@@ -1,6 +1,6 @@
 # ahmedfarid2.github.io
 
-Personal portfolio of **Ahmed Farid** — Senior Software Engineer.
+Website of **Ahmed Farid Studio** — a senior-led software development studio in Dubai, founded by Ahmed Farid.
 Live at **https://iamahmedfarid.com** (custom domain in `CNAME`)
 
 ---
