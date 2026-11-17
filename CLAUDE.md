@@ -1,6 +1,6 @@
 # ahmedfarid2.github.io
 
-Personal portfolio site deployed to GitHub Pages. Claude Design exports (`index*.html`, …) are the source; `scripts/build.mjs` renders them into a static `dist/`. Validate with `npm run copy:check` and `npm run build`. Never edit `CNAME` or `google*.html`.
+The company-only B2B website of Ahmed Farid Studio, deployed to GitHub Pages (not a personal portfolio; see Repository facts). Claude Design exports (`index*.html`, …) are the source; `scripts/build.mjs` renders them into a static `dist/`. Validate with `npm run copy:check` and `npm run build`. Never edit `CNAME` or `google*.html`.
 
 ## Repository facts
 

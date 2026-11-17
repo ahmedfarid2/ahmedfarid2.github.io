@@ -16,7 +16,9 @@
 //   - roles Ahmed held are never client work: case studies and testimonials
 //     from those companies are labelled "In-house role" (PROVENANCE_LABEL);
 //   - the only scale claims are the owner-confirmed ones: a senior-led team of
-//     7+, 4 client projects a quarter, the studio since 2022, Ahmed's 6+ years;
+//     7+, 4 client projects a quarter, the studio since 2022 (STUDIO.since,
+//     written out in the about text below; owner to verify, STUDIO-SPEC
+//     open item 8), Ahmed's 6+ years;
 //   - no registered company, office, licence or named team member until the
 //     owner supplies them (DRIFT_GUARDS refuse the build otherwise).
 //
