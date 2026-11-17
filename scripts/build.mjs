@@ -1374,7 +1374,7 @@ function insightPage({ url, title, description, ogImage, ogAlt, type, published,
     `<meta name="description" content="${insightEsc(description)}">`,
     `<link rel="canonical" href="${url}">`,
     `<meta property="og:type" content="${type}">`,
-    `<meta property="og:site_name" content="Ahmed Farid">`,
+    `<meta property="og:site_name" content="${STUDIO.name}">`,
     `<meta property="og:title" content="${insightEsc(title)}">`,
     `<meta property="og:description" content="${insightEsc(description)}">`,
     `<meta property="og:url" content="${url}">`,
@@ -1578,7 +1578,7 @@ async function writeSeoFiles(locales, specs, projects = null, prices = null) {
     'CCBot', 'cohere-ai',
   ];
   await writeFile(path.join(DIST, 'robots.txt'),
-    `# Ahmed Farid — portfolio. All crawlers welcome, including AI assistants.\n` +
+    `# ${STUDIO.name} — software development studio. All crawlers welcome, including AI assistants.\n` +
     // Content-Signal (contentsignals.org) — a proposed spec that lets sites
     // declare AI-usage preferences alongside robots.txt. For a portfolio the
     // goal is maximum discoverability: allow traditional search, allow AI
@@ -5219,7 +5219,7 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
     `<meta property="og:description" content="${esc(seo.description)}">`,
     `<meta name="twitter:title" content="${esc(seo.title)}">`,
     `<meta name="twitter:description" content="${esc(seo.description)}">`,
-    `<meta property="og:site_name" content="Ahmed Farid">`,
+    `<meta property="og:site_name" content="${STUDIO.name}">`,
     `<meta property="og:locale" content="${ogLocale[lang] || 'en_US'}">`,
     ...(multi
       ? locales

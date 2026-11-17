@@ -329,9 +329,14 @@ export const CAPACITY = { projectsPerQuarter: 4, availableNow: true };
 
 // The practice's name (owner-confirmed, Nov 2026; docs/STUDIO-SPEC.md 2.1):
 // founder-led, so the person's name leads. It sits next to the name in the
-// nav, the footer and the home title. A brand name, never translated. No
-// "we" or team copy goes with it until a named member is on the site (R2).
+// nav, the footer and the home title. A brand name, never translated. The
+// studio speaks as "we" (owner-confirmed senior-led team of 7+, Nov 2026);
+// team members are named only with their written consent (I2).
 // since: the year the independent practice started (CV: freelance, Jan 2022).
+// The site shows it as the studio's founding year ("Since 2022", "Studio
+// founded 2022", and literally in company-copy.mjs's /about/ text): pending
+// owner verification (docs/STUDIO-SPEC.md, open item 8). If it changes,
+// change it here and in company-copy.mjs together.
 export const STUDIO = { name: 'Ahmed Farid Studio', suffix: 'Studio', since: 2022 };
 
 // The footer's bottom line on every page: the studio, where it is, since
