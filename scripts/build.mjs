@@ -1769,14 +1769,14 @@ async function ogArabicFontCss() {
 const OG_MAIN = {
   en: {
     file: 'og.png', dir: 'ltr', eyebrow: `Software development studio · ${LOCATION.city}`,
-    h1: 'Custom software, SaaS<br>and mobile apps, <span>end to end.</span>',
+    h1: 'Custom software,<br>built <span>end to end.</span>',
     sub: 'Multi-tenant SaaS, AI features and mobile apps for founders and growing businesses. A senior-led team, with the founder on every project.',
     alt: 'Ahmed Farid Studio — custom software, SaaS and mobile app development',
   },
   ar: {
     file: 'og-ar.png', dir: 'rtl', eyebrow: 'استوديو تطوير برمجيات · دبي',
-    h1: 'برمجيات مخصّصة وSaaS<br>وتطبيقات جوّال، <span>من البداية إلى النهاية.</span>',
-    sub: 'منصّات SaaS متعدّدة المستأجرين ومزايا ذكاء اصطناعي وتطبيقات جوّال للمؤسّسين والشركات النامية. فريق بقيادة كبار المهندسين، والمؤسّس في كل مشروع.',
+    h1: 'برمجيات مخصّصة،<br><span>من الفكرة إلى الإنتاج.</span>',
+    sub: 'منصّات SaaS وتطبيقات جوّال ومزايا ذكاء اصطناعي، بقيادة المؤسّس في كل مشروع.',
     alt: 'Ahmed Farid Studio — تطوير برمجيات مخصّصة وSaaS وتطبيقات جوّال',
     caseEyebrow: 'دراسة حالة', caseAlt: 'دراسة حالة من Ahmed Farid Studio',
   },
@@ -1838,7 +1838,7 @@ async function generateOgImage(browser, fontCss = '', arFontCss = '') {
       <h1>${c.h1}</h1>
       <div class="sub">${ogEscape(c.sub)}</div>
     </div>
-    <div class="brand"><span class="mark">AF</span><span dir="ltr"><b>Ahmed Farid</b> · iamahmedfarid.com</span></div>
+    <div class="brand"><span class="mark">AF</span><span dir="ltr"><b>${STUDIO.name}</b> · iamahmedfarid.com</span></div>
     <div class="tags" dir="ltr">Laravel · Next.js · FastAPI · Flutter</div>
   </body></html>`;
   await renderOgCard(browser, card, c.file);
@@ -1886,7 +1886,7 @@ async function generateCaseOgImages(browser, fontCss, projects, arFontCss = '') 
         <div class="out">${ogEscape(outcome)}</div>
       </div>
       <div class="frame"><div class="bar"><i></i><i></i><i></i></div><img src="${shot}" alt=""></div>
-      <div class="brand"><span class="mark">AF</span><span dir="ltr"><b>Ahmed Farid</b> · iamahmedfarid.com</span></div>
+      <div class="brand"><span class="mark">AF</span><span dir="ltr"><b>${STUDIO.name}</b> · iamahmedfarid.com</span></div>
     </body></html>`;
     await renderOgCard(browser, card, ogCardFor(lang, f.slug).file);
     }
