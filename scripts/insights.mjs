@@ -17,7 +17,7 @@
 export const INSIGHTS_INDEX = {
   title: 'Engineering write-ups from production systems · Ahmed Farid',
   h1: 'Engineering write-ups.',
-  description: 'How production systems stay correct under load: real-time bidding, webhook sync and multi-tenant SaaS. By Ahmed Farid, senior software engineer in Dubai.',
+  description: 'How production systems stay correct under load: real-time bidding, webhook sync and multi-tenant SaaS. By Ahmed Farid, founder of Ahmed Farid Studio, Dubai.',
   lede: 'Notes from systems that are live: the problem, the decision that mattered, and what I would tell a team about to build the same thing.',
 };
 

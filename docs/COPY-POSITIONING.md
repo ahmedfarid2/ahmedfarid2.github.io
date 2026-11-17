@@ -1,5 +1,7 @@
 # 🎯 Sharpened Positioning Copy (for Claude design)
 
+> **Superseded in part (Nov 2026):** the site is now company-only (`docs/STUDIO-SPEC.md`, "Company-only decision"). The hiring path, the CV links and the "senior roles" badge described below are gone from every page; the build refuses them (`DRIFT_GUARDS`). The niche positioning still holds.
+
 **Why:** Your current copy is excellent but positions you as a generalist
 ("I build everything"). Generalists are hard to refer. This tightens your
 **spearhead niche** — real-time, multi-tenant SaaS — while keeping your full

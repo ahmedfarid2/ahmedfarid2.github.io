@@ -30,6 +30,7 @@ import { faviconSvg, appleIconSvg, badgeSvg, ICON_LINKS } from './brand-mark.mjs
 import { renderChecklist, CHECKLIST_PDF, CHECKLIST_REQUIRED_URIS, CHECKLIST_REQUIRED_TEXT } from './build-checklist.mjs';
 import { INSIGHTS, INSIGHTS_INDEX } from './insights.mjs';
 import { STUDIO_VOICE } from './studio-voice.mjs';
+import { COMPANY } from './company-copy.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = path.join(ROOT, 'index.html');
@@ -974,7 +975,7 @@ async function assertInternalLinks(files, locales = []) {
 // that reach the project pages, the one h1, the structured data. Checked on the
 // written pages, from the same table that drives them.
 const LD_TYPES = {
-  service: 'ProfessionalService', project: 'CreativeWork', profile: 'ProfilePage',
+  service: 'ProfessionalService', project: 'CreativeWork', profile: 'ProfilePage', aboutpage: 'AboutPage',
   collection: 'CollectionPage', breadcrumb: 'BreadcrumbList', faq: 'FAQPage', contactpage: 'ContactPage',
 };
 async function assertPageRoles(locales) {
@@ -1022,6 +1023,13 @@ async function assertPageRoles(locales) {
       const cardProvs = (masked.match(/class="writing-card-prov"/g) || []).length;
       if (cards !== cardProvs) bad.push(`${urlPath}: ${cards} project card(s) but ${cardProvs} provenance label(s)`);
     }
+    // Every testimonial card says whose it is (client project or in-house
+    // role): an employer's praise never reads as a client's (STUDIO-SPEC R1).
+    {
+      const tests = (masked.match(/class="test(?:\s[^"]*)?"/g) || []).length;
+      const testProvs = (masked.match(/class="test-prov"/g) || []).length;
+      if (tests !== testProvs) bad.push(`${urlPath}: ${tests} testimonial card(s) but ${testProvs} provenance label(s)`);
+    }
     // A project page's one h1 is the case name.
     if (spec.work === 'single') {
       const h1 = ((masked.match(/<h1[^>]*>([\s\S]*?)<\/h1>/) || [])[1] || '').replace(/<[^>]+>/g, '').trim();
@@ -1044,7 +1052,7 @@ async function assertPageRoles(locales) {
     err.fatal = true;
     throw err;
   }
-  console.log(`  ✓ page roles: ${pages.length} pages — four-link nav, contact order, project cards, provenance labels, one h1, JSON-LD types`);
+  console.log(`  ✓ page roles: ${pages.length} pages — four-link nav, contact order, project cards, provenance labels (cases and testimonials), one h1, JSON-LD types`);
 }
 
 // What search engines and share cards read: the title and description of every
@@ -1416,10 +1424,10 @@ async function writeInsights() {
       `<p class="eyebrow"><span class="dot"></span>${NAV.en.writeUp} · ${a.minutes} min read</p>`,
       `<h1>${insightEsc(a.h1)}</h1>`,
       `<p class="lede">${insightEsc(a.lede)}</p>`,
-      `<p class="byline">By <a href="/about/">Ahmed Farid</a>, senior software engineer · <time datetime="${a.datePublished}">${insightDate(a.datePublished)}</time></p>`,
+      `<p class="byline">By <a href="/about/">Ahmed Farid</a>, founder of ${STUDIO.name} · <time datetime="${a.datePublished}">${insightDate(a.datePublished)}</time></p>`,
       `<article class="prose">${a.body}</article>`,
       `<aside class="ins-cta" aria-label="Work with me"><h2>Need a system that stays correct under load?</h2>` +
-        `<p>This write-up comes from the <a href="/work/${f.slug}/">${insightEsc(f.name)} case study</a>. If part of your product has to stay right when it gets busy, a 30-minute call is usually enough to tell whether I can help.</p>` +
+        `<p>This write-up comes from the <a href="/work/${f.slug}/">${insightEsc(f.name)} case study</a>. If part of your product has to stay right when it gets busy, a 30-minute call is usually enough to tell whether we can help.</p>` +
         `<div class="btns"><a href="${CONTACT.calendly}" target="_blank" rel="noreferrer">Book a 30-minute scoping call</a>` +
         `<a class="ghost" href="/insights/">All write-ups</a></div></aside>`,
     ].join('\n');
@@ -1584,11 +1592,11 @@ async function writeSeoFiles(locales, specs, projects = null, prices = null) {
   // The page list for llms.txt. The project taglines come from the English render.
   const pagesBlock = projects
     ? `## Pages\n\n` + [
-        `- [Work](${SITE_URL}/work/): ${SEO.work.en.description}`,
-        ...FLAGSHIP.filter((f) => projects[f.slug]).map((f) => `- [${f.name}](${SITE_URL}/work/${f.slug}/): ${projects[f.slug].tagline}` +
+        `- [Case studies](${SITE_URL}/work/): ${SEO.work.en.description}`,
+        ...FLAGSHIP.filter((f) => projects[f.slug]).map((f) => `- [${f.name}](${SITE_URL}/work/${f.slug}/) (${PROVENANCE_LABEL.en[CASE_PROVENANCE[f.name]]}): ${projects[f.slug].tagline}` +
           (projects[f.slug].hard ? ` The hard part: ${projects[f.slug].hard}` : '')),
         `- [Services](${SITE_URL}/services/): ${SEO.services.en.description}`,
-        `- [About](${SITE_URL}/about/): ${SEO.about.en.description}`,
+        `- [Company](${SITE_URL}/about/): ${SEO.about.en.description}`,
         `- [Contact](${SITE_URL}/contact/): ${SEO.contact.en.description}`,
       ].join('\n') + `\n\n` +
       `## Writing\n\n` + [
@@ -1614,36 +1622,34 @@ async function writeSeoFiles(locales, specs, projects = null, prices = null) {
   // clean, structured Markdown summary of who this is and how to work with him,
   // so tools like ChatGPT/Claude/Perplexity can recommend him accurately.
   await writeFile(path.join(DIST, 'llms.txt'),
-    `# Ahmed Farid — Senior Software Engineer\n\n` +
-    `> Senior Software Engineer based in ${LOCATION_LABEL}, taking on fixed-scope builds, retainers and architecture reviews — ` +
-    `also open to senior roles. ` +
-    `${YEARS_PROSE.en[0].toUpperCase()}${YEARS_PROSE.en.slice(1)} building real-time, multi-tenant SaaS, AI tools and mobile ` +
-    `apps shipped to production across the Gulf, US, and UK.\n\n` +
-    `## About\n\n` +
-    `- Name: Ahmed Farid\n` +
-    `- Role: Senior Software Engineer\n` +
-    `- Location: ${LOCATION_LABEL} — remote and on-site\n` +
-    `- Currently: full-time at Recovery Advisers (Dubai)\n` +
-    `- Availability: client projects of any size alongside the full-time role; larger builds run with the studio's senior-led team of 7+, with Ahmed as the single point of contact\n\n` +
-    `## Core skills\n\n` +
-    `Laravel, PHP, Next.js, React, React Native, TypeScript, FastAPI, Python, Flutter, AWS, ` +
-    `PostgreSQL, multi-tenant SaaS architecture, real-time systems, AI integration.\n\n` +
+    `# ${STUDIO.name}\n\n` +
+    `> A senior-led software development studio in ${LOCATION_LABEL}, founded by Ahmed Farid in ${STUDIO.since}. ` +
+    `It designs, builds and runs custom software for founders, CTOs and growing businesses: multi-tenant SaaS, ` +
+    `web and mobile apps, AI features and internal tools, as fixed-price builds, monthly engineering retainers ` +
+    `and architecture reviews.\n\n` +
+    `## The studio\n\n` +
+    `- Name: ${STUDIO.name} (a business name; contracts and invoices are signed by the founder)\n` +
+    `- Founder: Ahmed Farid, who leads every project and is the client's single point of contact; ` +
+    `${YEARS_PROSE.en} shipping production systems\n` +
+    `- Team: a senior-led team of 7+ on larger builds, under the same NDA and IP terms\n` +
+    `- Capacity: ${CAPACITY.projectsPerQuarter} client projects per quarter\n` +
+    `- Location: ${LOCATION_LABEL}, working on Gulf time (${LOCATION.tz}) with clients in the region and abroad\n` +
+    `- Case studies are labelled: "Client project" for studio clients, "In-house role" for products the founder built while employed elsewhere\n\n` +
+    `## Services\n\n` +
+    `Custom software development, SaaS product engineering, web and mobile applications (Laravel, Next.js, React, ` +
+    `Flutter, FastAPI), AI integration, architecture reviews and modernization of existing systems, ongoing engineering.\n\n` +
     `## Ways to work together\n\n` +
     waysBlock +
     pagesBlock +
     `## Links\n\n` +
     `- Website: ${SITE_URL}\n` +
-    `- LinkedIn: ${CONTACT.linkedin}\n` +
-    `- GitHub: ${CONTACT.github}\n` +
-    `- Instagram: https://www.instagram.com/iamahmedfarid\n` +
-    `- X: https://x.com/iamahmedfarid\n` +
-    `- YouTube: https://www.youtube.com/@iamahmedfarid\n` +
-    `- TikTok: https://www.tiktok.com/@iamahmedfarid\n` +
-    `- Behance: https://www.behance.net/ahmedfarid20\n` +
-    `- CV (PDF): ${SITE_URL}${CONTACT.cv}\n\n` +
+    `- Founder on LinkedIn: ${CONTACT.linkedin}\n` +
+    `- Founder on GitHub: ${CONTACT.github}\n\n` +
     `## Contact\n\n` +
-    `- Project work: book a 30-minute scoping call (${CONTACT.calendly}) or WhatsApp Business (${CONTACT.whatsapp})\n` +
-    `- Senior roles: email ${CONTACT.email}, or LinkedIn\n`, 'utf8');
+    `- Request a proposal: ${SITE_URL}/contact/\n` +
+    `- Book a 30-minute scoping call: ${CONTACT.calendly}\n` +
+    `- WhatsApp Business: ${CONTACT.whatsapp}\n` +
+    `- Email: ${CONTACT.email}\n`, 'utf8');
 
   // The 404 joins the standalone pages that get the site's nav and footer
   // (applyShellToStandalonePages, which also brings the Geist faces), and
@@ -1651,7 +1657,7 @@ async function writeSeoFiles(locales, specs, projects = null, prices = null) {
   await writeFile(path.join(DIST, '404.html'),
     `<!doctype html><html lang="en"><head><meta charset="utf-8">\n` +
     `<meta name="viewport" content="width=device-width, initial-scale=1">\n` +
-    `<title>404 — Ahmed Farid</title><meta name="robots" content="noindex">\n` +
+    `<title>404 — ${STUDIO.name}</title><meta name="robots" content="noindex">\n` +
     `<style>:root{color-scheme:dark}*{box-sizing:border-box}` +
     `body{margin:0;background:#0B0D10;color:#F4F1EA;font-family:Geist,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}` +
     `.nf{position:relative;overflow:hidden;min-height:68vh;display:flex;flex-direction:column;align-items:center;justify-content:center;` +
@@ -1762,17 +1768,17 @@ async function ogArabicFontCss() {
 // home hero word for word.
 const OG_MAIN = {
   en: {
-    file: 'og.png', dir: 'ltr', eyebrow: `Senior software engineer · ${LOCATION.city}`,
-    h1: 'Building scalable products<br>and real-world <span>systems.</span>',
-    sub: 'Real-time, multi-tenant SaaS, AI tools and mobile apps, shipped across the Gulf, the US and the UK.',
-    alt: 'Ahmed Farid — Senior Software Engineer',
+    file: 'og.png', dir: 'ltr', eyebrow: `Software development studio · ${LOCATION.city}`,
+    h1: 'Custom software,<br>built <span>end to end.</span>',
+    sub: 'Multi-tenant SaaS, AI features and mobile apps for founders and growing businesses. A senior-led team, with the founder on every project.',
+    alt: 'Ahmed Farid Studio — custom software, SaaS and mobile app development',
   },
   ar: {
-    file: 'og-ar.png', dir: 'rtl', eyebrow: 'مهندس برمجيات أول · دبي',
-    h1: 'أبني منتجات قابلة للتوسّع<br>وأنظمةً <span>للعالم الحقيقي.</span>',
-    sub: 'منصّات SaaS فورية متعدّدة المستأجرين، وأدوات ذكاء اصطناعي وتطبيقات جوّال، أُطلقت في الخليج والولايات المتحدة والمملكة المتحدة.',
-    alt: 'Ahmed Farid — مهندس برمجيات أول',
-    caseEyebrow: 'دراسة حالة', caseAlt: 'دراسة حالة من Ahmed Farid',
+    file: 'og-ar.png', dir: 'rtl', eyebrow: 'استوديو تطوير برمجيات · دبي',
+    h1: 'برمجيات مخصّصة،<br><span>من الفكرة إلى الإنتاج.</span>',
+    sub: 'منصّات SaaS وتطبيقات جوّال ومزايا ذكاء اصطناعي، بقيادة المؤسّس في كل مشروع.',
+    alt: 'Ahmed Farid Studio — تطوير برمجيات مخصّصة وSaaS وتطبيقات جوّال',
+    caseEyebrow: 'دراسة حالة', caseAlt: 'دراسة حالة من Ahmed Farid Studio',
   },
 };
 // The card a page shares: Arabic pages get the Arabic cards, every other
@@ -1832,7 +1838,7 @@ async function generateOgImage(browser, fontCss = '', arFontCss = '') {
       <h1>${c.h1}</h1>
       <div class="sub">${ogEscape(c.sub)}</div>
     </div>
-    <div class="brand"><span class="mark">AF</span><span dir="ltr"><b>Ahmed Farid</b> · iamahmedfarid.com</span></div>
+    <div class="brand"><span class="mark">AF</span><span dir="ltr"><b>${STUDIO.name}</b> · iamahmedfarid.com</span></div>
     <div class="tags" dir="ltr">Laravel · Next.js · FastAPI · Flutter</div>
   </body></html>`;
   await renderOgCard(browser, card, c.file);
@@ -1880,7 +1886,7 @@ async function generateCaseOgImages(browser, fontCss, projects, arFontCss = '') 
         <div class="out">${ogEscape(outcome)}</div>
       </div>
       <div class="frame"><div class="bar"><i></i><i></i><i></i></div><img src="${shot}" alt=""></div>
-      <div class="brand"><span class="mark">AF</span><span dir="ltr"><b>Ahmed Farid</b> · iamahmedfarid.com</span></div>
+      <div class="brand"><span class="mark">AF</span><span dir="ltr"><b>${STUDIO.name}</b> · iamahmedfarid.com</span></div>
     </body></html>`;
     await renderOgCard(browser, card, ogCardFor(lang, f.slug).file);
     }
@@ -1947,10 +1953,10 @@ const HOME_SERVICE_ORDER = {
 //                project contact path on every page that leads with it
 const HOME_COPY = {
   en: {
-    tag: { 'tag-full': 'Senior Software Engineer · SaaS, Mobile & AI · Dubai 🇦🇪', 'tag-short': 'SaaS, Mobile & AI 🇦🇪', 'tag-tiny': 'SaaS, Mobile & AI 🇦🇪' },
-    trust: 'Products<br>I\'ve shipped',
+    tag: { 'tag-full': 'Software development studio · SaaS, Mobile & AI · Dubai 🇦🇪', 'tag-short': 'SaaS, Mobile & AI 🇦🇪', 'tag-tiny': 'SaaS, Mobile & AI 🇦🇪' },
+    trust: 'Shipped to<br>production',
     svcHeading: ['Four ways', 'Three ways'],
-    direct: 'You talk to me directly. No account managers, no middlemen.',
+    direct: 'You talk to the founder directly. No account managers, no middlemen.',
     notReady: 'Not ready for a call?',
     demo: "Get one screen of your product built, free →",
     demoBand: "Not sure yet? We'll build one real screen of your product, free, in five business days →",
@@ -1962,10 +1968,10 @@ const HOME_COPY = {
     terms: ['Reply within 24 hours', 'NDA before the first call', 'You own all code & IP once paid', 'Written contract & invoice, signed by the founder', 'Larger scopes: a senior-led team of 7+, quoted per scope', 'Same NDA and IP terms for the whole team'],
   },
   ar: {
-    tag: { 'tag-full': 'مهندس برمجيات أول · SaaS والجوّال والذكاء الاصطناعي · دبي 🇦🇪', 'tag-short': 'SaaS والجوّال والذكاء الاصطناعي 🇦🇪', 'tag-tiny': 'SaaS والجوّال والذكاء الاصطناعي 🇦🇪' },
-    trust: 'منتجات<br>أطلقتُها',
+    tag: { 'tag-full': 'استوديو تطوير برمجيات · SaaS والجوّال والذكاء الاصطناعي · دبي 🇦🇪', 'tag-short': 'SaaS والجوّال والذكاء الاصطناعي 🇦🇪', 'tag-tiny': 'SaaS والجوّال والذكاء الاصطناعي 🇦🇪' },
+    trust: 'منتجات<br>في الإنتاج',
     svcHeading: ['أربع طرق', 'ثلاث طرق'],
-    direct: 'ستتحدث معي مباشرةً — بلا وسطاء.',
+    direct: 'ستتحدث مع المؤسّس مباشرةً — بلا وسطاء.',
     notReady: 'هل الوقت مبكر لمكالمة؟',
     demo: "احصل على شاشة واحدة من منتجك مبنية مجانًا (بالإنجليزية) →",
     demoBand: "لست متأكدًا بعد؟ نبني لك شاشة حقيقية واحدة من منتجك مجانًا خلال خمسة أيام عمل (الصفحة بالإنجليزية) →",
@@ -1977,10 +1983,10 @@ const HOME_COPY = {
     terms: ['ردّ خلال ٢٤ ساعة', 'اتفاقية سرّية قبل أول مكالمة', 'الكود والملكية الفكرية لك بعد السداد', 'عقد مكتوب وفاتورة بتوقيع المؤسس', 'المشاريع الأكبر: فريق من أكثر من ٧ أشخاص بقيادة مهندس أول، وسعر حسب النطاق', 'الاتفاقية السرّية وملكية الكود تشملان الفريق كله'],
   },
   de: {
-    tag: { 'tag-full': 'Senior-Softwareentwickler · SaaS, Mobile & KI · Dubai 🇦🇪', 'tag-short': 'SaaS, Mobile & KI 🇦🇪', 'tag-tiny': 'SaaS, Mobile & KI 🇦🇪' },
-    trust: 'Produkte, die<br>ich gebaut habe',
+    tag: { 'tag-full': 'Softwareentwicklungsstudio · SaaS, Mobile & KI · Dubai 🇦🇪', 'tag-short': 'SaaS, Mobile & KI 🇦🇪', 'tag-tiny': 'SaaS, Mobile & KI 🇦🇪' },
+    trust: 'Live in<br>Produktion',
     svcHeading: ['Vier Wege', 'Drei Wege'],
-    direct: 'Sie sprechen direkt mit mir — ohne Account-Manager, ohne Zwischenstellen.',
+    direct: 'Sie sprechen direkt mit dem Gründer — ohne Account-Manager, ohne Zwischenstellen.',
     notReady: 'Noch nicht bereit für ein Gespräch?',
     demo: "Einen Screen Ihres Produkts kostenlos bauen lassen (Englisch) →",
     demoBand: "Noch unsicher? Wir bauen einen echten Screen Ihres Produkts kostenlos, in fünf Werktagen (Seite auf Englisch) →",
@@ -1992,10 +1998,10 @@ const HOME_COPY = {
     terms: ['Antwort innerhalb von 24 Stunden', 'NDA vor dem ersten Gespräch', 'Code und IP gehören Ihnen nach Zahlung', 'Schriftlicher Vertrag und Rechnung, vom Gründer unterschrieben', 'Größere Projekte: Team aus 7+ Personen unter Senior-Leitung, Preis nach Umfang', 'Gleiche NDA- und IP-Regeln für das ganze Team'],
   },
   es: {
-    tag: { 'tag-full': 'Ingeniero de Software Senior · SaaS, móvil e IA · Dubái 🇦🇪', 'tag-short': 'SaaS, móvil e IA 🇦🇪', 'tag-tiny': 'SaaS, móvil e IA 🇦🇪' },
-    trust: 'Productos que<br>he lanzado',
+    tag: { 'tag-full': 'Estudio de desarrollo de software · SaaS, móvil e IA · Dubái 🇦🇪', 'tag-short': 'SaaS, móvil e IA 🇦🇪', 'tag-tiny': 'SaaS, móvil e IA 🇦🇪' },
+    trust: 'En<br>producción',
     svcHeading: ['Cuatro formas', 'Tres formas'],
-    direct: 'Hablas directamente conmigo, sin gestores de cuenta ni intermediarios.',
+    direct: 'Hablas directamente con el fundador, sin gestores de cuenta ni intermediarios.',
     notReady: '¿Aún no estás listo para una llamada?',
     demo: "Consigue una pantalla de tu producto construida gratis (en inglés) →",
     demoBand: "¿Aún no lo tienes claro? Construimos una pantalla real de tu producto gratis, en cinco días hábiles (página en inglés) →",
@@ -2007,10 +2013,10 @@ const HOME_COPY = {
     terms: ['Respuesta en menos de 24 horas', 'NDA antes de la primera llamada', 'Código y PI son tuyos tras el pago', 'Contrato escrito y factura, firmados por el fundador', 'Proyectos mayores: equipo de más de 7 personas con liderazgo sénior, precio por alcance', 'Mismo NDA y misma PI para todo el equipo'],
   },
   fr: {
-    tag: { 'tag-full': 'Ingénieur logiciel senior · SaaS, mobile et IA · Dubaï 🇦🇪', 'tag-short': 'SaaS, mobile et IA 🇦🇪', 'tag-tiny': 'SaaS, mobile et IA 🇦🇪' },
-    trust: 'Produits que<br>j’ai livrés',
+    tag: { 'tag-full': 'Studio de développement logiciel · SaaS, mobile et IA · Dubaï 🇦🇪', 'tag-short': 'SaaS, mobile et IA 🇦🇪', 'tag-tiny': 'SaaS, mobile et IA 🇦🇪' },
+    trust: 'En<br>production',
     svcHeading: ['Quatre façons', 'Trois façons'],
-    direct: 'Vous parlez directement avec moi — sans chef de projet ni intermédiaire.',
+    direct: 'Vous parlez directement avec le fondateur — sans chef de projet ni intermédiaire.',
     notReady: 'Pas encore prêt pour un appel ?',
     demo: "Faites construire un écran de votre produit gratuitement (en anglais) →",
     demoBand: "Pas encore sûr ? Nous construisons gratuitement un vrai écran de votre produit, en cinq jours ouvrés (page en anglais) →",
@@ -2109,8 +2115,6 @@ const HUMAN_COPY = {
       'Shipped for teams across 17+ countries.': 'Clients and products in 17+ countries.',
       "Logos of teams & products I've shipped.": "Teams and products I've shipped for.",
       'The stack, without the buzzwords.': 'The stack I use.',
-      "Code I'm willing to publish.": 'Open-source code.',
-      'Roles, in order of arrival.': 'Experience.',
       'What you usually get vs. what I bring.': 'Why clients work with me directly.',
       'Find me where you work.': 'Find me online.',
     },
@@ -2134,20 +2138,17 @@ const HUMAN_COPY = {
       ['Most start as a 3-week scoped build — a defined slice', 'Most start as a 3-week scoped build: a defined slice'],
       ["What I actually reach for, and why. No frameworks-of-the-month — just the boring tools that survive contact with production.", "What I use, and why. Mostly proven tools that hold up in production."],
       ["Five principles I apply across every project. They're not laws — they're priors I'm willing to break with evidence.", "Five principles I apply on every project, and drop when the evidence says otherwise."],
-      ["Full-time and freelance, on-site and remote. The throughline isn't the title — it's the work shipped.", "Full-time and freelance roles, on-site and remote."],
       ["Not a brag list — a spec. If any of these feel like they're missing on your current project, that's where I help.", "What you can expect when we work together."],
       ["Backend, web, mobile, infra — held together by one person.", "Backend, web, mobile and infra, with one person accountable for all of it."],
       ["Quotes business outcomes — and the trade-offs to get there.", "Talks in business outcomes, and the trade-offs behind them."],
       ["Every mark is a real product I built or contributed to — from Gulf SaaS platforms to a fleet of US & UK pharmacy brands. Hover to pause; click any logo to open its live site.", "Every name here is a real product I built or contributed to, from Gulf SaaS platforms to US and UK pharmacy brands. Each one opens its live site."],
       ["A senior engineer's range, narrowed to what I actually ship — not what's on the résumé. Most projects sit across two or three of these at once.", "What I build most often. Most projects combine two or three of these."],
-      ["I'm open to full-time senior engineering roles in Dubai — that's what I'm looking for now. I'm currently full-time at Recovery Advisers (remote) and take a small number of freelance engagements alongside it; those are on the services page.", "Both. I'm full-time at Recovery Advisers (remote), and I take on client projects of any size alongside it: larger builds run with the studio's senior-led team of 7+, and you deal with me throughout. Packages and prices are on the services page."],
       ['UAE, Saudi Arabia, the United States, and Egypt.', 'UAE, Saudi Arabia, the United States, the UK, Spain and Egypt.'],
       ['Design concepts, client demos and smaller builds — all live on my own domain, so you can click through them instead of taking my word for it. Each one is labelled for what it actually is.', 'Client work and client demos, live on my own domain so you can click through them. Each one is labelled for what it is.'],
       ['Concepts & builds', 'Client builds'],
       ['Customer · Employee · Manager apps — App Store & Play coming soon', 'Customer · Employee · Manager apps for iOS and Android'],
       ['Recommendations from people who managed me directly, verified on LinkedIn.', 'Clients and the people who managed me, in their own words. The LinkedIn-verified one is marked.'],
       ["Architecture reviews, system design, schema and code audits. The 30-minute call that saves you from a six-month rewrite.", "A written review of your architecture, schema and code in five business days, before a decision you can’t cheaply undo."],
-      [" public repos spanning TypeScript tooling, PHP, and ML notebooks. Most client work lives behind NDAs.", " public repos. Most of my client work is private, under NDA."],
       ["Source, pinned projects & ML notebooks.", "My public code. Client work stays private."],
       ["ElastiCache, PayFort.", "ElastiCache."],
       ["Two calls, a shared doc, and a clear definition of done before code.", "The 30-minute scoping call, then a written scope and a fixed price within 2 business days, and a clear definition of done before any code."],
@@ -2158,7 +2159,6 @@ const HUMAN_COPY = {
       ["Debt-recovery & case management — internal app + multi-tenant client portal, webhook-synced.", "Debt-recovery case management: an internal app, a mobile app for the team on iOS and Android, and a multi-tenant client portal kept in sync by webhooks."],
     ],
     position: 'I treat a product as one system, not a pile of features. I design how the parts fit together, build every layer, and stay on the hook when it has to scale.',
-    pinnedStat: 'Pinned projects',
     contactTitle: 'Let’s talk.',
     projectForm: {"title": "Or tell me about the project here", "sub": "Two minutes to fill in. I reply personally, usually within a day.", "need": "Which service is closest?", "choose": "Choose one…", "notSure": "Not sure yet", "name": "Your name", "email": "Email", "company": "Company or product URL", "optional": "optional", "brief": "What are you building, and what do you need from me?", "briefPh": "The product, who it is for, where it stands today, and the timeline you have in mind.", "submit": "Send project details", "note": "No newsletter, no sequence. Your details go to my inbox and nowhere else.", "sentTitle": "Got it, thank you.", "sentBody": "Your message is in my inbox. I'll reply personally, usually within a day."},
     brandsSub: 'More real products and teams I built for, beyond the case studies above: from a bank and an e-learning platform to US and UK pharmacy brands. Each name opens its live site.',
@@ -2202,14 +2202,11 @@ const HUMAN_COPY = {
       'سلّمت لفِرَق عبر ١٧+ دولة.': 'عملاء ومنتجات في ١٧+ دولة.',
       'شعارات فِرَق ومنتجات سلّمتها.': 'فِرَق ومنتجات عملت معها.',
       'المنظومة التقنية، دون مصطلحات رنّانة.': 'التقنيات التي أستخدمها.',
-      'شيفرة أنا مستعدّ لنشرها.': 'شيفرة مفتوحة المصدر.',
-      'الأدوار، بترتيب وصولها.': 'الخبرة.',
       'ما تحصل عليه عادةً مقابل ما أقدّمه.': 'لماذا يعمل العملاء معي مباشرةً.',
       'اعثر عليّ حيث تعمل.': 'حساباتي على الإنترنت.',
     },
     text: [
       ["مرّر للإيقاف المؤقّت؛ انقر أي شعار لفتح موقعه الحيّ.", "كل اسم يفتح موقعه الحيّ."],
-      ['أبحث عن أدوار هندسية أولى بدوام كامل في دبي — هذا ما أسعى إليه الآن. أعمل حاليًا بدوام كامل لدى Recovery Advisers (عن بُعد) وآخذ إلى جانبها عددًا محدودًا من التعاقدات الحرّة، وهي معروضة في صفحة الخدمات.', 'كلاهما. أعمل بدوام كامل لدى Recovery Advisers (عن بُعد)، وأتولّى إلى جانبها مشاريع العملاء بأي حجم: المشاريع الأكبر تُنفَّذ مع فريق الاستوديو المكوّن من أكثر من ٧ أشخاص بقيادة مهندس أول، وتبقى أنت تتعامل معي مباشرةً طوال الوقت. الباقات والأسعار في صفحة الخدمات.'],
       ['الإمارات والسعودية والولايات المتحدة ومصر.', 'الإمارات والسعودية والولايات المتحدة والمملكة المتحدة وإسبانيا ومصر.'],
       ['مفاهيم تصميمية وعروض تجريبية لعملاء وأعمال أصغر — جميعها منشورة على نطاقي الخاص، لتتصفّحها بنفسك بدل أن تأخذ كلامي. وكلٌّ منها موسوم بما هو عليه فعلًا.', 'أعمال وعروض تجريبية لعملاء، منشورة على نطاقي الخاص لتتصفّحها بنفسك. وكلٌّ منها موسوم بما هو عليه.'],
       ['مفاهيم وأعمال', 'أعمال لعملاء'],
@@ -2217,7 +2214,6 @@ const HUMAN_COPY = {
       ['توصيات من أشخاص أداروني مباشرةً، موثّقة على LinkedIn.', 'عملاء وأشخاص أداروني، بكلماتهم. والتوصية الموثّقة على LinkedIn عليها علامة.'],
       ['احجز مكالمة تحديد نطاق مدتها ٣٠ دقيقة', 'احجز مكالمة مدتها ٣٠ دقيقة'],
       ["مراجعات معمارية، تصميم أنظمة، تدقيق مخطّطات وشيفرة. مكالمة الـ ٣٠ دقيقة التي تنقذك من إعادة كتابة تستغرق ستّة أشهر.", "مراجعة مكتوبة لمعمارية نظامك ومخطّط بياناته وشيفرته خلال خمسة أيام عمل، قبل قرار يصعب التراجع عنه لاحقًا."],
-      [" مستودعًا عامًّا تمتدّ عبر أدوات TypeScript وPHP ودفاتر ML. معظم أعمال العملاء خلف اتفاقيات سرّية.", " مستودعًا عامًّا. معظم أعمالي للعملاء خاصة، بموجب اتفاقيات سرّية."],
       ["المصدر والمشاريع المثبّتة ودفاتر ML.", "شيفرتي العامة. أعمال العملاء تبقى خاصة."],
       ["ElastiCache، PayFort.", "ElastiCache."],
       ["عمليتي ليست حِكرًا — إنها منضبطة فحسب. الشكل ذاته سواء استمرّ التعاقد ستّة أسابيع أو ستّة أشهر.", "لا أسرار في طريقتي: الخطوات الأربع نفسها، سواء استمرّ العمل ستّة أسابيع أو ستّة أشهر."],
@@ -2231,7 +2227,6 @@ const HUMAN_COPY = {
       ["إن لم يكن سؤالك هنا، فاطرحه مباشرةً — أسفل الصفحة.", "إن لم يكن سؤالك هنا، فاسألني مباشرةً أسفل الصفحة."],
       ["ما ألجأ إليه فعلًا، ولماذا. لا أطر «هذا الشهر» — بل الأدوات المملّة التي تنجو من ملامسة الإنتاج.", "ما أستخدمه، ولماذا. في الغالب أدوات مجرَّبة تصمد في الإنتاج."],
       ["خمسة مبادئ أطبّقها في كل مشروع. ليست قوانين — بل افتراضات مستعدّ لكسرها أمام الأدلّة.", "خمسة مبادئ أطبّقها في كل مشروع، وأتخلّى عنها حين تقول الأدلّة غير ذلك."],
-      ["دوام كامل وعمل حرّ، في الموقع وعن بُعد. الخيط الناظم ليس المسمّى — بل العمل المُسلَّم.", "أدوار بدوام كامل وعمل حرّ، في الموقع وعن بُعد."],
       ["ليست قائمة تباهٍ — بل مواصفات. إن شعرت أن أيًّا من هذه ناقص في مشروعك الحالي، فهناك أساعد.", "ما يمكنك توقّعه حين نعمل معًا."],
       ["مكالمتان، ومستند مشترك، وتعريف واضح لـ«المُنجَز» قبل الشيفرة.", "مكالمة تحديد النطاق (٣٠ دقيقة)، ثم نطاق مكتوب وسعر ثابت خلال يومَي عمل، وتعريف واضح لـ«المُنجَز» قبل أي شيفرة."],
       ["ترى برمجيات حقيقية خلال أسبوعين، لا مخطّط Gantt.", "ترى برمجيات حقيقية خلال أسبوعين، ثم عرضًا كل أسبوع على رابط تجريبي يمكنك فتحه."],
@@ -2242,7 +2237,6 @@ const HUMAN_COPY = {
       ["تحصيل الديون وإدارة القضايا — تطبيق داخلي + بوابة عملاء متعدّدة المستأجرين، متزامنة عبر Webhook.", "إدارة قضايا تحصيل الديون: تطبيق داخلي، وتطبيق جوّال للفريق على iOS وAndroid، وبوابة عملاء متعدّدة المستأجرين متزامنة عبر Webhook."],
     ],
     position: 'أتعامل مع المنتج كنظام واحد، لا كمجموعة مزايا متفرّقة. أصمّم كيف تترابط أجزاؤه، وأبني كل طبقاته، وأبقى مسؤولًا عنه حين يكبر.',
-    pinnedStat: 'مشاريع مثبّتة',
     contactTitle: 'لنتحدّث.',
     projectForm: {"title": "أو أخبرني عن مشروعك هنا", "sub": "تعبئة النموذج تستغرق دقيقتين. أردّ بنفسي، عادةً خلال يوم.", "need": "أيّ خدمة أقرب لما تحتاجه؟", "choose": "اختر واحدة…", "notSure": "لم أحدّد بعد", "name": "اسمك", "email": "البريد الإلكتروني", "company": "الشركة أو رابط المنتج", "optional": "اختياري", "brief": "ماذا تبني، وما الذي تحتاجه مني؟", "briefPh": "المنتج، ولمن هو، وأين وصل اليوم، والجدول الزمني الذي تفكّر فيه.", "submit": "أرسل تفاصيل المشروع", "note": "لا نشرات بريدية ولا رسائل متتابعة. تصل بياناتك إلى بريدي فقط.", "sentTitle": "وصلت رسالتك، شكرًا لك.", "sentBody": "رسالتك في بريدي الآن. سأردّ بنفسي، عادةً خلال يوم."},
     brandsSub: 'منتجات وفرق حقيقية أخرى بنيت لها، غير دراسات الحالة أعلاه: من بنك ومنصّة تعليم إلى علامات صيدليات أمريكية وبريطانية. كل اسم يفتح موقعه الحيّ.',
@@ -2284,8 +2278,6 @@ const HUMAN_COPY = {
       "Domänen, für die ich echte Systeme geliefert habe.": "Branchen, in denen ich gearbeitet habe.",
       "Logos of teams & products I've shipped.": "Teams und Produkte, für die ich geliefert habe.",
       "Der Stack, ohne die Buzzwords.": "Mein Tech-Stack.",
-      "Code, den ich zu veröffentlichen bereit bin.": "Open-Source-Code.",
-      "Rollen, in der Reihenfolge ihres Eintreffens.": "Berufserfahrung.",
       "Was Sie üblicherweise bekommen vs. was ich mitbringe.": "Warum Kunden direkt mit mir arbeiten.",
       "Finden Sie mich, wo Sie arbeiten.": "Hier finden Sie mich online.",
       'Konzepte, Demos und neuere Arbeiten.': 'Kleinere Kundenprojekte.',
@@ -2293,14 +2285,12 @@ const HUMAN_COPY = {
     },
     text: [
       ["Every mark is a real product I built or contributed to — from Gulf SaaS platforms to a fleet of US & UK pharmacy brands. Hover to pause; click any logo to open its live site.", "Jeder Name ist ein echtes Produkt, das ich gebaut oder mitentwickelt habe, von SaaS-Plattformen am Golf bis zu Apothekenmarken in den USA und Großbritannien. Jeder Link öffnet die Live-Website."],
-      ['Ich suche eine Senior-Engineering-Festanstellung in Dubai — das ist mein Ziel. Derzeit bin ich Vollzeit bei Recovery Advisers (remote) und nehme daneben einige wenige freiberufliche Projekte an; die stehen auf der Services-Seite.', 'Beides. Ich bin Vollzeit bei Recovery Advisers (remote) und übernehme daneben Kundenprojekte jeder Größe: Größere Projekte setze ich mit dem Studio-Team aus 7+ Personen unter Senior-Leitung um, und Ihr Ansprechpartner bleibe durchgehend ich. Pakete und Preise stehen auf der Services-Seite.'],
       ['VAE, Saudi-Arabien, die Vereinigten Staaten und Ägypten.', 'VAE, Saudi-Arabien, die USA, Großbritannien, Spanien und Ägypten.'],
       ['Designkonzepte, Kunden-Demos und kleinere Builds — alle live auf meiner eigenen Domain, damit Sie durchklicken können, statt mir zu glauben. Jedes ist als das gekennzeichnet, was es wirklich ist.', 'Kundenarbeiten und Kunden-Demos, live auf meiner eigenen Domain zum Durchklicken. Jede ist als das gekennzeichnet, was sie ist.'],
       ['Konzepte & Builds', 'Kundenprojekte'],
       ['Kunden- · Mitarbeiter- · Manager-Apps — App Store & Play demnächst', 'Kunden- · Mitarbeiter- · Manager-Apps für iOS und Android'],
       ['Empfehlungen von Personen, die mich direkt geführt haben, verifiziert auf LinkedIn.', 'Kunden und Vorgesetzte, in ihren eigenen Worten. Die auf LinkedIn verifizierte Empfehlung ist markiert.'],
       ["Architektur-Reviews, Systemdesign, Schema- und Code-Audits. Der 30-minütige Call, der Ihnen eine sechsmonatige Neuschreibung erspart.", "Ein schriftliches Review Ihrer Architektur, Ihres Schemas und Ihres Codes in fünf Werktagen, bevor Sie etwas entscheiden, das sich nur teuer rückgängig machen lässt."],
-      [" öffentliche Repos über TypeScript-Tooling, PHP und ML-Notebooks. Die meiste Kundenarbeit liegt hinter NDAs.", " öffentliche Repos. Der Großteil meiner Kundenarbeit ist privat und unter NDA."],
       ["Quellcode, angepinnte Projekte & ML-Notebooks.", "Mein öffentlicher Code. Kundenarbeit bleibt privat."],
       ["ElastiCache, PayFort.", "ElastiCache."],
       ["Das vollständige Portfolio — zuerst die Flaggschiff-SaaS, dann der Rest. Jeder Eintrag verlinkt direkt zum Live-Produkt, zum Store-Eintrag oder zur Admin-Oberfläche, gezogen aus meinem GitHub-Profil.", "Zuerst die Flaggschiff-SaaS, dann der Rest. Jeder Eintrag verlinkt auf das Live-Produkt, den Store-Eintrag oder das Admin-Panel."],
@@ -2311,7 +2301,6 @@ const HUMAN_COPY = {
       ["Wenn Ihre nicht dabei ist, stellen Sie sie direkt — am Ende der Seite.", "Wenn Ihre Frage fehlt, stellen Sie sie mir direkt unten auf der Seite."],
       ["Wofür ich tatsächlich greife, und warum. Keine Frameworks-des-Monats — nur die langweiligen Werkzeuge, die den Kontakt mit der Produktion überleben.", "Was ich einsetze, und warum. Vor allem bewährte Werkzeuge, die im Produktivbetrieb halten."],
       ["Fünf Prinzipien, die ich auf jedes Projekt anwende. Es sind keine Gesetze — es sind Annahmen, die ich bei Belegen zu brechen bereit bin.", "Fünf Prinzipien, die ich in jedem Projekt anwende und aufgebe, wenn die Belege dagegen sprechen."],
-      ["Vollzeit und freiberuflich, vor Ort und remote. Der rote Faden ist nicht der Titel — es ist die gelieferte Arbeit.", "Festanstellungen und freiberufliche Projekte, vor Ort und remote."],
       ["Keine Angeberliste — eine Spezifikation. Wenn sich etwas davon in Ihrem aktuellen Projekt vermisst anfühlt, dort helfe ich.", "Was Sie von der Zusammenarbeit erwarten können."],
       ["Architektur, Backend, Web, Mobile und Infrastruktur — ein Entwickler, der das ganze Seil halten kann.", "Architektur, Backend, Web, Mobile und Infrastruktur, mit einem Senior-Entwickler, der für alles verantwortlich ist."],
       ["Backend, Web, Mobile, Infra — von einer Person zusammengehalten.", "Backend, Web, Mobile und Infra, mit einer Person, die für alles verantwortlich ist."],
@@ -2324,7 +2313,6 @@ const HUMAN_COPY = {
       ["Inkasso & Fallmanagement — interne App + Multi-Tenant-Kundenportal, per Webhook synchronisiert.", "Fallmanagement für Inkasso: eine interne App, eine Mobile-App für das Team auf iOS und Android und ein Multi-Tenant-Kundenportal, per Webhooks synchron gehalten."],
     ],
     position: "Ich behandle ein Produkt als ein System, nicht als Sammlung von Features. Ich entwerfe, wie die Teile zusammenspielen, baue jede Schicht und bleibe verantwortlich, wenn es wachsen muss.",
-    pinnedStat: 'Angepinnte Projekte',
     contactTitle: 'Sprechen wir.',
     projectForm: {"title": "Oder erzählen Sie mir hier vom Projekt", "sub": "In zwei Minuten ausgefüllt. Ich antworte persönlich, meist innerhalb eines Tages.", "need": "Welche Leistung passt am ehesten?", "choose": "Bitte wählen…", "notSure": "Noch unklar", "name": "Ihr Name", "email": "E-Mail", "company": "Firma oder Produkt-URL", "optional": "optional", "brief": "Was bauen Sie, und was brauchen Sie von mir?", "briefPh": "Das Produkt, für wen es ist, wo es heute steht und welchen Zeitrahmen Sie im Kopf haben.", "submit": "Projektdetails senden", "note": "Kein Newsletter, keine Mail-Sequenz. Ihre Angaben landen nur in meinem Postfach.", "sentTitle": "Angekommen, danke.", "sentBody": "Ihre Nachricht ist in meinem Postfach. Ich antworte persönlich, meist innerhalb eines Tages."},
     brandsSub: 'Weitere echte Produkte und Teams, für die ich gebaut habe, über die Fallstudien oben hinaus: von einer Bank und einer E-Learning-Plattform bis zu Apothekenmarken in den USA und Großbritannien. Jeder Name öffnet die Live-Website.',
@@ -2366,8 +2354,6 @@ const HUMAN_COPY = {
       "Dominios para los que he entregado sistemas reales.": "Sectores en los que he trabajado.",
       "Logos de equipos y productos que he entregado.": "Equipos y productos para los que he trabajado.",
       "El stack, sin palabras de moda.": "Mi stack técnico.",
-      "Código que estoy dispuesto a publicar.": "Código abierto.",
-      "Roles, por orden de llegada.": "Experiencia.",
       "Lo que sueles obtener vs. lo que yo aporto.": "Por qué los clientes trabajan conmigo directamente.",
       "Encuéntrame donde tú trabajas.": "Dónde encontrarme.",
       'Conceptos, demos y trabajos recientes.': 'Proyectos más pequeños para clientes.',
@@ -2375,14 +2361,12 @@ const HUMAN_COPY = {
     },
     text: [
       ["Pasa el cursor para pausar; haz clic en cualquier logo para abrir su sitio en vivo.", "Cada nombre abre su sitio en vivo."],
-      ['Busco un puesto senior de ingeniería a jornada completa en Dubái — es lo que quiero ahora. Actualmente estoy a jornada completa en Recovery Advisers (remoto) y acepto algunos encargos freelance en paralelo; están en la página de servicios.', 'Ambos. Estoy a jornada completa en Recovery Advisers (remoto) y acepto proyectos de clientes de cualquier tamaño: los más grandes se hacen con el equipo del estudio, de más de 7 personas con liderazgo sénior, y tu interlocutor sigo siendo yo de principio a fin. Los paquetes y precios están en la página de servicios.'],
       ['EAU, Arabia Saudí, Estados Unidos y Egipto.', 'EAU, Arabia Saudí, Estados Unidos, Reino Unido, España y Egipto.'],
       ['Conceptos de diseño, demos para clientes y trabajos más pequeños — todos publicados en mi propio dominio, para que los recorras en vez de creerme. Cada uno está etiquetado por lo que realmente es.', 'Trabajos y demos para clientes, publicados en mi propio dominio para que los recorras. Cada uno está etiquetado por lo que es.'],
       ['Conceptos y builds', 'Proyectos de clientes'],
       ['Apps de Cliente · Empleado · Gerente — App Store y Play próximamente', 'Apps de Cliente · Empleado · Gerente para iOS y Android'],
       ['Recomendaciones de personas que me supervisaron directamente, verificadas en LinkedIn.', 'Clientes y personas que me supervisaron, con sus propias palabras. La recomendación verificada en LinkedIn está marcada.'],
       ["Revisiones de arquitectura, diseño de sistemas, auditorías de esquema y código. La llamada de 30 minutos que te ahorra una reescritura de seis meses.", "Una revisión por escrito de tu arquitectura, esquema y código en cinco días hábiles, antes de una decisión que luego cueste deshacer."],
-      [" repos públicos entre herramientas en TypeScript, PHP y notebooks de ML. La mayoría del trabajo con clientes está bajo NDA.", " repos públicos. La mayor parte de mi trabajo con clientes es privado y está bajo NDA."],
       ["Código, proyectos fijados y notebooks de ML.", "Mi código público. El trabajo con clientes es privado."],
       ["ElastiCache, PayFort.", "ElastiCache."],
       ["El portafolio completo — primero los SaaS insignia, luego el resto. Cada entrada enlaza directamente al producto en vivo, la ficha de la tienda o el panel de administración, extraído de mi perfil de GitHub.", "Primero los SaaS insignia, luego el resto. Cada entrada enlaza al producto en vivo, su ficha en la tienda o su panel de administración."],
@@ -2393,7 +2377,6 @@ const HUMAN_COPY = {
       ["Si la tuya no está aquí, pregúntala directamente — al final de la página.", "Si la tuya no está, pregúntame directamente al final de la página."],
       ["Lo que de verdad uso, y por qué. Nada de frameworks del mes — solo las herramientas aburridas que sobreviven al contacto con producción.", "Lo que uso, y por qué. Sobre todo herramientas probadas que aguantan en producción."],
       ["Cinco principios que aplico en cada proyecto. No son leyes — son criterios que estoy dispuesto a romper con evidencia.", "Cinco principios que aplico en cada proyecto, y que dejo de lado cuando la evidencia dice otra cosa."],
-      ["Jornada completa y freelance, presencial y remoto. El hilo conductor no es el título — es el trabajo entregado.", "Puestos a jornada completa y freelance, presenciales y en remoto."],
       ["No es una lista para presumir — es una especificación. Si sientes que falta alguno de estos en tu proyecto actual, ahí es donde ayudo.", "Lo que puedes esperar cuando trabajamos juntos."],
       ["Cada marca es un producto real que construí o en el que contribuí — desde plataformas SaaS del Golfo hasta una flota de marcas de farmacia de EE. UU. y Reino Unido. Cada nombre abre su sitio en vivo.", "Cada nombre es un producto real que construí o en el que contribuí, desde plataformas SaaS del Golfo hasta marcas de farmacia de EE. UU. y Reino Unido. Cada uno abre su sitio en vivo."],
       ["Arquitectura, backend, web, móvil e infraestructura — un solo ingeniero que sostiene toda la cuerda.", "Arquitectura, backend, web, móvil e infraestructura, con un ingeniero sénior responsable de todo."],
@@ -2407,7 +2390,6 @@ const HUMAN_COPY = {
       ["Recobro de deuda y gestión de casos — app interna + portal de clientes multi-tenant, sincronizado por webhooks.", "Gestión de casos de recobro: una app interna, una app móvil para el equipo en iOS y Android, y un portal de clientes multi-tenant sincronizado por webhooks."],
     ],
     position: "Trato un producto como un solo sistema, no como un montón de funciones. Diseño cómo encajan las piezas, construyo cada capa y sigo respondiendo cuando tiene que escalar.",
-    pinnedStat: 'Proyectos fijados',
     contactTitle: 'Hablemos.',
     projectForm: {"title": "O cuéntame aquí sobre el proyecto", "sub": "Se rellena en dos minutos. Respondo personalmente, normalmente en un día.", "need": "¿Qué servicio encaja mejor contigo?", "choose": "Elige uno…", "notSure": "Aún no lo sé", "name": "Tu nombre", "email": "Email", "company": "Empresa o URL del producto", "optional": "opcional", "brief": "¿Qué estás construyendo y qué necesitas de mí?", "briefPh": "El producto, para quién es, en qué punto está hoy y el plazo que tienes en mente.", "submit": "Enviar detalles del proyecto", "note": "Sin newsletter ni secuencias. Tus datos solo llegan a mi bandeja de entrada.", "sentTitle": "Recibido, gracias.", "sentBody": "Tu mensaje está en mi bandeja de entrada. Respondo personalmente, normalmente en un día."},
     brandsSub: 'Más productos y equipos reales para los que construí, además de los casos de arriba: desde un banco y una plataforma de e-learning hasta marcas de farmacia de EE. UU. y Reino Unido. Cada nombre abre su sitio en vivo.',
@@ -2449,8 +2431,6 @@ const HUMAN_COPY = {
       "Domaines pour lesquels j'ai livré de vrais systèmes.": "Secteurs dans lesquels j’ai travaillé.",
       "Logos of teams & products I've shipped.": "Équipes et produits pour lesquels j’ai livré.",
       "Le stack, sans les mots à la mode.": "Ma stack technique.",
-      "Du code que je suis prêt à publier.": "Code open source.",
-      "Rôles, par ordre d'arrivée.": "Expérience.",
       "Ce que vous obtenez d'habitude vs. ce que j'apporte.": "Pourquoi les clients travaillent directement avec moi.",
       "Retrouvez-moi là où vous travaillez.": "Où me trouver.",
       'Concepts, démos et travaux récents.': 'Projets clients plus courts.',
@@ -2458,14 +2438,12 @@ const HUMAN_COPY = {
     },
     text: [
       ["Every mark is a real product I built or contributed to — from Gulf SaaS platforms to a fleet of US & UK pharmacy brands. Hover to pause; click any logo to open its live site.", "Chaque nom est un vrai produit que j’ai construit ou auquel j’ai contribué, des plateformes SaaS du Golfe aux marques de pharmacies aux États-Unis et au Royaume-Uni. Chaque lien ouvre le site en ligne."],
-      ["Je cherche un poste senior en ingénierie à temps plein à Dubaï — c'est mon objectif aujourd'hui. Je suis actuellement à temps plein chez Recovery Advisers (à distance) et je prends quelques missions freelance en parallèle ; elles sont sur la page services.", 'Les deux. Je suis à temps plein chez Recovery Advisers (à distance) et je prends des projets clients de toute taille : les plus importants sont menés avec l’équipe du studio, plus de 7 personnes que j’encadre, et votre interlocuteur reste moi du début à la fin. Les forfaits et les tarifs sont sur la page services.'],
       ['EAU, Arabie saoudite, États-Unis et Égypte.', 'EAU, Arabie saoudite, États-Unis, Royaume-Uni, Espagne et Égypte.'],
       ['Concepts de design, démos client et réalisations plus courtes — tous en ligne sur mon propre domaine, pour que vous cliquiez plutôt que de me croire sur parole. Chacun est étiqueté pour ce qu’il est vraiment.', 'Réalisations et démos client, en ligne sur mon propre domaine pour que vous cliquiez dessus. Chacune est étiquetée pour ce qu’elle est.'],
       ['Concepts & réalisations', 'Projets clients'],
       ['Apps Client · Employé · Manager — App Store et Play bientôt disponibles', 'Apps Client · Employé · Manager pour iOS et Android'],
       ["Recommandations de personnes qui m'ont encadré directement, vérifiées sur LinkedIn.", 'Des clients et des personnes qui m’ont encadré, avec leurs propres mots. La recommandation vérifiée sur LinkedIn est signalée.'],
       ["Revues d'architecture, conception système, audits de schéma et de code. L'appel de 30 minutes qui vous épargne une réécriture de six mois.", "Une revue écrite de votre architecture, de votre schéma et de votre code en cinq jours ouvrés, avant une décision difficile à défaire."],
-      [" dépôts publics couvrant outils TypeScript, PHP et notebooks ML. La majorité du travail client est sous NDA.", " dépôts publics. L’essentiel de mon travail client est privé, sous NDA."],
       ["Code source, projets épinglés et notebooks ML.", "Mon code public. Le travail client reste privé."],
       ["ElastiCache, PayFort.", "ElastiCache."],
       ["Le portfolio complet — d'abord les SaaS phares, puis le reste. Chaque entrée renvoie directement au produit en ligne, à la fiche du store ou au panneau admin, extrait de mon profil GitHub.", "D’abord les SaaS phares, puis le reste. Chaque entrée renvoie au produit en ligne, à sa fiche sur les stores ou à son panneau d’administration."],
@@ -2476,7 +2454,6 @@ const HUMAN_COPY = {
       ["Si la vôtre n'y est pas, posez-la directement — en bas de la page.", "Si la vôtre n’y est pas, posez-la-moi directement en bas de la page."],
       ["Ce que j'utilise vraiment, et pourquoi. Pas de framework du mois — juste les outils ennuyeux qui survivent au contact de la production.", "Ce que j’utilise, et pourquoi. Surtout des outils éprouvés qui tiennent en production."],
       ["Cinq principes que j'applique à chaque projet. Ce ne sont pas des lois — ce sont des a priori que je suis prêt à briser sur preuves.", "Cinq principes que j’applique à chaque projet, et que j’abandonne quand les faits disent le contraire."],
-      ["Temps plein et freelance, sur site et à distance. Le fil conducteur n'est pas le titre — c'est le travail livré.", "Postes à temps plein et missions freelance, sur site et à distance."],
       ["Pas une liste pour se vanter — un cahier des charges. Si l'un de ces points manque sur votre projet actuel, c'est là que j'interviens.", "Ce à quoi vous pouvez vous attendre en travaillant avec moi."],
       ["Architecture, backend, web, mobile et infra — un seul ingénieur qui tient toute la corde.", "Architecture, backend, web, mobile et infra, avec un ingénieur senior responsable de l’ensemble."],
       ["Backend, web, mobile, infra — tenus ensemble par une seule personne.", "Backend, web, mobile et infra, avec une seule personne responsable de l’ensemble."],
@@ -2489,7 +2466,6 @@ const HUMAN_COPY = {
       ["Recouvrement de créances et gestion de dossiers — app interne + portail client multi-tenant, synchronisé par webhooks.", "Gestion de dossiers de recouvrement : une app interne, une app mobile pour l’équipe sur iOS et Android, et un portail client multi-tenant synchronisé par webhooks."],
     ],
     position: "Je traite un produit comme un seul système, pas comme un empilement de fonctionnalités. Je conçois la façon dont les pièces s’assemblent, je construis chaque couche et je reste responsable quand il faut passer à l’échelle.",
-    pinnedStat: 'Projets épinglés',
     contactTitle: 'Parlons-en.',
     projectForm: {"title": "Ou parlez-moi du projet ici", "sub": "Se remplit en deux minutes. Je réponds personnellement, généralement sous un jour.", "need": "Quel service correspond le mieux à votre besoin ?", "choose": "Choisissez…", "notSure": "Je ne sais pas encore", "name": "Votre nom", "email": "E-mail", "company": "Entreprise ou URL du produit", "optional": "facultatif", "brief": "Que construisez-vous, et qu’attendez-vous de moi ?", "briefPh": "Le produit, pour qui il est, où il en est aujourd’hui et le calendrier que vous visez.", "submit": "Envoyer les détails du projet", "note": "Pas de newsletter, pas de séquence. Vos informations n’arrivent que dans ma boîte mail.", "sentTitle": "Bien reçu, merci.", "sentBody": "Votre message est dans ma boîte mail. Je réponds personnellement, généralement sous un jour."},
     brandsSub: 'D’autres produits et équipes pour qui j’ai construit, au-delà des études de cas ci-dessus : d’une banque et d’une plateforme d’e-learning à des marques de pharmacies aux États-Unis et au Royaume-Uni. Chaque nom ouvre le site en ligne.',
@@ -2711,8 +2687,12 @@ const PACKAGED_ABOVE = {
 // tolerant of whitespace and quote style.
 const ENHANCE_READY = /document\.querySelector\((['"])\.hero-stats\1\)\s*&&\s*(document\.querySelector\((['"])\.nav-links a\3\))/;
 const ENHANCE_INTRO_SEEN = /if\s*\(\s*sessionStorage\.getItem\((['"])af_intro_done\1\)\s*\)\s*return/;
-function enhanceForVariant(js, spec) {
+function enhanceForVariant(js, spec, lang) {
   if (!js) return js;
+  // The intro splash never runs (below), but its markup ships in the script:
+  // it names the studio, not a job title (company-only decision; a
+  // DRIFT_GUARDS row refuses the old line).
+  js = js.replace(/(class="intro-role">)[^<]*(<)/g, (m, a, b) => `${a}${(COMPANY[lang] || COMPANY.en).introRole}${b}`);
   const count = (rx) => (js.match(new RegExp(rx.source, 'g')) || []).length;
   if (spec.key === 'home') {
     if (count(ENHANCE_INTRO_SEEN) === 1) return js.replace(ENHANCE_INTRO_SEEN, 'return');
@@ -2780,8 +2760,11 @@ const PAGE_LAYOUT = {
 // everything else is published. "writing": six one-line teasers that all
 // linked to the same LinkedIn feed, not to any post (Oct 2026 review).
 // "bynumbers": a second row of four numbers right under the profile's own row
-// of four (Oct 2026 UI review); the profile row stays.
-const RETIRED_SECTIONS = ['writing', 'bynumbers'];
+// of four (Oct 2026 UI review); the profile row stays. "experience" (the
+// founder's employment timeline) and "github" (his personal repos): career
+// content, off the site since the company-only decision (Nov 2026,
+// docs/STUDIO-SPEC.md); the CV PDF still holds the timeline.
+const RETIRED_SECTIONS = ['writing', 'bynumbers', 'experience', 'github'];
 const SECTION_KEYS = [
   'top', 'trust', 'position', 'about', 'bynumbers', 'work', 'products', 'builds', 'build',
   'domains', 'brands', 'regions', 'depth', 'arch', 'github', 'experience', 'process', 'why',
@@ -2819,7 +2802,7 @@ const PAGE_SPECS = [
     sections: ['pricing', 'build', 'domains', 'faq', 'contact'],
     keepUnknown: false, faq: 'buyer', anchors: 'resolve', renumber: true,
     sortWriting: false, foldCases: false, contactFirst: 'project', promoteH1: true,
-    ld: ['faq', 'breadcrumb'], priority: '0.8',
+    ld: ['service', 'faq', 'breadcrumb'], priority: '0.8',
     verify: { minText: 3865, minSections: 2 },     // measured 5522 chars, 4 sections
   },
   {
@@ -2827,17 +2810,20 @@ const PAGE_SPECS = [
     sections: ['work', 'products', 'builds', 'brands', 'regions', 'contact'],
     keepUnknown: false, faq: null, anchors: 'resolve', renumber: true, work: 'teaser',
     sortWriting: false, foldCases: true, contactFirst: 'project', promoteH1: true,
-    ld: ['collection', 'breadcrumb'], priority: '0.8',
+    ld: ['service', 'collection', 'breadcrumb'], priority: '0.8',
     verify: { minText: 5642, minSections: 4 },      // measured 8060 chars, 6 sections (Oct 2026: "What I build" and Industries moved to /services/, the further case studies became compact cards)
   },
   {
-    key: 'about', suffix: 'about/',
+    // The company page (company-only decision, Nov 2026): the studio and its
+    // founder, how a project runs, capabilities, principles, why clients pick
+    // it, the general FAQ. A client page like the others: project path only.
     // The channel list (#connect) moved to /contact/, which the nav links to.
-    sections: ['about', 'depth', 'arch', 'github', 'experience', 'why', 'faq', 'contact'],
+    key: 'about', suffix: 'about/',
+    sections: ['about', 'process', 'depth', 'arch', 'why', 'faq', 'contact'],
     keepUnknown: true, faq: 'other', anchors: 'resolve', renumber: true,
-    sortWriting: false, foldCases: false, contactFirst: 'hire', promoteH1: true,
-    ld: ['profile', 'faq', 'breadcrumb'], priority: '0.6',
-    verify: { minText: 5649, minSections: 5 },       // measured 8070 chars, 8 sections (Oct 2026: Writing and By the numbers retired, Connect moved to /contact/)
+    sortWriting: false, foldCases: false, contactFirst: 'project', promoteH1: true,
+    ld: ['aboutpage', 'service', 'faq', 'breadcrumb'], priority: '0.6',
+    verify: { minText: 5664, minSections: 4 },       // measured 8092 chars, 7 sections (Nov 2026: company page; Experience and GitHub retired, process added)
   },
   {
     // Every way to reach me, at an address the nav, an email signature or a
@@ -2846,8 +2832,8 @@ const PAGE_SPECS = [
     key: 'contact', suffix: 'contact/',
     sections: ['connect', 'contact'],
     keepUnknown: false, faq: null, anchors: 'resolve', renumber: true,
-    sortWriting: false, foldCases: false, contactFirst: 'project', hiring: true, promoteH1: true,
-    ld: ['contactpage', 'breadcrumb'], priority: '0.6',
+    sortWriting: false, foldCases: false, contactFirst: 'project', promoteH1: true,
+    ld: ['service', 'contactpage', 'breadcrumb'], priority: '0.6',
     verify: { minText: 1318, minSections: 1 },        // measured 1883 chars, 2 sections
   },
   // One page per flagship case study, cut from the same #work section.
@@ -2856,7 +2842,7 @@ const PAGE_SPECS = [
     sections: ['work', 'contact'],
     keepUnknown: false, faq: null, anchors: 'resolve', renumber: true,
     sortWriting: false, foldCases: false, contactFirst: 'project', promoteH1: false,
-    ld: ['project', 'breadcrumb'], priority: '0.7',
+    ld: ['service', 'project', 'breadcrumb'], priority: '0.7',
     verify: PROJECT_VERIFY[f.slug],
   })),
 ];
@@ -2866,8 +2852,8 @@ const PAGE_SPECS = [
 // is listed. Each value is a PAGE_SPECS key.
 const LINK_OWNER = {
   top: 'home', 'what-i-do': 'home', trust: 'home', process: 'home', testimonials: 'home',
-  about: 'about', depth: 'about', arch: 'about', github: 'about', experience: 'about',
-  why: 'about', connect: 'contact',   // no writing or bynumbers: retired (RETIRED_SECTIONS)
+  about: 'about', depth: 'about', arch: 'about',
+  why: 'about', connect: 'contact',   // no writing, bynumbers, experience or github: retired (RETIRED_SECTIONS)
   work: 'work', products: 'work', builds: 'work', build: 'services', domains: 'services',
   brands: 'work', regions: 'work',
   pricing: 'services', services: 'home', faq: 'services',
@@ -2988,7 +2974,7 @@ async function renderLocale({ browser, loc, ghData, enhanceJS, locales }) {
   await page.evaluate(`window.__afSectionKey = ${sectionKeyOf.toString()};`);
 
   console.log(`→ [${lang}] Transforming + extracting static DOM…`);
-  const shared = await page.evaluate(async (ghUser, gh, hasEnhance, localeCodes, retired) => {
+  const shared = await page.evaluate(async (ghUser, gh, hasEnhance, localeCodes, retired, companyFaq, buyerKeys) => {
     // ── Convert <image-slot> → <img> (image lives in shadow DOM otherwise) ──
     document.querySelectorAll('image-slot').forEach((slot) => {
       const src = slot.getAttribute('src') || '';
@@ -3312,6 +3298,23 @@ async function renderLocale({ browser, loc, ghData, enhanceJS, locales }) {
       else retiredMissing.push(id);
     });
 
+    // The general FAQ (the items that are not a buyer's, /about/'s): the
+    // export's three were a candidate's ("full-time, freelance, or both?");
+    // they become the studio's (company-copy.mjs) before the inventory, so
+    // the inventory counts the questions that are actually published.
+    const generalFaq = [...document.querySelectorAll('.faq-item')]
+      .filter((item) => !buyerKeys.some((k) => (item.textContent || '').slice(0, 120).includes(k)));
+    const faqRewritten = generalFaq.length === companyFaq.length && generalFaq.every((item) =>
+      (item.querySelector('.faq-q .text') || item.querySelector('.faq-q')) && item.querySelector('.faq-a'));
+    if (faqRewritten) {
+      generalFaq.forEach((item, i) => {
+        (item.querySelector('.faq-q .text') || item.querySelector('.faq-q')).textContent = companyFaq[i][0];
+        const a = item.querySelector('.faq-a');
+        const p = a.querySelector('p') || a;
+        p.textContent = companyFaq[i][1];
+      });
+    }
+
     // ── Inventory + pristine copy ───────────────────────────────────────
     // What the export holds, so the Node side can prove every section, case
     // study and FAQ question is published on some page. The pristine copy is
@@ -3328,9 +3331,15 @@ async function renderLocale({ browser, loc, ghData, enhanceJS, locales }) {
 
     return {
       title, lang, meta, css, bodyClass, rootAttrs, bodyAttrs, hasOwnSwitcher,
-      blobCount: blobUrls.length, pristineKeys, caseNames, faqQs, retiredMissing,
+      blobCount: blobUrls.length, pristineKeys, caseNames, faqQs, retiredMissing, faqRewritten,
     };
-  }, GH_USER, ghData, !!enhanceJS, locales.map((l) => l.lang), RETIRED_SECTIONS);
+  }, GH_USER, ghData, !!enhanceJS, locales.map((l) => l.lang), RETIRED_SECTIONS,
+    (COMPANY[lang] || COMPANY.en).faq, FAQ_BUYER_KEYS[lang] || FAQ_BUYER_KEYS.en);
+  // A candidate's FAQ left on a company site is a broken page, not a style
+  // issue: refuse rather than publish it.
+  if (!shared.faqRewritten) {
+    throw Object.assign(new Error(`[build] [${lang}] the general FAQ items could not be rewritten for the studio (expected ${(COMPANY[lang] || COMPANY.en).faq.length} non-buyer items with a question and an answer) — update company-copy.mjs to the export`), { fatal: true });
+  }
 
   if (pageErrors.length) {
     console.log(`  [${lang}] (${pageErrors.length} non-fatal page errors during render — expected for blocked external assets)`);
@@ -3478,6 +3487,17 @@ async function snapshotVariant({ page, spec, lang, locales }) {
       if (!workSec || missing.length || !holder || !articles.every((c) => c.parentElement === holder)) {
         warnings.push(`work: flagship cases not found or not in one list (${missing.map((f) => f.name).join(', ') || 'layout'}) — left as exported`);
       } else {
+        // The flagships' numbers follow FLAGSHIP's order (client projects
+        // first), not the export's, so the cards read 01, 02, 03 … in the
+        // order they are shown. Arabic keeps its own digits.
+        layout.flagships.forEach((f, i) => {
+          const num = caseFor(f).querySelector('.case-num');
+          if (!num) return;
+          num.textContent = num.textContent.replace(/([0-9]+|[\u0660-\u0669]+)\s*$/, (m) => {
+            const n = String(i + 1).padStart(m.trim().length, '0');
+            return /[\u0660-\u0669]/.test(m) ? n.replace(/[0-9]/g, (d) => String.fromCharCode(0x0660 + Number(d))) : n;
+          });
+        });
         const el = (tag, cls, text) => {
           const e = document.createElement(tag);
           if (cls) e.className = cls;
@@ -3587,7 +3607,7 @@ async function snapshotVariant({ page, spec, lang, locales }) {
           const crumbs = el('nav', 'crumbs');
           crumbs.setAttribute('aria-label', 'Breadcrumb');
           const ol = el('ol');
-          [[localePrefix, 'Ahmed Farid'], [`${localePrefix}work/`, labels.work]].forEach(([href, text]) => {
+          [[localePrefix, copy.foot.name], [`${localePrefix}work/`, labels.work]].forEach(([href, text]) => {
             const li = el('li');
             const a = el('a', null, text);
             a.setAttribute('href', href);
@@ -3854,6 +3874,19 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         s.after(facts, priv);
       }
     });
+    // Company-only (Nov 2026): the footer, which every page and the standalone
+    // pages share, carries no CV and no personal social accounts. LinkedIn and
+    // GitHub stay: the founder's, and /contact/ says so.
+    {
+      const personal = /instagram\.com|\/\/(www\.)?x\.com|youtube\.com|tiktok\.com|behance\.net/;
+      document.querySelectorAll('footer .foot-col a').forEach((a) => {
+        const href = a.getAttribute('href') || '';
+        if (href.endsWith('Ahmed-Farid-CV.pdf') || personal.test(href)) (a.closest('li') || a).remove();
+      });
+      const tag = document.querySelector('footer .foot-tag');
+      if (tag) tag.textContent = copy.company.footTag;
+      else warnings.push('footer: .foot-tag not found — the tagline is left as exported');
+    }
     // The footer's services link said "Freelance & consulting"; it is the
     // same page the nav calls Services.
     document.querySelectorAll(`.foot-col a[href="${localePrefix}services/"]`).forEach((a) => { a.textContent = labels.services; });
@@ -4167,6 +4200,7 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         const first = testsGrid.querySelector(':scope > .test');
         copy.clientQuotes.forEach((q) => {
           const card = template.cloneNode(true);
+          card.setAttribute('data-prov', q.provenance);
           card.querySelectorAll('.test-verified, .test-link').forEach((e) => e.remove());
           card.querySelector('.test-quote').textContent = `"${q.quote}"`;
           const av = card.querySelector('.av');
@@ -4187,6 +4221,29 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         });
         testsGrid.classList.add('tests-many');
       } else warnings.push('testimonials: no card to copy the client quotes from — left as exported');
+    }
+    // Every testimonial says whose it is (docs/STUDIO-SPEC.md R1): a client
+    // project, or a company where Ahmed held a role (CASE_PROVENANCE, found by
+    // the company named in the card's role line). assertPageRoles fails the
+    // build if a card is left without one.
+    if (testsGrid) {
+      const companies = Object.keys(copy.provenance);
+      testsGrid.querySelectorAll(':scope > .test').forEach((card) => {
+        let prov = card.getAttribute('data-prov');
+        if (!prov) {
+          const role = card.querySelector('.role')?.textContent || '';
+          const co = companies.find((c) => role.includes(c));
+          prov = co ? copy.provenance[co] : '';
+        }
+        const quote = card.querySelector('.test-quote');
+        if (!prov || !quote || card.querySelector('.test-prov')) return;
+        card.setAttribute('data-prov', prov);
+        const tag = document.createElement('span');
+        tag.className = 'test-prov';
+        tag.setAttribute('data-prov', prov);
+        tag.textContent = copy.provLabel[prov];
+        quote.before(tag);
+      });
     }
     // Project pages: the highlight boxes in plain words (IMPACT_PLAIN).
     if (pageSpec.work === 'single') {
@@ -4367,75 +4424,31 @@ async function snapshotVariant({ page, spec, lang, locales }) {
         foot.after(terms);
       } else warnings.push('services: the note under the plans was not found — terms left out');
     }
-    // /about/: the pinned-repo list (student projects and notebooks) goes; the
-    // profile card stays and takes the link to the live profile.
+    // /about/ is the company page (company-only decision, Nov 2026): the
+    // GitHub and Experience sections are retired (RETIRED_SECTIONS); the
+    // profile block becomes the studio and its founder (company-copy.mjs).
+    // No CV button and no résumé items (the award and teaching cards): the
+    // page sells the studio, it does not apply for a job.
     if (pageSpec.key === 'about') {
-      const repos = document.querySelector('#github .gh-repos');
-      const link = repos && repos.querySelector(':scope > a');
-      const card = document.querySelector('#github .gh-card');
-      const col = repos && repos.closest('.gh > *');
-      if (repos && link && card && col) {
-        link.classList.add('gh-profile-link');
-        card.appendChild(link);
-        col.remove();
-        document.querySelector('#github .gh').classList.add('gh-solo');
-      } else warnings.push('about: GitHub repo list or profile card not found — left as exported');
-      // Experience: Ibdaa Course and Applyni are case studies with their
-      // founder’s recommendation on home, so they belong in the freelance
-      // client list too (cloned from its last chip, same markup and icon).
-      const lastChip = [...document.querySelectorAll('.co-chip')].find((c) => c.textContent.trim() === 'Alnaimi Studios');
-      if (lastChip) {
-        const have = new Set([...lastChip.parentElement.querySelectorAll('.co-chip')].map((c) => c.textContent.trim()));
-        let at = lastChip;
-        for (const [name, href] of [['Ibdaa Course', 'https://ibdaacourse.com/'], ['Applyni', 'https://applyni.com/']]) {
-          if (have.has(name)) continue;
-          const chip = lastChip.cloneNode(true);
-          chip.href = href;
-          chip.firstChild.nodeValue = name;
-          at.after(chip);
-          at = chip;
-        }
-      } else warnings.push('about: freelance client chips not found — Ibdaa Course and Applyni not added');
-      // The same company names the cards, case studies and CV use.
-      const chipNames = { CompassMed: 'Compass Med', PhonicMaps: 'Phonic Maps' };
-      document.querySelectorAll('#experience .co-chip').forEach((chip) => {
-        const t = chip.firstChild;
-        const fixed = t && t.nodeType === 3 && chipNames[t.nodeValue.trim()];
-        if (fixed) t.nodeValue = fixed;
-      });
-      // The pinned list is gone, so its count goes too.
-      const pinned = [...document.querySelectorAll('#github .gh-stat')]
-        .find((st) => (st.querySelector('.l')?.textContent || '').trim() === copy.human.pinnedStat);
-      if (pinned) pinned.remove();
-      else warnings.push('about: "pinned projects" stat not found — left as exported');
-      // GitHub achievements are badges, not a signal a client reads: the
-      // public-repo count (first) stays alone.
-      const ghStats = [...document.querySelectorAll('#github .gh-stat')];
-      if (ghStats.length === 2) ghStats[1].remove();
-      else warnings.push(`about: expected 2 GitHub stats after the pinned one, found ${ghStats.length} — left as exported`);
-      // Experience: one letter tile per company. Favicons rendered as grey
-      // squares beside the letter tiles, and Compass Med had no mark at all.
-      const tileTpl = document.querySelector('#experience .co-link > .co-logo-mono');
-      const coLinks = [...document.querySelectorAll('#experience .co-link')];
-      if (tileTpl && coLinks.length) {
-        for (const link of coLinks) {
-          const name = (link.querySelector('.co-name')?.textContent || '').trim();
-          const mark = link.querySelector(':scope > .co-logo');
-          if (!name || (mark && mark.classList.contains('co-logo-mono'))) continue;
-          const tile = tileTpl.cloneNode(true);
-          tile.textContent = name[0].toUpperCase();
-          if (mark) mark.replaceWith(tile);
-          else link.prepend(tile);
-        }
-      } else warnings.push('about: no experience letter tile to copy — logos left as exported');
-      // The hero: one CV button (it opens the PDF, which has its own
-      // download); the portrait is the first thing painted, so it loads now.
-      const cvButtons = [...document.querySelectorAll('#about .about-cta a[href$="Ahmed-Farid-CV.pdf"]')];
-      const dl = cvButtons.find((a) => a.hasAttribute('download'));
-      if (cvButtons.length === 2 && dl) dl.remove();
-      else warnings.push(`about: expected a View and a Download CV button, found ${cvButtons.length} — left as exported`);
+      const A = copy.company.about;
+      const sec = document.getElementById('about');
+      const eyebrow = sec && sec.querySelector('.eyebrow');
+      const eyebrowText = eyebrow && [...eyebrow.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
+      const h = sec && sec.querySelector('.about-h');
+      const ps = sec ? [...sec.querySelectorAll('.about-p')] : [];
+      const facts = sec ? [...sec.querySelectorAll('.about-fact')] : [];
+      if (eyebrowText && h && ps.length === A.p.length && facts.length === A.facts.length && facts.every((f) => f.querySelector('.v') && f.querySelector('.l'))) {
+        eyebrowText.textContent = A.eyebrow;
+        const em = document.createElement('em');
+        em.textContent = A.h1[1];
+        h.replaceChildren(A.h1[0], em, A.h1[2]);
+        ps.forEach((p, i) => { p.textContent = A.p[i]; });
+        facts.forEach((f, i) => { f.querySelector('.v').textContent = A.facts[i][0]; f.querySelector('.l').textContent = A.facts[i][1]; });
+      } else warnings.push('about: the profile block (eyebrow, heading, 2 paragraphs, 4 facts) was not found — left as exported');
+      document.querySelectorAll('#about .about-award').forEach((e) => (e.closest('.reveal') || e).remove());
+      document.querySelectorAll('#about .about-cta a[href$="Ahmed-Farid-CV.pdf"]').forEach((a) => a.remove());
       const portrait = document.querySelector('#about .about-portrait img');
-      if (portrait) { portrait.setAttribute('loading', 'eager'); portrait.setAttribute('fetchpriority', 'high'); }
+      if (portrait) { portrait.setAttribute('loading', 'eager'); portrait.setAttribute('fetchpriority', 'high'); portrait.setAttribute('alt', A.portraitAlt); }
       else warnings.push('about: portrait image not found — left lazy');
       // Toolbelt: the core stack stays visible; the long tail (60+ items) sits
       // behind a native checkbox + label, so it works without the enhancement
@@ -4787,6 +4800,92 @@ async function snapshotVariant({ page, spec, lang, locales }) {
       }
     }
 
+    // Company copy (company-copy.mjs): after the studio voice, the very last
+    // copy pass. It sets elements, not exact sentences, so a reworded export
+    // cannot bring the personal version back; an element a page should carry
+    // and does not is a warning for that page.
+    {
+      const C = copy.company;
+      const missing = (what) => warnings.push(`company copy: ${what} not found — left as exported`);
+      const setText = (sel, text) => { const e = document.querySelector(sel); if (e) e.textContent = text; else missing(sel); };
+      const head = (id, h2, sub) => {
+        const sec = document.getElementById(id);
+        const hd = sec && sec.querySelector('.section-head');
+        if (!hd) return missing(`#${id} .section-head`);
+        const t = hd.querySelector('.section-title');
+        const p = hd.querySelector('.section-sub');
+        if (h2) { if (t) t.textContent = h2; else missing(`#${id} .section-title`); }
+        if (sub) { if (p) p.textContent = sub; else missing(`#${id} .section-sub`); }
+      };
+      const eyebrowOf = (id, text) => {
+        const e = document.querySelector(`#${id} .section-head .eyebrow`);
+        const n = e && [...e.childNodes].find((x) => x.nodeType === 3 && x.textContent.trim());
+        if (n) n.textContent = text; else missing(`#${id} eyebrow`);
+      };
+      const replaceIn = (root, from, to) => {
+        let hit = false;
+        const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        for (let n = w.nextNode(); n; n = w.nextNode()) {
+          if (n.nodeValue.includes(from)) { n.nodeValue = n.nodeValue.split(from).join(to); hit = true; }
+        }
+        return hit;
+      };
+      const has = (id) => pageSpec.sections.includes(id) && document.getElementById(id);
+      document.querySelectorAll('.nav-mobile-cta').forEach((e) => { e.textContent = C.navCta; });
+      if (pageSpec.key === 'home') {
+        const h1 = document.querySelector('.hero-h1');
+        if (h1) h1.innerHTML = C.heroH1; else missing('.hero-h1');
+        setText('.hero-person span', C.hi);
+        setText('.hero-proof', C.proof);
+        const stats = [...document.querySelectorAll('.hero-stats .hero-stat')];
+        const countries = stats.find((st) => /17|١٧/.test(st.querySelector('.num')?.textContent || ''));
+        const lbl = countries && countries.querySelector('.lbl');
+        if (lbl) lbl.textContent = C.countriesLabel; else missing('.hero-stat 17+ label');
+      }
+      if (has('work')) head('work', C.work.h2, C.work.sub);
+      if (has('testimonials')) head('testimonials', C.tests.h2, C.tests.sub);
+      if (has('products')) {
+        head('products', C.products.h2, C.products.sub);
+        if (C.products.eyebrow) eyebrowOf('products', C.products.eyebrow);
+      }
+      if (has('builds')) head('builds', null, C.builds.sub);
+      if (has('brands')) head('brands', C.brands.h2, C.brands.sub);
+      if (has('regions')) head('regions', C.regions.h2);
+      if (has('connect')) {
+        head('connect', C.contactTitle);
+        document.querySelectorAll('#connect .connect-meta').forEach((m) => {
+          const name = (m.querySelector('.connect-name')?.textContent || '').trim();
+          const d = m.querySelector('.connect-desc');
+          if (d && C.connect[name]) d.textContent = C.connect[name];
+        });
+      }
+      if (pageSpec.key === 'about') {
+        eyebrowOf('depth', C.depth.eyebrow);
+        head('depth', C.depth.h2, C.depth.sub);
+        setText('.toolbelt-head p', C.depth.toolbelt);
+        eyebrowOf('arch', C.arch.eyebrow);
+        const at = document.querySelector('#arch .section-title');
+        if (at) {
+          const em = document.createElement('em');
+          em.textContent = C.arch.h2[1];
+          at.replaceChildren(C.arch.h2[0], em);
+        } else missing('#arch .section-title');
+        head('arch', null, C.arch.sub);
+        const arch = document.getElementById('arch');
+        for (const [from, to] of C.archParts) if (!arch || !replaceIn(arch, from, to)) missing(`#arch "${from}"`);
+        eyebrowOf('why', C.why.eyebrow);
+        head('why', C.why.h2, C.why.sub);
+        const them = document.querySelectorAll('#why .l.them');
+        const us = document.querySelectorAll('#why .l.me');
+        const vs = [...document.querySelectorAll('#why .v:not(.them)')];
+        if (them.length && us.length === them.length && vs.length === us.length) {
+          them.forEach((e) => { e.textContent = C.why.them; });
+          us.forEach((e) => { e.textContent = C.why.us; });
+          vs[1].textContent = C.why.v2;
+        } else missing('#why comparison cells');
+      }
+    }
+
     // Analytics (docs/MEASUREMENT.md). The offer buttons all point at
     // #contact, which no CLICK_EVENTS pattern matches, so they counted
     // nothing; each now says which plan it was for. Booking links say where
@@ -4851,8 +4950,8 @@ async function snapshotVariant({ page, spec, lang, locales }) {
   }, spec, locales.map((l) => l.lang), FAQ_BUYER_KEYS[lang] || FAQ_BUYER_KEYS.en, prefix, PAGE_LAYOUT, SECTION_KEYS,
     { owner: LINK_OWNER, paths: Object.fromEntries(PAGE_SPECS.map((s) => [s.key, s.suffix])) },
     NAV[lang],
-    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en, conceptHosts: CONCEPT_HOSTS, insights: INSIGHTS.map(({ slug, title, related }) => ({ slug, title, related })), caseShots: CASE_SHOTS, studio: STUDIO.suffix, foot: { name: STUDIO.name, founded: STUDIO.since, ...(STUDIO_FOOT[lang] || STUDIO_FOOT.en) }, voice: STUDIO_VOICE[lang] || [], caseService: CASE_SERVICE, provenance: CASE_PROVENANCE, provLabel: PROVENANCE_LABEL[lang] || PROVENANCE_LABEL.en, formAction: `https://formsubmit.co/${CONTACT.email}`, siteUrl: SITE_URL, impact: IMPACT_PLAIN[lang] || IMPACT_PLAIN.en, aedRate: AED_PER_USD, priceLocale: PRICE_LOCALE[lang] || 'en-AE', pricing: PRICING_TERMS[lang] || PRICING_TERMS.en, moreRecs: MORE_RECS[lang] || MORE_RECS.en,
-      clientQuotes: CLIENT_QUOTES.map((q) => ({ name: q.name[lang] || q.name.en, initials: q.initials[lang] || q.initials.en, role: q.role[lang] || q.role.en, quote: q.quote[lang] || q.quote.en,
+    { packagedAbove: PACKAGED_ABOVE[lang] || PACKAGED_ABOVE.en, serviceOrder: HOME_SERVICE_ORDER[lang] || HOME_SERVICE_ORDER.en, home: HOME_COPY[lang] || HOME_COPY.en, human: HUMAN_COPY[lang] || HUMAN_COPY.en, conceptHosts: CONCEPT_HOSTS, insights: INSIGHTS.map(({ slug, title, related }) => ({ slug, title, related })), caseShots: CASE_SHOTS, studio: STUDIO.suffix, foot: { name: STUDIO.name, founded: STUDIO.since, ...(STUDIO_FOOT[lang] || STUDIO_FOOT.en) }, voice: STUDIO_VOICE[lang] || [], company: COMPANY[lang] || COMPANY.en, caseService: CASE_SERVICE, provenance: CASE_PROVENANCE, provLabel: PROVENANCE_LABEL[lang] || PROVENANCE_LABEL.en, formAction: `https://formsubmit.co/${CONTACT.email}`, siteUrl: SITE_URL, impact: IMPACT_PLAIN[lang] || IMPACT_PLAIN.en, aedRate: AED_PER_USD, priceLocale: PRICE_LOCALE[lang] || 'en-AE', pricing: PRICING_TERMS[lang] || PRICING_TERMS.en, moreRecs: MORE_RECS[lang] || MORE_RECS.en,
+      clientQuotes: CLIENT_QUOTES.map((q) => ({ provenance: q.provenance, name: q.name[lang] || q.name.en, initials: q.initials[lang] || q.initials.en, role: q.role[lang] || q.role.en, quote: q.quote[lang] || q.quote.en,
         caseStudy: q.caseStudy ? { slug: q.caseStudy, name: FLAGSHIP.find((f) => f.slug === q.caseStudy).name } : null })) }));
 
   // Layout passes are best-effort: a re-export that renames a class leaves the
@@ -5009,8 +5108,14 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
   const ogImg = `${SITE_URL}/${ogCardFor(lang, spec.flagship && spec.flagship.slug).file}`;
   const ogAlt = lang === 'ar'
     ? (spec.flagship ? `${spec.flagship.name} — ${OG_MAIN.ar.caseAlt}` : OG_MAIN.ar.alt)
-    : (spec.flagship ? `${spec.flagship.name} — case study by Ahmed Farid` : OG_MAIN.en.alt);
+    : (spec.flagship ? `${spec.flagship.name} — case study by Ahmed Farid Studio` : OG_MAIN.en.alt);
 
+  // What the studio sells (its ProfessionalService node, home and /about/).
+  const studioOffers = [
+    { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Fixed-price product build', serviceType: 'Custom software development' } },
+    { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Monthly engineering retainer', serviceType: 'Software development' } },
+    { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Code & architecture review', serviceType: 'Technical consulting' } },
+  ];
   // Canonical Person structured data — used to inject a block if the export has
   // none, and to enrich an existing export block with fields it may lack.
   const personLd = {
@@ -5018,16 +5123,20 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
     '@type': 'Person',
     '@id': `${SITE_URL}/#person`,
     name: 'Ahmed Farid',
-    jobTitle: 'Senior Software Engineer',
+    // The founder of the studio, not a candidate (company-only decision, Nov
+    // 2026): no `seeks`, and the offers belong to the studio (#service).
+    jobTitle: `Founder, ${STUDIO.name}`,
     description:
-      `Senior Software Engineer in ${LOCATION.city} with ${YEARS_PROSE.en} building real-time, ` +
-      'multi-tenant SaaS, AI tools and mobile apps shipped to production across the Gulf, US and UK.',
-    url: `${SITE_URL}/`,
+      `Founder of ${STUDIO.name}, a software development studio in ${LOCATION.city}. ${YEARS_PROSE.en[0].toUpperCase()}${YEARS_PROSE.en.slice(1)} ` +
+      'building real-time, multi-tenant SaaS, AI tools and mobile apps shipped to production across the Gulf, US and UK.',
+    url: `${SITE_URL}/about/`,
     image: `${SITE_URL}/og.png`,
     email: CONTACT.email,
     nationality: { '@type': 'Country', name: 'Egypt' },
     // Nationality stays Egyptian — that is a fact about him, not about where he
-    // works from. Address/homeLocation are the "where do I hire from" signal.
+    // works from. Address/homeLocation say where the founder (and the studio) is.
+    // worksFor stays as the fact it is; whether to show it is an owner decision
+    // (docs/STUDIO-SPEC.md, company-only decision, open items).
     address: { '@type': 'PostalAddress', addressLocality: LOCATION.city, addressCountry: LOCATION.countryCode },
     homeLocation: { '@type': 'Place', name: LOCATION_LABEL },
     worksFor: { '@type': 'Organization', name: 'Recovery Advisers' },
@@ -5038,37 +5147,11 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
       'Flutter', 'AWS', 'PostgreSQL', 'Multi-tenant SaaS', 'Real-time systems',
       'AI integration', 'Software Architecture',
     ],
-    hasOccupation: {
-      '@type': 'Occupation',
-      name: 'Software Engineer',
-      occupationalCategory: '15-1252.00',
-      skills:
-        'Laravel, PHP, Next.js, React, React Native, TypeScript, FastAPI, Python, Flutter, ' +
-        'AWS, PostgreSQL, multi-tenant SaaS architecture, real-time systems, AI integration',
-    },
-    // Grounded in the site's "Ways to work together" section — helps AI
-    // assistants surface Ahmed for "recommend an engineer to hire" queries.
-    // He is available for hire, not only for engagements. Without this the
-    // only machine-readable intent on the page is `makesOffer`, which reads
-    // as a vendor listing.
-    seeks: {
-      '@type': 'Demand',
-      name: 'Senior Software Engineer role',
-      availableAtOrFrom: { '@type': 'Place', name: LOCATION_LABEL },
-    },
-    makesOffer: [
-      { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Fixed-scope product build', serviceType: 'Software development' } },
-      { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Ongoing engineering retainer', serviceType: 'Software development' } },
-      { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Technical advisory & architecture review', serviceType: 'Technical consulting' } },
-    ],
+    // The founder's professional profiles only (company-only decision): the
+    // personal social accounts left the footer and llms.txt too.
     sameAs: [
       CONTACT.linkedin,
       CONTACT.github,
-      'https://www.instagram.com/iamahmedfarid',
-      'https://x.com/iamahmedfarid',
-      'https://www.youtube.com/@iamahmedfarid',
-      'https://www.tiktok.com/@iamahmedfarid',
-      'https://www.behance.net/ahmedfarid20',
     ],
   };
 
@@ -5088,7 +5171,11 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
         }
         // Facts owned by site-facts.mjs win over whatever the export says, so
         // a stale years/location claim in the export cannot reach JSON-LD.
-        for (const k of ['description', 'address', 'homeLocation']) obj[k] = personLd[k];
+        for (const k of ['description', 'address', 'homeLocation', 'jobTitle', 'sameAs']) obj[k] = personLd[k];
+        // A candidate's fields never reach a company page, whatever the export ships.
+        delete obj.seeks;
+        delete obj.makesOffer;
+        delete obj.hasOccupation;
         return `${mm[1]}${ldJson(obj)}${mm[3]}`;
       }
     } catch { /* leave malformed ld+json untouched */ }
@@ -5169,9 +5256,10 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
     '@type': 'WebSite',
     '@id': `${SITE_URL}/#website`,
     url: `${SITE_URL}/`,
-    name: 'Ahmed Farid — Senior Software Engineer',
+    name: STUDIO.name,
+    alternateName: 'Ahmed Farid',
     inLanguage: lang,
-    about: { '@id': `${SITE_URL}/#person` },
+    publisher: { '@id': `${SITE_URL}/#service` },
   };
   const faqLd =
     spec.ld.includes('faq') && result.faq && result.faq.length
@@ -5201,23 +5289,34 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
       ? { ...pageNode, '@type': 'ProfilePage', '@id': `${pageUrl}#profile`, mainEntity: { '@id': `${SITE_URL}/#person` } }
       : null,
     spec.ld.includes('contactpage')
-      ? { ...pageNode, '@type': 'ContactPage', '@id': `${pageUrl}#page`, about: { '@id': `${SITE_URL}/#person` } }
+      ? { ...pageNode, '@type': 'ContactPage', '@id': `${pageUrl}#page`, about: { '@id': `${SITE_URL}/#service` } }
       : null,
     spec.ld.includes('collection')
       ? {
-          ...pageNode, '@type': 'CollectionPage', '@id': `${pageUrl}#page`, about: { '@id': `${SITE_URL}/#person` },
+          ...pageNode, '@type': 'CollectionPage', '@id': `${pageUrl}#page`, about: { '@id': `${SITE_URL}/#service` },
           mainEntity: {
             '@type': 'ItemList',
             itemListElement: FLAGSHIP.map((f, i) => ({ '@type': 'ListItem', position: i + 1, name: f.name, url: `${pageUrl}${f.slug}/` })),
           },
         }
       : null,
+    spec.ld.includes('aboutpage')
+      ? { ...pageNode, '@type': 'AboutPage', '@id': `${pageUrl}#page`, mainEntity: { '@id': `${SITE_URL}/#service` } }
+      : null,
+    // The studio: a business name, not a registered company (no legalName
+    // until docs/STUDIO-SPEC.md I3 exists; DRIFT_GUARDS refuse LLC & co.).
+    // On every page, so each page's #service reference (WebSite.publisher,
+    // ContactPage/CollectionPage/AboutPage) resolves on that page.
     spec.ld.includes('service')
       ? {
           '@context': 'https://schema.org', '@type': 'ProfessionalService', '@id': `${SITE_URL}/#service`,
-          name: STUDIO.name, alternateName: 'Ahmed Farid', foundingDate: String(STUDIO.since), url: `${SITE_URL}/`, description: seo.description,
+          name: STUDIO.name, alternateName: 'Ahmed Farid', foundingDate: String(STUDIO.since), url: `${SITE_URL}/`,
+          description: SEO.home[lang].description, inLanguage: lang,
           founder: { '@id': `${SITE_URL}/#person` }, address: personLd.address, email: CONTACT.email,
-          sameAs: [CONTACT.linkedin, CONTACT.github], makesOffer: personLd.makesOffer,
+          areaServed: ['United Arab Emirates', 'Saudi Arabia', 'Gulf Cooperation Council', 'Worldwide (remote)'],
+          knowsAbout: ['Custom software development', 'SaaS product engineering', 'Web application development',
+            'Mobile app development', 'AI integration', 'Software architecture', 'Legacy modernization'],
+          sameAs: [CONTACT.linkedin, CONTACT.github], makesOffer: studioOffers,
         }
       : null,
     spec.ld.includes('project')
@@ -5235,8 +5334,8 @@ async function writeVariantPage({ loc, spec, shared, snap, locales, enhanceJS, a
         '@type': 'BreadcrumbList',
         '@id': `${pageUrl}#breadcrumb`,
         itemListElement: (spec.work === 'single'
-          ? [['Ahmed Farid', `${SITE_URL}${urlPath}`], [NAV[lang].work, `${SITE_URL}${urlPath}work/`], [project.name, pageUrl]]
-          : [['Ahmed Farid', `${SITE_URL}${urlPath}`], [NAV[lang][spec.key], pageUrl]]
+          ? [[STUDIO.name, `${SITE_URL}${urlPath}`], [NAV[lang].work, `${SITE_URL}${urlPath}work/`], [project.name, pageUrl]]
+          : [[STUDIO.name, `${SITE_URL}${urlPath}`], [NAV[lang][spec.key], pageUrl]]
         ).map(([name, item], i) => ({ '@type': 'ListItem', position: i + 1, name, item })),
       }
     : null;
@@ -5512,10 +5611,11 @@ html:not([lang="ar"]) .hero-h1 .it{white-space:nowrap}
 @media (max-width:359px){.brand-studio{display:none;}}
 /* Who a case was built for: a client, or a role held there. Client work in
    the accent, a role in the quieter ink. */
-.case-prov,.writing-card-prov{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;padding:3px 10px;border-radius:999px;border:1px solid var(--line-strong);color:var(--ink-mute);align-self:flex-start;}
-.case-prov[data-prov="client"],.writing-card-prov[data-prov="client"]{color:var(--accent);border-color:var(--accent);}
+.case-prov,.writing-card-prov,.test-prov{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;padding:3px 10px;border-radius:999px;border:1px solid var(--line-strong);color:var(--ink-mute);align-self:flex-start;}
+.case-prov[data-prov="client"],.writing-card-prov[data-prov="client"],.test-prov[data-prov="client"]{color:var(--accent);border-color:var(--accent);}
 .writing-card-head{flex-wrap:wrap;justify-content:flex-start;}
-[lang="ar"] .case-prov,[lang="ar"] .writing-card-prov{letter-spacing:0;}
+[lang="ar"] .case-prov,[lang="ar"] .writing-card-prov,[lang="ar"] .test-prov{letter-spacing:0;}
+.test-prov{display:inline-block;width:max-content;max-width:100%;margin-bottom:14px;}
 .writing-card .wc-impact strong{color:var(--accent);font-weight:600}
 /* Closing block: who you will talk to, and a step for visitors not ready to call. */
 .cta-person{display:flex;align-items:center;justify-content:center;gap:12px;margin:22px auto 6px;color:var(--ink-mute);font-size:14px;max-width:560px}
@@ -5798,7 +5898,7 @@ ${switcherCss}
 ${skipLink(lang)}
 ${switcher}
 <div id="root">${tagClicks(drawBrandMark(result.body, lang, spec.key))}</div>
-${enhanceJS ? `<script>${enhanceForVariant(enhanceJS, spec)}</script>` : ''}
+${enhanceJS ? `<script>${enhanceForVariant(enhanceJS, spec, lang)}</script>` : ''}
 <script>${interactivity}</script>
 </body>
 </html>`;

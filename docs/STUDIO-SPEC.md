@@ -8,6 +8,38 @@
 
 ---
 
+## Company-only decision (owner, Nov 2026) — supersedes the hiring assumptions below
+
+The site is **Ahmed Farid Studio's B2B website and nothing else**. Its only audience is businesses, founders, CTOs and decision-makers buying software development. It does not support job hunting or recruiting. Where anything further down this spec (or any other doc) assumes a hiring path, a CV on `/about/` or "the founder and hiring page", this section wins.
+
+**What that means on the site (shipped):**
+
+| Area | Before | After |
+|---|---|---|
+| Navigation | Work · Services · About · Contact | Case studies · Services · Company · Contact (same URLs: `/work/`, `/services/`, `/about/`, `/contact/`) |
+| `/about/` | Personal profile ("I'm Ahmed Farid — a senior engineer…"), CV button, award and teaching cards, Experience timeline, GitHub repos, "Why me / With me", candidate FAQ ("full-time, freelance, or both?"), hiring path first | Company page: the studio and its founder (leadership), owner-confirmed facts (since 2022, team of 7+, 4 client projects a quarter, founder 6+ years), how a project runs, capabilities, engineering principles ("we"), "Why the studio", a buyer's FAQ; project path only |
+| `/contact/` | "Let's talk", project path then hiring path (CV, "Contact me about a senior role") | "Request a proposal", project path only; channel lines say what is the founder's (LinkedIn, GitHub) |
+| Footer (every page) | "Senior Software Engineer · …" tagline, View/Download CV, Instagram, X, YouTube, TikTok, Behance | Studio tagline; LinkedIn and GitHub only; no CV |
+| Home | Intro splash and hero tag "Senior Software Engineer", "Products I've shipped", "Countries served", employer-first flagships, testimonials unlabelled | Hero states what is built for whom; flagships client projects first; every testimonial labelled "Client project" or "In-house role", clients first |
+| SEO / JSON-LD | Titles pitched "Senior Software Engineer" / "Hire a … Developer"; `Person.seeks` "Senior Software Engineer role"; WebSite named after the engineer | Studio titles and descriptions in all 5 locales; Person = founder (`jobTitle` "Founder, Ahmed Farid Studio", no `seeks`, no `hasOccupation`, no offers, `sameAs` LinkedIn + GitHub only); `ProfessionalService` on every page (`/about/` is an `AboutPage` about it) carries the offers; WebSite published by the studio; breadcrumbs start at the studio |
+| `llms.txt`, `demo.html`, checklist page | "also open to senior roles", "Senior roles: email …", first-person demo page | Studio summary with labelled case studies; demo page in the studio's voice |
+
+The CV PDF stays served at `/Ahmed-Farid-CV.pdf` (links already out there keep working) but nothing on the site, in `llms.txt` or in the sitemap points at it. Retired sections: `experience`, `github` (`RETIRED_SECTIONS` in `scripts/build.mjs`). Copy: `scripts/company-copy.mjs`.
+
+**Enforced by the build:** `DRIFT_GUARDS` refuse any `Ahmed-Farid-CV.pdf` reference, "senior role(s)" (and its de/es/fr/ar forms), "full-time role", "open to senior/full-time" and "Senior Software Engineer role" anywhere in `dist/`; `assertPageRoles` refuses a testimonial card without a provenance label; renderLocale refuses an export whose general FAQ cannot be rewritten for the studio.
+
+**Open owner decisions (nothing below is on the site until supplied):**
+
+1. **Legal entity (I3).** Contracts and invoices stay "signed by the founder"; no `legalName`, LLC, licence or registered-company wording (guarded). When the company exists: legal name, jurisdiction, licence number if shown → Phase 3.
+2. **Named team members (I2).** The site says "a senior-led team of 7+" and names no one. Each named person needs written consent → Phase 2.2.
+3. **Branded domain and role addresses.** Recommendation: keep `iamahmedfarid.com` as the canonical domain for now (it carries the rankings and every hreflang/canonical), and decide on a studio domain (e.g. a short "ahmedfarid.studio"-style name) only together with a 301 plan for all 56 sitemap URLs; add role addresses (`hello@`, `projects@`, `billing@`) on the current domain first. No domain is bought and no DNS changes until the owner approves.
+4. **`worksFor` in JSON-LD.** The Person node still says `worksFor: Recovery Advisers` (true today). The pages no longer state the employment; keep it (default: honesty) or remove it is the owner's call.
+5. **The lead-magnet PDF byline.** `lead-magnet/…checklist.html` and the committed `multi-tenant-saas-checklist.pdf` still say "Senior Software Engineer". Changing it means re-rendering the PDF on Linux (CI) so the public-PDF gate stays green; not done in this change.
+6. **Left as they are (low, noted in review):** the export's capability text on `/about/` names "the RevealSite platform" (an in-house role) as a stack example; the "Brands & products" eyebrow is untranslated on de/fr `/work/` (pre-existing); "27+ products" and the logo strip count the founder's whole track record, employment included, and are labelled as neither (the case studies and the brands heading carry the distinction).
+7. **Case-study role lines** ("My role: Senior Software Engineer, full time …" on in-house cases) are kept on purpose: they are what tells a buyer the case was a role, not a client engagement (R1).
+
+---
+
 ## Inputs the owner must supply (blocking)
 
 Each phase lists which inputs it needs. A phase never ships with a placeholder in place of a real value.
@@ -86,7 +118,7 @@ The existing tiers stay: Architecture Clinic $1,200 · Launchpad $9,000 · Partn
 - **Accept:** `head limits + JSON-LD` gate passes; title ≤ 80 chars in all 5 locales.
 
 ### 2.2 Team section
-- **Where:** `/services/`, a new section `team` after the delivery model; a 3-face strip on home after `testimonials` linking to it. Not on `/about/`, which stays the founder and hiring page.
+- **Where:** `/about/` (the company page since Nov 2026) or `/services/`, a new section `team` after the delivery model; a 3-face strip on home after `testimonials` linking to it.
 - **Per person:** photo or letter tile, name, role, one-line "shipped with Ahmed on …", LinkedIn link. Data in `site-facts.mjs` (`TEAM`), with a `consent: 'YYYY-MM-DD'` field that is required (the build refuses a member without it).
 - **Wiring:** add `team` to `PAGE_SPECS.services.sections`; update `verify` floors and the page-inventory expectations; add the section id to `LINK_OWNER` so `/#team` forwards.
 - **Accept:** page inventory still reports 50 pages / 55 sitemap URLs (no new page); the section renders in all 5 locales; it has 0 members → section not rendered (never an empty "team").

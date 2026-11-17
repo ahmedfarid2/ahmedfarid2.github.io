@@ -79,123 +79,126 @@ export const YEARS_PROSE = {
 
 // Head metadata the build writes for every page. Descriptions stay under
 // ~165 characters; city, 6+ and stack names are never translated away.
+// Company-only (owner decision, Nov 2026; docs/STUDIO-SPEC.md "Company-only
+// decision"): every page speaks for Ahmed Farid Studio to a client. No title
+// or description pitches a person for hire; "Ahmed Farid" stays in every
+// title through the studio name, which keeps the name search.
 export const SEO = {
-  // Home speaks to a client first; the CV and the hiring pitch are on /about/.
   home: {
     en: {
-      title: 'Ahmed Farid Studio — Senior Software Engineer · SaaS, Mobile & AI · Dubai',
-      description: 'Dubai-based senior software engineer (6+ years) building real-time, multi-tenant SaaS end to end — Laravel, Next.js, Flutter. Fixed-scope builds and consulting.',
+      title: 'Ahmed Farid Studio — Custom Software, SaaS & Mobile App Development · Dubai',
+      description: 'Dubai software development studio for founders and businesses: custom SaaS, web and mobile apps and AI features, built end to end. Fixed-price builds and retainers.',
     },
     ar: {
-      title: 'Ahmed Farid Studio — مهندس برمجيات أول · SaaS والجوّال والذكاء الاصطناعي · دبي',
-      description: 'مهندس برمجيات أول مقيم في دبي (أكثر من ٦ سنوات): منصّات SaaS فورية متعدّدة المستأجرين من البداية إلى النهاية — Laravel وNext.js وFlutter. مشاريع محدّدة النطاق واستشارات.',
+      title: 'Ahmed Farid Studio — تطوير برمجيات مخصّصة وSaaS وتطبيقات جوّال · دبي',
+      description: 'استوديو تطوير برمجيات في دبي للمؤسّسين والشركات: منصّات SaaS وتطبيقات ويب وجوّال ومزايا ذكاء اصطناعي، من البداية إلى النهاية. مشاريع بسعر ثابت وعقود شهرية.',
     },
     de: {
-      title: 'Ahmed Farid Studio — Senior-Softwareentwickler · SaaS, Mobile & KI · Dubai',
-      description: 'Senior-Softwareentwickler in Dubai (6+ Jahre): Echtzeit-Multi-Tenant-SaaS, end to end — Laravel, Next.js, Flutter. Festpreis-Projekte und Beratung.',
+      title: 'Ahmed Farid Studio — Individualsoftware, SaaS & App-Entwicklung · Dubai',
+      description: 'Softwareentwicklungsstudio in Dubai für Gründer und Unternehmen: SaaS, Web- und Mobile-Apps und KI-Funktionen, end to end gebaut. Festpreis-Projekte und Retainer.',
     },
     es: {
-      title: 'Ahmed Farid Studio — Ingeniero de Software Senior · SaaS, móvil e IA · Dubái',
-      description: 'Ingeniero de Software Senior en Dubái (6+ años): SaaS multi-tenant en tiempo real, de punta a punta — Laravel, Next.js, Flutter. Proyectos cerrados y consultoría.',
+      title: 'Ahmed Farid Studio — Software a medida, SaaS y apps móviles · Dubái',
+      description: 'Estudio de desarrollo de software en Dubái para fundadores y empresas: SaaS, apps web y móviles y funciones de IA, de punta a punta. Precio cerrado o retainer mensual.',
     },
     fr: {
-      title: 'Ahmed Farid Studio — Ingénieur logiciel senior · SaaS, mobile et IA · Dubaï',
-      description: 'Ingénieur logiciel senior à Dubaï (6+ ans) : SaaS multi-tenant temps réel, de bout en bout — Laravel, Next.js, Flutter. Projets au forfait et conseil.',
+      title: 'Ahmed Farid Studio — Logiciel sur mesure, SaaS et apps mobiles · Dubaï',
+      description: 'Studio de développement logiciel à Dubaï pour fondateurs et entreprises : SaaS, applications web et mobiles, fonctions IA, de bout en bout. Au forfait ou en retainer.',
     },
   },
   services: {
     en: {
-      title: 'Hire a Laravel & Next.js Developer in Dubai — Pricing · Ahmed Farid',
-      description: 'Fixed-scope Laravel & Next.js builds, retainers and architecture reviews for real-time, multi-tenant SaaS — with pricing, FAQ and a 30-minute scoping call.',
+      title: 'Laravel & Next.js Development Services & Pricing · Dubai · Ahmed Farid Studio',
+      description: 'Fixed-price builds, monthly engineering retainers and architecture reviews for SaaS, web and mobile products, with published prices, FAQ and a 30-minute scoping call.',
     },
     ar: {
-      title: 'وظّف مطوّر Laravel وNext.js في دبي — الأسعار · Ahmed Farid',
-      description: 'مشاريع محدّدة النطاق وعقود مستمرة ومراجعات معمارية لمنصّات SaaS متعدّدة المستأجرين — الأسعار والأسئلة الشائعة ومكالمة 30 دقيقة. من دبي.',
+      title: 'خدمات تطوير Laravel وNext.js والأسعار · دبي · Ahmed Farid Studio',
+      description: 'مشاريع بسعر ثابت وعقود هندسية شهرية ومراجعات معمارية لمنتجات SaaS والويب والجوّال — بأسعار معلنة وأسئلة شائعة ومكالمة تحديد نطاق مدتها ٣٠ دقيقة.',
     },
     de: {
-      title: 'Laravel- & Next.js-Entwickler in Dubai beauftragen — Preise · Ahmed Farid',
-      description: 'Festpreis-Projekte, Engineering-Retainer und Architektur-Reviews für Echtzeit-Multi-Tenant-SaaS — mit Preisen, FAQ und 30-minütigem Scoping-Call. Aus Dubai.',
+      title: 'Laravel- & Next.js-Entwicklung: Leistungen & Preise · Ahmed Farid Studio',
+      description: 'Festpreis-Projekte, monatliche Engineering-Retainer und Architektur-Reviews für SaaS-, Web- und Mobile-Produkte — mit Preisen, FAQ und 30-minütigem Scoping-Call.',
     },
     es: {
-      title: 'Contrata a un desarrollador Laravel y Next.js en Dubái — Precios · Ahmed Farid',
-      description: 'Proyectos cerrados, retainers y revisiones de arquitectura para SaaS multi-tenant en tiempo real — precios, FAQ y llamada de alcance de 30 min. Desde Dubái.',
+      title: 'Desarrollo Laravel y Next.js: servicios y precios · Ahmed Farid Studio',
+      description: 'Proyectos a precio cerrado, retainers mensuales de ingeniería y revisiones de arquitectura para productos SaaS, web y móviles — con precios, FAQ y llamada de 30 min.',
     },
     fr: {
-      title: 'Engager un développeur Laravel & Next.js à Dubaï — Tarifs · Ahmed Farid',
-      description: 'Projets au forfait, retainers d’ingénierie et revues d’architecture pour SaaS multi-tenant temps réel — tarifs, FAQ et appel de cadrage de 30 min. Basé à Dubaï.',
+      title: 'Développement Laravel & Next.js : services et tarifs · Ahmed Farid Studio',
+      description: 'Projets au forfait, retainers d’ingénierie mensuels et revues d’architecture pour produits SaaS, web et mobiles — tarifs publiés, FAQ et appel de cadrage de 30 min.',
     },
   },
   work: {
     en: {
-      title: 'Work — Case Studies in SaaS, Real-Time & Mobile · Ahmed Farid',
-      description: 'Case studies of production systems: live-bidding auctions, multi-tenant SaaS, AI-assisted tools and Flutter apps shipped across the Gulf, US and UK.',
+      title: 'Case Studies — SaaS, Real-Time & Mobile Products · Ahmed Farid Studio',
+      description: 'Case studies of production systems: multi-tenant SaaS, AI-assisted tools, live auctions and Flutter apps shipped across the Gulf, US and UK. Client projects labelled.',
     },
     ar: {
-      title: 'الأعمال — دراسات حالة في SaaS والأنظمة الفورية والموبايل · Ahmed Farid',
-      description: 'دراسات حالة لأنظمة في الإنتاج: مزادات مباشرة، منصّات SaaS متعدّدة المستأجرين، أدوات بالذكاء الاصطناعي وتطبيقات Flutter في الخليج وأمريكا وبريطانيا.',
+      title: 'دراسات الحالة — منتجات SaaS والأنظمة الفورية والجوّال · Ahmed Farid Studio',
+      description: 'دراسات حالة لأنظمة في الإنتاج: منصّات SaaS متعدّدة المستأجرين، أدوات بالذكاء الاصطناعي، مزادات مباشرة وتطبيقات Flutter، مع تمييز واضح لمشاريع العملاء.',
     },
     de: {
-      title: 'Arbeiten — Fallstudien zu SaaS, Echtzeit & Mobile · Ahmed Farid',
-      description: 'Fallstudien produktiver Systeme: Live-Auktionen, Multi-Tenant-SaaS, KI-gestützte Tools und Flutter-Apps für den Golf, die USA und Großbritannien.',
+      title: 'Fallstudien — SaaS, Echtzeit & Mobile · Ahmed Farid Studio',
+      description: 'Fallstudien produktiver Systeme: Multi-Tenant-SaaS, KI-gestützte Tools, Live-Auktionen und Flutter-Apps für den Golf, die USA und Großbritannien. Kundenprojekte markiert.',
     },
     es: {
-      title: 'Proyectos — Casos de estudio de SaaS, tiempo real y móvil · Ahmed Farid',
-      description: 'Casos de estudio de sistemas en producción: subastas en vivo, SaaS multi-tenant, herramientas con IA y apps Flutter en el Golfo, EE. UU. y Reino Unido.',
+      title: 'Casos de estudio — SaaS, tiempo real y móvil · Ahmed Farid Studio',
+      description: 'Casos de estudio de sistemas en producción: SaaS multi-tenant, herramientas con IA, subastas en vivo y apps Flutter en el Golfo, EE. UU. y Reino Unido.',
     },
     fr: {
-      title: 'Projets — Études de cas SaaS, temps réel et mobile · Ahmed Farid',
-      description: 'Études de cas de systèmes en production : enchères en direct, SaaS multi-tenant, outils d’IA et apps Flutter livrés dans le Golfe, aux États-Unis et au Royaume-Uni.',
+      title: 'Études de cas — SaaS, temps réel et mobile · Ahmed Farid Studio',
+      description: 'Études de cas de systèmes en production : SaaS multi-tenant, outils d’IA, enchères en direct et apps Flutter livrés dans le Golfe, aux États-Unis et au Royaume-Uni.',
     },
   },
   about: {
     en: {
-      title: 'About Ahmed Farid — Senior Software Engineer in Dubai',
-      description: 'Who you work with: 6+ years shipping production SaaS from Dubai, the stack and principles behind it, past roles, open-source code and the CV.',
+      title: 'About Ahmed Farid Studio — Senior-Led Software Development, Dubai',
+      description: 'Who builds your software: a senior-led team of 7+, founded by Ahmed Farid in 2022. Capabilities, delivery process, engineering principles and how engagements work.',
     },
     ar: {
-      title: 'نبذة عن Ahmed Farid — مهندس برمجيات أول في دبي',
-      description: 'مع من ستعمل: أكثر من ٦ سنوات في بناء منصّات SaaS للإنتاج من دبي، والتقنيات والمبادئ وراءها، والأدوار السابقة، والشيفرة المفتوحة المصدر، والسيرة الذاتية.',
+      title: 'عن Ahmed Farid Studio — استوديو تطوير برمجيات بقيادة كبار المهندسين · دبي',
+      description: 'من يبني برمجياتك: فريق من أكثر من ٧ أشخاص بقيادة مهندس أول، أسّسه أحمد فريد عام ٢٠٢٢. القدرات وطريقة التسليم والمبادئ الهندسية وكيف يسير التعاون.',
     },
     de: {
-      title: 'Über Ahmed Farid — Senior-Softwareentwickler in Dubai',
-      description: 'Mit wem Sie arbeiten: 6+ Jahre Produktions-SaaS aus Dubai, Stack und Prinzipien dahinter, bisherige Rollen, Open-Source-Code und der Lebenslauf.',
+      title: 'Über Ahmed Farid Studio — Softwareentwicklung unter Senior-Leitung, Dubai',
+      description: 'Wer Ihre Software baut: ein Team aus 7+ Personen unter Senior-Leitung, 2022 von Ahmed Farid gegründet. Leistungen, Lieferprozess, Prinzipien und Zusammenarbeit.',
     },
     es: {
-      title: 'Sobre Ahmed Farid — Ingeniero de Software Senior en Dubái',
-      description: 'Con quién trabajas: 6+ años creando SaaS en producción desde Dubái, el stack y los principios detrás, roles anteriores, código abierto y el CV.',
+      title: 'Sobre Ahmed Farid Studio — Desarrollo de software con liderazgo sénior',
+      description: 'Quién construye tu software: un equipo de más de 7 personas con liderazgo sénior, fundado por Ahmed Farid en 2022. Capacidades, proceso, principios y colaboración.',
     },
     fr: {
-      title: 'À propos d’Ahmed Farid — Ingénieur logiciel senior à Dubaï',
-      description: 'Avec qui vous travaillez : 6+ ans de SaaS en production depuis Dubaï, la stack et les principes derrière, les postes passés, le code open source et le CV.',
+      title: 'À propos d’Ahmed Farid Studio — Studio logiciel à Dubaï',
+      description: 'Qui construit votre logiciel : une équipe de plus de 7 personnes encadrée par des seniors, fondée par Ahmed Farid en 2022. Compétences, méthode, principes, collaboration.',
     },
   },
   contact: {
     en: {
-      title: 'Contact Ahmed Farid — Book a Call, Email or WhatsApp · Dubai',
-      description: 'Schedule a 30-minute scoping call, send a project brief, or reach me by email, WhatsApp or LinkedIn. Dubai-based, GMT+4; I reply within a day.',
+      title: 'Request a Proposal — Ahmed Farid Studio · Book a Scoping Call · Dubai',
+      description: 'Tell us about your project: book a 30-minute scoping call, send a brief or message us on WhatsApp. A written scope and fixed price within 2 business days. GMT+4.',
     },
     ar: {
-      title: 'تواصل مع Ahmed Farid — احجز مكالمة أو راسلني · دبي',
-      description: 'احجز مكالمة تحديد نطاق مدتها ٣٠ دقيقة، أو أرسل وصف مشروعك، أو تواصل عبر البريد أو واتساب أو LinkedIn. من دبي (GMT+4)، وأردّ خلال يوم.',
+      title: 'اطلب عرضًا — Ahmed Farid Studio · احجز مكالمة تحديد نطاق · دبي',
+      description: 'أخبرنا عن مشروعك: احجز مكالمة تحديد نطاق مدتها ٣٠ دقيقة، أو أرسل وصف المشروع، أو راسلنا عبر واتساب. نطاق مكتوب وسعر ثابت خلال يومَي عمل. GMT+4.',
     },
     de: {
-      title: 'Kontakt — Ahmed Farid · Call buchen, E-Mail oder WhatsApp · Dubai',
-      description: '30-minütigen Scoping-Call buchen, ein Projekt-Briefing schicken oder per E-Mail, WhatsApp oder LinkedIn schreiben. Aus Dubai (GMT+4), Antwort binnen eines Tages.',
+      title: 'Angebot anfragen — Ahmed Farid Studio · Scoping-Call buchen · Dubai',
+      description: 'Erzählen Sie uns von Ihrem Projekt: Scoping-Call (30 Min.) buchen, Briefing senden oder per WhatsApp schreiben. Schriftlicher Umfang und Festpreis in 2 Werktagen.',
     },
     es: {
-      title: 'Contacto — Ahmed Farid · Agenda una llamada, email o WhatsApp · Dubái',
-      description: 'Agenda una llamada de alcance de 30 minutos, envía un brief de proyecto o escríbeme por email, WhatsApp o LinkedIn. Desde Dubái (GMT+4); respondo en un día.',
+      title: 'Solicita una propuesta — Ahmed Farid Studio · Llamada de alcance · Dubái',
+      description: 'Cuéntanos tu proyecto: agenda una llamada de alcance de 30 minutos, envía un brief o escríbenos por WhatsApp. Alcance por escrito y precio cerrado en 2 días hábiles.',
     },
     fr: {
-      title: 'Contacter Ahmed Farid — Appel, e-mail ou WhatsApp · Dubaï',
-      description: 'Réservez un appel de cadrage de 30 minutes, envoyez un brief de projet ou écrivez-moi par e-mail, WhatsApp ou LinkedIn. Basé à Dubaï (GMT+4), réponse sous un jour.',
+      title: 'Demander une proposition — Ahmed Farid Studio · Appel de cadrage · Dubaï',
+      description: 'Parlez-nous de votre projet : appel de cadrage de 30 minutes, brief écrit ou WhatsApp. Un périmètre écrit et un prix fixe sous 2 jours ouvrés. Basé à Dubaï (GMT+4).',
     },
   },
 };
 
 // Page names and link labels the build writes into the navigation, breadcrumbs
-// and cards, per locale. `work` is the export's own #work nav label in each
-// locale (read from the built pages, not translated here). Brand and case names
+// and cards, per locale. The company structure (Nov 2026): Case studies,
+// Services, Company (/about/), Contact; the URLs stay as they were. Brand and case names
 // are never translated and do not appear here. Arrows are written by the build
 // as "→" in every locale.
 //   work/services/about/contact  the four navigation links
@@ -204,11 +207,11 @@ export const SEO = {
 //   insights / writeUp           the footer link to /insights/ and the label of
 //                                a case study's link to its write-up (English)
 export const NAV = {
-  en: { work: 'Work', services: 'Services', about: 'About', contact: 'Contact', caseStudy: 'Case study', allWork: 'All work', moreWork: 'More work', pricing: 'Services & pricing', insights: 'Insights', writeUp: 'Engineering write-up' },
-  ar: { work: 'أعمال', services: 'الخدمات', about: 'نبذة عني', contact: 'تواصل', caseStudy: 'دراسة الحالة', allWork: 'كل الأعمال', moreWork: 'أعمال أخرى', pricing: 'الخدمات والأسعار', insights: 'مقالات', writeUp: 'مقال تقني (بالإنجليزية)' },
-  de: { work: 'Arbeiten', services: 'Leistungen', about: 'Über mich', contact: 'Kontakt', caseStudy: 'Fallstudie', allWork: 'Alle Arbeiten', moreWork: 'Weitere Arbeiten', pricing: 'Leistungen & Preise', insights: 'Artikel', writeUp: 'Technischer Artikel (auf Englisch)' },
-  es: { work: 'Proyectos', services: 'Servicios', about: 'Sobre mí', contact: 'Contacto', caseStudy: 'Caso de estudio', allWork: 'Todo el trabajo', moreWork: 'Más trabajo', pricing: 'Servicios y precios', insights: 'Artículos', writeUp: 'Artículo técnico (en inglés)' },
-  fr: { work: 'Projets', services: 'Services', about: 'À propos', contact: 'Contact', caseStudy: 'Étude de cas', allWork: 'Toutes les réalisations', moreWork: 'Autres réalisations', pricing: 'Services et tarifs', insights: 'Articles', writeUp: 'Article technique (en anglais)' },
+  en: { work: 'Case studies', services: 'Services', about: 'Company', contact: 'Contact', caseStudy: 'Case study', allWork: 'All case studies', moreWork: 'More case studies', pricing: 'Services & pricing', insights: 'Insights', writeUp: 'Engineering write-up' },
+  ar: { work: 'دراسات الحالة', services: 'الخدمات', about: 'من نحن', contact: 'تواصل', caseStudy: 'دراسة الحالة', allWork: 'كل دراسات الحالة', moreWork: 'دراسات حالة أخرى', pricing: 'الخدمات والأسعار', insights: 'مقالات', writeUp: 'مقال تقني (بالإنجليزية)' },
+  de: { work: 'Fallstudien', services: 'Leistungen', about: 'Über uns', contact: 'Kontakt', caseStudy: 'Fallstudie', allWork: 'Alle Fallstudien', moreWork: 'Weitere Fallstudien', pricing: 'Leistungen & Preise', insights: 'Artikel', writeUp: 'Technischer Artikel (auf Englisch)' },
+  es: { work: 'Casos', services: 'Servicios', about: 'Nosotros', contact: 'Contacto', caseStudy: 'Caso de estudio', allWork: 'Todos los casos', moreWork: 'Más casos', pricing: 'Servicios y precios', insights: 'Artículos', writeUp: 'Artículo técnico (en inglés)' },
+  fr: { work: 'Études de cas', services: 'Services', about: 'Le studio', contact: 'Contact', caseStudy: 'Étude de cas', allWork: 'Toutes les études de cas', moreWork: 'Autres études de cas', pricing: 'Services et tarifs', insights: 'Articles', writeUp: 'Article technique (en anglais)' },
 };
 
 // The five flagship case studies, each with a page of its own at
@@ -217,8 +220,10 @@ export const NAV = {
 // the build finds the case in the render); `slug` is the URL segment and is the
 // same in every locale. Adding a flagship is adding a row here — and marking
 // the case FLAGSHIP in the export.
-// Client testimonials on home, client first, before the LinkedIn-verified
-// recommendation. Ahmed drafted these at the clients' request; each person
+// Testimonials on home, before the LinkedIn-verified recommendation: client
+// projects first, then people from companies where Ahmed held a role. Every
+// card shows PROVENANCE_LABEL from `provenance` (rule R1: an employer's quote
+// is never presented as a client's). Ahmed drafted these at the clients' request; each person
 // approved the final wording and the use of their name before it shipped.
 // Changing a quote means getting that approval again. No LinkedIn badge: that
 // mark stays on recommendations that are actually on LinkedIn.
@@ -227,7 +232,33 @@ export const NAV = {
 // the product the quote is about; the card links to that case study.
 export const CLIENT_QUOTES = [
   {
+    name: { en: 'Bandar', ar: 'بندر' }, initials: { en: 'B', ar: 'ب' },
+    provenance: 'client',
+    role: { en: 'Founder, Ibdaa Course & Applyni', ar: 'مؤسس Ibdaa Course وApplyni', de: 'Gründer, Ibdaa Course & Applyni', es: 'Fundador, Ibdaa Course y Applyni', fr: 'Fondateur, Ibdaa Course et Applyni' },
+    quote: {
+      en: "I'm not technical, and Ahmed never made me feel it. He built the whole platform and explained every decision in words I could follow. When he handed it over, we actually knew how to run it.",
+      ar: 'لست تقنيًا، ولم يُشعرني أحمد بذلك يومًا. بنى المنصّة كاملة وشرح كل قرار بكلام أفهمه. وحين سلّمها، كنا نعرف فعلًا كيف نديرها.',
+      de: 'Ich bin kein Techniker, und Ahmed hat mich das nie spüren lassen. Er hat die ganze Plattform gebaut und jede Entscheidung so erklärt, dass ich sie verstanden habe. Bei der Übergabe wussten wir wirklich, wie wir sie betreiben.',
+      es: 'No soy técnico, y Ahmed nunca me lo hizo sentir. Construyó toda la plataforma y explicó cada decisión con palabras que yo entendía. Cuando nos la entregó, sabíamos de verdad cómo llevarla.',
+      fr: 'Je ne suis pas technique, et Ahmed ne me l’a jamais fait sentir. Il a construit toute la plateforme et expliqué chaque décision avec des mots que je comprenais. À la livraison, nous savions vraiment la faire tourner.',
+    },
+  },
+  {
+    name: { en: 'Amr Khalil', ar: 'عمرو خليل' }, initials: { en: 'AK', ar: 'ع' },
+    provenance: 'client',
+    role: { en: 'Project Manager, Phonic Maps', ar: 'مدير المشروع، Phonic Maps', de: 'Projektmanager, Phonic Maps', es: 'Jefe de proyecto, Phonic Maps', fr: 'Chef de projet, Phonic Maps' },
+    caseStudy: 'phonic-maps',
+    quote: {
+      en: "We manage reviews for a lot of locations, and before this it was tab after tab. Now it's one screen, with replies drafted for us. He also flagged problems before we ran into them, which doesn't happen often.",
+      ar: 'ندير التقييمات لعدد كبير من الفروع، وكان الأمر قبل ذلك تبويبًا بعد تبويب. الآن أصبح شاشة واحدة، والردود تُصاغ لنا. وكان ينبّهنا إلى المشكلات قبل أن نقع فيها، وهذا نادر.',
+      de: 'Wir verwalten Bewertungen für viele Standorte, und vorher war das Tab um Tab. Jetzt ist es ein Bildschirm, die Antworten werden für uns vorformuliert. Und er hat uns auf Probleme hingewiesen, bevor wir hineingelaufen sind. Das erlebt man selten.',
+      es: 'Gestionamos reseñas de muchas sedes, y antes era pestaña tras pestaña. Ahora es una sola pantalla, con las respuestas redactadas para nosotros. Además nos avisaba de los problemas antes de que llegáramos a ellos, y eso no pasa a menudo.',
+      fr: 'Nous gérons les avis de nombreux établissements, et avant c’était onglet après onglet. Maintenant tout tient sur un écran, avec des réponses rédigées pour nous. Et il nous prévenait des problèmes avant qu’on tombe dessus, ce qui est rare.',
+    },
+  },
+  {
     name: { en: 'Remon Adel', ar: 'ريمون عادل' }, initials: { en: 'RA', ar: 'ر' },
+    provenance: 'employment',
     role: { en: 'CTO, Recovery Advisers', ar: 'المدير التقني، Recovery Advisers', de: 'CTO, Recovery Advisers', es: 'CTO, Recovery Advisers', fr: 'CTO, Recovery Advisers' },
     caseStudy: 'recovery-advisers',
     quote: {
@@ -240,6 +271,7 @@ export const CLIENT_QUOTES = [
   },
   {
     name: { en: 'Mohamed Atef', ar: 'محمد عاطف' }, initials: { en: 'MA', ar: 'م' },
+    provenance: 'employment',
     role: { en: 'Tech Lead, Yelo Sale', ar: 'قائد الفريق التقني، Yelo Sale', de: 'Tech Lead, Yelo Sale', es: 'Líder técnico, Yelo Sale', fr: 'Responsable technique, Yelo Sale' },
     caseStudy: 'yelo-sale',
     quote: {
@@ -251,18 +283,8 @@ export const CLIENT_QUOTES = [
     },
   },
   {
-    name: { en: 'Bandar', ar: 'بندر' }, initials: { en: 'B', ar: 'ب' },
-    role: { en: 'Founder, Ibdaa Course & Applyni', ar: 'مؤسس Ibdaa Course وApplyni', de: 'Gründer, Ibdaa Course & Applyni', es: 'Fundador, Ibdaa Course y Applyni', fr: 'Fondateur, Ibdaa Course et Applyni' },
-    quote: {
-      en: "I'm not technical, and Ahmed never made me feel it. He built the whole platform and explained every decision in words I could follow. When he handed it over, we actually knew how to run it.",
-      ar: 'لست تقنيًا، ولم يُشعرني أحمد بذلك يومًا. بنى المنصّة كاملة وشرح كل قرار بكلام أفهمه. وحين سلّمها، كنا نعرف فعلًا كيف نديرها.',
-      de: 'Ich bin kein Techniker, und Ahmed hat mich das nie spüren lassen. Er hat die ganze Plattform gebaut und jede Entscheidung so erklärt, dass ich sie verstanden habe. Bei der Übergabe wussten wir wirklich, wie wir sie betreiben.',
-      es: 'No soy técnico, y Ahmed nunca me lo hizo sentir. Construyó toda la plataforma y explicó cada decisión con palabras que yo entendía. Cuando nos la entregó, sabíamos de verdad cómo llevarla.',
-      fr: 'Je ne suis pas technique, et Ahmed ne me l’a jamais fait sentir. Il a construit toute la plateforme et expliqué chaque décision avec des mots que je comprenais. À la livraison, nous savions vraiment la faire tourner.',
-    },
-  },
-  {
     name: { en: 'Amr Khalaf', ar: 'عمرو خلف' }, initials: { en: 'AK', ar: 'ع' },
+    provenance: 'employment',
     role: { en: 'CEO, Compass Med', ar: 'الرئيس التنفيذي، Compass Med', de: 'CEO, Compass Med', es: 'CEO, Compass Med', fr: 'PDG, Compass Med' },
     quote: {
       en: "Ahmed handled the engineering and a lot of the design for our store and internal tools. For a company our size, that meant one person who understood both the product and the business, instead of two who didn't talk.",
@@ -270,18 +292,6 @@ export const CLIENT_QUOTES = [
       de: 'Ahmed hat die Technik und einen großen Teil des Designs für unseren Shop und unsere internen Tools übernommen. Für ein Unternehmen unserer Größe hieß das: eine Person, die Produkt und Geschäft versteht, statt zwei, die nicht miteinander reden.',
       es: 'Ahmed se ocupó de la ingeniería y de buena parte del diseño de nuestra tienda y nuestras herramientas internas. Para una empresa de nuestro tamaño, eso significó una sola persona que entendía el producto y el negocio, en vez de dos que no se hablaban.',
       fr: 'Ahmed s’est occupé de l’ingénierie et d’une bonne partie du design de notre boutique et de nos outils internes. Pour une entreprise de notre taille, cela voulait dire une seule personne qui comprenait le produit et le métier, au lieu de deux qui ne se parlaient pas.',
-    },
-  },
-  {
-    name: { en: 'Amr Khalil', ar: 'عمرو خليل' }, initials: { en: 'AK', ar: 'ع' },
-    role: { en: 'Project Manager, Phonic Maps', ar: 'مدير المشروع، Phonic Maps', de: 'Projektmanager, Phonic Maps', es: 'Jefe de proyecto, Phonic Maps', fr: 'Chef de projet, Phonic Maps' },
-    caseStudy: 'phonic-maps',
-    quote: {
-      en: "We manage reviews for a lot of locations, and before this it was tab after tab. Now it's one screen, with replies drafted for us. He also flagged problems before we ran into them, which doesn't happen often.",
-      ar: 'ندير التقييمات لعدد كبير من الفروع، وكان الأمر قبل ذلك تبويبًا بعد تبويب. الآن أصبح شاشة واحدة، والردود تُصاغ لنا. وكان ينبّهنا إلى المشكلات قبل أن نقع فيها، وهذا نادر.',
-      de: 'Wir verwalten Bewertungen für viele Standorte, und vorher war das Tab um Tab. Jetzt ist es ein Bildschirm, die Antworten werden für uns vorformuliert. Und er hat uns auf Probleme hingewiesen, bevor wir hineingelaufen sind. Das erlebt man selten.',
-      es: 'Gestionamos reseñas de muchas sedes, y antes era pestaña tras pestaña. Ahora es una sola pantalla, con las respuestas redactadas para nosotros. Además nos avisaba de los problemas antes de que llegáramos a ellos, y eso no pasa a menudo.',
-      fr: 'Nous gérons les avis de nombreux établissements, et avant c’était onglet après onglet. Maintenant tout tient sur un écran, avec des réponses rédigées pour nous. Et il nous prévenait des problèmes avant qu’on tombe dessus, ce qui est rare.',
     },
   },
 ];
@@ -334,11 +344,14 @@ export const STUDIO_FOOT = {
   fr: { place: 'Dubaï, EAU', since: 'Depuis', privacy: 'Confidentialité' },
 };
 
+// Order is display order (cards on home and /work/, the CollectionPage
+// list): client projects first, then the roles Ahmed held, each labelled by
+// CASE_PROVENANCE (company-only decision, Nov 2026).
 export const FLAGSHIP = [
-  { name: 'Yelo Sale', slug: 'yelo-sale' },
   { name: 'Qoralia', slug: 'qoralia' },
-  { name: 'KhebraOS', slug: 'khebraos' },
   { name: 'Phonic Maps', slug: 'phonic-maps' },
+  { name: 'KhebraOS', slug: 'khebraos' },
+  { name: 'Yelo Sale', slug: 'yelo-sale' },
   { name: 'Recovery Advisers', slug: 'recovery-advisers' },
 ];
 
@@ -391,4 +404,13 @@ export const DRIFT_GUARDS = [
   { re: /vetted team|erprobtes Team|erprobten Team|equipo probado|équipe éprouvée|فريق مؤهّل/gi, max: 0 },
   // A role Ahmed held is never presented as a client (R1).
   { re: /\bour clients?\b[^.<]{0,80}\b(Yelo|Recovery Advisers|RevealSite|Arab Bank|Compass Med)\b/gi, max: 0 },
+  // Company-only (owner decision, Nov 2026; docs/STUDIO-SPEC.md): the site
+  // sells the studio's work to clients and recruits no one. The CV PDF stays
+  // served at its URL for links already out there, but no page, llms.txt or
+  // sitemap points at it, and no page pitches a hire.
+  { s: 'Ahmed-Farid-CV.pdf', max: 0 },
+  { re: /\bsenior roles?\b|Senior-Rolle|puesto senior|poste senior|دور (هندسي )?أول/gi, max: 0 },
+  { re: /\bfull-time (senior )?(engineering )?roles?\b|\bopen to (senior|full-time)\b|Senior Software Engineer role/gi, max: 0 },
+  // The first-visit intro splash names the studio, not a job title.
+  { re: /class="intro-role">[^<]*(Senior|Engineer|مهندس|Entwickler|Ingeniero|Ingénieur)/g, max: 0 },
 ];
